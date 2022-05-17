@@ -1,0 +1,128 @@
+*version
+3
+data-file-overflow=false
+clock=dual
+elapsed-time-usec=917910
+num-method-calls=173
+clock-call-overhead-nsec=25171
+vm=art
+pid=9182
+*threads
+9182	main
+9188	Jit thread pool worker thread 0
+9190	Runtime worker thread 1
+9192	Runtime worker thread 3
+9189	Runtime worker thread 0
+9191	Runtime worker thread 2
+9194	Signal Catcher
+9195	ADB-JDWP Connection Control Thread
+9197	HeapTaskDaemon
+9198	ReferenceQueueDaemon
+9199	FinalizerDaemon
+9200	FinalizerWatchdogDaemon
+9204	Binder:9182_1
+9205	Binder:9182_2
+9218	Binder:9182_3
+9228	Profile Saver
+9236	pool-2-thread-1
+9237	pool-2-thread-2
+9238	dev.specto-pool-3-thread-1
+9239	RenderThread
+9241	pool-2-thread-3
+9243	pool-2-thread-4
+9247	dev.specto-pool-3-thread-2
+9249	kotlinx.coroutines.DefaultExecutor
+*methods
+0xbc	java.util.concurrent.LinkedBlockingQueue	take	()Ljava/lang/Object;	LinkedBlockingQueue.java
+0xb8	java.util.concurrent.ThreadPoolExecutor	getTask	()Ljava/lang/Runnable;	ThreadPoolExecutor.java
+0xb4	java.util.concurrent.ThreadPoolExecutor	runWorker	(Ljava/util/concurrent/ThreadPoolExecutor$Worker;)V	ThreadPoolExecutor.java
+0xc0	java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject	await	()V	AbstractQueuedSynchronizer.java
+0xa0	java.lang.ref.ReferenceQueue	remove	()Ljava/lang/ref/Reference;	ReferenceQueue.java
+0xa4	java.lang.ref.ReferenceQueue	remove	(J)Ljava/lang/ref/Reference;	ReferenceQueue.java
+0xc4	java.util.concurrent.locks.LockSupport	park	(Ljava/lang/Object;)V	LockSupport.java
+0xb0	java.util.concurrent.ThreadPoolExecutor$Worker	run	()V	ThreadPoolExecutor.java
+0x90	java.lang.Object	wait	()V	Object.java
+0x94	java.lang.Object	wait	(J)V	Object.java
+0x98	java.lang.Object	wait	(JI)V	Object.java
+0x7c	java.lang.Thread	run	()V	Thread.java
+0x8	java.lang.reflect.Method	invoke	(Ljava/lang/Object;[Ljava/lang/Object;)Ljava/lang/Object;	Method.java
+0xc8	sun.misc.Unsafe	park	(ZJ)V	Unsafe.java
+0x64	java.lang.reflect.Constructor	newInstance0	([Ljava/lang/Object;)Ljava/lang/Object;	Constructor.java
+0x60	java.lang.reflect.Constructor	newInstance	([Ljava/lang/Object;)Ljava/lang/Object;	Constructor.java
+0x8c	java.lang.Daemons$ReferenceQueueDaemon	runInternal	()V	Daemons.java
+0x84	java.lang.Daemons$HeapTaskDaemon	runInternal	()V	Daemons.java
+0x9c	java.lang.Daemons$FinalizerDaemon	runInternal	()V	Daemons.java
+0xac	java.lang.Daemons$FinalizerWatchdogDaemon	sleepUntilNeeded	()Z	Daemons.java
+0xa8	java.lang.Daemons$FinalizerWatchdogDaemon	runInternal	()V	Daemons.java
+0x80	java.lang.Daemons$Daemon	run	()V	Daemons.java
+0x88	dalvik.system.VMRuntime	runHeapTasks	()V	VMRuntime.java
+0x18	android.app.ActivityThread$H	handleMessage	(Landroid/os/Message;)V	ActivityThread.java
+0x134	android.view.WindowManagerGlobal	addView	(Landroid/view/View;Landroid/view/ViewGroup$LayoutParams;Landroid/view/Display;Landroid/view/Window;)V	WindowManagerGlobal.java
+0x130	android.view.WindowManagerImpl	addView	(Landroid/view/View;Landroid/view/ViewGroup$LayoutParams;)V	WindowManagerImpl.java
+0x118	android.app.servertransaction.TransactionExecutor	executeLifecycleState	(Landroid/app/servertransaction/ClientTransaction;)V	TransactionExecutor.java
+0x1c	android.app.servertransaction.TransactionExecutor	execute	(Landroid/app/servertransaction/ClientTransaction;)V	TransactionExecutor.java
+0x20	android.app.servertransaction.TransactionExecutor	executeCallbacks	(Landroid/app/servertransaction/ClientTransaction;)V	TransactionExecutor.java
+0x104	android.app.IActivityTaskManager$Stub$Proxy	getActivityOptions	(Landroid/os/IBinder;)Landroid/os/Bundle;	IActivityTaskManager.java
+0x114	android.app.IActivityTaskManager$Stub$Proxy	reportSizeConfigurations	(Landroid/os/IBinder;[I[I[I)V	IActivityTaskManager.java
+0x54	android.view.LayoutInflater	createViewFromTag	(Landroid/view/View;Ljava/lang/String;Landroid/content/Context;Landroid/util/AttributeSet;)Landroid/view/View;	LayoutInflater.java
+0x5c	android.view.LayoutInflater	createView	(Landroid/content/Context;Ljava/lang/String;Ljava/lang/String;Landroid/util/AttributeSet;)Landroid/view/View;	LayoutInflater.java
+0x58	android.view.LayoutInflater	createViewFromTag	(Landroid/view/View;Ljava/lang/String;Landroid/content/Context;Landroid/util/AttributeSet;Z)Landroid/view/View;	LayoutInflater.java
+0x48	android.view.LayoutInflater	inflate	(ILandroid/view/ViewGroup;)Landroid/view/View;	LayoutInflater.java
+0x4c	android.view.LayoutInflater	inflate	(ILandroid/view/ViewGroup;Z)Landroid/view/View;	LayoutInflater.java
+0x50	android.view.LayoutInflater	inflate	(Lorg/xmlpull/v1/XmlPullParser;Landroid/view/ViewGroup;Z)Landroid/view/View;	LayoutInflater.java
+0x30	android.app.Instrumentation	callActivityOnCreate	(Landroid/app/Activity;Landroid/os/Bundle;)V	Instrumentation.java
+0x12c	android.view.View	needGlobalAttributesUpdate	(Z)V	View.java
+0x128	android.view.View	setFlags	(II)V	View.java
+0x124	android.view.View	setVisibility	(I)V	View.java
+0x11c	android.app.servertransaction.ResumeActivityItem	execute	(Landroid/app/ClientTransactionHandler;Landroid/os/IBinder;Landroid/app/servertransaction/PendingTransactionActions;)V	ResumeActivityItem.java
+0x14	android.os.Handler	dispatchMessage	(Landroid/os/Message;)V	Handler.java
+0x4	com.android.internal.os.RuntimeInit$MethodAndArgsCaller	run	()V	RuntimeInit.java
+0x10	android.os.Looper	loop	()V	Looper.java
+0x24	android.app.servertransaction.LaunchActivityItem	execute	(Landroid/app/ClientTransactionHandler;Landroid/os/IBinder;Landroid/app/servertransaction/PendingTransactionActions;)V	LaunchActivityItem.java
+0x13c	android.view.IWindowSession$Stub$Proxy	addToDisplay	(Landroid/view/IWindow;ILandroid/view/WindowManager$LayoutParams;IILandroid/graphics/Rect;Landroid/graphics/Rect;Landroid/graphics/Rect;Landroid/graphics/Rect;Landroid/view/DisplayCutout$ParcelableWrapper;Landroid/view/InputChannel;Landroid/view/InsetsState;)I	IWindowSession.java
+0x138	android.view.ViewRootImpl	setView	(Landroid/view/View;Landroid/view/WindowManager$LayoutParams;Landroid/view/View;)V	ViewRootImpl.java
+0xc	android.app.ActivityThread	main	([Ljava/lang/String;)V	ActivityThread.java
+0x2c	android.app.ActivityThread	performLaunchActivity	(Landroid/app/ActivityThread$ActivityClientRecord;Landroid/content/Intent;)Landroid/app/Activity;	ActivityThread.java
+0x110	android.app.ActivityThread	reportSizeConfigurations	(Landroid/app/ActivityThread$ActivityClientRecord;)V	ActivityThread.java
+0x28	android.app.ActivityThread	handleLaunchActivity	(Landroid/app/ActivityThread$ActivityClientRecord;Landroid/app/servertransaction/PendingTransactionActions;Landroid/content/Intent;)Landroid/app/Activity;	ActivityThread.java
+0x120	android.app.ActivityThread	handleResumeActivity	(Landroid/os/IBinder;ZZLjava/lang/String;)V	ActivityThread.java
+0x108	android.os.BinderProxy	transact	(ILandroid/os/Parcel;Landroid/os/Parcel;I)Z	BinderProxy.java
+0x10c	android.os.BinderProxy	transactNative	(ILandroid/os/Parcel;Landroid/os/Parcel;I)Z	BinderProxy.java
+0	com.android.internal.os.ZygoteInit	main	([Ljava/lang/String;)V	ZygoteInit.java
+0x100	android.app.Activity	getActivityOptions	()Landroid/app/ActivityOptions;	Activity.java
+0x34	android.app.Activity	performCreate	(Landroid/os/Bundle;)V	Activity.java
+0x38	android.app.Activity	performCreate	(Landroid/os/Bundle;Landroid/os/PersistableBundle;)V	Activity.java
+0xf4	android.os.Debug	getMemoryInfo	(Landroid/os/Debug$MemoryInfo;)V	Debug.java
+0x68	androidx.constraintlayout.widget.ConstraintLayout	<init>	(Landroid/content/Context;Landroid/util/AttributeSet;)V
+0x6c	b.e.a.j.g	<init>	()V
+0x70	b.e.a.e	<init>	()V
+0x78	b.e.a.b	<init>	(Lb/e/a/c;)V
+0xec	specto.core.internal.plugins.h$a$b	a	(Lspecto/proto/EntryGenerated$Entry$Builder;Lspecto/core/internal/plugins/f$a;)V
+0xe8	specto.core.internal.plugins.h$a$b	g	(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
+0x140	kotlinx.coroutines.p0	a	(JLe/b0/d;)Ljava/lang/Object;
+0x74	b.e.a.d	<init>	(Lb/e/a/c;)V
+0x44	androidx.appcompat.app.f	z	(I)V
+0xd4	specto.core.internal.plugins.h$a	l	(Ljava/lang/Object;)Ljava/lang/Object;
+0xd0	e.b0.j.a.a	j	(Ljava/lang/Object;)V
+0xfc	specto.core.internal.native.NativeControllerImpl	startConsuming	()V
+0xe0	specto.core.internal.plugins.f	f	(Ljava/lang/String;Le/e0/b/p;)Lspecto/proto/EntryGenerated$Entry;
+0xe4	specto.core.internal.plugins.f	h	(Lspecto/core/internal/plugins/i;Ljava/lang/String;Le/e0/b/p;)Lspecto/proto/EntryGenerated$Entry$Builder;
+0xd8	specto.core.internal.plugins.f	k	(Lspecto/core/internal/plugins/f;Ljava/lang/String;Le/e0/b/p;ILjava/lang/Object;)V
+0xdc	specto.core.internal.plugins.f	j	(Ljava/lang/String;Le/e0/b/p;)V
+0xf0	specto.core.internal.plugins.d	o	(Lspecto/proto/EntryGenerated$Entry$Builder;Lspecto/core/internal/plugins/f$a;)V
+0xf8	f.a.d.b$k	run	()V
+0x144	kotlinx.coroutines.e1	i	(JLkotlinx/coroutines/i;)V
+0xcc	kotlinx.coroutines.s0	run	()V
+0x150	kotlinx.coroutines.z0	T	(JLkotlinx/coroutines/z0$b;)I
+0x14c	kotlinx.coroutines.z0	S	(JLkotlinx/coroutines/z0$b;)V
+0x148	kotlinx.coroutines.z0	i	(JLkotlinx/coroutines/i;)V
+0x3c	specto.android.example.MainActivity	onCreate	(Landroid/os/Bundle;)V
+0x40	androidx.appcompat.app.c	setContentView	(I)V
+*end
+SLOW   „¾iÂ                 Þ#        ‚ø Þ#       ‚ø Þ#       ‚ø Þ#       ‚ø Þ#       ‚ø Þ#       ‚ø Þ#       ‚ø Þ#       ‚ø Þ#        ‚ø Þ#$       ‚ø Þ#(       ‚ø Þ#,       ‚ø Þ#0       ‚ø Þ#4       ‚ø Þ#8       ‚ø Þ#<       ‚ø Þ#@       ‚ø Þ#D       ‚ø Þ#H       ‚ø Þ#L       ‚ø Þ#P       ‚ø Þ#T       ‚ø Þ#X       ‚ø Þ#\       ‚ø Þ#`       ‚ø Þ#d       ‚ø Þ#h       ‚ø Þ#l       ‚ø Þ#p       ‚ø Þ#t       ‚ø Þ#x       ‚ø í#|       ûø í#€       ûø í#„       ûø í#ˆ       ûø î#|       
+ù î#€       
+ù î#Œ       
+ù î#       
+ù î#”       
+ù î#˜       
+ù ï#|       ù ï#€       ù ï#œ       ù ï#        ù ï#¤       ù ï#”       ù ï#˜       ù ð#|       $ù ð#€       $ù ð#¨       $ù ð#¬       $ù ð#       $ù ð#”       $ù ð#˜       $ù $|       gù $°       gù $´       gù $¸       gù $¼       gù $À       gù $Ä       gù $È       gù $|       yù $°       yù $´       yù $¸       yù $¼       yù $À       yù $Ä       yù $È       yù $|       ©ù $°       ©ù $´       ©ù $Ì       ©ù $Ð       ©ù $Ô       ©ù $Ø       ©ù $Ü       ©ù $à       ©ù $ä       ©ù $è       ©ù $ì       ©ù $ð       ©ù $ô       ©ù $|       Åù $°       Åù $´       Åù $¸       Åù $¼       Åù $À       Åù $Ä       Åù $È       Åù $|       Òù $°       Òù $´       Òù $¸       Òù $¼       Òù $À       Òù $Ä       Òù $È       Òù $|       ßù $°       ßù $´       ßù $ø       ßù $ü       ßù Þ#y   b$  ~' Þ#u   b$  ~' Þ#q   b$  ~' Þ#m   b$  ~' Þ#i   b$  ~' Þ#e   b$  ~' Þ#a   b$  ~' Þ#]   b$  ~' Þ#Y   b$  ~' Þ#U   b$  ~' Þ#Q   b$  ~' Þ#M   b$  ~' Þ#I   b$  ~' Þ#E   b$  ~' Þ#A   b$  ~' Þ#=   b$  ~' Þ#   b$  ~' Þ#  b$  ~' Þ#  b$  ~' Þ#  b$  ~' Þ#  ‘2  e] Þ#	  ‘2  e] Þ#  ‘2  e] Þ#  ‘2  e] Þ#9   ‘2  e] Þ#5   ‘2  e] Þ#1   ‘2  e] Þ#-   ‘2  e] Þ#  ‘2  e] Þ#  ‘2  e] Þ#  ‘2  e] Þ#  ‘2  e] Þ#  “]  ´š Þ#	  “]  ´š Þ#  “]  ´š Þ#  “]  ´š Þ#)   “]  ´š Þ#%   “]  ´š Þ#!   “]  ´š Þ#  “]  ´š Þ#  “]  ´š Þ#   “]  ´š Þ#$  “]  ´š Þ#(  “]  ´š Þ#,  “]  ´š Þ#-  Æs  tÇ Þ#)  Æs  tÇ Þ#%  Æs  tÇ Þ#0  Æs  tÇ Þ#4  Æs  tÇ Þ#8  Æs  tÇ Þ#<  Æs  tÇ Þ#  Æs  tÇ Þ#  Æs  tÇ $õ   eÂ  gÈ $ñ   eÂ  gÈ $í   eÂ  gÈ $é   eÂ  gÈ $å   eÂ  gÈ $á   eÂ  gÈ $Ý   eÂ  gÈ $Ù   eÂ  gÈ $@  eÂ  gÈ $D  eÂ  gÈ $H  eÂ  gÈ $L  eÂ  gÈ $P  eÂ  gÈ 
