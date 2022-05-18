@@ -73,8 +73,11 @@ var (
 		"com.google.android.",
 		"com.motorola.",
 		"java.",
+		"javax.",
 		"kotlin.",
 		"kotlinx.",
+		"retrofit2.",
+		"sun.",
 	}
 )
 
