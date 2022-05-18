@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math"
 	"sort"
+	"strconv"
 
 	"github.com/getsentry/vroom/internal/android"
 	"github.com/getsentry/vroom/internal/calltree"
@@ -607,7 +608,7 @@ func (data *profileMethodData) update(mainThreadID threadIDType, threadIDToThrea
 		}
 		threadName, found := threadIDToThreadName[threadID]
 		if !found {
-			return fmt.Errorf("androidtrace: %w: did not find thread name entry for thread ID %v", errorutil.ErrDataIntegrity, event.ThreadID)
+			threadName = strconv.FormatUint(event.ThreadID, 10)
 		}
 		data.threadNameToCallExitCount[threadName]++
 
