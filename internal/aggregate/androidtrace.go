@@ -94,7 +94,7 @@ func (aggregator *AndroidTraceAggregatorP) UpdateFromProfile(profile snubautil.P
 		mKey := methodIDToKey[methodID]
 		profileData, found := methodKeyToProfileData[mKey]
 		if !found {
-			profileData = newProfileMethodData()
+			profileData = newProfileMethodData(profile.ProfileID)
 		}
 		err := profileData.update(mainThreadID, threadIDToThreadName, event, mKey, i)
 		if err != nil {
@@ -394,9 +394,16 @@ func (a *AndroidTraceAggregatorP) computeFunctionCall(mwd *methodWithDuration) (
 		return BacktraceAggregateFunctionCall{}, fmt.Errorf("androidtrace: %w: did not find AndroidProfile method corresponding to method %v", errorutil.ErrDataIntegrity, mk)
 	}
 
-	packageName, simpleMethodName, err := android.ExtractPackageNameAndSimpleMethodNameFromAndroidMethod(&method)
-	if err != nil {
-		return BacktraceAggregateFunctionCall{}, err
+	var packageName, simpleMethodName string
+	if method.Signature == "" {
+		packageName = method.ClassName
+		simpleMethodName = method.Name
+	} else {
+		var err error
+		packageName, simpleMethodName, err = android.ExtractPackageNameAndSimpleMethodNameFromAndroidMethod(&method)
+		if err != nil {
+			return BacktraceAggregateFunctionCall{}, err
+		}
 	}
 
 	traceDataList, found := a.methodKeyToProfileData[mk]
@@ -410,11 +417,17 @@ func (a *AndroidTraceAggregatorP) computeFunctionCall(mwd *methodWithDuration) (
 		return BacktraceAggregateFunctionCall{}, fmt.Errorf("androidtrace: %w: the number of profiles associated with one method cannot be greater than the total number of traces", errorutil.ErrDataIntegrity)
 	}
 
+	profileIDs, found := a.methodKeyToProfileIDs[mk]
+	if !found {
+		return BacktraceAggregateFunctionCall{}, fmt.Errorf("androidtrace: %w: did not find profile IDs corresponding to method %v", errorutil.ErrDataIntegrity, mk)
+	}
+
 	var frequency []float64
 	var callCount float32
 
 	mainThreadCallCount := 0
 	threadNameToCallCount := make(map[string]int)
+	profileIDToThreadID := make(map[string]uint64)
 
 	for _, traceData := range traceDataList {
 		// For each trace where the method wasn't present a frequency value of 0 is added.
@@ -427,16 +440,13 @@ func (a *AndroidTraceAggregatorP) computeFunctionCall(mwd *methodWithDuration) (
 		for threadName, callCount := range traceData.threadNameToCallExitCount {
 			threadNameToCallCount[threadName] += callCount
 		}
+
+		profileIDToThreadID[traceData.profileID] = traceData.methodKeyToThreadID[mk]
 	}
 
 	threadNameToPercent := make(map[string]float32)
 	for threadName, threadCallCount := range threadNameToCallCount {
 		threadNameToPercent[threadName] = float32(threadCallCount) / callCount
-	}
-
-	profileIDs, found := a.methodKeyToProfileIDs[mk]
-	if !found {
-		return BacktraceAggregateFunctionCall{}, fmt.Errorf("androidtrace: %w: did not find profile IDs corresponding to method %v", errorutil.ErrDataIntegrity, mk)
 	}
 
 	var interactions []string
@@ -464,6 +474,7 @@ func (a *AndroidTraceAggregatorP) computeFunctionCall(mwd *methodWithDuration) (
 		Line:                int(method.SourceLine),
 		Path:                method.SourceFile,
 		ProfileIDs:          profileIDs,
+		ProfileIDToThreadID: profileIDToThreadID,
 		TransactionNames:    interactions,
 	}, nil
 }
@@ -509,9 +520,12 @@ type (
 
 	// Data about a given method from a single trace.
 	profileMethodData struct {
+		profileID string
+
 		// Used for processing.
-		enterRecords       map[threadIDType][]AndroidtraceRecord
-		methodsPerThreadID map[threadIDType][]methodInfoP
+		enterRecords        map[threadIDType][]AndroidtraceRecord
+		methodsPerThreadID  map[threadIDType][]methodInfoP
+		methodKeyToThreadID map[methodKey]uint64
 
 		// Results after processing is done.
 		callExitCount             int
@@ -560,11 +574,13 @@ func (mk methodKey) Less(other methodKey) bool {
 	return mk.signature < other.signature
 }
 
-func newProfileMethodData() profileMethodData {
+func newProfileMethodData(profileID string) profileMethodData {
 	return profileMethodData{
 		enterRecords:              make(map[threadIDType][]AndroidtraceRecord),
-		threadNameToCallExitCount: make(map[string]int),
+		methodKeyToThreadID:       make(map[methodKey]uint64),
 		methodsPerThreadID:        make(map[threadIDType][]methodInfoP),
+		profileID:                 profileID,
+		threadNameToCallExitCount: make(map[string]int),
 	}
 }
 
@@ -579,6 +595,7 @@ func keyP(method android.AndroidMethod) methodKey {
 // Profile events must be processed in order.
 func (data *profileMethodData) update(mainThreadID threadIDType, threadIDToThreadName map[threadIDType]string, event android.AndroidEvent, mk methodKey, index int) error {
 	threadID := threadIDType(event.ThreadID)
+	data.methodKeyToThreadID[mk] = event.ThreadID
 
 	switch event.Action {
 	case "Enter":

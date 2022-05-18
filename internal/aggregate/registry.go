@@ -21,10 +21,10 @@ func NewAggregatorFromPlatform(platform string) (AggregatorP, error) {
 		}, nil
 	case "android":
 		return &AndroidTraceAggregatorP{
-			numFunctions:           defaultNTopFunctions,
 			methodKeyToMethod:      make(map[methodKey]android.AndroidMethod),
 			methodKeyToProfileData: make(map[methodKey][]profileMethodData),
 			methodKeyToProfileIDs:  make(map[methodKey][]string),
+			numFunctions:           defaultNTopFunctions,
 			profileIDToInteraction: make(map[string]string),
 		}, nil
 	default:
