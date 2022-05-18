@@ -7,6 +7,7 @@ import (
 	"math/rand"
 	"sort"
 	"strconv"
+	"strings"
 
 	"github.com/rs/zerolog/log"
 
@@ -254,6 +255,9 @@ func (a *BacktraceAggregatorP) Result() (BacktraceAggregate, error) {
 	// Figure out which ones are the top functions
 	var functionsWithDurations []functionCallWithDurationP
 	for key, data := range bucketedFunctionData {
+		if strings.HasPrefix(data.symbol, "unknown") {
+			continue
+		}
 		functionsWithDurations = append(functionsWithDurations, functionCallWithDurationP{
 			key:           key,
 			data:          data,
@@ -275,10 +279,11 @@ func (a *BacktraceAggregatorP) Result() (BacktraceAggregate, error) {
 		return iFwd.key < jFwd.key
 	})
 
-	topFunctions := functionsWithDurations[:min(len(functionsWithDurations), a.n)]
+	topFunctionsCount := min(len(functionsWithDurations), a.n)
+	topFunctions := functionsWithDurations[:topFunctionsCount]
 
 	// Calculate aggregate statistics for every unique function call
-	var aggregateCalls []BacktraceAggregateFunctionCall
+	aggregateCalls := make([]BacktraceAggregateFunctionCall, 0, topFunctionsCount)
 	for _, call := range topFunctions {
 		data := call.data
 		frequency := make([]float64, 0, len(data.profileIDToCount))
