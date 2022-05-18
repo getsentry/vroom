@@ -242,12 +242,6 @@ func (a *AndroidTraceAggregatorP) Result() (BacktraceAggregate, error) {
 
 }
 
-type CallTreeInfo struct {
-	CallTree   *calltree.AggregateCallTree
-	ThreadName string
-	TraceID    string
-}
-
 type CallTreeInfoP struct {
 	CallTree   *calltree.AggregateCallTree
 	ThreadName string
