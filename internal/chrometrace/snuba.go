@@ -219,25 +219,13 @@ func androidSpeedscopeTraceFromProfile(profile *android.AndroidProfile) (output,
 	for _, method := range profile.Methods {
 		if len(method.InlineFrames) > 0 {
 			for _, m := range method.InlineFrames {
-				// HACK: the method name and signature should never be empty, find out why this is happening
-				if m.Name == "" || m.Signature == "" {
-					continue
-				}
-				packageName, _, err := android.ExtractPackageNameAndSimpleMethodNameFromAndroidMethod(&m)
-				if err != nil {
-					return output{}, err
-				}
-				fullMethodName, err := android.FullMethodNameFromAndroidMethod(&m)
-				if err != nil {
-					return output{}, err
-				}
 				methodIDToFrameIndex[method.ID] = append(methodIDToFrameIndex[method.ID], len(frames))
 				frames = append(frames, frame{
-					Name:          fullMethodName,
+					Name:          m.Name,
 					File:          m.SourceFile,
 					Line:          int(m.SourceLine),
-					IsApplication: !aggregate.IsAndroidSystemPackage(fullMethodName),
-					Image:         packageName,
+					IsApplication: !aggregate.IsAndroidSystemPackage(m.ClassName),
+					Image:         m.ClassName,
 				})
 
 			}

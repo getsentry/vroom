@@ -273,14 +273,16 @@ func (a *AndroidTraceAggregatorP) methodsToCallTrees() (map[string][]CallTreeInf
 			for _, mi := range methodsInfo {
 				method := a.methodKeyToMethod[mi.mk]
 
-				// HACK: the method name and signature should never be empty, find out why this is happening
-				if method.Name == "" || method.Signature == "" {
-					continue
-				}
-				packageName, simpleMethodName, err := android.ExtractPackageNameAndSimpleMethodNameFromAndroidMethod(&method)
-
-				if err != nil {
-					return nil, err
+				var packageName, simpleMethodName string
+				if method.Signature == "" {
+					packageName = method.ClassName
+					simpleMethodName = method.Name
+				} else {
+					var err error
+					packageName, simpleMethodName, err = android.ExtractPackageNameAndSimpleMethodNameFromAndroidMethod(&method)
+					if err != nil {
+						return nil, err
+					}
 				}
 
 				ct := &calltree.AggregateCallTree{
@@ -289,7 +291,6 @@ func (a *AndroidTraceAggregatorP) methodsToCallTrees() (map[string][]CallTreeInf
 					Line:   uint32(method.SourceLine),
 					Path:   method.SourceFile,
 				}
-
 				n := &node{
 					relativeStartUsec: uint32(mi.relativeStartNs),
 					relativeEndUsec:   uint32(mi.relativeEndNs),
