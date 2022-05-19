@@ -4,7 +4,7 @@
 *.dll
 *.so
 *.dylib
-vroom
+/vroom
 
 # Test binary, built with `go test -c`
 *.test
