@@ -4,8 +4,6 @@ set -euo pipefail
 
 image="us-central1-docker.pkg.dev/specto-dev/vroom/vroom:latest"
 
-docker build -f Dockerfile -t $image .
-docker push $image
 gcloud beta run deploy vroom \
   --concurrency 10 \
   --cpu 1 \

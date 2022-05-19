@@ -6,5 +6,9 @@ build:
 dev: build
 	./scripts/run.sh
 
+docker:
+	./build/package/docker/build.sh
+	./build/package/docker/publish.sh
+
 deploy:
-	./scripts/deploy.sh
+	./deployments/deploy.sh
