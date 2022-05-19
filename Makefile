@@ -5,3 +5,6 @@ build:
 
 dev: build
 	./scripts/run.sh
+
+deploy:
+	./scripts/deploy.sh
