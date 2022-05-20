@@ -1,0 +1,23 @@
+name: continuous-integration
+
+on:
+  pull_request:
+    branches:
+      - "*"
+    paths:
+      - 'internal/**'
+      - 'cmd/**'
+      - 'pkg/**'
+      - 'vendor/**'
+      - '.github/workflows/ci.yml'
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    - name: Run golang tests
+      uses: ./.github/actions/run-golang-tests
+

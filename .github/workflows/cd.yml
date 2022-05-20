@@ -1,0 +1,34 @@
+name: continuous-deployment
+
+on:
+  workflow_dispatch:
+    branches:
+      - master
+  push:
+    branches:
+      - master
+    paths:
+      - 'internal/**'
+      - 'cmd/**'
+      - 'pkg/**'
+      - 'vendor/**'
+      - '.github/workflows/cd.yml'
+
+jobs:
+  deploy-to-production:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    - name: Run golang tests
+      uses: ./.github/actions/run-golang-tests
+    - name: Set up gcloud
+      uses: ./.github/actions/authenticate-with-gcp
+      with:
+        gcp_service_account_email: ${{ secrets.GCP_SERVICE_ACCOUNT_EMAIL }}
+        gcp_service_account_key: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+    - name: Build Docker image
+      run: make docker
+    - name: Deploy to production
+      run: make deploy
