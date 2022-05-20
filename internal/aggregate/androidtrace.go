@@ -134,7 +134,7 @@ func (aggregator *AndroidTraceAggregatorP) UpdateFromProfile(profile snubautil.P
 	return nil
 }
 
-func (a *AndroidTraceAggregatorP) Result() (BacktraceAggregate, error) {
+func (a *AndroidTraceAggregatorP) Result() (Aggregate, error) {
 
 	// Only a subset of methods are usually returned, based on AndroidTraceAggregator.numFunctions. Duration is used to
 	// sort and filter them, so it is calculated first.
@@ -158,15 +158,15 @@ func (a *AndroidTraceAggregatorP) Result() (BacktraceAggregate, error) {
 	// Compute the rest of the metrics for the top methods only.
 	functionCalls, err := a.functionCalls(topMethods)
 	if err != nil {
-		return BacktraceAggregate{}, err
+		return Aggregate{}, err
 	}
 
 	methodsToCallTrees, err := a.methodsToCallTrees()
 	if err != nil {
-		return BacktraceAggregate{}, err
+		return Aggregate{}, err
 	}
 
-	callTrees := make(map[string][]AggregateCallTree, len(topMethods))
+	callTrees := make(map[string][]CallTree, len(topMethods))
 	for _, topMethod := range topMethods {
 		method := a.methodKeyToMethod[topMethod.methodKey]
 		topMethodPackageName, topMethodSimpleMethodName, err := android.ExtractPackageNameAndSimpleMethodNameFromAndroidMethod(&method)
@@ -187,7 +187,7 @@ func (a *AndroidTraceAggregatorP) Result() (BacktraceAggregate, error) {
 		for _, info := range mctData {
 			keys, err := cta.Update(info.CallTree, topMethodPackageName, topMethodSimpleMethodName)
 			if err != nil {
-				return BacktraceAggregate{}, err
+				return Aggregate{}, err
 			}
 
 			for _, key := range keys {
@@ -207,7 +207,7 @@ func (a *AndroidTraceAggregatorP) Result() (BacktraceAggregate, error) {
 			}
 		}
 
-		callTrees[topMethodKey] = make([]AggregateCallTree, 0, len(cta.UniqueRootCallTrees))
+		callTrees[topMethodKey] = make([]CallTree, 0, len(cta.UniqueRootCallTrees))
 		for id, tree := range cta.UniqueRootCallTrees {
 			var profileIDs []string
 			for profileID, _ := range treeKeyToProfileIDs[id] {
@@ -219,7 +219,7 @@ func (a *AndroidTraceAggregatorP) Result() (BacktraceAggregate, error) {
 				totalCount += count
 			}
 
-			callTrees[topMethodKey] = append(callTrees[topMethodKey], AggregateCallTree{
+			callTrees[topMethodKey] = append(callTrees[topMethodKey], CallTree{
 				Count:             totalCount,
 				ID:                id,
 				RootFrame:         newCallTreeFrameP(tree, nil, DisplayModeAndroid),
@@ -229,13 +229,13 @@ func (a *AndroidTraceAggregatorP) Result() (BacktraceAggregate, error) {
 		}
 	}
 
-	functionToCallTrees := make(map[string][]AggregateCallTree)
+	functionToCallTrees := make(map[string][]CallTree)
 	for topMethodKey, aggCallTrees := range callTrees {
-		sortAggregateCallTrees(aggCallTrees)
+		sortCallTrees(aggCallTrees)
 		functionToCallTrees[topMethodKey] = aggCallTrees
 	}
 
-	return BacktraceAggregate{
+	return Aggregate{
 		FunctionCalls:       functionCalls,
 		FunctionToCallTrees: functionToCallTrees,
 	}, nil
@@ -387,11 +387,11 @@ func (aggregator *AndroidTraceAggregatorP) methodsSortedByDuration() []*methodWi
 	return methodsWithDuration
 }
 
-func (a *AndroidTraceAggregatorP) computeFunctionCall(mwd *methodWithDuration) (BacktraceAggregateFunctionCall, error) {
+func (a *AndroidTraceAggregatorP) computeFunctionCall(mwd *methodWithDuration) (FunctionCall, error) {
 	mk := mwd.methodKey
 	method, found := a.methodKeyToMethod[mk]
 	if !found {
-		return BacktraceAggregateFunctionCall{}, fmt.Errorf("androidtrace: %w: did not find AndroidProfile method corresponding to method %v", errorutil.ErrDataIntegrity, mk)
+		return FunctionCall{}, fmt.Errorf("androidtrace: %w: did not find AndroidProfile method corresponding to method %v", errorutil.ErrDataIntegrity, mk)
 	}
 
 	var packageName, simpleMethodName string
@@ -402,24 +402,24 @@ func (a *AndroidTraceAggregatorP) computeFunctionCall(mwd *methodWithDuration) (
 		var err error
 		packageName, simpleMethodName, err = android.ExtractPackageNameAndSimpleMethodNameFromAndroidMethod(&method)
 		if err != nil {
-			return BacktraceAggregateFunctionCall{}, err
+			return FunctionCall{}, err
 		}
 	}
 
 	traceDataList, found := a.methodKeyToProfileData[mk]
 	if !found {
-		return BacktraceAggregateFunctionCall{}, fmt.Errorf("androidtrace: %w: did not find profile data list corresponding to method %v", errorutil.ErrDataIntegrity, mk)
+		return FunctionCall{}, fmt.Errorf("androidtrace: %w: did not find profile data list corresponding to method %v", errorutil.ErrDataIntegrity, mk)
 	}
 
 	// Number of profiles that contained this method.
 	methodProfileCount := len(traceDataList)
 	if methodProfileCount > a.profileCount {
-		return BacktraceAggregateFunctionCall{}, fmt.Errorf("androidtrace: %w: the number of profiles associated with one method cannot be greater than the total number of traces", errorutil.ErrDataIntegrity)
+		return FunctionCall{}, fmt.Errorf("androidtrace: %w: the number of profiles associated with one method cannot be greater than the total number of traces", errorutil.ErrDataIntegrity)
 	}
 
 	profileIDs, found := a.methodKeyToProfileIDs[mk]
 	if !found {
-		return BacktraceAggregateFunctionCall{}, fmt.Errorf("androidtrace: %w: did not find profile IDs corresponding to method %v", errorutil.ErrDataIntegrity, mk)
+		return FunctionCall{}, fmt.Errorf("androidtrace: %w: did not find profile IDs corresponding to method %v", errorutil.ErrDataIntegrity, mk)
 	}
 
 	var frequency []float64
@@ -463,7 +463,7 @@ func (a *AndroidTraceAggregatorP) computeFunctionCall(mwd *methodWithDuration) (
 		uniqueInteractions[i] = struct{}{}
 	}
 
-	return BacktraceAggregateFunctionCall{
+	return FunctionCall{
 		Key:                 computeMethodKey(packageName, simpleMethodName),
 		Image:               packageName,
 		Symbol:              simpleMethodName,
@@ -485,8 +485,8 @@ func computeMethodKey(packageName, simpleMethodName string) string {
 }
 
 // Should only be called after methodKeyToMethod, methodKeyToProfileIDs, and methodKeyToProfileData have been populated.
-func (aggregator *AndroidTraceAggregatorP) functionCalls(methodsWithDuration []*methodWithDuration) ([]BacktraceAggregateFunctionCall, error) {
-	functionCalls := make([]BacktraceAggregateFunctionCall, 0, len(methodsWithDuration))
+func (aggregator *AndroidTraceAggregatorP) functionCalls(methodsWithDuration []*methodWithDuration) ([]FunctionCall, error) {
+	functionCalls := make([]FunctionCall, 0, len(methodsWithDuration))
 
 	for _, methodWithDuration := range methodsWithDuration {
 		mwdProto, err := aggregator.computeFunctionCall(methodWithDuration)

@@ -140,7 +140,6 @@ func (a *BacktraceAggregatorP) UpdateFromProfile(profile snubautil.Profile) erro
 		for i, frame := range sample.Frames {
 			addresses[i] = frame.InstructionAddr
 
-			// populate symbolsByProfileID
 			var symbolName, imageName string
 			if frame.Function != "" {
 				symbolName = frame.Function
@@ -173,7 +172,7 @@ func (a *BacktraceAggregatorP) UpdateFromProfile(profile snubautil.Profile) erro
 	return nil
 }
 
-func (a *BacktraceAggregatorP) Result() (BacktraceAggregate, error) {
+func (a *BacktraceAggregatorP) Result() (Aggregate, error) {
 	a.bta.Finalize()
 
 	profileIDToSessionData := make(map[string]sessionDataP)
@@ -191,7 +190,7 @@ func (a *BacktraceAggregatorP) Result() (BacktraceAggregate, error) {
 				if currentSessionKey == "" {
 					currentSessionKey = callTree.SessionKey
 				} else if currentSessionKey != callTree.SessionKey {
-					return BacktraceAggregate{}, fmt.Errorf("backtrace: unexpected multiple session keys in the same trace: %q and %q", currentSessionKey, callTree.SessionKey)
+					return Aggregate{}, fmt.Errorf("backtrace: unexpected multiple session keys in the same trace: %q and %q", currentSessionKey, callTree.SessionKey)
 				}
 			}
 		}
@@ -202,7 +201,7 @@ func (a *BacktraceAggregatorP) Result() (BacktraceAggregate, error) {
 	}
 
 	if len(a.symbolsByProfileID) == 0 {
-		return BacktraceAggregate{}, nil
+		return Aggregate{}, nil
 	}
 
 	// Iterate through all calls from all traces and bucket them by image and symbol
@@ -283,7 +282,7 @@ func (a *BacktraceAggregatorP) Result() (BacktraceAggregate, error) {
 	topFunctions := functionsWithDurations[:topFunctionsCount]
 
 	// Calculate aggregate statistics for every unique function call
-	aggregateCalls := make([]BacktraceAggregateFunctionCall, 0, topFunctionsCount)
+	aggregateCalls := make([]FunctionCall, 0, topFunctionsCount)
 	for _, call := range topFunctions {
 		data := call.data
 		frequency := make([]float64, 0, len(data.profileIDToCount))
@@ -312,7 +311,7 @@ func (a *BacktraceAggregatorP) Result() (BacktraceAggregate, error) {
 			threadNameToPercent[name] = float32(count) / totalCount
 		}
 		sort.Strings(profileIDs)
-		aggregateCalls = append(aggregateCalls, BacktraceAggregateFunctionCall{
+		aggregateCalls = append(aggregateCalls, FunctionCall{
 			Image:               data.image,
 			Symbol:              data.symbol,
 			DurationNs:          quantileToAggQuantiles(data.durationsNs),
@@ -330,19 +329,19 @@ func (a *BacktraceAggregatorP) Result() (BacktraceAggregate, error) {
 
 	functionToCallTrees, err := a.computeFunctionsToCallTreesMap(topFunctions)
 	if err != nil {
-		return BacktraceAggregate{}, err
+		return Aggregate{}, err
 	}
 
-	return BacktraceAggregate{
+	return Aggregate{
 		FunctionCalls:       aggregateCalls,
 		FunctionToCallTrees: functionToCallTrees,
 	}, nil
 
 }
 
-func (a *BacktraceAggregatorP) computeFunctionsToCallTreesMap(fns []functionCallWithDurationP) (map[string][]AggregateCallTree, error) {
+func (a *BacktraceAggregatorP) computeFunctionsToCallTreesMap(fns []functionCallWithDurationP) (map[string][]CallTree, error) {
 	// Compute the call trees for each function separately
-	functionToCallTrees := make(map[string][]AggregateCallTree)
+	functionToCallTrees := make(map[string][]CallTree)
 	for _, fn := range fns {
 		trees, err := a.computeCallTreesForFunctionP(fn, a.symbolsByProfileID)
 		if err != nil {
@@ -354,7 +353,7 @@ func (a *BacktraceAggregatorP) computeFunctionsToCallTreesMap(fns []functionCall
 	return functionToCallTrees, nil
 }
 
-func (a *BacktraceAggregatorP) computeCallTreesForFunctionP(f functionCallWithDurationP, symbolsByProfileID map[string]map[string]Symbol) ([]AggregateCallTree, error) {
+func (a *BacktraceAggregatorP) computeCallTreesForFunctionP(f functionCallWithDurationP, symbolsByProfileID map[string]map[string]Symbol) ([]CallTree, error) {
 	// Create aggregate call trees using the symbolication results, then use
 	// a CallTreeAggregator to unique them.
 	agg := calltree.NewCallTreeAggregator()
@@ -372,10 +371,10 @@ func (a *BacktraceAggregatorP) computeCallTreesForFunctionP(f functionCallWithDu
 		// 25  libsystem_pthread.dylib             0x00007fff60c8e498 _pthread_wqthread + 313
 		// 26  libsystem_pthread.dylib             0x00007fff60c8d466 start_wqthread + 14
 		// 27  ???                                 0xffffffffffffffff 0x0 + 18446744073709551615
-		if tree.Address == "0xffffffffffffffff" && len(tree.Children) == 1 {
-			rootAct = newAggregateCallTreeP(tree.Children[0], symbolsByProfileID[tree.Children[0].ProfileID])
+		if tree.Address == "0xffffffffc" && len(tree.Children) == 1 {
+			rootAct = newCallTreeP(tree.Children[0], symbolsByProfileID[tree.Children[0].ProfileID])
 		} else {
-			rootAct = newAggregateCallTreeP(tree, symbolsByProfileID[tree.ProfileID])
+			rootAct = newCallTreeP(tree, symbolsByProfileID[tree.ProfileID])
 		}
 		keys, err := agg.Update(rootAct, f.data.image, f.data.symbol)
 		if err != nil {
@@ -401,7 +400,7 @@ func (a *BacktraceAggregatorP) computeCallTreesForFunctionP(f functionCallWithDu
 	}
 
 	// Convert call trees to the protocol buffer format
-	callTrees := make([]AggregateCallTree, 0, len(agg.UniqueRootCallTrees))
+	callTrees := make([]CallTree, 0, len(agg.UniqueRootCallTrees))
 	for key, tree := range agg.UniqueRootCallTrees {
 		var profileIDs []string
 		if uniqueprofileIDs, ok := treeKeyToprofileIDs[key]; ok {
@@ -417,7 +416,7 @@ func (a *BacktraceAggregatorP) computeCallTreesForFunctionP(f functionCallWithDu
 		}
 		examplarprofileIDs := selectExemplarTraceIDs(profileIDs, defaultNExemplarTraces)
 		sort.Strings(examplarprofileIDs)
-		callTrees = append(callTrees, AggregateCallTree{
+		callTrees = append(callTrees, CallTree{
 			ID:                key,
 			Count:             totalCount,
 			ThreadNameToCount: treeKeyToThreadCounts[key],
@@ -425,22 +424,22 @@ func (a *BacktraceAggregatorP) computeCallTreesForFunctionP(f functionCallWithDu
 			RootFrame:         newCallTreeFrameP(tree, nil, DisplayModeIOS),
 		})
 	}
-	sortAggregateCallTrees(callTrees)
+	sortCallTrees(callTrees)
 
 	return callTrees, nil
 }
 
-func sortAggregateCallTrees(pbs []AggregateCallTree) {
+func sortCallTrees(pbs []CallTree) {
 	sort.SliceStable(pbs, func(i, j int) bool {
 		return pbs[i].ID < pbs[j].ID
 	})
 }
 
-// newAggregateCallTree creates an `AggregateCallTree` from a `CallTree` by mapping
+// newCallTree creates an `CallTree` from a `CallTree` by mapping
 // the addresses in the call tree to the symbols from the batch symbolication
 // response. This function does NOT perform recursive creation of the aggregate
 // call trees, it only creates a single node.
-func newAggregateCallTreeP(root *calltree.CallTreeP, symbols map[string]Symbol) (act *calltree.AggregateCallTree) {
+func newCallTreeP(root *calltree.CallTreeP, symbols map[string]Symbol) (act *calltree.AggregateCallTree) {
 	var totalDurationsNs, selfDurationsNs []float64
 	rootDuration := calltree.TotalDurationP(root)
 	if root.EndTimeNs != calltree.NoEndTime {
@@ -454,7 +453,7 @@ func newAggregateCallTreeP(root *calltree.CallTreeP, symbols map[string]Symbol) 
 		SelfDurationsNs:  selfDurationsNs,
 	}
 	for _, child := range root.Children {
-		act.Children = append(act.Children, newAggregateCallTreeP(child, symbols))
+		act.Children = append(act.Children, newCallTreeP(child, symbols))
 	}
 	symbol, ok := symbols[root.Address]
 	if !ok {

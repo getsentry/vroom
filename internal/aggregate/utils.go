@@ -40,7 +40,7 @@ func newCallTreeFrameP(root *calltree.AggregateCallTree, hashOfParents []byte, d
 	case DisplayModeIOS:
 		image = root.Image
 		symbol = root.Symbol
-		isApplicationSymbol = IsIOSApplicationImage(root.Image)
+		isApplicationSymbol = IsIOSApplicationImage(root.Path)
 	case DisplayModeAndroid:
 		image = root.Image
 		symbol = root.Symbol
@@ -127,7 +127,7 @@ func removeDurationValuesFromFrameP(f Frame) {
 	}
 }
 
-func RemoveDurationValuesFromCallTreesP(callTrees []AggregateCallTree) {
+func RemoveDurationValuesFromCallTreesP(callTrees []CallTree) {
 	for _, ct := range callTrees {
 		removeDurationValuesFromFrameP(ct.RootFrame)
 	}
@@ -138,24 +138,19 @@ func RemoveDurationValuesFromCallTreesP(callTrees []AggregateCallTree) {
 /** A container type to group aggregations by app_version, interaction and
  * entry_type. **/
 type AggregationResult struct {
-	AppVersion      string             `json:"app_version,omitempty"`
-	TransactionName string             `json:"interaction,omitempty"`
-	EntityType      string             `json:"entry_type,omitempty"`
-	RowCount        uint32             `json:"row_count"`
-	Aggregation     BacktraceAggregate `json:"aggregation"`
+	AppVersion      string    `json:"app_version,omitempty"`
+	TransactionName string    `json:"interaction,omitempty"`
+	EntityType      string    `json:"entry_type,omitempty"`
+	RowCount        uint32    `json:"row_count"`
+	Aggregation     Aggregate `json:"aggregation"`
 }
 
-type CallTreeData struct {
-	FunctionCall BacktraceAggregateFunctionCall `json:"function_call"`
-	CallTrees    []AggregateCallTree            `json:"call_trees"`
+type Aggregate struct {
+	FunctionCalls       []FunctionCall        `json:"function_call"`
+	FunctionToCallTrees map[string][]CallTree `json:"function_to_call_trees"`
 }
 
-type BacktraceAggregate struct {
-	FunctionCalls       []BacktraceAggregateFunctionCall `json:"function_call"`
-	FunctionToCallTrees map[string][]AggregateCallTree   `json:"function_to_call_trees"`
-}
-
-type BacktraceAggregateFunctionCall struct {
+type FunctionCall struct {
 	// The name of the binary/library that the function is in
 	Image string `json:"image"`
 	// String representation of the function name
@@ -197,7 +192,7 @@ type BacktraceAggregateFunctionCall struct {
 	TransactionNames []string `json:"transaction_names"`
 }
 
-type AggregateCallTree struct {
+type CallTree struct {
 	// An identifier that uniquely identifies the pattern for this call tree,
 	// which is computed as an MD5 hash over the image & symbol for each of
 	// the frames, recursively.
@@ -240,11 +235,11 @@ type Frame struct {
 
 	// Path is the path to the original source file that contains the
 	// function, if that information is available, otherwise "".
-	Path string `json:"path"`
+	Path string `json:"-"`
 
 	// Wall time duration for the execution of the function and its children.
 	TotalDurationNs       Quantiles `json:"total_duration_ns"`
-	TotalDurationNsValues []float64 `json:"total_duration_ns_values"`
+	TotalDurationNsValues []float64 `json:"-"`
 
 	// Child frames of this frame.
 	Children []Frame `json:"children"`
@@ -252,7 +247,11 @@ type Frame struct {
 	// Wall time duration for the execution of the function, excluding its
 	// children.
 	SelfDurationNs       Quantiles `json:"self_duration_ns"`
-	SelfDurationNsValues []float64 `json:"self_duration_ns_values"`
+	SelfDurationNsValues []float64 `json:"-"`
+}
+
+func (f Frame) Identifier() string {
+	return fmt.Sprintf("%s:%s", calltree.ImageBaseName(f.Image), f.Symbol)
 }
 
 type Quantiles struct {

@@ -12,7 +12,7 @@ type AggregatorP interface {
 	UpdateFromProfile(profile snubautil.Profile) error
 
 	// Result returns the final aggregated result as a BacktraceAggregate.
-	Result() (BacktraceAggregate, error)
+	Result() (Aggregate, error)
 
 	SetTopNFunctions(n int)
 }

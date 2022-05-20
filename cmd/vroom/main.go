@@ -16,7 +16,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/julienschmidt/httprouter"
 	"github.com/kelseyhightower/envconfig"
-	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
 	"github.com/getsentry/vroom/internal/aggregate"
@@ -58,6 +57,7 @@ func (env *environment) newRouter() (*httprouter.Router, error) {
 	router.Handler(http.MethodGet, "/organizations/:organization_id/projects/:project_id/functions_call_trees", compress(http.HandlerFunc(env.getFunctionsCallTrees)))
 	router.Handler(http.MethodGet, "/organizations/:organization_id/projects/:project_id/functions_versions", compress(http.HandlerFunc(env.getFunctions)))
 	router.Handler(http.MethodGet, "/organizations/:organization_id/projects/:project_id/profiles/:profile_id", compress(http.HandlerFunc(env.getProfile)))
+	router.Handler(http.MethodGet, "/organizations/:organization_id/projects/:project_id/profiles/:profile_id/call_tree", compress(http.HandlerFunc(env.getProfileCallTree)))
 
 	return router, nil
 }
@@ -137,10 +137,6 @@ func (env *environment) getProfile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	logger := log.With().Uint64("project_id", organizationID).Uint64("project_id", projectID).Str("profile_id", profileID).Logger()
-	getChromeTraceDataFromSnuba(r.Context(), env, w, r, logger, organizationID, projectID, profileID)
-}
-
-func getChromeTraceDataFromSnuba(ctx context.Context, env *environment, w http.ResponseWriter, r *http.Request, logger zerolog.Logger, organizationID, projectID uint64, profileID string) {
 	sqb := snubautil.SnubaQueryBuilder{
 		Endpoint: env.SnubaHost,
 		Port:     env.SnubaPort,
@@ -307,6 +303,11 @@ func (env *environment) getFilters(w http.ResponseWriter, r *http.Request) {
 	_, _ = w.Write(b)
 }
 
+type GetFunctionsCallTreesResponse struct {
+	FunctionCall aggregate.FunctionCall `json:"function_call"`
+	CallTrees    []aggregate.CallTree   `json:"call_trees"`
+}
+
 func (env *environment) getFunctionsCallTrees(w http.ResponseWriter, r *http.Request) {
 	ps := httprouter.ParamsFromContext(r.Context())
 	rawOrganizationID := ps.ByName("organization_id")
@@ -380,36 +381,34 @@ func (env *environment) getFunctionsCallTrees(w http.ResponseWriter, r *http.Req
 		logger.Err(err).Msg("aggregation: error while trying to compute the aggregation")
 	}
 
-	var callTreeData aggregate.CallTreeData
+	var response GetFunctionsCallTreesResponse
 	// Linear search the list of functions for the one matching the key
 	// because N is small (less than 100 elements).
 	for _, f := range aggRes.Aggregation.FunctionCalls {
 		if f.Key == p["key"] {
-			callTreeData.FunctionCall = f
+			response.FunctionCall = f
 			break
 		}
 	}
 	if trees, ok := aggRes.Aggregation.FunctionToCallTrees[p["key"]]; ok {
 		aggregate.RemoveDurationValuesFromCallTreesP(trees)
-		callTreeData.CallTrees = trees
+		response.CallTrees = trees
 	}
-	if len(callTreeData.CallTrees) == 0 {
+	if len(response.CallTrees) == 0 {
 		logger.Error().Msg("aggregate: no call trees")
 	}
-
-	b, err := json.Marshal(callTreeData)
+	b, err := json.Marshal(response)
 	if err != nil {
 		logger.Err(err).Msg("aggregate: error marshaling response to json")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-
 	w.Header().Set("Content-Type", "application/json")
 	_, _ = w.Write(b)
 }
 
 type FunctionCallsData struct {
-	FunctionCalls []aggregate.BacktraceAggregateFunctionCall
+	FunctionCalls []aggregate.FunctionCall
 }
 
 type VersionSeriesData struct {
