@@ -68,12 +68,12 @@ func main() {
 
 	env, err := newEnvironment()
 	if err != nil {
-		log.Fatal().Err(err).Msg("aggregate: error setting up environment")
+		log.Fatal().Err(err).Msg("error setting up environment")
 	}
 
 	router, err := env.newRouter()
 	if err != nil {
-		log.Fatal().Err(err).Msg("aggregate: error setting up the router")
+		log.Fatal().Err(err).Msg("error setting up the router")
 	}
 
 	server := http.Server{
@@ -91,7 +91,7 @@ func main() {
 		defer cancel()
 
 		if err := server.Shutdown(cctx); err != nil {
-			log.Err(err).Msg("aggregate: error shutting down server")
+			log.Err(err).Msg("error shutting down server")
 		}
 
 		close(waitForShutdown)
@@ -100,14 +100,14 @@ func main() {
 	log.Info().Str("port", env.Port).Msg("starting server")
 	err = server.ListenAndServe()
 	if err != nil && err != http.ErrServerClosed {
-		log.Err(err).Msg("aggregate: server failed")
+		log.Err(err).Msg("server failed")
 	}
 
 	<-waitForShutdown
 
 	// Shutdown the rest of the environment after the HTTP connections are closed
 	if err := env.shutdown(); err != nil {
-		log.Err(err).Msg("aggregate: error tearing down environment")
+		log.Err(err).Msg("error tearing down environment")
 	}
 }
 
@@ -116,7 +116,7 @@ func (env *environment) getProfile(w http.ResponseWriter, r *http.Request) {
 	rawOrganizationID := ps.ByName("organization_id")
 	organizationID, err := strconv.ParseUint(rawOrganizationID, 10, 64)
 	if err != nil {
-		log.Err(err).Str("raw_organization_id", rawOrganizationID).Msg("aggregate: invalid organization_id")
+		log.Err(err).Str("raw_organization_id", rawOrganizationID).Msg("invalid organization_id")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -124,7 +124,7 @@ func (env *environment) getProfile(w http.ResponseWriter, r *http.Request) {
 	rawProjectID := ps.ByName("project_id")
 	projectID, err := strconv.ParseUint(rawProjectID, 10, 64)
 	if err != nil {
-		log.Err(err).Str("raw_project_id", rawProjectID).Msg("aggregate: invalid project_id")
+		log.Err(err).Str("raw_project_id", rawProjectID).Msg("invalid project_id")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -132,7 +132,7 @@ func (env *environment) getProfile(w http.ResponseWriter, r *http.Request) {
 	profileID := ps.ByName("profile_id")
 	_, err = uuid.Parse(profileID)
 	if err != nil {
-		log.Err(err).Str("raw_profile_id", profileID).Msg("aggregate: invalid profile_id")
+		log.Err(err).Str("raw_profile_id", profileID).Msg("invalid profile_id")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -149,7 +149,7 @@ func (env *environment) getProfile(w http.ResponseWriter, r *http.Request) {
 		if errors.Is(err, snubautil.ErrProfileNotFound) {
 			w.WriteHeader(http.StatusNotFound)
 		} else {
-			logger.Err(err).Msg("aggregate: cannot fetch profile data from snuba")
+			logger.Err(err).Msg("cannot fetch profile data from snuba")
 			w.WriteHeader(http.StatusInternalServerError)
 		}
 		return
@@ -163,7 +163,7 @@ func (env *environment) getProfile(w http.ResponseWriter, r *http.Request) {
 		b, err = chrometrace.SpeedscopeFromSnuba(profile)
 	}
 	if err != nil {
-		logger.Err(err).Msg("aggregate: error creating chrome trace data")
+		logger.Err(err).Msg("error creating chrome trace data")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -203,7 +203,7 @@ func (env *environment) getProfiles(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Err(err).
 			Str("raw_organization_id", rawOrganizationID).
-			Msg("aggregate: organization_id path parameter is malformed and could not be parsed")
+			Msg("organization_id path parameter is malformed and could not be parsed")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -216,7 +216,7 @@ func (env *environment) getProfiles(w http.ResponseWriter, r *http.Request) {
 	logger := log.With().Uint64("organization_id", organizationID).Logger()
 	sqb, err := snubaQueryBuilderFromRequest(r.URL.Query())
 	if err != nil {
-		logger.Err(err).Msg("aggregate: can't build snuba query from request")
+		logger.Err(err).Msg("can't build snuba query from request")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -229,7 +229,7 @@ func (env *environment) getProfiles(w http.ResponseWriter, r *http.Request) {
 
 	profiles, err := snubautil.GetProfiles(sqb, false)
 	if err != nil {
-		logger.Err(err).Msg("aggregate: error retrieving organization profiles")
+		logger.Err(err).Msg("error retrieving organization profiles")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -244,7 +244,7 @@ func (env *environment) getProfiles(w http.ResponseWriter, r *http.Request) {
 
 	b, err := json.Marshal(resp)
 	if err != nil {
-		logger.Err(err).Msg("aggregate: error marshaling response to json")
+		logger.Err(err).Msg("error marshaling response to json")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -263,7 +263,7 @@ func (env *environment) getFilters(w http.ResponseWriter, r *http.Request) {
 	rawOrganizationID := ps.ByName("organization_id")
 	organizationID, err := strconv.ParseUint(rawOrganizationID, 10, 64)
 	if err != nil {
-		log.Err(err).Str("raw_organization_id", rawOrganizationID).Msg("aggregate: could not parse organization_id path parameter")
+		log.Err(err).Str("raw_organization_id", rawOrganizationID).Msg("could not parse organization_id path parameter")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -271,7 +271,7 @@ func (env *environment) getFilters(w http.ResponseWriter, r *http.Request) {
 	logger := log.With().Uint64("organization_id", organizationID).Logger()
 	sqb, err := snubaQueryBuilderFromRequest(r.URL.Query())
 	if err != nil {
-		logger.Err(err).Msg("aggregate: can't build snuba query from request")
+		logger.Err(err).Msg("can't build snuba query from request")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -284,7 +284,7 @@ func (env *environment) getFilters(w http.ResponseWriter, r *http.Request) {
 
 	filters, err := snubautil.GetFilters(sqb)
 	if err != nil {
-		logger.Err(err).Msg("aggregate: error retrieving organization profiles")
+		logger.Err(err).Msg("error retrieving organization profiles")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -296,7 +296,7 @@ func (env *environment) getFilters(w http.ResponseWriter, r *http.Request) {
 
 	b, err := json.Marshal(response)
 	if err != nil {
-		logger.Err(err).Msg("aggregate: error marshaling response to json")
+		logger.Err(err).Msg("error marshaling response to json")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -316,7 +316,7 @@ func (env *environment) getFunctionsCallTrees(w http.ResponseWriter, r *http.Req
 	if err != nil {
 		log.Err(err).
 			Str("raw_organization_id", rawOrganizationID).
-			Msg("aggregate: organization_id path parameter is malformed and cannot be parsed")
+			Msg("organization_id path parameter is malformed and cannot be parsed")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -326,7 +326,7 @@ func (env *environment) getFunctionsCallTrees(w http.ResponseWriter, r *http.Req
 	if err != nil {
 		log.Err(err).
 			Str("raw_project_id", rawProjectID).
-			Msg("aggregate: project_id path parameter is malformed and cannot be parsed")
+			Msg("project_id path parameter is malformed and cannot be parsed")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -341,7 +341,7 @@ func (env *environment) getFunctionsCallTrees(w http.ResponseWriter, r *http.Req
 
 	sqb, err := snubaQueryBuilderFromRequest(r.URL.Query())
 	if err != nil {
-		logger.Err(err).Msg("aggregate: can't build snuba query from request")
+		logger.Err(err).Msg("can't build snuba query from request")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -358,7 +358,7 @@ func (env *environment) getFunctionsCallTrees(w http.ResponseWriter, r *http.Req
 
 	profiles, err := snubautil.GetProfiles(sqb, true)
 	if err != nil {
-		logger.Err(err).Msg("aggregate: error retrieving the profiles")
+		logger.Err(err).Msg("error retrieving the profiles")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -370,7 +370,7 @@ func (env *environment) getFunctionsCallTrees(w http.ResponseWriter, r *http.Req
 		if err != nil {
 			logger.Err(err).
 				Str("top_n_functions", topN[0]).
-				Msg("aggregate: malformed query parameter cannot be parsed")
+				Msg("malformed query parameter cannot be parsed")
 			w.WriteHeader(http.StatusBadRequest)
 		} else {
 			topNFunctions = i
@@ -396,11 +396,11 @@ func (env *environment) getFunctionsCallTrees(w http.ResponseWriter, r *http.Req
 		response.CallTrees = trees
 	}
 	if len(response.CallTrees) == 0 {
-		logger.Error().Msg("aggregate: no call trees")
+		logger.Error().Msg("no call trees")
 	}
 	b, err := json.Marshal(response)
 	if err != nil {
-		logger.Err(err).Msg("aggregate: error marshaling response to json")
+		logger.Err(err).Msg("error marshaling response to json")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -423,7 +423,7 @@ func (env *environment) getFunctions(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Err(err).
 			Str("raw_organization_id", rawOrganizationID).
-			Msg("aggregate: organization_id path parameter is malformed and cannot be parsed")
+			Msg("organization_id path parameter is malformed and cannot be parsed")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -433,7 +433,7 @@ func (env *environment) getFunctions(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Err(err).
 			Str("raw_project_id", rawProjectID).
-			Msg("aggregate: project_id path parameter is malformed and cannot be parsed")
+			Msg("project_id path parameter is malformed and cannot be parsed")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -453,7 +453,7 @@ func (env *environment) getFunctions(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			logger.Err(err).
 				Str("top_n_functions", topN[0]).
-				Msg("aggregate: malformed query parameter cannot be parsed")
+				Msg("malformed query parameter cannot be parsed")
 			w.WriteHeader(http.StatusBadRequest)
 		} else {
 			topNFunctions = i
@@ -462,7 +462,7 @@ func (env *environment) getFunctions(w http.ResponseWriter, r *http.Request) {
 
 	sqb, err := snubaQueryBuilderFromRequest(r.URL.Query())
 	if err != nil {
-		logger.Err(err).Msg("aggregate: can't build snuba query from request")
+		logger.Err(err).Msg("can't build snuba query from request")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -489,7 +489,7 @@ func (env *environment) getFunctions(w http.ResponseWriter, r *http.Request) {
 		sqb.WhereConditions[len(sqb.WhereConditions)-1] = fmt.Sprintf("(version_name = '%s' AND version_code = '%s')", snubautil.Escape(versionBuild.Name), snubautil.Escape(versionBuild.Code))
 		profiles, err := snubautil.GetProfiles(sqb, true)
 		if err != nil {
-			logger.Err(err).Msg("aggregate: error retrieving the profiles")
+			logger.Err(err).Msg("error retrieving the profiles")
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -503,7 +503,7 @@ func (env *environment) getFunctions(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			logger.Err(err).
 				Str("version", version).
-				Msg("aggregate: error while running the aggregation")
+				Msg("error while running the aggregation")
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -519,7 +519,7 @@ func (env *environment) getFunctions(w http.ResponseWriter, r *http.Request) {
 
 	b, err := json.Marshal(versionData)
 	if err != nil {
-		logger.Err(err).Msg("aggregate: error marshaling response to json")
+		logger.Err(err).Msg("error marshaling response to json")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}

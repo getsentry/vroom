@@ -113,7 +113,7 @@ func (a *BacktraceAggregatorP) UpdateFromProfile(profile snubautil.Profile) erro
 		case uint64:
 			threadID = v
 		default:
-			return fmt.Errorf("aggregate: unknown threadID value type: %T for %v", v, v)
+			return fmt.Errorf("unknown threadID value type: %T for %v", v, v)
 		}
 		var relativeTimestampNS uint64
 		switch v := sample.RelativeTimestampNS.(type) {
@@ -127,7 +127,7 @@ func (a *BacktraceAggregatorP) UpdateFromProfile(profile snubautil.Profile) erro
 		case uint64:
 			relativeTimestampNS = v
 		default:
-			return fmt.Errorf("aggregate: unknown relativeTimestampNS value type: %T for %v", v, v)
+			return fmt.Errorf("unknown relativeTimestampNS value type: %T for %v", v, v)
 		}
 		var threadName string
 		metadata, ok := iosProfile.ThreadMetadata[strconv.FormatUint(threadID, 10)]

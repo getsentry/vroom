@@ -28,6 +28,6 @@ func NewAggregatorFromPlatform(platform string) (AggregatorP, error) {
 			profileIDToInteraction: make(map[string]string),
 		}, nil
 	default:
-		return nil, fmt.Errorf("aggregate: platform <%s> not supported", platform)
+		return nil, fmt.Errorf("platform <%s> not supported", platform)
 	}
 }

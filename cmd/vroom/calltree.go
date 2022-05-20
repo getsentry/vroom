@@ -23,7 +23,7 @@ func (env *environment) getProfileCallTree(w http.ResponseWriter, r *http.Reques
 	if err != nil {
 		log.Err(err).
 			Str("raw_organization_id", rawOrganizationID).
-			Msg("aggregate: organization_id path parameter is malformed and cannot be parsed")
+			Msg("organization_id path parameter is malformed and cannot be parsed")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -33,7 +33,7 @@ func (env *environment) getProfileCallTree(w http.ResponseWriter, r *http.Reques
 	if err != nil {
 		log.Err(err).
 			Str("raw_project_id", rawProjectID).
-			Msg("aggregate: project_id path parameter is malformed and cannot be parsed")
+			Msg("project_id path parameter is malformed and cannot be parsed")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -49,7 +49,7 @@ func (env *environment) getProfileCallTree(w http.ResponseWriter, r *http.Reques
 
 	profiles, err := snubautil.GetProfile(organizationID, projectID, profileID, sqb)
 	if err != nil {
-		logger.Err(err).Msg("aggregate: error retrieving the profiles")
+		logger.Err(err).Msg("error retrieving the profiles")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -61,7 +61,7 @@ func (env *environment) getProfileCallTree(w http.ResponseWriter, r *http.Reques
 
 	merged, err := aggregate.MergeAllCallTreesInBacktrace(&aggRes.Aggregation)
 	if err != nil {
-		log.Error().Err(err).Msg("aggregate: error merging single trace aggregation")
+		log.Error().Err(err).Msg("error merging single trace aggregation")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -70,7 +70,7 @@ func (env *environment) getProfileCallTree(w http.ResponseWriter, r *http.Reques
 		CallTrees: merged,
 	})
 	if err != nil {
-		logger.Err(err).Msg("aggregate: error marshaling response to json")
+		logger.Err(err).Msg("error marshaling response to json")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}

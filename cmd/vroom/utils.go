@@ -140,7 +140,7 @@ func GetVersionBuildFromAppVersion(appVersion string) (VersionBuild, error) {
 		s := appVersionRegex.FindStringSubmatch(appVersion)
 		return VersionBuild{Name: s[1], Code: s[2]}, nil
 	}
-	return VersionBuild{}, fmt.Errorf("aggregate: cannot parse application_versions: %v", appVersion)
+	return VersionBuild{}, fmt.Errorf("cannot parse application_versions: %v", appVersion)
 }
 
 func snubaProfileToProfileResult(profile snubautil.Profile) ProfileResult {

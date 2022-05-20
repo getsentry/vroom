@@ -84,7 +84,7 @@ func iosSpeedscopeTraceFromProfile(profile *aggregate.IosProfile) (output, error
 		case uint64:
 			threadID = v
 		default:
-			return output{}, fmt.Errorf("aggregate: unknown threadID value type: %T for %v", v, v)
+			return output{}, fmt.Errorf("unknown threadID value type: %T for %v", v, v)
 		}
 		var relativeTimestampNS uint64
 		switch v := sample.RelativeTimestampNS.(type) {
@@ -99,7 +99,7 @@ func iosSpeedscopeTraceFromProfile(profile *aggregate.IosProfile) (output, error
 		case uint64:
 			relativeTimestampNS = v
 		default:
-			return output{}, fmt.Errorf("aggregate: unknown relativeTimestampNS value type: %T for %v", v, v)
+			return output{}, fmt.Errorf("unknown relativeTimestampNS value type: %T for %v", v, v)
 		}
 		sampProfile, ok := threadIDToProfile[threadID]
 		if !ok {

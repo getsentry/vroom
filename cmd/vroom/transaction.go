@@ -34,14 +34,14 @@ func (env *environment) getTransactions(w http.ResponseWriter, r *http.Request) 
 	rawOrganizationID := ps.ByName("organization_id")
 	organizationID, err := strconv.ParseUint(rawOrganizationID, 10, 64)
 	if err != nil {
-		log.Err(err).Str("raw_organization_id", rawOrganizationID).Msg("aggregate: invalid organization_id")
+		log.Err(err).Str("raw_organization_id", rawOrganizationID).Msg("invalid organization_id")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 	logger := log.With().Uint64("organization_id", organizationID).Logger()
 	sqb, err := snubaQueryBuilderFromRequest(r.URL.Query())
 	if err != nil {
-		logger.Err(err).Msg("aggregate: cannot build snuba query from request")
+		logger.Err(err).Msg("cannot build snuba query from request")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -54,7 +54,7 @@ func (env *environment) getTransactions(w http.ResponseWriter, r *http.Request) 
 	)
 	transactions, err := snubautil.GetTransactions(sqb)
 	if err != nil {
-		logger.Err(err).Msg("aggregate: cannot fetch profile data from snuba")
+		logger.Err(err).Msg("cannot fetch profile data from snuba")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -66,7 +66,7 @@ func (env *environment) getTransactions(w http.ResponseWriter, r *http.Request) 
 	}
 	b, err := json.Marshal(tr)
 	if err != nil {
-		logger.Err(err).Msg("aggregate: error creating chrome trace data")
+		logger.Err(err).Msg("error creating chrome trace data")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
