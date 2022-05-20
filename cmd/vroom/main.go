@@ -137,7 +137,7 @@ func (env *environment) getProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	logger := log.With().Uint64("project_id", organizationID).Uint64("project_id", projectID).Str("profile_id", profileID).Logger()
+	logger := log.With().Uint64("organization_id", organizationID).Uint64("project_id", projectID).Str("profile_id", profileID).Logger()
 	sqb := snubautil.SnubaQueryBuilder{
 		Endpoint: env.SnubaHost,
 		Port:     env.SnubaPort,
