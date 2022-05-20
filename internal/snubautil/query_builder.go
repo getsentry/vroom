@@ -40,6 +40,15 @@ type (
 		DryRun     bool   `json:"dry_run"`
 		Legacy     bool   `json:"legacy"`
 	}
+
+	ErrorResponse struct {
+		Error Error `json:"error"`
+	}
+
+	Error struct {
+		Type    string `json:"type"`
+		Message string `json:"message"`
+	}
 )
 
 func (sqb *SnubaQueryBuilder) URL() (string, error) {
@@ -109,8 +118,9 @@ func (sqb *SnubaQueryBuilder) Do() (io.ReadCloser, error) {
 		return nil, err
 	}
 	if resp.StatusCode >= 400 && resp.StatusCode <= 599 {
-		b, _ := io.ReadAll(resp.Body)
-		return nil, fmt.Errorf("error while trying to query snuba. Http status code: %d. Snuba error: %s", resp.StatusCode, string(b))
+		var errResponse ErrorResponse
+		_ = json.NewDecoder(resp.Body).Decode(&errResponse)
+		return nil, fmt.Errorf("error while trying to query snuba. http status: %d, type: %s, message: %s", resp.StatusCode, errResponse.Error.Type, errResponse.Error.Message)
 	}
 
 	return resp.Body, nil
