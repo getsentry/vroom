@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/getsentry/vroom/internal/aggregate"
+	"github.com/getsentry/vroom/internal/httputil"
 	"github.com/getsentry/vroom/internal/snubautil"
 	"github.com/julienschmidt/httprouter"
 	"github.com/maruel/natural"
@@ -30,6 +31,10 @@ type (
 )
 
 func (env *environment) getTransactions(w http.ResponseWriter, r *http.Request) {
+	_, logger, ok := httputil.GetRequiredQueryParameters(w, r, "project_id", "start", "end")
+	if !ok {
+		return
+	}
 	ps := httprouter.ParamsFromContext(r.Context())
 	rawOrganizationID := ps.ByName("organization_id")
 	organizationID, err := strconv.ParseUint(rawOrganizationID, 10, 64)
@@ -38,7 +43,7 @@ func (env *environment) getTransactions(w http.ResponseWriter, r *http.Request) 
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	logger := log.With().Uint64("organization_id", organizationID).Logger()
+	logger = logger.With().Uint64("organization_id", organizationID).Logger()
 	sqb, err := snubaQueryBuilderFromRequest(r.URL.Query())
 	if err != nil {
 		logger.Err(err).Msg("cannot build snuba query from request")
