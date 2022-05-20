@@ -54,6 +54,7 @@ func (env *environment) newRouter() (*httprouter.Router, error) {
 
 	router.Handler(http.MethodGet, "/organizations/:organization_id/filters", compress(http.HandlerFunc(env.getFilters)))
 	router.Handler(http.MethodGet, "/organizations/:organization_id/profiles", compress(http.HandlerFunc(env.getProfiles)))
+	router.Handler(http.MethodGet, "/organizations/:organization_id/transactions", compress(http.HandlerFunc(env.getTransactions)))
 	router.Handler(http.MethodGet, "/organizations/:organization_id/projects/:project_id/functions_call_trees", compress(http.HandlerFunc(env.getFunctionsCallTrees)))
 	router.Handler(http.MethodGet, "/organizations/:organization_id/projects/:project_id/functions_versions", compress(http.HandlerFunc(env.getFunctions)))
 	router.Handler(http.MethodGet, "/organizations/:organization_id/projects/:project_id/profiles/:profile_id", compress(http.HandlerFunc(env.getProfile)))

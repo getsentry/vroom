@@ -24,6 +24,7 @@ type (
 		// query fields
 		Entity          string
 		SelectCols      []string
+		GroupBy         string
 		WhereConditions []string
 		OrderBy         string
 		Limit           int
@@ -67,6 +68,12 @@ func (sqb *SnubaQueryBuilder) query() (string, error) {
 
 	var sb strings.Builder
 	sb.WriteString(fmt.Sprintf("MATCH (%s) SELECT %s", sqb.Entity, strings.Join(sqb.SelectCols, ", ")))
+
+	if sqb.GroupBy != "" {
+		sb.WriteString(" BY ")
+		sb.WriteString(sqb.GroupBy)
+	}
+
 	if len(sqb.WhereConditions) > 0 {
 		sb.WriteString(fmt.Sprintf(" WHERE %s", strings.Join(sqb.WhereConditions, " AND ")))
 	}
