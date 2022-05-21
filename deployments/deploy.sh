@@ -14,5 +14,8 @@ gcloud beta run deploy vroom \
   --region us-central1 \
   --service-account service-vroom@specto-dev.iam.gserviceaccount.com \
   --set-env-vars=SENTRY_PROFILING_SNUBA_HOST=http://snuba-api.profiling \
+  --set-env-vars=SENTRY_DSN= \
+  --set-env-vars=SENTRY_ENVIRONMENT=production \
+  --set-env-vars=SENTRY_RELEASE="$(git rev-parse HEAD)" \
   --timeout 30s \
   --vpc-connector sentry-ingest

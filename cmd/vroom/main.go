@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/CAFxX/httpcompression"
+	"github.com/getsentry/sentry-go"
 	"github.com/google/uuid"
 	"github.com/julienschmidt/httprouter"
 	"github.com/kelseyhightower/envconfig"
@@ -41,6 +42,7 @@ func newEnvironment() (*environment, error) {
 }
 
 func (env *environment) shutdown() error {
+	sentry.Flush(5 * time.Second)
 	return nil
 }
 
@@ -65,6 +67,13 @@ func (env *environment) newRouter() (*httprouter.Router, error) {
 
 func main() {
 	logutil.ConfigureLogger()
+
+	err := sentry.Init(sentry.ClientOptions{
+		Debug: true,
+	})
+	if err != nil {
+		log.Fatal().Err(err).Msg("can't initialize sentry")
+	}
 
 	env, err := newEnvironment()
 	if err != nil {
