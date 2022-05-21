@@ -12,3 +12,6 @@ docker:
 
 deploy:
 	./deployments/deploy.sh
+
+test:
+	go test ./...
