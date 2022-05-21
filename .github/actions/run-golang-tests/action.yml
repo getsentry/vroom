@@ -4,6 +4,8 @@ runs:
   using: "composite"
   steps:
     - name: Install Golang
+      env:
+        SHELL: /bin/bash
       shell: bash
       run: curl -LO https://get.golang.org/$(uname)/go_installer && chmod +x go_installer && ./go_installer && rm go_installer
     - name: Run golang tests

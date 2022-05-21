@@ -11,6 +11,13 @@ on:
       - 'vendor/**'
       - '.github/workflows/ci.yml'
 
+env:
+  SHELL: /bin/bash
+
+defaults:
+  run:
+    shell: bash
+
 jobs:
   backend:
     runs-on: ubuntu-latest
