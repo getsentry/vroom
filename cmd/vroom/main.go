@@ -440,7 +440,6 @@ func (env *environment) getFunctionsCallTrees(w http.ResponseWriter, r *http.Req
 	}
 
 	if trees, ok := aggRes.Aggregation.FunctionToCallTrees[p["key"]]; ok {
-		aggregate.RemoveDurationValuesFromCallTreesP(trees)
 		response.CallTrees = trees
 	}
 

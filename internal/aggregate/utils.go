@@ -119,20 +119,6 @@ func min(a, b int) int {
 	return b
 }
 
-func removeDurationValuesFromFrameP(f Frame) {
-	f.TotalDurationNsValues = nil
-	f.SelfDurationNsValues = nil
-	for _, c := range f.Children {
-		removeDurationValuesFromFrameP(c)
-	}
-}
-
-func RemoveDurationValuesFromCallTreesP(callTrees []CallTree) {
-	for _, ct := range callTrees {
-		removeDurationValuesFromFrameP(ct.RootFrame)
-	}
-}
-
 // Structs
 
 /** A container type to group aggregations by app_version, interaction and
@@ -157,11 +143,11 @@ type FunctionCall struct {
 	Symbol string `json:"symbol"`
 	// Wall time duration for the execution of the function
 	DurationNs       Quantiles `json:"duration_ns"`
-	DurationNsValues []float64 `json:"duration_ns_values"`
+	DurationNsValues []float64 `json:"-"`
 
 	// How frequently the function is called within a single transaction
 	Frequency       Quantiles `json:"frequency"`
-	FrequencyValues []float64 `json:"frequency_values"`
+	FrequencyValues []float64 `json:"-"`
 
 	// Percentage of how frequently the function is called on the main thread,
 	// from [0, 1]
