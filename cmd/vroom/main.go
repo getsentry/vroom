@@ -14,6 +14,7 @@ import (
 
 	"github.com/CAFxX/httpcompression"
 	"github.com/getsentry/sentry-go"
+	sentryhttp "github.com/getsentry/sentry-go/http"
 	"github.com/google/uuid"
 	"github.com/julienschmidt/httprouter"
 	"github.com/kelseyhightower/envconfig"
@@ -28,14 +29,15 @@ import (
 
 type environment struct {
 	Port      string `default:"8080"`
-	SnubaHost string `envconfig:"SENTRY_PROFILING_SNUBA_HOST" required:"true"`
-	SnubaPort int    `envconfig:"SENTRY_PROFILING_SNUBA_PORT" required:"false"`
+	SnubaHost string `envconfig:"SENTRY_SNUBA_HOST" required:"true"`
+	SnubaPort int    `envconfig:"SENTRY_SNUBA_PORT" required:"false"`
 }
 
 func newEnvironment() (*environment, error) {
 	var e environment
 	err := envconfig.Process("", &e)
 	if err != nil {
+		sentry.CaptureException(err)
 		log.Fatal().Err(err).Msg("organization: missing environment variables")
 	}
 	return &e, nil
@@ -72,22 +74,25 @@ func main() {
 		Debug: true,
 	})
 	if err != nil {
+		sentry.CaptureException(err)
 		log.Fatal().Err(err).Msg("can't initialize sentry")
 	}
 
 	env, err := newEnvironment()
 	if err != nil {
+		sentry.CaptureException(err)
 		log.Fatal().Err(err).Msg("error setting up environment")
 	}
 
 	router, err := env.newRouter()
 	if err != nil {
+		sentry.CaptureException(err)
 		log.Fatal().Err(err).Msg("error setting up the router")
 	}
 
 	server := http.Server{
 		Addr:    ":" + env.Port,
-		Handler: router,
+		Handler: sentryhttp.New(sentryhttp.Options{}).Handle(router),
 	}
 
 	waitForShutdown := make(chan os.Signal)
@@ -100,6 +105,7 @@ func main() {
 		defer cancel()
 
 		if err := server.Shutdown(cctx); err != nil {
+			sentry.CaptureException(err)
 			log.Err(err).Msg("error shutting down server")
 		}
 
@@ -109,6 +115,7 @@ func main() {
 	log.Info().Str("port", env.Port).Msg("starting server")
 	err = server.ListenAndServe()
 	if err != nil && err != http.ErrServerClosed {
+		sentry.CaptureException(err)
 		log.Err(err).Msg("server failed")
 	}
 
@@ -116,37 +123,47 @@ func main() {
 
 	// Shutdown the rest of the environment after the HTTP connections are closed
 	if err := env.shutdown(); err != nil {
+		sentry.CaptureException(err)
 		log.Err(err).Msg("error tearing down environment")
 	}
 }
 
 func (env *environment) getProfile(w http.ResponseWriter, r *http.Request) {
+	hub := sentry.GetHubFromContext(r.Context())
 	ps := httprouter.ParamsFromContext(r.Context())
 	rawOrganizationID := ps.ByName("organization_id")
 	organizationID, err := strconv.ParseUint(rawOrganizationID, 10, 64)
 	if err != nil {
-		log.Err(err).Str("raw_organization_id", rawOrganizationID).Msg("invalid organization_id")
+		hub.Scope().SetContext("raw_organization_id", rawOrganizationID)
+		hub.CaptureException(err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+
+	hub.Scope().SetTag("organization_id", rawOrganizationID)
 
 	rawProjectID := ps.ByName("project_id")
 	projectID, err := strconv.ParseUint(rawProjectID, 10, 64)
 	if err != nil {
-		log.Err(err).Str("raw_project_id", rawProjectID).Msg("invalid project_id")
+		hub.Scope().SetContext("raw_project_id", rawProjectID)
+		sentry.CaptureException(err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+
+	hub.Scope().SetTag("project_id", rawProjectID)
 
 	profileID := ps.ByName("profile_id")
 	_, err = uuid.Parse(profileID)
 	if err != nil {
-		log.Err(err).Str("raw_profile_id", profileID).Msg("invalid profile_id")
+		hub.Scope().SetContext("raw_profile_id", profileID)
+		hub.CaptureException(err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	logger := log.With().Uint64("organization_id", organizationID).Uint64("project_id", projectID).Str("profile_id", profileID).Logger()
+	hub.Scope().SetTag("profile_id", profileID)
+
 	sqb := snubautil.SnubaQueryBuilder{
 		Endpoint: env.SnubaHost,
 		Port:     env.SnubaPort,
@@ -158,12 +175,16 @@ func (env *environment) getProfile(w http.ResponseWriter, r *http.Request) {
 		if errors.Is(err, snubautil.ErrProfileNotFound) {
 			w.WriteHeader(http.StatusNotFound)
 		} else {
-			logger.Err(err).Msg("cannot fetch profile data from snuba")
+			q, _ := sqb.Query()
+			hub.Scope().SetContext("query", q)
+			hub.CaptureException(err)
 			w.WriteHeader(http.StatusInternalServerError)
 		}
 		return
 	}
-	logger = logger.With().Str("platform", profile.Platform).Logger()
+
+	hub.Scope().SetTag("platform", profile.Platform)
+
 	var b []byte
 	switch profile.Platform {
 	case "typescript", "javascript":
@@ -172,10 +193,11 @@ func (env *environment) getProfile(w http.ResponseWriter, r *http.Request) {
 		b, err = chrometrace.SpeedscopeFromSnuba(profile)
 	}
 	if err != nil {
-		logger.Err(err).Msg("error creating chrome trace data")
+		hub.CaptureException(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Cache-Control", "public, max-age=3600, immutable")
 	w.WriteHeader(http.StatusOK)
@@ -206,26 +228,27 @@ type ProfileResult struct {
 }
 
 func (env *environment) getProfiles(w http.ResponseWriter, r *http.Request) {
-	ps := httprouter.ParamsFromContext(r.Context())
-	rawOrganizationID := ps.ByName("organization_id")
-	organizationID, err := strconv.ParseUint(rawOrganizationID, 10, 64)
-	if err != nil {
-		log.Err(err).
-			Str("raw_organization_id", rawOrganizationID).
-			Msg("organization_id path parameter is malformed and could not be parsed")
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-
-	_, _, ok := httputil.GetRequiredQueryParameters(w, r, "project_id", "limit", "offset")
+	hub := sentry.GetHubFromContext(r.Context())
+	_, ok := httputil.GetRequiredQueryParameters(w, r, hub, "project_id", "limit", "offset")
 	if !ok {
 		return
 	}
 
-	logger := log.With().Uint64("organization_id", organizationID).Logger()
+	ps := httprouter.ParamsFromContext(r.Context())
+	rawOrganizationID := ps.ByName("organization_id")
+	organizationID, err := strconv.ParseUint(rawOrganizationID, 10, 64)
+	if err != nil {
+		hub.Scope().SetContext("raw_organization_id", rawOrganizationID)
+		hub.CaptureException(err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	hub.Scope().SetTag("organization_id", rawOrganizationID)
+
 	sqb, err := snubaQueryBuilderFromRequest(r.URL.Query())
 	if err != nil {
-		logger.Err(err).Msg("can't build snuba query from request")
+		hub.CaptureException(err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -238,7 +261,9 @@ func (env *environment) getProfiles(w http.ResponseWriter, r *http.Request) {
 
 	profiles, err := snubautil.GetProfiles(sqb, false)
 	if err != nil {
-		logger.Err(err).Msg("error retrieving organization profiles")
+		q, _ := sqb.Query()
+		hub.Scope().SetContext("query", q)
+		hub.CaptureException(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -253,10 +278,11 @@ func (env *environment) getProfiles(w http.ResponseWriter, r *http.Request) {
 
 	b, err := json.Marshal(resp)
 	if err != nil {
-		logger.Err(err).Msg("error marshaling response to json")
+		hub.CaptureException(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+
 	w.Header().Set("Content-Type", "application/json")
 	_, _ = w.Write(b)
 }
@@ -268,19 +294,22 @@ type Filter struct {
 }
 
 func (env *environment) getFilters(w http.ResponseWriter, r *http.Request) {
+	hub := sentry.GetHubFromContext(r.Context())
 	ps := httprouter.ParamsFromContext(r.Context())
 	rawOrganizationID := ps.ByName("organization_id")
 	organizationID, err := strconv.ParseUint(rawOrganizationID, 10, 64)
 	if err != nil {
-		log.Err(err).Str("raw_organization_id", rawOrganizationID).Msg("could not parse organization_id path parameter")
+		hub.Scope().SetContext("raw_organization_id", rawOrganizationID)
+		hub.CaptureException(err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	logger := log.With().Uint64("organization_id", organizationID).Logger()
+	hub.Scope().SetTag("organization_id", rawOrganizationID)
+
 	sqb, err := snubaQueryBuilderFromRequest(r.URL.Query())
 	if err != nil {
-		logger.Err(err).Msg("can't build snuba query from request")
+		hub.CaptureException(err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -293,7 +322,9 @@ func (env *environment) getFilters(w http.ResponseWriter, r *http.Request) {
 
 	filters, err := snubautil.GetFilters(sqb)
 	if err != nil {
-		logger.Err(err).Msg("error retrieving organization profiles")
+		q, _ := sqb.Query()
+		hub.Scope().SetContext("query", q)
+		hub.CaptureException(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -305,10 +336,11 @@ func (env *environment) getFilters(w http.ResponseWriter, r *http.Request) {
 
 	b, err := json.Marshal(response)
 	if err != nil {
-		logger.Err(err).Msg("error marshaling response to json")
+		hub.CaptureException(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+
 	w.Header().Set("Content-Type", "application/json")
 	_, _ = w.Write(b)
 }
@@ -319,76 +351,82 @@ type GetFunctionsCallTreesResponse struct {
 }
 
 func (env *environment) getFunctionsCallTrees(w http.ResponseWriter, r *http.Request) {
+	hub := sentry.GetHubFromContext(r.Context())
+	p, ok := httputil.GetRequiredQueryParameters(w, r, hub, "version", "transaction_name", "key")
+	if !ok {
+		return
+	}
+
+	hub.Scope().SetTags(p)
+
 	ps := httprouter.ParamsFromContext(r.Context())
 	rawOrganizationID := ps.ByName("organization_id")
 	organizationID, err := strconv.ParseUint(rawOrganizationID, 10, 64)
 	if err != nil {
-		log.Err(err).
-			Str("raw_organization_id", rawOrganizationID).
-			Msg("organization_id path parameter is malformed and cannot be parsed")
+		hub.Scope().SetContext("raw_organization_id", rawOrganizationID)
+		hub.CaptureException(err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+
+	hub.Scope().SetTag("organization_id", rawOrganizationID)
 
 	rawProjectID := ps.ByName("project_id")
 	projectID, err := strconv.ParseUint(rawProjectID, 10, 64)
 	if err != nil {
-		log.Err(err).
-			Str("raw_project_id", rawProjectID).
-			Msg("project_id path parameter is malformed and cannot be parsed")
+		hub.Scope().SetContext("raw_project_id", rawProjectID)
+		hub.CaptureException(err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	p, logger, ok := httputil.GetRequiredQueryParameters(w, r, "version", "transaction_name", "key")
-	if !ok {
-		return
-	}
-	logger.With().
-		Uint64("organization_id", organizationID).
-		Uint64("project_id", projectID).Logger()
+	hub.Scope().SetTag("project_id", rawProjectID)
 
 	sqb, err := snubaQueryBuilderFromRequest(r.URL.Query())
 	if err != nil {
-		logger.Err(err).Msg("can't build snuba query from request")
+		hub.CaptureException(err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+
+	sqb.Dataset = "profiles"
+	sqb.Endpoint = env.SnubaHost
+	sqb.Entity = "profiles"
+	sqb.Limit = 10
+	sqb.Port = env.SnubaPort
 	sqb.WhereConditions = append(sqb.WhereConditions,
 		fmt.Sprintf("organization_id=%d", organizationID),
 		fmt.Sprintf("project_id=%d", projectID),
 	)
-	sqb.Limit = 10
-
-	sqb.Endpoint = env.SnubaHost
-	sqb.Port = env.SnubaPort
-	sqb.Dataset = "profiles"
-	sqb.Entity = "profiles"
 
 	profiles, err := snubautil.GetProfiles(sqb, true)
 	if err != nil {
-		logger.Err(err).Msg("error retrieving the profiles")
+		q, _ := sqb.Query()
+		hub.Scope().SetContext("query", q)
+		hub.CaptureException(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	var topNFunctions int
-
-	if topN, exists := r.URL.Query()["top_n_functions"]; exists && len(topN) == 1 {
-		i, err := strconv.Atoi(topN[0])
+	if rawTopNFunctions := r.URL.Query().Get("top_n_functions"); rawTopNFunctions != "" {
+		i, err := strconv.Atoi(rawTopNFunctions)
 		if err != nil {
-			logger.Err(err).
-				Str("top_n_functions", topN[0]).
-				Msg("malformed query parameter cannot be parsed")
+			hub.Scope().SetContext("raw_top_n_functions", rawTopNFunctions)
+			sentry.CaptureException(err)
 			w.WriteHeader(http.StatusBadRequest)
 		} else {
 			topNFunctions = i
 		}
+
+		hub.Scope().SetContext("top_n_functions", rawTopNFunctions)
 	}
 
 	aggRes, err := aggregate.AggregateProfiles(profiles, topNFunctions)
 	if err != nil {
-		logger.Err(err).Msg("aggregation: error while trying to compute the aggregation")
+		hub.CaptureException(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 
 	var response GetFunctionsCallTreesResponse
@@ -400,135 +438,125 @@ func (env *environment) getFunctionsCallTrees(w http.ResponseWriter, r *http.Req
 			break
 		}
 	}
+
 	if trees, ok := aggRes.Aggregation.FunctionToCallTrees[p["key"]]; ok {
 		aggregate.RemoveDurationValuesFromCallTreesP(trees)
 		response.CallTrees = trees
 	}
+
 	if len(response.CallTrees) == 0 {
-		logger.Error().Msg("no call trees")
+		hub.CaptureMessage("no call tree")
 	}
+
 	b, err := json.Marshal(response)
 	if err != nil {
-		logger.Err(err).Msg("error marshaling response to json")
+		hub.CaptureException(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+
 	w.Header().Set("Content-Type", "application/json")
 	_, _ = w.Write(b)
 }
 
-type FunctionCallsData struct {
-	FunctionCalls []aggregate.FunctionCall
-}
+type (
+	FunctionCallsData struct {
+		FunctionCalls []aggregate.FunctionCall
+	}
 
-type VersionSeriesData struct {
-	Versions map[string]FunctionCallsData
-}
+	VersionSeriesData struct {
+		Versions map[string]FunctionCallsData
+	}
+)
 
 func (env *environment) getFunctions(w http.ResponseWriter, r *http.Request) {
+	hub := sentry.GetHubFromContext(r.Context())
+	p, ok := httputil.GetRequiredQueryParameters(w, r, hub, "version", "transaction_name")
+	if !ok {
+		return
+	}
+
+	hub.Scope().SetTags(p)
+
 	ps := httprouter.ParamsFromContext(r.Context())
 	rawOrganizationID := ps.ByName("organization_id")
 	organizationID, err := strconv.ParseUint(rawOrganizationID, 10, 64)
 	if err != nil {
-		log.Err(err).
-			Str("raw_organization_id", rawOrganizationID).
-			Msg("organization_id path parameter is malformed and cannot be parsed")
+		hub.Scope().SetContext("raw_organization_id", rawOrganizationID)
+		hub.CaptureException(err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+
+	hub.Scope().SetTag("organization_id", rawOrganizationID)
 
 	rawProjectID := ps.ByName("project_id")
 	projectID, err := strconv.ParseUint(rawProjectID, 10, 64)
 	if err != nil {
-		log.Err(err).
-			Str("raw_project_id", rawProjectID).
-			Msg("project_id path parameter is malformed and cannot be parsed")
+		hub.Scope().SetContext("raw_project_id", rawProjectID)
+		hub.CaptureException(err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	_, logger, ok := httputil.GetRequiredQueryParameters(w, r, "version", "transaction_name")
-	if !ok {
-		return
-	}
-	logger.With().
-		Uint64("organization_id", organizationID).
-		Uint64("project_id", projectID).Logger()
+	hub.Scope().SetTag("project_id", rawProjectID)
 
 	var topNFunctions int
-
-	if topN, exists := r.URL.Query()["top_n_functions"]; exists && len(topN) == 1 {
-		i, err := strconv.Atoi(topN[0])
+	if rawTopNFunctions := r.URL.Query().Get("top_n_functions"); rawTopNFunctions != "" {
+		i, err := strconv.Atoi(rawTopNFunctions)
 		if err != nil {
-			logger.Err(err).
-				Str("top_n_functions", topN[0]).
-				Msg("malformed query parameter cannot be parsed")
+			hub.Scope().SetContext("raw_top_n_functions", rawTopNFunctions)
+			hub.CaptureException(err)
 			w.WriteHeader(http.StatusBadRequest)
 		} else {
 			topNFunctions = i
 		}
+
+		hub.Scope().SetContext("top_n_functions", rawTopNFunctions)
 	}
 
 	sqb, err := snubaQueryBuilderFromRequest(r.URL.Query())
 	if err != nil {
-		logger.Err(err).Msg("can't build snuba query from request")
+		hub.CaptureException(err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	// placeholder is a condition we'll replace each time with the specific app_version
-	// for which we want to fetch profiles
 	sqb.WhereConditions = append(sqb.WhereConditions,
 		fmt.Sprintf("organization_id=%d", organizationID),
 		fmt.Sprintf("project_id=%d", projectID),
-		"placeholder",
 	)
 	sqb.Limit = 10
-
 	sqb.Endpoint = env.SnubaHost
 	sqb.Port = env.SnubaPort
 	sqb.Dataset = "profiles"
 	sqb.Entity = "profiles"
 
-	// here it is safe to ignore the errors because if there were any, they'd be
-	// already triggered when calling snubaQueryBuilderFromRequest
-	versionBuilds, _ := GetVersionBuildFromAppVersions(r.URL.Query()["version"])
-	versionToProfiles := make(map[string][]snubautil.Profile)
-	for _, versionBuild := range versionBuilds {
-		// replace the placeholder condition
-		sqb.WhereConditions[len(sqb.WhereConditions)-1] = fmt.Sprintf("(version_name = '%s' AND version_code = '%s')", snubautil.Escape(versionBuild.Name), snubautil.Escape(versionBuild.Code))
-		profiles, err := snubautil.GetProfiles(sqb, true)
-		if err != nil {
-			logger.Err(err).Msg("error retrieving the profiles")
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-		versionToProfiles[fmt.Sprintf("%s (build %s)", versionBuild.Name, versionBuild.Code)] = profiles
+	profiles, err := snubautil.GetProfiles(sqb, true)
+	if err != nil {
+		q, _ := sqb.Query()
+		hub.Scope().SetContext("query", q)
+		hub.CaptureException(err)
+		return
 	}
 
-	versionMap := make(map[string]FunctionCallsData)
-	for version, profiles := range versionToProfiles {
-
-		aggResult, err := aggregate.AggregateProfiles(profiles, topNFunctions)
-		if err != nil {
-			logger.Err(err).
-				Str("version", version).
-				Msg("error while running the aggregation")
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-
-		versionMap[version] = FunctionCallsData{
-			FunctionCalls: aggResult.Aggregation.FunctionCalls,
-		}
+	aggResult, err := aggregate.AggregateProfiles(profiles, topNFunctions)
+	if err != nil {
+		hub.CaptureException(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 
 	versionData := VersionSeriesData{
-		Versions: versionMap,
+		Versions: map[string]FunctionCallsData{
+			p["version"]: FunctionCallsData{
+				FunctionCalls: aggResult.Aggregation.FunctionCalls,
+			},
+		},
 	}
 
 	b, err := json.Marshal(versionData)
 	if err != nil {
-		logger.Err(err).Msg("error marshaling response to json")
+		hub.CaptureException(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}

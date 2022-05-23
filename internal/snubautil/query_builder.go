@@ -67,7 +67,7 @@ func (sqb *SnubaQueryBuilder) URL() (string, error) {
 	return sb.String(), nil
 }
 
-func (sqb *SnubaQueryBuilder) query() (string, error) {
+func (sqb *SnubaQueryBuilder) Query() (string, error) {
 	if len(sqb.SelectCols) == 0 {
 		return "", errors.New("no column selected")
 	}
@@ -127,7 +127,7 @@ func (sqb *SnubaQueryBuilder) Do() (io.ReadCloser, error) {
 }
 
 func (sqb *SnubaQueryBuilder) body() (io.Reader, error) {
-	query, err := sqb.query()
+	query, err := sqb.Query()
 	if err != nil {
 		return nil, err
 	}
