@@ -187,7 +187,7 @@ func (act *AggregateCallTree) pathMerge(other *AggregateCallTree, p treePath) {
 
 func (act *AggregateCallTree) Symbols() []string {
 	uniqueSymbols := map[string]struct{}{
-		act.Symbol: struct{}{},
+		act.Symbol: {},
 	}
 
 	for _, c := range act.Children {
@@ -198,7 +198,7 @@ func (act *AggregateCallTree) Symbols() []string {
 
 	symbols := make([]string, 0, len(uniqueSymbols))
 
-	for s, _ := range uniqueSymbols {
+	for s := range uniqueSymbols {
 		symbols = append(symbols, s)
 	}
 

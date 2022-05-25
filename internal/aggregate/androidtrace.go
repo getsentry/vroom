@@ -210,7 +210,7 @@ func (a *AndroidTraceAggregatorP) Result() (Aggregate, error) {
 		callTrees[topMethodKey] = make([]CallTree, 0, len(cta.UniqueRootCallTrees))
 		for id, tree := range cta.UniqueRootCallTrees {
 			var profileIDs []string
-			for profileID, _ := range treeKeyToProfileIDs[id] {
+			for profileID := range treeKeyToProfileIDs[id] {
 				profileIDs = append(profileIDs, profileID)
 			}
 
