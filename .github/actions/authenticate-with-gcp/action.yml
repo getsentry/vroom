@@ -1,8 +1,8 @@
 name: authenticate-with-gcp
 inputs:
-  service_account_email:
+  gcp_service_account_email:
     required: true
-  service_account_key:
+  gcp_service_account_key:
     required: true
 
 runs:
