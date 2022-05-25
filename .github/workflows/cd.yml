@@ -35,6 +35,8 @@ jobs:
       with:
         gcp_service_account_email: ${{ secrets.GCP_SERVICE_ACCOUNT_EMAIL }}
         gcp_service_account_key: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+    - name: Configure Docker with GCP
+      run: gcloud auth configure-docker us-central1-docker.pkg.dev
     - name: Build Docker image
       run: make docker
     - name: Deploy to production
