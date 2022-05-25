@@ -12,7 +12,15 @@ import (
 func ConfigureLogger() {
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
 	log.Logger = log.With().Caller().Stack().Logger()
-	if !metadata.OnGCE() {
+	if metadata.OnGCE() {
+		log.Logger = log.Hook(ErrorHook{})
+	} else {
 		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 	}
+}
+
+type ErrorHook struct{}
+
+func (h ErrorHook) Run(e *zerolog.Event, level zerolog.Level, msg string) {
+	e.Str("severity", level.String())
 }
