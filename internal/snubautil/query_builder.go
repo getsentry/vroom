@@ -9,8 +9,10 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/getsentry/sentry-go"
+	"github.com/gojek/heimdall/v7/httpclient"
 )
 
 type (
@@ -18,6 +20,7 @@ type (
 		consistent bool
 		debug      bool
 		dryRun     bool
+		http       *httpclient.Client
 		hub        *sentry.Hub
 		turbo      bool
 		url        string
@@ -74,7 +77,8 @@ func NewClient(host, port, dataset string, hub *sentry.Hub) (Client, error) {
 	u.WriteString(dataset)
 	u.WriteString("/snql")
 	return Client{
-		url: u.String(),
+		url:  u.String(),
+		http: httpclient.NewClient(httpclient.WithHTTPTimeout(30 * time.Second)),
 	}, nil
 }
 
@@ -141,7 +145,10 @@ func (q *QueryBuilder) Do(r *sentry.Span) (io.ReadCloser, error) {
 	s = r.StartChild("http.client")
 	defer s.Finish()
 
-	resp, err := http.Post(q.client.URL(), "application/json", body)
+	headers := make(http.Header)
+	headers.Set("Content-Type", "application/json")
+	headers.Add("sentry-trace", s.ToSentryTrace())
+	resp, err := q.client.http.Post(q.client.URL(), body, headers)
 	if err != nil {
 		return nil, err
 	}
