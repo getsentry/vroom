@@ -77,7 +77,6 @@ func main() {
 
 	err := sentry.Init(sentry.ClientOptions{
 		TracesSampleRate: 1.0,
-		Debug:            true,
 	})
 	if err != nil {
 		log.Fatal().Err(err).Msg("can't initialize sentry")
