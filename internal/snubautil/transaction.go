@@ -3,6 +3,8 @@ package snubautil
 import (
 	"encoding/json"
 	"time"
+
+	"github.com/getsentry/sentry-go"
 )
 
 type (
@@ -18,7 +20,11 @@ type (
 	}
 )
 
-func GetTransactions(sqb SnubaQueryBuilder) ([]Transaction, error) {
+func GetTransactions(sqb QueryBuilder) ([]Transaction, error) {
+	t := sentry.TransactionFromContext(sqb.ctx)
+	rs := t.StartChild("snuba")
+	defer rs.Finish()
+
 	sqb.SelectCols = []string{
 		"transaction_name",
 		"groupUniqArray(tuple(version_name, version_code)) AS versions",
@@ -29,14 +35,18 @@ func GetTransactions(sqb SnubaQueryBuilder) ([]Transaction, error) {
 	sqb.GroupBy = "transaction_name"
 	sqb.OrderBy = "transaction_name ASC"
 
-	r, err := sqb.Do()
+	rb, err := sqb.Do(rs)
 	if err != nil {
 		return nil, err
 	}
-	defer r.Close()
+	defer rb.Close()
+
+	s := rs.StartChild("json.unmarshal")
+	s.Description = "Decode response from Snuba"
+	defer s.Finish()
 
 	var sr SnubaTransactionsResponse
-	err = json.NewDecoder(r).Decode(&sr)
+	err = json.NewDecoder(rb).Decode(&sr)
 	if err != nil {
 		return nil, err
 	}

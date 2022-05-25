@@ -3,7 +3,6 @@ repos:
   rev: 96221dc741cb30cc0136999083dc6bd0e2113000
   hooks:
     - id: go-build
-    - id: go-fmt
     - id: go-imports
     - id: go-mod-tidy
     - id: golangci-lint

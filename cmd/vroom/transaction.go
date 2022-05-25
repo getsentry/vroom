@@ -8,12 +8,12 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/getsentry/sentry-go"
 	"github.com/getsentry/vroom/internal/aggregate"
 	"github.com/getsentry/vroom/internal/httputil"
 	"github.com/getsentry/vroom/internal/snubautil"
 	"github.com/julienschmidt/httprouter"
 	"github.com/maruel/natural"
-	"github.com/rs/zerolog/log"
 )
 
 type (
@@ -31,50 +31,63 @@ type (
 )
 
 func (env *environment) getTransactions(w http.ResponseWriter, r *http.Request) {
-	_, logger, ok := httputil.GetRequiredQueryParameters(w, r, "project_id", "start", "end")
+	hub := sentry.GetHubFromContext(r.Context())
+	p, ok := httputil.GetRequiredQueryParameters(w, r, hub, "project_id", "start", "end")
 	if !ok {
 		return
 	}
+
+	hub.Scope().SetTag("project_id", p["project_id"])
+
+	ctx := r.Context()
 	ps := httprouter.ParamsFromContext(r.Context())
 	rawOrganizationID := ps.ByName("organization_id")
 	organizationID, err := strconv.ParseUint(rawOrganizationID, 10, 64)
 	if err != nil {
-		log.Err(err).Str("raw_organization_id", rawOrganizationID).Msg("invalid organization_id")
+		hub.Scope().SetContext("raw_organization_id", rawOrganizationID)
+		hub.CaptureException(err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	logger = logger.With().Uint64("organization_id", organizationID).Logger()
-	sqb, err := snubaQueryBuilderFromRequest(r.URL.Query())
+
+	hub.Scope().SetTag("organization_id", rawOrganizationID)
+
+	sqb, err := env.snubaQueryBuilderFromRequest(ctx, r.URL.Query())
 	if err != nil {
-		logger.Err(err).Msg("cannot build snuba query from request")
+		hub.CaptureException(err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	sqb.Endpoint = env.SnubaHost
-	sqb.Port = env.SnubaPort
-	sqb.Dataset = "profiles"
-	sqb.Entity = "profiles"
+
+	sqb.OrderBy = "transaction_name ASC"
 	sqb.WhereConditions = append(sqb.WhereConditions,
 		fmt.Sprintf("organization_id=%d", organizationID),
 	)
+
 	transactions, err := snubautil.GetTransactions(sqb)
 	if err != nil {
-		logger.Err(err).Msg("cannot fetch profile data from snuba")
+		hub.CaptureException(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+
+	s := sentry.StartSpan(ctx, "json.marshal")
+	defer s.Finish()
+
 	tr := GetTransactionsResponse{
 		Transactions: make([]Transaction, 0, len(transactions)),
 	}
 	for _, t := range transactions {
 		tr.Transactions = append(tr.Transactions, snubaTransactionToTransaction(t))
 	}
+
 	b, err := json.Marshal(tr)
 	if err != nil {
-		logger.Err(err).Msg("error creating chrome trace data")
+		hub.CaptureException(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	_, _ = w.Write(b)
