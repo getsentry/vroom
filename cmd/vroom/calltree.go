@@ -18,8 +18,9 @@ type GetProfileCallTreeResponse struct {
 }
 
 func (env *environment) getProfileCallTree(w http.ResponseWriter, r *http.Request) {
-	hub := sentry.GetHubFromContext(r.Context())
-	ps := httprouter.ParamsFromContext(r.Context())
+	ctx := r.Context()
+	hub := sentry.GetHubFromContext(ctx)
+	ps := httprouter.ParamsFromContext(ctx)
 	rawOrganizationID := ps.ByName("organization_id")
 	organizationID, err := strconv.ParseUint(rawOrganizationID, 10, 64)
 	if err != nil {
@@ -47,38 +48,46 @@ func (env *environment) getProfileCallTree(w http.ResponseWriter, r *http.Reques
 		"profile_id": profileID,
 	})
 
-	sqb := snubautil.SnubaQueryBuilder{
-		Endpoint: env.SnubaHost,
-		Port:     env.SnubaPort,
-		Dataset:  "profiles",
-		Entity:   "profiles",
+	sqb, err := env.snuba.NewQuery(ctx, "profiles")
+	if err != nil {
+		hub.CaptureException(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
+
 	profiles, err := snubautil.GetProfile(organizationID, projectID, profileID, sqb)
 	if err != nil {
 		if errors.Is(err, snubautil.ErrProfileNotFound) {
 			w.WriteHeader(http.StatusNotFound)
 		} else {
-			q, _ := sqb.Query()
-			hub.Scope().SetContext("query", q)
 			hub.CaptureException(err)
 			w.WriteHeader(http.StatusInternalServerError)
 		}
 		return
 	}
 
+	s := sentry.StartSpan(ctx, "aggregation")
+	s.Description = "Aggregate profiles"
 	aggRes, err := aggregate.AggregateProfiles([]snubautil.Profile{profiles}, math.MaxInt)
+	s.Finish()
 	if err != nil {
 		hub.CaptureException(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
+	s = sentry.StartSpan(ctx, "merge")
+	s.Description = "Merge all call trees in one"
 	merged, err := aggregate.MergeAllCallTreesInBacktrace(&aggRes.Aggregation)
+	s.Finish()
 	if err != nil {
 		hub.CaptureException(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+
+	s = sentry.StartSpan(ctx, "json.marshal")
+	defer s.Finish()
 
 	b, err := json.Marshal(GetProfileCallTreeResponse{
 		CallTrees: merged,

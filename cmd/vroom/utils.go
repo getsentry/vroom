@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/url"
@@ -37,15 +38,18 @@ type (
 	}
 )
 
-// conditions, err
-func snubaQueryBuilderFromRequest(p url.Values) (snubautil.SnubaQueryBuilder, error) {
-	sqb := snubautil.SnubaQueryBuilder{WhereConditions: make([]string, 0, 5)}
+func (e *environment) snubaQueryBuilderFromRequest(ctx context.Context, p url.Values) (snubautil.QueryBuilder, error) {
+	sqb, err := e.snuba.NewQuery(ctx, "profiles")
+	if err != nil {
+		return snubautil.QueryBuilder{}, err
+	}
+	sqb.WhereConditions = make([]string, 0, 5)
 
 	if projects, exists := p["project_id"]; exists && len(projects) > 0 {
 		for _, p := range projects {
 			_, err := strconv.ParseUint(p, 10, 64)
 			if err != nil {
-				return snubautil.SnubaQueryBuilder{}, fmt.Errorf("invalid project ID: %s", p)
+				return snubautil.QueryBuilder{}, fmt.Errorf("invalid project ID: %s", p)
 			}
 		}
 		sqb.WhereConditions = append(sqb.WhereConditions, fmt.Sprintf("project_id IN tuple(%s)", strings.Join(projects, ", ")))
@@ -54,20 +58,20 @@ func snubaQueryBuilderFromRequest(p url.Values) (snubautil.SnubaQueryBuilder, er
 	if periodStart := p.Get("start"); periodStart != "" {
 		sqb.WhereConditions = append(sqb.WhereConditions, fmt.Sprintf("received >= toDateTime('%s')", periodStart))
 	} else {
-		return snubautil.SnubaQueryBuilder{}, errors.New("no range start in the request")
+		return snubautil.QueryBuilder{}, errors.New("no range start in the request")
 	}
 
 	if periodEnd := p.Get("end"); periodEnd != "" {
 		sqb.WhereConditions = append(sqb.WhereConditions, fmt.Sprintf("received < toDateTime('%s')", periodEnd))
 	} else {
-		return snubautil.SnubaQueryBuilder{}, errors.New("no range end in the request")
+		return snubautil.QueryBuilder{}, errors.New("no range end in the request")
 	}
 
 	if v := p.Get("limit"); v != "" {
 		limit, err := strconv.Atoi(v)
 		if err != nil {
 			log.Err(err).Str("limit", v).Msg("can't parse limit value")
-			return snubautil.SnubaQueryBuilder{}, err
+			return snubautil.QueryBuilder{}, err
 		}
 		sqb.Limit = limit
 	}
@@ -76,7 +80,7 @@ func snubaQueryBuilderFromRequest(p url.Values) (snubautil.SnubaQueryBuilder, er
 		offset, err := strconv.ParseUint(v, 10, 64)
 		if err != nil {
 			log.Err(err).Str("offset", v).Msg("can't parse offset value")
-			return snubautil.SnubaQueryBuilder{}, err
+			return snubautil.QueryBuilder{}, err
 		}
 		sqb.Offset = offset
 	}
@@ -102,7 +106,7 @@ func snubaQueryBuilderFromRequest(p url.Values) (snubautil.SnubaQueryBuilder, er
 		for _, l := range levels {
 			_, err := strconv.ParseUint(l, 10, 64)
 			if err != nil {
-				return snubautil.SnubaQueryBuilder{}, errors.New("can't parse android api level")
+				return snubautil.QueryBuilder{}, errors.New("can't parse android api level")
 			}
 		}
 		sqb.WhereConditions = append(sqb.WhereConditions, fmt.Sprintf("android_api_level IN tuple(%s)", strings.Join(levels, ", ")))
@@ -111,7 +115,7 @@ func snubaQueryBuilderFromRequest(p url.Values) (snubautil.SnubaQueryBuilder, er
 	if versions, exists := p["version"]; exists {
 		versionBuilds, err := GetVersionBuildFromAppVersions(versions)
 		if err != nil {
-			return snubautil.SnubaQueryBuilder{}, err
+			return snubautil.QueryBuilder{}, err
 		}
 		pairs := make([]string, 0, len(versionBuilds))
 		for _, vb := range versionBuilds {

@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"strings"
 	"time"
+
+	"github.com/getsentry/sentry-go"
 )
 
 var ErrProfileNotFound = errors.New("profile not found")
@@ -16,7 +18,12 @@ type SnubaProfilesResponse struct {
 	Profiles []Profile `json:"data"`
 }
 
-func GetProfile(organizationID, projectID uint64, profileID string, sqb SnubaQueryBuilder) (Profile, error) {
+func GetProfile(organizationID, projectID uint64, profileID string, sqb QueryBuilder) (Profile, error) {
+	t := sentry.TransactionFromContext(sqb.ctx)
+	rs := t.StartChild("snuba")
+	rs.Description = "Get a profile"
+	defer rs.Finish()
+
 	sqb.SelectCols = []string{
 		"duration_ns",
 		"platform",
@@ -37,13 +44,18 @@ func GetProfile(organizationID, projectID uint64, profileID string, sqb SnubaQue
 	)
 	sqb.Limit = 1
 
-	r, err := sqb.Do()
+	rb, err := sqb.Do(rs)
 	if err != nil {
 		return Profile{}, err
 	}
-	defer r.Close()
+	defer rb.Close()
+
+	s := rs.StartChild("json.unmarshal")
+	s.Description = "Decode response from Snuba"
+	defer s.Finish()
+
 	var sr SnubaProfilesResponse
-	err = json.NewDecoder(r).Decode(&sr)
+	err = json.NewDecoder(rb).Decode(&sr)
 	if err != nil {
 		return Profile{}, err
 	}
@@ -55,7 +67,12 @@ func GetProfile(organizationID, projectID uint64, profileID string, sqb SnubaQue
 	return sr.Profiles[0], nil
 }
 
-func GetProfiles(sqb SnubaQueryBuilder, fetchPayload bool) ([]Profile, error) {
+func GetProfiles(sqb QueryBuilder, fetchPayload bool) ([]Profile, error) {
+	t := sentry.TransactionFromContext(sqb.ctx)
+	rs := t.StartChild("snuba")
+	rs.Description = "Get profiles"
+	defer rs.Finish()
+
 	sqb.SelectCols = []string{
 		"organization_id", "project_id", "transaction_id", "profile_id", "received",
 		"android_api_level", "device_classification", "device_locale", "device_manufacturer",
@@ -72,14 +89,18 @@ func GetProfiles(sqb SnubaQueryBuilder, fetchPayload bool) ([]Profile, error) {
 
 	sqb.OrderBy = "received DESC"
 
-	r, err := sqb.Do()
+	rb, err := sqb.Do(rs)
 	if err != nil {
 		return nil, err
 	}
-	defer r.Close()
+	defer rb.Close()
+
+	s := rs.StartChild("json.unmarshal")
+	s.Description = "Decode response from Snuba"
+	defer s.Finish()
 
 	var sr SnubaProfilesResponse
-	err = json.NewDecoder(r).Decode(&sr)
+	err = json.NewDecoder(rb).Decode(&sr)
 	if err != nil {
 		return nil, err
 	}
@@ -95,7 +116,11 @@ type SnubaFiltersResponse struct {
 	Filters []map[string][]interface{} `json:"data"`
 }
 
-func GetFilters(sqb SnubaQueryBuilder) (map[string][]interface{}, error) {
+func GetFilters(sqb QueryBuilder) (map[string][]interface{}, error) {
+	t := sentry.TransactionFromContext(sqb.ctx)
+	rs := t.StartChild("snuba")
+	defer rs.Finish()
+
 	sqb.SelectCols = []string{
 		"arraySort(groupUniqArray(android_api_level)) AS _android_api_level",
 		"arraySort(groupUniqArray(device_model)) AS _device_model",
@@ -110,14 +135,18 @@ func GetFilters(sqb SnubaQueryBuilder) (map[string][]interface{}, error) {
 		"arraySort(groupUniqArray(tuple(version_name, version_code))) AS _version",
 	}
 
-	r, err := sqb.Do()
+	rb, err := sqb.Do(rs)
 	if err != nil {
 		return nil, err
 	}
-	defer r.Close()
+	defer rb.Close()
+
+	s := rs.StartChild("json.unmarshal")
+	s.Description = "Decode response from Snuba"
+	defer s.Finish()
 
 	var sr SnubaFiltersResponse
-	err = json.NewDecoder(r).Decode(&sr)
+	err = json.NewDecoder(rb).Decode(&sr)
 	if err != nil {
 		return nil, err
 	}

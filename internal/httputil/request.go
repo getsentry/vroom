@@ -23,6 +23,5 @@ func GetRequiredQueryParameters(w http.ResponseWriter, r *http.Request, hub *sen
 		params[key] = value
 		context[key] = value
 	}
-	hub.Scope().SetContexts(context)
 	return params, true
 }

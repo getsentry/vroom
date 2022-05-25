@@ -39,6 +39,7 @@ func (env *environment) getTransactions(w http.ResponseWriter, r *http.Request) 
 
 	hub.Scope().SetTag("project_id", p["project_id"])
 
+	ctx := r.Context()
 	ps := httprouter.ParamsFromContext(r.Context())
 	rawOrganizationID := ps.ByName("organization_id")
 	organizationID, err := strconv.ParseUint(rawOrganizationID, 10, 64)
@@ -51,30 +52,27 @@ func (env *environment) getTransactions(w http.ResponseWriter, r *http.Request) 
 
 	hub.Scope().SetTag("organization_id", rawOrganizationID)
 
-	sqb, err := snubaQueryBuilderFromRequest(r.URL.Query())
+	sqb, err := env.snubaQueryBuilderFromRequest(ctx, r.URL.Query())
 	if err != nil {
 		hub.CaptureException(err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	sqb.Dataset = "profiles"
-	sqb.Endpoint = env.SnubaHost
-	sqb.Entity = "profiles"
 	sqb.OrderBy = "transaction_name ASC"
-	sqb.Port = env.SnubaPort
 	sqb.WhereConditions = append(sqb.WhereConditions,
 		fmt.Sprintf("organization_id=%d", organizationID),
 	)
 
 	transactions, err := snubautil.GetTransactions(sqb)
 	if err != nil {
-		q, _ := sqb.Query()
-		hub.Scope().SetExtra("query", q)
 		hub.CaptureException(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+
+	s := sentry.StartSpan(ctx, "json.marshal")
+	defer s.Finish()
 
 	tr := GetTransactionsResponse{
 		Transactions: make([]Transaction, 0, len(transactions)),

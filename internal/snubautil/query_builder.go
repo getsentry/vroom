@@ -2,36 +2,42 @@ package snubautil
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"strings"
+
+	"github.com/getsentry/sentry-go"
 )
 
 type (
-	SnubaQueryBuilder struct {
-		Endpoint   string
-		Port       int
-		Dataset    string
-		Turbo      bool
-		Consistent bool
-		Debug      bool
-		DryRun     bool
-		Legacy     bool
-
-		// query fields
-		Entity          string
-		SelectCols      []string
-		GroupBy         string
-		WhereConditions []string
-		OrderBy         string
-		Limit           int
-		Offset          uint64
+	Client struct {
+		consistent bool
+		debug      bool
+		dryRun     bool
+		hub        *sentry.Hub
+		turbo      bool
+		url        string
 	}
 
-	SnubaPostBody struct {
+	// query fields
+	QueryBuilder struct {
+		client *Client
+		entity string
+		ctx    context.Context
+
+		GroupBy         string
+		Limit           int
+		Offset          uint64
+		OrderBy         string
+		SelectCols      []string
+		WhereConditions []string
+	}
+
+	body struct {
 		Query      string `json:"query"`
 		Dataset    string `json:"dataset"`
 		Turbo      bool   `json:"turbo"`
@@ -51,69 +57,91 @@ type (
 	}
 )
 
-func (sqb *SnubaQueryBuilder) URL() (string, error) {
-	if sqb.Endpoint == "" {
-		return "", errors.New("endpoint must be set")
+func NewClient(host, port, dataset string, hub *sentry.Hub) (Client, error) {
+	if host == "" {
+		return Client{}, errors.New("host must be set")
 	}
-	if sqb.Dataset == "" {
-		return "", errors.New("dataset must be set")
+	if dataset == "" {
+		return Client{}, errors.New("dataset must be set")
 	}
-	var sb strings.Builder
-	sb.WriteString(sqb.Endpoint)
-	if sqb.Port != 0 {
-		sb.WriteString(fmt.Sprintf(":%d", sqb.Port))
+	var u strings.Builder
+	u.WriteString(host)
+	if port != "" {
+		u.WriteString(":")
+		u.WriteString(port)
 	}
-	sb.WriteString(fmt.Sprintf("/%s/snql", sqb.Dataset))
-	return sb.String(), nil
+	u.WriteString("/")
+	u.WriteString(dataset)
+	u.WriteString("/snql")
+	return Client{
+		url: u.String(),
+	}, nil
 }
 
-func (sqb *SnubaQueryBuilder) Query() (string, error) {
-	if len(sqb.SelectCols) == 0 {
+func (c *Client) NewQuery(ctx context.Context, entity string) (QueryBuilder, error) {
+	if entity == "" {
+		return QueryBuilder{}, errors.New("no entity selected")
+	}
+	return QueryBuilder{
+		client: c,
+		entity: entity,
+		ctx:    ctx,
+	}, nil
+}
+
+func (c Client) URL() string {
+	return c.url
+}
+
+func (q *QueryBuilder) Query() (string, error) {
+	if len(q.SelectCols) == 0 {
 		return "", errors.New("no column selected")
 	}
-	if sqb.Entity == "" {
-		return "", errors.New("no entity selected")
-	}
 
 	var sb strings.Builder
-	sb.WriteString(fmt.Sprintf("MATCH (%s) SELECT %s", sqb.Entity, strings.Join(sqb.SelectCols, ", ")))
+	sb.WriteString(fmt.Sprintf("MATCH (%s) SELECT %s", q.entity, strings.Join(q.SelectCols, ", ")))
 
-	if sqb.GroupBy != "" {
+	if q.GroupBy != "" {
 		sb.WriteString(" BY ")
-		sb.WriteString(sqb.GroupBy)
+		sb.WriteString(q.GroupBy)
 	}
 
-	if len(sqb.WhereConditions) > 0 {
-		sb.WriteString(fmt.Sprintf(" WHERE %s", strings.Join(sqb.WhereConditions, " AND ")))
+	if len(q.WhereConditions) > 0 {
+		sb.WriteString(fmt.Sprintf(" WHERE %s", strings.Join(q.WhereConditions, " AND ")))
 	}
 
-	if sqb.OrderBy != "" {
-		sb.WriteString(fmt.Sprintf(" ORDER BY %s", sqb.OrderBy))
+	if q.OrderBy != "" {
+		sb.WriteString(fmt.Sprintf(" ORDER BY %s", q.OrderBy))
 	}
 
-	if sqb.Limit > 0 {
-		sb.WriteString(fmt.Sprintf(" LIMIT %d", sqb.Limit))
+	if q.Limit > 0 {
+		sb.WriteString(fmt.Sprintf(" LIMIT %d", q.Limit))
 	}
 
-	if sqb.Offset > 0 {
-		sb.WriteString(fmt.Sprintf(" OFFSET %d", sqb.Offset))
+	if q.Offset > 0 {
+		sb.WriteString(fmt.Sprintf(" OFFSET %d", q.Offset))
 	}
 
 	return sb.String(), nil
 }
 
-func (sqb *SnubaQueryBuilder) Do() (io.ReadCloser, error) {
-	url, err := sqb.URL()
+func (q *QueryBuilder) Do(r *sentry.Span) (io.ReadCloser, error) {
+	o := r.StartChild("query_builder")
+	o.Description = "Query Snuba"
+	defer o.Finish()
+
+	s := o.StartChild("query_builder")
+	s.Description = "Prepare Body"
+	body, err := q.body(s)
+	s.Finish()
 	if err != nil {
 		return nil, err
 	}
 
-	body, err := sqb.body()
-	if err != nil {
-		return nil, err
-	}
+	s = r.StartChild("http.client")
+	defer s.Finish()
 
-	resp, err := http.Post(url, "application/json", body)
+	resp, err := http.Post(q.client.URL(), "application/json", body)
 	if err != nil {
 		return nil, err
 	}
@@ -126,19 +154,21 @@ func (sqb *SnubaQueryBuilder) Do() (io.ReadCloser, error) {
 	return resp.Body, nil
 }
 
-func (sqb *SnubaQueryBuilder) body() (io.Reader, error) {
-	query, err := sqb.Query()
+func (q *QueryBuilder) body(s *sentry.Span) (io.Reader, error) {
+	query, err := q.Query()
 	if err != nil {
 		return nil, err
 	}
-	spb := SnubaPostBody{
+	if s.Data == nil {
+		s.Data = make(map[string]interface{})
+	}
+	s.Data["query"] = query
+	spb := body{
 		Query:      query,
-		Dataset:    sqb.Dataset,
-		Turbo:      sqb.Turbo,
-		Consistent: sqb.Consistent,
-		Debug:      sqb.Debug,
-		DryRun:     sqb.DryRun,
-		Legacy:     sqb.Legacy,
+		Turbo:      q.client.turbo,
+		Consistent: q.client.consistent,
+		Debug:      q.client.debug,
+		DryRun:     q.client.dryRun,
 	}
 	body, err := json.Marshal(spb)
 	if err != nil {

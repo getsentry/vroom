@@ -30,7 +30,9 @@ import (
 type environment struct {
 	Port      string `default:"8080"`
 	SnubaHost string `envconfig:"SENTRY_SNUBA_HOST" required:"true"`
-	SnubaPort int    `envconfig:"SENTRY_SNUBA_PORT" required:"false"`
+	SnubaPort string `envconfig:"SENTRY_SNUBA_PORT" required:"false"`
+
+	snuba snubautil.Client
 }
 
 func newEnvironment() (*environment, error) {
@@ -39,6 +41,10 @@ func newEnvironment() (*environment, error) {
 	if err != nil {
 		sentry.CaptureException(err)
 		log.Fatal().Err(err).Msg("organization: missing environment variables")
+	}
+	e.snuba, err = snubautil.NewClient(e.SnubaHost, e.SnubaPort, "profiles", sentry.CurrentHub())
+	if err != nil {
+		return nil, err
 	}
 	return &e, nil
 }
@@ -71,7 +77,8 @@ func main() {
 	logutil.ConfigureLogger()
 
 	err := sentry.Init(sentry.ClientOptions{
-		Debug: true,
+		TracesSampleRate: 1.0,
+		Debug:            true,
 	})
 	if err != nil {
 		sentry.CaptureException(err)
@@ -129,8 +136,9 @@ func main() {
 }
 
 func (env *environment) getProfile(w http.ResponseWriter, r *http.Request) {
-	hub := sentry.GetHubFromContext(r.Context())
-	ps := httprouter.ParamsFromContext(r.Context())
+	ctx := r.Context()
+	hub := sentry.GetHubFromContext(ctx)
+	ps := httprouter.ParamsFromContext(ctx)
 	rawOrganizationID := ps.ByName("organization_id")
 	organizationID, err := strconv.ParseUint(rawOrganizationID, 10, 64)
 	if err != nil {
@@ -164,19 +172,17 @@ func (env *environment) getProfile(w http.ResponseWriter, r *http.Request) {
 
 	hub.Scope().SetTag("profile_id", profileID)
 
-	sqb := snubautil.SnubaQueryBuilder{
-		Endpoint: env.SnubaHost,
-		Port:     env.SnubaPort,
-		Dataset:  "profiles",
-		Entity:   "profiles",
+	sqb, err := env.snuba.NewQuery(ctx, "profiles")
+	if err != nil {
+		hub.CaptureException(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 	profile, err := snubautil.GetProfile(organizationID, projectID, profileID, sqb)
 	if err != nil {
 		if errors.Is(err, snubautil.ErrProfileNotFound) {
 			w.WriteHeader(http.StatusNotFound)
 		} else {
-			q, _ := sqb.Query()
-			hub.Scope().SetContext("query", q)
 			hub.CaptureException(err)
 			w.WriteHeader(http.StatusInternalServerError)
 		}
@@ -184,6 +190,9 @@ func (env *environment) getProfile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	hub.Scope().SetTag("platform", profile.Platform)
+
+	s := sentry.StartSpan(ctx, "json.marshal")
+	defer s.Finish()
 
 	var b []byte
 	switch profile.Platform {
@@ -228,13 +237,14 @@ type ProfileResult struct {
 }
 
 func (env *environment) getProfiles(w http.ResponseWriter, r *http.Request) {
-	hub := sentry.GetHubFromContext(r.Context())
+	ctx := r.Context()
+	hub := sentry.GetHubFromContext(ctx)
 	_, ok := httputil.GetRequiredQueryParameters(w, r, hub, "project_id", "limit", "offset")
 	if !ok {
 		return
 	}
 
-	ps := httprouter.ParamsFromContext(r.Context())
+	ps := httprouter.ParamsFromContext(ctx)
 	rawOrganizationID := ps.ByName("organization_id")
 	organizationID, err := strconv.ParseUint(rawOrganizationID, 10, 64)
 	if err != nil {
@@ -246,7 +256,7 @@ func (env *environment) getProfiles(w http.ResponseWriter, r *http.Request) {
 
 	hub.Scope().SetTag("organization_id", rawOrganizationID)
 
-	sqb, err := snubaQueryBuilderFromRequest(r.URL.Query())
+	sqb, err := env.snubaQueryBuilderFromRequest(ctx, r.URL.Query())
 	if err != nil {
 		hub.CaptureException(err)
 		w.WriteHeader(http.StatusBadRequest)
@@ -254,19 +264,16 @@ func (env *environment) getProfiles(w http.ResponseWriter, r *http.Request) {
 	}
 
 	sqb.WhereConditions = append(sqb.WhereConditions, fmt.Sprintf("organization_id=%d", organizationID))
-	sqb.Endpoint = env.SnubaHost
-	sqb.Port = env.SnubaPort
-	sqb.Dataset = "profiles"
-	sqb.Entity = "profiles"
 
 	profiles, err := snubautil.GetProfiles(sqb, false)
 	if err != nil {
-		q, _ := sqb.Query()
-		hub.Scope().SetContext("query", q)
 		hub.CaptureException(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+
+	s := sentry.StartSpan(ctx, "json.marshal")
+	defer s.Finish()
 
 	resp := GetOrganizationProfilesResponse{
 		Profiles: make([]ProfileResult, 0, len(profiles)),
@@ -294,8 +301,9 @@ type Filter struct {
 }
 
 func (env *environment) getFilters(w http.ResponseWriter, r *http.Request) {
-	hub := sentry.GetHubFromContext(r.Context())
-	ps := httprouter.ParamsFromContext(r.Context())
+	ctx := r.Context()
+	hub := sentry.GetHubFromContext(ctx)
+	ps := httprouter.ParamsFromContext(ctx)
 	rawOrganizationID := ps.ByName("organization_id")
 	organizationID, err := strconv.ParseUint(rawOrganizationID, 10, 64)
 	if err != nil {
@@ -307,7 +315,7 @@ func (env *environment) getFilters(w http.ResponseWriter, r *http.Request) {
 
 	hub.Scope().SetTag("organization_id", rawOrganizationID)
 
-	sqb, err := snubaQueryBuilderFromRequest(r.URL.Query())
+	sqb, err := env.snubaQueryBuilderFromRequest(ctx, r.URL.Query())
 	if err != nil {
 		hub.CaptureException(err)
 		w.WriteHeader(http.StatusBadRequest)
@@ -315,19 +323,16 @@ func (env *environment) getFilters(w http.ResponseWriter, r *http.Request) {
 	}
 
 	sqb.WhereConditions = append(sqb.WhereConditions, fmt.Sprintf("organization_id = %d", organizationID))
-	sqb.Endpoint = env.SnubaHost
-	sqb.Port = env.SnubaPort
-	sqb.Dataset = "profiles"
-	sqb.Entity = "profiles"
 
 	filters, err := snubautil.GetFilters(sqb)
 	if err != nil {
-		q, _ := sqb.Query()
-		hub.Scope().SetContext("query", q)
 		hub.CaptureException(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+
+	s := sentry.StartSpan(ctx, "json.marshal")
+	defer s.Finish()
 
 	response := make([]Filter, 0, len(filters))
 	for k, v := range filters {
@@ -351,7 +356,8 @@ type GetFunctionsCallTreesResponse struct {
 }
 
 func (env *environment) getFunctionsCallTrees(w http.ResponseWriter, r *http.Request) {
-	hub := sentry.GetHubFromContext(r.Context())
+	ctx := r.Context()
+	hub := sentry.GetHubFromContext(ctx)
 	p, ok := httputil.GetRequiredQueryParameters(w, r, hub, "version", "transaction_name", "key")
 	if !ok {
 		return
@@ -359,7 +365,7 @@ func (env *environment) getFunctionsCallTrees(w http.ResponseWriter, r *http.Req
 
 	hub.Scope().SetTags(p)
 
-	ps := httprouter.ParamsFromContext(r.Context())
+	ps := httprouter.ParamsFromContext(ctx)
 	rawOrganizationID := ps.ByName("organization_id")
 	organizationID, err := strconv.ParseUint(rawOrganizationID, 10, 64)
 	if err != nil {
@@ -382,18 +388,14 @@ func (env *environment) getFunctionsCallTrees(w http.ResponseWriter, r *http.Req
 
 	hub.Scope().SetTag("project_id", rawProjectID)
 
-	sqb, err := snubaQueryBuilderFromRequest(r.URL.Query())
+	sqb, err := env.snubaQueryBuilderFromRequest(ctx, r.URL.Query())
 	if err != nil {
 		hub.CaptureException(err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	sqb.Dataset = "profiles"
-	sqb.Endpoint = env.SnubaHost
-	sqb.Entity = "profiles"
 	sqb.Limit = 10
-	sqb.Port = env.SnubaPort
 	sqb.WhereConditions = append(sqb.WhereConditions,
 		fmt.Sprintf("organization_id=%d", organizationID),
 		fmt.Sprintf("project_id=%d", projectID),
@@ -401,8 +403,6 @@ func (env *environment) getFunctionsCallTrees(w http.ResponseWriter, r *http.Req
 
 	profiles, err := snubautil.GetProfiles(sqb, true)
 	if err != nil {
-		q, _ := sqb.Query()
-		hub.Scope().SetContext("query", q)
 		hub.CaptureException(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -422,12 +422,17 @@ func (env *environment) getFunctionsCallTrees(w http.ResponseWriter, r *http.Req
 		hub.Scope().SetContext("top_n_functions", rawTopNFunctions)
 	}
 
+	s := sentry.StartSpan(ctx, "aggregation")
 	aggRes, err := aggregate.AggregateProfiles(profiles, topNFunctions)
+	s.Finish()
 	if err != nil {
 		hub.CaptureException(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+
+	s = sentry.StartSpan(ctx, "json.marshal")
+	defer s.Finish()
 
 	var response GetFunctionsCallTreesResponse
 	// Linear search the list of functions for the one matching the key
@@ -459,17 +464,18 @@ func (env *environment) getFunctionsCallTrees(w http.ResponseWriter, r *http.Req
 }
 
 type (
-	FunctionCallsData struct {
+	functionCallsData struct {
 		FunctionCalls []aggregate.FunctionCall
 	}
 
-	VersionSeriesData struct {
-		Versions map[string]FunctionCallsData
+	versionSeriesData struct {
+		Versions map[string]functionCallsData
 	}
 )
 
 func (env *environment) getFunctions(w http.ResponseWriter, r *http.Request) {
-	hub := sentry.GetHubFromContext(r.Context())
+	ctx := r.Context()
+	hub := sentry.GetHubFromContext(ctx)
 	p, ok := httputil.GetRequiredQueryParameters(w, r, hub, "version", "transaction_name")
 	if !ok {
 		return
@@ -477,7 +483,7 @@ func (env *environment) getFunctions(w http.ResponseWriter, r *http.Request) {
 
 	hub.Scope().SetTags(p)
 
-	ps := httprouter.ParamsFromContext(r.Context())
+	ps := httprouter.ParamsFromContext(ctx)
 	rawOrganizationID := ps.ByName("organization_id")
 	organizationID, err := strconv.ParseUint(rawOrganizationID, 10, 64)
 	if err != nil {
@@ -514,7 +520,7 @@ func (env *environment) getFunctions(w http.ResponseWriter, r *http.Request) {
 		hub.Scope().SetContext("top_n_functions", rawTopNFunctions)
 	}
 
-	sqb, err := snubaQueryBuilderFromRequest(r.URL.Query())
+	sqb, err := env.snubaQueryBuilderFromRequest(ctx, r.URL.Query())
 	if err != nil {
 		hub.CaptureException(err)
 		w.WriteHeader(http.StatusBadRequest)
@@ -525,29 +531,28 @@ func (env *environment) getFunctions(w http.ResponseWriter, r *http.Request) {
 		fmt.Sprintf("project_id=%d", projectID),
 	)
 	sqb.Limit = 10
-	sqb.Endpoint = env.SnubaHost
-	sqb.Port = env.SnubaPort
-	sqb.Dataset = "profiles"
-	sqb.Entity = "profiles"
 
 	profiles, err := snubautil.GetProfiles(sqb, true)
 	if err != nil {
-		q, _ := sqb.Query()
-		hub.Scope().SetContext("query", q)
 		hub.CaptureException(err)
 		return
 	}
 
+	s := sentry.StartSpan(ctx, "aggregation")
 	aggResult, err := aggregate.AggregateProfiles(profiles, topNFunctions)
+	s.Finish()
 	if err != nil {
 		hub.CaptureException(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	versionData := VersionSeriesData{
-		Versions: map[string]FunctionCallsData{
-			p["version"]: FunctionCallsData{
+	s = sentry.StartSpan(ctx, "json.marshal")
+	defer s.Finish()
+
+	versionData := versionSeriesData{
+		Versions: map[string]functionCallsData{
+			p["version"]: functionCallsData{
 				FunctionCalls: aggResult.Aggregation.FunctionCalls,
 			},
 		},
