@@ -28,9 +28,9 @@ import (
 )
 
 type environment struct {
-	Port      string `default:"8080" required:"false"`
+	Port      string `default:"8080"`
 	SnubaHost string `envconfig:"SENTRY_SNUBA_HOST" required:"true"`
-	SnubaPort string `envconfig:"SENTRY_SNUBA_PORT" required:"false"`
+	SnubaPort string `envconfig:"SENTRY_SNUBA_PORT"`
 
 	snuba snubautil.Client
 }
