@@ -404,7 +404,7 @@ func (a *BacktraceAggregatorP) computeCallTreesForFunctionP(f functionCallWithDu
 	for key, tree := range agg.UniqueRootCallTrees {
 		var profileIDs []string
 		if uniqueprofileIDs, ok := treeKeyToprofileIDs[key]; ok {
-			for profileID, _ := range uniqueprofileIDs {
+			for profileID := range uniqueprofileIDs {
 				profileIDs = append(profileIDs, profileID)
 			}
 		}

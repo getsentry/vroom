@@ -15,3 +15,6 @@ deploy:
 
 test:
 	go test ./...
+
+format:
+	gofmt -l -w -s .

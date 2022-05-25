@@ -231,14 +231,14 @@ func TestMultiThreadBacktracePAggregation(t *testing.T) {
 				{1, 0, []string{"2", "1", "0"}},
 			},
 			want: map[uint64][]*CallTreeP{
-				0: []*CallTreeP{
+				0: {
 					{"0", 0, 0, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
 						{"1", 0, 0, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
 							{"2", 0, 0, NoEndTime, NoEndTime, "trace1", "", "", nil},
 						}},
 					}},
 				},
-				1: []*CallTreeP{
+				1: {
 					{"0", 1, 0, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
 						{"1", 1, 0, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
 							{"2", 1, 0, NoEndTime, NoEndTime, "trace1", "", "", nil},
@@ -254,14 +254,14 @@ func TestMultiThreadBacktracePAggregation(t *testing.T) {
 				{1, 0, []string{"5", "4", "3"}},
 			},
 			want: map[uint64][]*CallTreeP{
-				0: []*CallTreeP{
+				0: {
 					{"0", 0, 0, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
 						{"1", 0, 0, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
 							{"2", 0, 0, NoEndTime, NoEndTime, "trace1", "", "", nil},
 						}},
 					}},
 				},
-				1: []*CallTreeP{
+				1: {
 					{"3", 1, 0, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
 						{"4", 1, 0, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
 							{"5", 1, 0, NoEndTime, NoEndTime, "trace1", "", "", nil},
@@ -279,14 +279,14 @@ func TestMultiThreadBacktracePAggregation(t *testing.T) {
 				{1, 10, []string{"4", "3"}},
 			},
 			want: map[uint64][]*CallTreeP{
-				0: []*CallTreeP{
+				0: {
 					{"0", 0, 0, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
 						{"1", 0, 0, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
 							{"2", 0, 0, 10, 10, "trace1", "", "", nil},
 						}},
 					}},
 				},
-				1: []*CallTreeP{
+				1: {
 					{"3", 1, 0, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
 						{"4", 1, 0, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
 							{"5", 1, 0, 10, 10, "trace1", "", "", nil},
@@ -304,14 +304,14 @@ func TestMultiThreadBacktracePAggregation(t *testing.T) {
 				{1, 30, []string{"4", "3"}},
 			},
 			want: map[uint64][]*CallTreeP{
-				0: []*CallTreeP{
+				0: {
 					{"0", 0, 0, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
 						{"1", 0, 0, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
 							{"2", 0, 0, 10, 10, "trace1", "", "", nil},
 						}},
 					}},
 				},
-				1: []*CallTreeP{
+				1: {
 					{"3", 1, 20, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
 						{"4", 1, 20, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
 							{"5", 1, 20, 30, 10, "trace1", "", "", nil},
@@ -329,14 +329,14 @@ func TestMultiThreadBacktracePAggregation(t *testing.T) {
 				{1, 10, []string{"4", "3"}},
 			},
 			want: map[uint64][]*CallTreeP{
-				0: []*CallTreeP{
+				0: {
 					{"0", 0, 0, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
 						{"1", 0, 0, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
 							{"2", 0, 0, 10, 10, "trace1", "", "", nil},
 						}},
 					}},
 				},
-				1: []*CallTreeP{
+				1: {
 					{"3", 1, 0, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
 						{"4", 1, 0, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
 							{"5", 1, 0, 10, 10, "trace1", "", "", nil},
@@ -354,14 +354,14 @@ func TestMultiThreadBacktracePAggregation(t *testing.T) {
 				{1, 50, []string{"4", "3"}},
 			},
 			want: map[uint64][]*CallTreeP{
-				0: []*CallTreeP{
+				0: {
 					{"0", 0, 0, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
 						{"1", 0, 0, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
 							{"2", 0, 0, 10, 10, "trace1", "", "", nil},
 						}},
 					}},
 				},
-				1: []*CallTreeP{
+				1: {
 					{"3", 1, 40, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
 						{"4", 1, 40, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
 							{"5", 1, 40, 50, 10, "trace1", "", "", nil},
@@ -413,8 +413,8 @@ func TestMultiTraceBacktracePAggregation(t *testing.T) {
 				{"trace2", 0, 0, []string{"2", "1", "0"}},
 			},
 			want: map[string]map[uint64][]*CallTreeP{
-				"trace1": map[uint64][]*CallTreeP{
-					0: []*CallTreeP{
+				"trace1": {
+					0: {
 						{"0", 0, 0, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
 							{"1", 0, 0, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
 								{"2", 0, 0, NoEndTime, NoEndTime, "trace1", "", "", nil},
@@ -422,8 +422,8 @@ func TestMultiTraceBacktracePAggregation(t *testing.T) {
 						}},
 					},
 				},
-				"trace2": map[uint64][]*CallTreeP{
-					0: []*CallTreeP{
+				"trace2": {
+					0: {
 						{"0", 0, 0, NoEndTime, NoEndTime, "trace2", "", "", []*CallTreeP{
 							{"1", 0, 0, NoEndTime, NoEndTime, "trace2", "", "", []*CallTreeP{
 								{"2", 0, 0, NoEndTime, NoEndTime, "trace2", "", "", nil},
@@ -440,8 +440,8 @@ func TestMultiTraceBacktracePAggregation(t *testing.T) {
 				{"trace2", 0, 0, []string{"5", "4", "3"}},
 			},
 			want: map[string]map[uint64][]*CallTreeP{
-				"trace1": map[uint64][]*CallTreeP{
-					0: []*CallTreeP{
+				"trace1": {
+					0: {
 						{"0", 0, 0, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
 							{"1", 0, 0, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
 								{"2", 0, 0, NoEndTime, NoEndTime, "trace1", "", "", nil},
@@ -449,8 +449,8 @@ func TestMultiTraceBacktracePAggregation(t *testing.T) {
 						}},
 					},
 				},
-				"trace2": map[uint64][]*CallTreeP{
-					0: []*CallTreeP{
+				"trace2": {
+					0: {
 						{"3", 0, 0, NoEndTime, NoEndTime, "trace2", "", "", []*CallTreeP{
 							{"4", 0, 0, NoEndTime, NoEndTime, "trace2", "", "", []*CallTreeP{
 								{"5", 0, 0, NoEndTime, NoEndTime, "trace2", "", "", nil},
@@ -467,8 +467,8 @@ func TestMultiTraceBacktracePAggregation(t *testing.T) {
 				{"trace2", 1, 0, []string{"2", "1", "0"}},
 			},
 			want: map[string]map[uint64][]*CallTreeP{
-				"trace1": map[uint64][]*CallTreeP{
-					0: []*CallTreeP{
+				"trace1": {
+					0: {
 						{"0", 0, 0, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
 							{"1", 0, 0, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
 								{"2", 0, 0, NoEndTime, NoEndTime, "trace1", "", "", nil},
@@ -476,8 +476,8 @@ func TestMultiTraceBacktracePAggregation(t *testing.T) {
 						}},
 					},
 				},
-				"trace2": map[uint64][]*CallTreeP{
-					1: []*CallTreeP{
+				"trace2": {
+					1: {
 						{"0", 1, 0, NoEndTime, NoEndTime, "trace2", "", "", []*CallTreeP{
 							{"1", 1, 0, NoEndTime, NoEndTime, "trace2", "", "", []*CallTreeP{
 								{"2", 1, 0, NoEndTime, NoEndTime, "trace2", "", "", nil},
@@ -494,8 +494,8 @@ func TestMultiTraceBacktracePAggregation(t *testing.T) {
 				{"trace2", 1, 0, []string{"5", "4", "3"}},
 			},
 			want: map[string]map[uint64][]*CallTreeP{
-				"trace1": map[uint64][]*CallTreeP{
-					0: []*CallTreeP{
+				"trace1": {
+					0: {
 						{"0", 0, 0, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
 							{"1", 0, 0, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
 								{"2", 0, 0, NoEndTime, NoEndTime, "trace1", "", "", nil},
@@ -503,8 +503,8 @@ func TestMultiTraceBacktracePAggregation(t *testing.T) {
 						}},
 					},
 				},
-				"trace2": map[uint64][]*CallTreeP{
-					1: []*CallTreeP{
+				"trace2": {
+					1: {
 						{"3", 1, 0, NoEndTime, NoEndTime, "trace2", "", "", []*CallTreeP{
 							{"4", 1, 0, NoEndTime, NoEndTime, "trace2", "", "", []*CallTreeP{
 								{"5", 1, 0, NoEndTime, NoEndTime, "trace2", "", "", nil},
@@ -523,8 +523,8 @@ func TestMultiTraceBacktracePAggregation(t *testing.T) {
 				{"trace2", 0, 10, []string{"4", "3"}},
 			},
 			want: map[string]map[uint64][]*CallTreeP{
-				"trace1": map[uint64][]*CallTreeP{
-					0: []*CallTreeP{
+				"trace1": {
+					0: {
 						{"0", 0, 0, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
 							{"1", 0, 0, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
 								{"2", 0, 0, 10, 10, "trace1", "", "", nil},
@@ -532,8 +532,8 @@ func TestMultiTraceBacktracePAggregation(t *testing.T) {
 						}},
 					},
 				},
-				"trace2": map[uint64][]*CallTreeP{
-					0: []*CallTreeP{
+				"trace2": {
+					0: {
 						{"3", 0, 0, NoEndTime, NoEndTime, "trace2", "", "", []*CallTreeP{
 							{"4", 0, 0, NoEndTime, NoEndTime, "trace2", "", "", []*CallTreeP{
 								{"5", 0, 0, 10, 10, "trace2", "", "", nil},
@@ -552,8 +552,8 @@ func TestMultiTraceBacktracePAggregation(t *testing.T) {
 				{"trace2", 0, 30, []string{"4", "3"}},
 			},
 			want: map[string]map[uint64][]*CallTreeP{
-				"trace1": map[uint64][]*CallTreeP{
-					0: []*CallTreeP{
+				"trace1": {
+					0: {
 						{"0", 0, 0, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
 							{"1", 0, 0, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
 								{"2", 0, 0, 10, 10, "trace1", "", "", nil},
@@ -561,8 +561,8 @@ func TestMultiTraceBacktracePAggregation(t *testing.T) {
 						}},
 					},
 				},
-				"trace2": map[uint64][]*CallTreeP{
-					0: []*CallTreeP{
+				"trace2": {
+					0: {
 						{"3", 0, 20, NoEndTime, NoEndTime, "trace2", "", "", []*CallTreeP{
 							{"4", 0, 20, NoEndTime, NoEndTime, "trace2", "", "", []*CallTreeP{
 								{"5", 0, 20, 30, 10, "trace2", "", "", nil},
@@ -581,15 +581,15 @@ func TestMultiTraceBacktracePAggregation(t *testing.T) {
 				{"trace2", 0, 10, []string{"4", "3"}},
 			},
 			want: map[string]map[uint64][]*CallTreeP{
-				"trace1": map[uint64][]*CallTreeP{
-					0: []*CallTreeP{
+				"trace1": {
+					0: {
 						{"0", 0, 10, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
 							{"1", 0, 10, NoEndTime, NoEndTime, "trace1", "", "", nil},
 						}},
 					},
 				},
-				"trace2": map[uint64][]*CallTreeP{
-					0: []*CallTreeP{
+				"trace2": {
+					0: {
 						{"3", 0, 10, NoEndTime, NoEndTime, "trace2", "", "", []*CallTreeP{
 							{"4", 0, 10, NoEndTime, NoEndTime, "trace2", "", "", nil},
 						}},
@@ -606,15 +606,15 @@ func TestMultiTraceBacktracePAggregation(t *testing.T) {
 				{"trace2", 0, 30, []string{"4", "3"}},
 			},
 			want: map[string]map[uint64][]*CallTreeP{
-				"trace1": map[uint64][]*CallTreeP{
-					0: []*CallTreeP{
+				"trace1": {
+					0: {
 						{"0", 0, 10, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
 							{"1", 0, 10, NoEndTime, NoEndTime, "trace1", "", "", nil},
 						}},
 					},
 				},
-				"trace2": map[uint64][]*CallTreeP{
-					0: []*CallTreeP{
+				"trace2": {
+					0: {
 						{"3", 0, 30, NoEndTime, NoEndTime, "trace2", "", "", []*CallTreeP{
 							{"4", 0, 30, NoEndTime, NoEndTime, "trace2", "", "", nil},
 						}},
