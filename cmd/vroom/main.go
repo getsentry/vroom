@@ -39,8 +39,7 @@ func newEnvironment() (*environment, error) {
 	var e environment
 	err := envconfig.Process("", &e)
 	if err != nil {
-		sentry.CaptureException(err)
-		log.Fatal().Err(err).Msg("organization: missing environment variables")
+		return nil, err
 	}
 	e.snuba, err = snubautil.NewClient(e.SnubaHost, e.SnubaPort, "profiles", sentry.CurrentHub())
 	if err != nil {
@@ -81,7 +80,6 @@ func main() {
 		Debug:            true,
 	})
 	if err != nil {
-		sentry.CaptureException(err)
 		log.Fatal().Err(err).Msg("can't initialize sentry")
 	}
 
@@ -552,7 +550,7 @@ func (env *environment) getFunctions(w http.ResponseWriter, r *http.Request) {
 
 	versionData := versionSeriesData{
 		Versions: map[string]functionCallsData{
-			p["version"]: functionCallsData{
+			p["version"]: {
 				FunctionCalls: aggResult.Aggregation.FunctionCalls,
 			},
 		},
