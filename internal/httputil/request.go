@@ -3,8 +3,10 @@ package httputil
 import (
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/getsentry/sentry-go"
+	"github.com/julienschmidt/httprouter"
 )
 
 // GetRequiredQueryParameters attempts to read the specified query parameters
@@ -24,4 +26,16 @@ func GetRequiredQueryParameters(w http.ResponseWriter, r *http.Request, hub *sen
 		context[key] = value
 	}
 	return params, true
+}
+
+func AnonymizeTransactionName(handler http.Handler) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		params := httprouter.ParamsFromContext(r.Context())
+		path := r.URL.Path
+		for _, param := range params {
+			path = strings.Replace(path, param.Value, fmt.Sprintf(":%s", param.Key), 1)
+		}
+		sentry.GetHubFromContext(r.Context()).Scope().SetTransaction(fmt.Sprintf("%s %s", r.Method, path))
+		handler.ServeHTTP(w, r)
+	}
 }
