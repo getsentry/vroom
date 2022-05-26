@@ -146,8 +146,9 @@ func (q *QueryBuilder) Do(r *sentry.Span) (io.ReadCloser, error) {
 	defer s.Finish()
 
 	headers := make(http.Header)
-	headers.Set("Content-Type", "application/json")
-	headers.Add("sentry-trace", s.ToSentryTrace())
+	headers.Set("content-type", "application/json")
+	headers.Set("sentry-trace", s.ToSentryTrace())
+	headers.Set("referer", "api.vroom")
 	resp, err := q.client.http.Post(q.client.URL(), body, headers)
 	if err != nil {
 		return nil, err
