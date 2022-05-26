@@ -142,7 +142,7 @@ func (q *QueryBuilder) Do(r *sentry.Span) (io.ReadCloser, error) {
 		return nil, err
 	}
 
-	s = r.StartChild("http.client")
+	s = o.StartChild("http.client")
 	defer s.Finish()
 
 	headers := make(http.Header)
