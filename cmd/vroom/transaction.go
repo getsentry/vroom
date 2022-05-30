@@ -22,6 +22,7 @@ type (
 		LastProfileAt time.Time           `json:"last_profile_at"`
 		Name          string              `json:"name"`
 		ProfilesCount int                 `json:"profiles_count"`
+		ProjectID     string              `json:"project_id"`
 		Versions      []string            `json:"versions"`
 	}
 
@@ -111,6 +112,7 @@ func snubaTransactionToTransaction(t snubautil.Transaction) Transaction {
 		LastProfileAt: t.LastProfileAt,
 		Name:          t.TransactionName,
 		ProfilesCount: t.ProfilesCount,
+		ProjectID:     strconv.FormatUint(t.ProjectID, 10),
 		Versions:      versions,
 	}
 }
