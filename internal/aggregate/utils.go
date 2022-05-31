@@ -280,7 +280,7 @@ type IosProfile struct {
 
 type ThreadMedata struct {
 	Name     string `json:"name"`
-	Priority uint64 `json:"priority"`
+	Priority int    `json:"priority"`
 }
 
 type QueueMetadata struct {
