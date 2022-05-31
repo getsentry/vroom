@@ -24,7 +24,6 @@ func (env *environment) getProfileCallTree(w http.ResponseWriter, r *http.Reques
 	rawOrganizationID := ps.ByName("organization_id")
 	organizationID, err := strconv.ParseUint(rawOrganizationID, 10, 64)
 	if err != nil {
-		hub.Scope().SetContext("raw_organization_id", rawOrganizationID)
 		hub.CaptureException(err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -35,7 +34,6 @@ func (env *environment) getProfileCallTree(w http.ResponseWriter, r *http.Reques
 	rawProjectID := ps.ByName("project_id")
 	projectID, err := strconv.ParseUint(rawProjectID, 10, 64)
 	if err != nil {
-		hub.Scope().SetContext("raw_project_id", rawProjectID)
 		hub.CaptureException(err)
 		w.WriteHeader(http.StatusBadRequest)
 		return

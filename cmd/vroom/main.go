@@ -149,7 +149,6 @@ func (env *environment) getProfile(w http.ResponseWriter, r *http.Request) {
 	rawOrganizationID := ps.ByName("organization_id")
 	organizationID, err := strconv.ParseUint(rawOrganizationID, 10, 64)
 	if err != nil {
-		hub.Scope().SetContext("raw_organization_id", rawOrganizationID)
 		hub.CaptureException(err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -160,7 +159,6 @@ func (env *environment) getProfile(w http.ResponseWriter, r *http.Request) {
 	rawProjectID := ps.ByName("project_id")
 	projectID, err := strconv.ParseUint(rawProjectID, 10, 64)
 	if err != nil {
-		hub.Scope().SetContext("raw_project_id", rawProjectID)
 		sentry.CaptureException(err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -171,7 +169,6 @@ func (env *environment) getProfile(w http.ResponseWriter, r *http.Request) {
 	profileID := ps.ByName("profile_id")
 	_, err = uuid.Parse(profileID)
 	if err != nil {
-		hub.Scope().SetContext("raw_profile_id", profileID)
 		hub.CaptureException(err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -246,7 +243,7 @@ type ProfileResult struct {
 func (env *environment) getProfiles(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	hub := sentry.GetHubFromContext(ctx)
-	_, ok := httputil.GetRequiredQueryParameters(w, r, hub, "project_id", "limit", "offset")
+	_, ok := httputil.GetRequiredQueryParameters(w, r, "project_id", "limit", "offset")
 	if !ok {
 		return
 	}
@@ -255,7 +252,6 @@ func (env *environment) getProfiles(w http.ResponseWriter, r *http.Request) {
 	rawOrganizationID := ps.ByName("organization_id")
 	organizationID, err := strconv.ParseUint(rawOrganizationID, 10, 64)
 	if err != nil {
-		hub.Scope().SetContext("raw_organization_id", rawOrganizationID)
 		hub.CaptureException(err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -314,7 +310,6 @@ func (env *environment) getFilters(w http.ResponseWriter, r *http.Request) {
 	rawOrganizationID := ps.ByName("organization_id")
 	organizationID, err := strconv.ParseUint(rawOrganizationID, 10, 64)
 	if err != nil {
-		hub.Scope().SetContext("raw_organization_id", rawOrganizationID)
 		hub.CaptureException(err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -365,7 +360,7 @@ type GetFunctionsCallTreesResponse struct {
 func (env *environment) getFunctionsCallTrees(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	hub := sentry.GetHubFromContext(ctx)
-	p, ok := httputil.GetRequiredQueryParameters(w, r, hub, "version", "transaction_name", "key")
+	p, ok := httputil.GetRequiredQueryParameters(w, r, "version", "transaction_name", "key")
 	if !ok {
 		return
 	}
@@ -376,7 +371,6 @@ func (env *environment) getFunctionsCallTrees(w http.ResponseWriter, r *http.Req
 	rawOrganizationID := ps.ByName("organization_id")
 	organizationID, err := strconv.ParseUint(rawOrganizationID, 10, 64)
 	if err != nil {
-		hub.Scope().SetContext("raw_organization_id", rawOrganizationID)
 		hub.CaptureException(err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -387,7 +381,6 @@ func (env *environment) getFunctionsCallTrees(w http.ResponseWriter, r *http.Req
 	rawProjectID := ps.ByName("project_id")
 	projectID, err := strconv.ParseUint(rawProjectID, 10, 64)
 	if err != nil {
-		hub.Scope().SetContext("raw_project_id", rawProjectID)
 		hub.CaptureException(err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -419,14 +412,11 @@ func (env *environment) getFunctionsCallTrees(w http.ResponseWriter, r *http.Req
 	if rawTopNFunctions := r.URL.Query().Get("top_n_functions"); rawTopNFunctions != "" {
 		i, err := strconv.Atoi(rawTopNFunctions)
 		if err != nil {
-			hub.Scope().SetContext("raw_top_n_functions", rawTopNFunctions)
 			sentry.CaptureException(err)
 			w.WriteHeader(http.StatusBadRequest)
 		} else {
 			topNFunctions = i
 		}
-
-		hub.Scope().SetContext("top_n_functions", rawTopNFunctions)
 	}
 
 	s := sentry.StartSpan(ctx, "aggregation")
@@ -483,7 +473,7 @@ type (
 func (env *environment) getFunctions(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	hub := sentry.GetHubFromContext(ctx)
-	p, ok := httputil.GetRequiredQueryParameters(w, r, hub, "version", "transaction_name")
+	p, ok := httputil.GetRequiredQueryParameters(w, r, "version", "transaction_name")
 	if !ok {
 		return
 	}
@@ -494,7 +484,6 @@ func (env *environment) getFunctions(w http.ResponseWriter, r *http.Request) {
 	rawOrganizationID := ps.ByName("organization_id")
 	organizationID, err := strconv.ParseUint(rawOrganizationID, 10, 64)
 	if err != nil {
-		hub.Scope().SetContext("raw_organization_id", rawOrganizationID)
 		hub.CaptureException(err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -505,7 +494,6 @@ func (env *environment) getFunctions(w http.ResponseWriter, r *http.Request) {
 	rawProjectID := ps.ByName("project_id")
 	projectID, err := strconv.ParseUint(rawProjectID, 10, 64)
 	if err != nil {
-		hub.Scope().SetContext("raw_project_id", rawProjectID)
 		hub.CaptureException(err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -517,14 +505,11 @@ func (env *environment) getFunctions(w http.ResponseWriter, r *http.Request) {
 	if rawTopNFunctions := r.URL.Query().Get("top_n_functions"); rawTopNFunctions != "" {
 		i, err := strconv.Atoi(rawTopNFunctions)
 		if err != nil {
-			hub.Scope().SetContext("raw_top_n_functions", rawTopNFunctions)
 			hub.CaptureException(err)
 			w.WriteHeader(http.StatusBadRequest)
 		} else {
 			topNFunctions = i
 		}
-
-		hub.Scope().SetContext("top_n_functions", rawTopNFunctions)
 	}
 
 	sqb, err := env.snubaQueryBuilderFromRequest(ctx, r.URL.Query())
