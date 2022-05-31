@@ -461,19 +461,15 @@ func (env *environment) getFunctionsCallTrees(w http.ResponseWriter, r *http.Req
 }
 
 type (
-	functionCallsData struct {
-		FunctionCalls []aggregate.FunctionCall
-	}
-
-	versionSeriesData struct {
-		Versions map[string]functionCallsData
+	GetFunctionsResponse struct {
+		Functions []aggregate.FunctionCall `json:"functions"`
 	}
 )
 
 func (env *environment) getFunctions(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	hub := sentry.GetHubFromContext(ctx)
-	p, ok := httputil.GetRequiredQueryParameters(w, r, "version", "transaction_name")
+	p, ok := httputil.GetRequiredQueryParameters(w, r, "transaction_name")
 	if !ok {
 		return
 	}
@@ -542,15 +538,9 @@ func (env *environment) getFunctions(w http.ResponseWriter, r *http.Request) {
 	s = sentry.StartSpan(ctx, "json.marshal")
 	defer s.Finish()
 
-	versionData := versionSeriesData{
-		Versions: map[string]functionCallsData{
-			p["version"]: {
-				FunctionCalls: aggResult.Aggregation.FunctionCalls,
-			},
-		},
-	}
-
-	b, err := json.Marshal(versionData)
+	b, err := json.Marshal(GetFunctionsResponse{
+		Functions: aggResult.Aggregation.FunctionCalls,
+	})
 	if err != nil {
 		hub.CaptureException(err)
 		w.WriteHeader(http.StatusInternalServerError)
