@@ -41,7 +41,7 @@ type (
 		EndValue     uint64           `json:"endValue"`
 		IsMainThread bool             `json:"isMainThread"`
 		Name         string           `json:"name"`
-		Priority     uint64           `json:"priority"`
+		Priority     int              `json:"priority"`
 		Queues       map[string]queue `json:"queues,omitempty"`
 		Samples      [][]int          `json:"samples"`
 		StartValue   uint64           `json:"startValue"`
