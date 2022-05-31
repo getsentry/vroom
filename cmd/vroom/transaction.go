@@ -33,7 +33,7 @@ type (
 
 func (env *environment) getTransactions(w http.ResponseWriter, r *http.Request) {
 	hub := sentry.GetHubFromContext(r.Context())
-	p, ok := httputil.GetRequiredQueryParameters(w, r, hub, "project_id", "start", "end")
+	p, ok := httputil.GetRequiredQueryParameters(w, r, "project_id", "start", "end")
 	if !ok {
 		return
 	}
@@ -45,7 +45,6 @@ func (env *environment) getTransactions(w http.ResponseWriter, r *http.Request) 
 	rawOrganizationID := ps.ByName("organization_id")
 	organizationID, err := strconv.ParseUint(rawOrganizationID, 10, 64)
 	if err != nil {
-		hub.Scope().SetContext("raw_organization_id", rawOrganizationID)
 		hub.CaptureException(err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
