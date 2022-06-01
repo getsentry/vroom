@@ -98,7 +98,6 @@ func (a *BacktraceAggregatorP) UpdateFromProfile(profile snubautil.Profile) erro
 	if err != nil {
 		return err
 	}
-
 	a.profileIDToTransactionName[profile.ProfileID] = profile.TransactionName
 	for _, sample := range iosProfile.Samples {
 		var threadID uint64
@@ -137,6 +136,7 @@ func (a *BacktraceAggregatorP) UpdateFromProfile(profile snubautil.Profile) erro
 			threadName = fmt.Sprintf("%d", threadID)
 		}
 		addresses := make([]string, len(sample.Frames), len(sample.Frames))
+		var isMainThread bool
 		for i, frame := range sample.Frames {
 			addresses[i] = frame.InstructionAddr
 
@@ -159,13 +159,18 @@ func (a *BacktraceAggregatorP) UpdateFromProfile(profile snubautil.Profile) erro
 				a.symbolsByProfileID[profile.ProfileID] = make(map[string]Symbol)
 			}
 			a.symbolsByProfileID[profile.ProfileID][frame.InstructionAddr] = symbol
+
+			if !isMainThread && frame.IsMain() {
+				isMainThread = true
+			}
 		}
 		a.bta.Update(calltree.BacktraceP{
-			ProfileID:   profile.ProfileID,
-			ThreadID:    threadID,
-			TimestampNs: relativeTimestampNS,
-			Addresses:   addresses,
-			ThreadName:  threadName,
+			ProfileID:    profile.ProfileID,
+			Addresses:    addresses,
+			IsMainThread: isMainThread,
+			ThreadID:     threadID,
+			ThreadName:   threadName,
+			TimestampNs:  relativeTimestampNS,
 		})
 	}
 
@@ -503,11 +508,11 @@ func accumulateFunctionCallsP(root, cur *calltree.CallTreeP, profileID string, f
 		*functionCalls = append(*functionCalls, functionCallP{
 			address:      cur.Address,
 			durationNs:   curDurationNs,
-			isMainThread: cur.ThreadName == "com.apple.main-thread",
+			isMainThread: root.IsMainThread,
 			profileID:    profileID,
 			rootCallTree: root,
 			threadID:     cur.ThreadID,
-			threadName:   cur.ThreadName,
+			threadName:   root.ThreadName,
 		})
 	}
 }

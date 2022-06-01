@@ -110,13 +110,12 @@ func iosSpeedscopeTraceFromProfile(profile *aggregate.IosProfile) (output, error
 				threadName = queueMetadata.Label
 			}
 			sampProfile = &sampledProfile{
-				IsMainThread: threadName == iosMainThreadName,
-				Name:         threadName,
-				Queues:       make(map[string]queue),
-				StartValue:   relativeTimestampNS,
-				ThreadID:     threadID,
-				Type:         profileTypeSampled,
-				Unit:         valueUnitNanoseconds,
+				Name:       threadName,
+				Queues:     make(map[string]queue),
+				StartValue: relativeTimestampNS,
+				ThreadID:   threadID,
+				Type:       profileTypeSampled,
+				Unit:       valueUnitNanoseconds,
 			}
 			if qmExists {
 				sampProfile.Queues[queueMetadata.Label] = queue{Label: queueMetadata.Label, StartNS: relativeTimestampNS, EndNS: relativeTimestampNS}
@@ -147,7 +146,7 @@ func iosSpeedscopeTraceFromProfile(profile *aggregate.IosProfile) (output, error
 			fr := sample.Frames[i]
 			// the main thread may not always have the correct name if the thread
 			// contains the main function, we should consider it the main thread too
-			if !sampProfile.IsMainThread && fr.Function == iosMainFunctionName {
+			if !sampProfile.IsMainThread && fr.IsMain() {
 				sampProfile.IsMainThread = true
 			}
 			frameIndex, ok := addressToFrameIndex[fr.InstructionAddr]
@@ -156,7 +155,7 @@ func iosSpeedscopeTraceFromProfile(profile *aggregate.IosProfile) (output, error
 				symbolName := fr.Function
 				if symbolName == "" {
 					symbolName = fmt.Sprintf("unknown (%s)", fr.InstructionAddr)
-				} else if symbolName == "main" {
+				} else if fr.IsMain() {
 					mainFunctionFrameIndex = frameIndex
 				}
 				addressToFrameIndex[fr.InstructionAddr] = frameIndex
