@@ -182,6 +182,7 @@ func iosSpeedscopeTraceFromProfile(profile *aggregate.IosProfile) (output, error
 	})
 
 	var mainThreadProfileIndex int
+	mainThreadSamples := 0
 	allProfiles := make([]interface{}, 0)
 	for _, threadID := range threadIDs {
 		prof, ok := threadIDToProfile[threadID]
@@ -189,7 +190,14 @@ func iosSpeedscopeTraceFromProfile(profile *aggregate.IosProfile) (output, error
 			continue
 		}
 		if prof.IsMainThread {
-			mainThreadProfileIndex = len(allProfiles)
+
+			// There are multiple threads that can be marked as
+			// the main thread at times. We should favor the one
+			// with the most amount of samples to be shown first.
+			if len(prof.Samples) > mainThreadSamples {
+				mainThreadProfileIndex = len(allProfiles)
+				mainThreadSamples = len(prof.Samples)
+			}
 
 			// Remove all frames before main is called on the main thread
 			if mainFunctionFrameIndex != -1 {
