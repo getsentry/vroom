@@ -97,7 +97,7 @@ func (env *environment) getTransactions(w http.ResponseWriter, r *http.Request) 
 func snubaTransactionToTransaction(t snubautil.Transaction) Transaction {
 	versions := make([]string, 0, len(t.Versions))
 	for _, v := range t.Versions {
-		versions = append(versions, fmt.Sprintf("%s (build %s)", v[0], v[1]))
+		versions = append(versions, snubautil.FormatVersion(v[0], v[1]))
 	}
 	sort.Sort(natural.StringSlice(versions))
 	return Transaction{

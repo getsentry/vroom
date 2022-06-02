@@ -1,7 +1,6 @@
 package snubautil
 
 import (
-	"fmt"
 	"time"
 )
 
@@ -30,5 +29,5 @@ type Profile struct {
 }
 
 func (p Profile) Version() string {
-	return fmt.Sprintf("%s (build %v)", p.VersionName, p.VersionCode)
+	return FormatVersion(p.VersionName, p.VersionCode)
 }
