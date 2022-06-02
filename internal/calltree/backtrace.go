@@ -17,13 +17,14 @@ type BacktraceAggregatorP struct {
 // Backtrace contains attributes for a single backtrace "row", which is a call
 // stack capture for a single thread at a given point in time.
 type BacktraceP struct {
-	ProfileID   string
-	SessionKey  string
-	ThreadID    uint64
-	TimestampNs uint64
-	Addresses   []string
-	ThreadName  string
-	QueueName   string
+	Addresses    []string
+	IsMainThread bool
+	ProfileID    string
+	QueueName    string
+	SessionKey   string
+	ThreadID     uint64
+	ThreadName   string
+	TimestampNs  uint64
 }
 
 func NewBacktraceAggregatorP() *BacktraceAggregatorP {
@@ -97,13 +98,14 @@ func (a *BacktraceAggregatorP) Update(b BacktraceP) {
 					setEndTimeRecursiveP(child, b.TimestampNs)
 				}
 				newCallTree := &CallTreeP{
-					ProfileID:   b.ProfileID,
-					SessionKey:  b.SessionKey,
-					Address:     address,
-					ThreadID:    b.ThreadID,
-					StartTimeNs: b.TimestampNs,
-					EndTimeNs:   NoEndTime,
-					SelfTimeNs:  0,
+					ProfileID:    b.ProfileID,
+					SessionKey:   b.SessionKey,
+					Address:      address,
+					ThreadID:     b.ThreadID,
+					IsMainThread: b.IsMainThread,
+					StartTimeNs:  b.TimestampNs,
+					EndTimeNs:    NoEndTime,
+					SelfTimeNs:   0,
 				}
 				current.Children = append(current.Children, newCallTree)
 				current = newCallTree
@@ -133,13 +135,14 @@ func (a *BacktraceAggregatorP) Finalize() {
 func backtraceToCallTreeP(b BacktraceP) *CallTreeP {
 	threadName := getCallTreeThreadName(b.QueueName, b.ThreadName)
 	root := &CallTreeP{
-		ProfileID:   b.ProfileID,
-		SessionKey:  b.SessionKey,
-		Address:     b.Addresses[0],
-		ThreadID:    b.ThreadID,
-		ThreadName:  threadName,
-		StartTimeNs: b.TimestampNs,
-		EndTimeNs:   NoEndTime,
+		Address:      b.Addresses[0],
+		EndTimeNs:    NoEndTime,
+		IsMainThread: b.IsMainThread,
+		ProfileID:    b.ProfileID,
+		SessionKey:   b.SessionKey,
+		StartTimeNs:  b.TimestampNs,
+		ThreadID:     b.ThreadID,
+		ThreadName:   threadName,
 	}
 	current := root
 	for _, address := range b.Addresses[1:] {

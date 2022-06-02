@@ -264,6 +264,10 @@ type IosFrame struct {
 	Symbol          string `json:"symbol,omitempty"`
 }
 
+func (f IosFrame) IsMain() bool {
+	return f.Function == "main" || f.Function == "UIApplicationMain"
+}
+
 type Sample struct {
 	Frames              []IosFrame  `json:"frames,omitempty"`
 	Priority            int         `json:"priority,omitempty"`

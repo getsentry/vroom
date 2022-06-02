@@ -25,9 +25,9 @@ func TestSingleThreadBacktracePAggregation(t *testing.T) {
 			want: []*CallTreeP{
 				{"0", 0, 0, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
 					{"1", 0, 0, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
-						{"2", 0, 0, NoEndTime, NoEndTime, "trace1", "", "", nil},
-					}},
-				}},
+						{"2", 0, 0, NoEndTime, NoEndTime, "trace1", "", "", nil, false},
+					}, false},
+				}, false},
 			},
 		},
 		{
@@ -39,14 +39,14 @@ func TestSingleThreadBacktracePAggregation(t *testing.T) {
 			want: []*CallTreeP{
 				{"0", 0, 0, 1, 0, "trace1", "", "", []*CallTreeP{
 					{"1", 0, 0, 1, 0, "trace1", "", "", []*CallTreeP{
-						{"2", 0, 0, 1, 1, "trace1", "", "", nil},
-					}},
-				}},
+						{"2", 0, 0, 1, 1, "trace1", "", "", nil, false},
+					}, false},
+				}, false},
 				{"3", 0, 1, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
 					{"4", 0, 1, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
-						{"5", 0, 1, NoEndTime, NoEndTime, "trace1", "", "", nil},
-					}},
-				}},
+						{"5", 0, 1, NoEndTime, NoEndTime, "trace1", "", "", nil, false},
+					}, false},
+				}, false},
 			},
 		},
 		{
@@ -58,9 +58,9 @@ func TestSingleThreadBacktracePAggregation(t *testing.T) {
 			want: []*CallTreeP{
 				{"0", 0, 0, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
 					{"1", 0, 0, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
-						{"2", 0, 0, 10, 10, "trace1", "", "", nil},
-					}},
-				}},
+						{"2", 0, 0, 10, 10, "trace1", "", "", nil, false},
+					}, false},
+				}, false},
 			},
 		},
 		{
@@ -72,9 +72,9 @@ func TestSingleThreadBacktracePAggregation(t *testing.T) {
 			want: []*CallTreeP{
 				{"0", 0, 0, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
 					{"1", 0, 0, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
-						{"2", 0, 10, NoEndTime, NoEndTime, "trace1", "", "", nil},
-					}},
-				}},
+						{"2", 0, 10, NoEndTime, NoEndTime, "trace1", "", "", nil, false},
+					}, false},
+				}, false},
 			},
 		},
 		{
@@ -88,10 +88,10 @@ func TestSingleThreadBacktracePAggregation(t *testing.T) {
 			want: []*CallTreeP{
 				{"0", 0, 0, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
 					{"1", 0, 0, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
-						{"2", 0, 0, 10, 10, "trace1", "", "", nil},
-						{"2", 0, 20, 30, 10, "trace1", "", "", nil},
-					}},
-				}},
+						{"2", 0, 0, 10, 10, "trace1", "", "", nil, false},
+						{"2", 0, 20, 30, 10, "trace1", "", "", nil, false},
+					}, false},
+				}, false},
 			},
 		},
 		{
@@ -105,10 +105,10 @@ func TestSingleThreadBacktracePAggregation(t *testing.T) {
 			want: []*CallTreeP{
 				{"0", 0, 0, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
 					{"1", 0, 0, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
-						{"2", 0, 10, 20, 10, "trace1", "", "", nil},
-						{"2", 0, 30, NoEndTime, NoEndTime, "trace1", "", "", nil},
-					}},
-				}},
+						{"2", 0, 10, 20, 10, "trace1", "", "", nil, false},
+						{"2", 0, 30, NoEndTime, NoEndTime, "trace1", "", "", nil, false},
+					}, false},
+				}, false},
 			},
 		},
 		{
@@ -121,9 +121,9 @@ func TestSingleThreadBacktracePAggregation(t *testing.T) {
 			want: []*CallTreeP{
 				{"0", 0, 0, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
 					{"1", 0, 0, 20, 10, "trace1", "", "", []*CallTreeP{
-						{"2", 0, 0, 10, 10, "trace1", "", "", nil},
-					}},
-				}},
+						{"2", 0, 0, 10, 10, "trace1", "", "", nil, false},
+					}, false},
+				}, false},
 			},
 		},
 		{
@@ -136,9 +136,9 @@ func TestSingleThreadBacktracePAggregation(t *testing.T) {
 			want: []*CallTreeP{
 				{"0", 0, 0, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
 					{"1", 0, 10, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
-						{"2", 0, 20, NoEndTime, NoEndTime, "trace1", "", "", nil},
-					}},
-				}},
+						{"2", 0, 20, NoEndTime, NoEndTime, "trace1", "", "", nil, false},
+					}, false},
+				}, false},
 			},
 		},
 		{
@@ -152,11 +152,11 @@ func TestSingleThreadBacktracePAggregation(t *testing.T) {
 			want: []*CallTreeP{
 				{"0", 0, 0, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
 					{"1", 0, 0, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
-						{"2", 0, 10, 20, 10, "trace1", "", "", nil},
-						{"3", 0, 20, 30, 10, "trace1", "", "", nil},
-						{"4", 0, 30, NoEndTime, NoEndTime, "trace1", "", "", nil},
-					}},
-				}},
+						{"2", 0, 10, 20, 10, "trace1", "", "", nil, false},
+						{"3", 0, 20, 30, 10, "trace1", "", "", nil, false},
+						{"4", 0, 30, NoEndTime, NoEndTime, "trace1", "", "", nil, false},
+					}, false},
+				}, false},
 			},
 		},
 		{
@@ -175,19 +175,19 @@ func TestSingleThreadBacktracePAggregation(t *testing.T) {
 				{"0", 0, 0, 70, 0, "trace1", "", "", []*CallTreeP{
 					{"1", 0, 0, 40, 10, "trace1", "", "", []*CallTreeP{
 						{"6", 0, 10, 30, 10, "trace1", "", "", []*CallTreeP{
-							{"7", 0, 20, 30, 10, "trace1", "", "", nil},
-						}},
+							{"7", 0, 20, 30, 10, "trace1", "", "", nil, false},
+						}, false},
 						{"5", 0, 30, 40, 0, "trace1", "", "", []*CallTreeP{
-							{"7", 0, 30, 40, 10, "trace1", "", "", nil},
-						}},
-					}},
+							{"7", 0, 30, 40, 10, "trace1", "", "", nil, false},
+						}, false},
+					}, false},
 					{"2", 0, 40, 60, 0, "trace1", "", "", []*CallTreeP{
-						{"4", 0, 40, 50, 10, "trace1", "", "", nil},
-						{"5", 0, 50, 60, 10, "trace1", "", "", nil},
-					}},
-					{"3", 0, 60, 70, 10, "trace1", "", "", nil},
-				}},
-				{"8", 0, 70, NoEndTime, NoEndTime, "trace1", "", "", nil},
+						{"4", 0, 40, 50, 10, "trace1", "", "", nil, false},
+						{"5", 0, 50, 60, 10, "trace1", "", "", nil, false},
+					}, false},
+					{"3", 0, 60, 70, 10, "trace1", "", "", nil, false},
+				}, false},
+				{"8", 0, 70, NoEndTime, NoEndTime, "trace1", "", "", nil, false},
 			},
 		},
 	}
@@ -234,16 +234,16 @@ func TestMultiThreadBacktracePAggregation(t *testing.T) {
 				0: {
 					{"0", 0, 0, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
 						{"1", 0, 0, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
-							{"2", 0, 0, NoEndTime, NoEndTime, "trace1", "", "", nil},
-						}},
-					}},
+							{"2", 0, 0, NoEndTime, NoEndTime, "trace1", "", "", nil, false},
+						}, false},
+					}, false},
 				},
 				1: {
 					{"0", 1, 0, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
 						{"1", 1, 0, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
-							{"2", 1, 0, NoEndTime, NoEndTime, "trace1", "", "", nil},
-						}},
-					}},
+							{"2", 1, 0, NoEndTime, NoEndTime, "trace1", "", "", nil, false},
+						}, false},
+					}, false},
 				},
 			},
 		},
@@ -257,16 +257,16 @@ func TestMultiThreadBacktracePAggregation(t *testing.T) {
 				0: {
 					{"0", 0, 0, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
 						{"1", 0, 0, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
-							{"2", 0, 0, NoEndTime, NoEndTime, "trace1", "", "", nil},
-						}},
-					}},
+							{"2", 0, 0, NoEndTime, NoEndTime, "trace1", "", "", nil, false},
+						}, false},
+					}, false},
 				},
 				1: {
 					{"3", 1, 0, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
 						{"4", 1, 0, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
-							{"5", 1, 0, NoEndTime, NoEndTime, "trace1", "", "", nil},
-						}},
-					}},
+							{"5", 1, 0, NoEndTime, NoEndTime, "trace1", "", "", nil, false},
+						}, false},
+					}, false},
 				},
 			},
 		},
@@ -282,16 +282,16 @@ func TestMultiThreadBacktracePAggregation(t *testing.T) {
 				0: {
 					{"0", 0, 0, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
 						{"1", 0, 0, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
-							{"2", 0, 0, 10, 10, "trace1", "", "", nil},
-						}},
-					}},
+							{"2", 0, 0, 10, 10, "trace1", "", "", nil, false},
+						}, false},
+					}, false},
 				},
 				1: {
 					{"3", 1, 0, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
 						{"4", 1, 0, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
-							{"5", 1, 0, 10, 10, "trace1", "", "", nil},
-						}},
-					}},
+							{"5", 1, 0, 10, 10, "trace1", "", "", nil, false},
+						}, false},
+					}, false},
 				},
 			},
 		},
@@ -307,16 +307,16 @@ func TestMultiThreadBacktracePAggregation(t *testing.T) {
 				0: {
 					{"0", 0, 0, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
 						{"1", 0, 0, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
-							{"2", 0, 0, 10, 10, "trace1", "", "", nil},
-						}},
-					}},
+							{"2", 0, 0, 10, 10, "trace1", "", "", nil, false},
+						}, false},
+					}, false},
 				},
 				1: {
 					{"3", 1, 20, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
 						{"4", 1, 20, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
-							{"5", 1, 20, 30, 10, "trace1", "", "", nil},
-						}},
-					}},
+							{"5", 1, 20, 30, 10, "trace1", "", "", nil, false},
+						}, false},
+					}, false},
 				},
 			},
 		},
@@ -332,16 +332,16 @@ func TestMultiThreadBacktracePAggregation(t *testing.T) {
 				0: {
 					{"0", 0, 0, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
 						{"1", 0, 0, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
-							{"2", 0, 0, 10, 10, "trace1", "", "", nil},
-						}},
-					}},
+							{"2", 0, 0, 10, 10, "trace1", "", "", nil, false},
+						}, false},
+					}, false},
 				},
 				1: {
 					{"3", 1, 0, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
 						{"4", 1, 0, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
-							{"5", 1, 0, 10, 10, "trace1", "", "", nil},
-						}},
-					}},
+							{"5", 1, 0, 10, 10, "trace1", "", "", nil, false},
+						}, false},
+					}, false},
 				},
 			},
 		},
@@ -357,16 +357,16 @@ func TestMultiThreadBacktracePAggregation(t *testing.T) {
 				0: {
 					{"0", 0, 0, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
 						{"1", 0, 0, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
-							{"2", 0, 0, 10, 10, "trace1", "", "", nil},
-						}},
-					}},
+							{"2", 0, 0, 10, 10, "trace1", "", "", nil, false},
+						}, false},
+					}, false},
 				},
 				1: {
 					{"3", 1, 40, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
 						{"4", 1, 40, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
-							{"5", 1, 40, 50, 10, "trace1", "", "", nil},
-						}},
-					}},
+							{"5", 1, 40, 50, 10, "trace1", "", "", nil, false},
+						}, false},
+					}, false},
 				},
 			},
 		},
@@ -417,18 +417,18 @@ func TestMultiTraceBacktracePAggregation(t *testing.T) {
 					0: {
 						{"0", 0, 0, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
 							{"1", 0, 0, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
-								{"2", 0, 0, NoEndTime, NoEndTime, "trace1", "", "", nil},
-							}},
-						}},
+								{"2", 0, 0, NoEndTime, NoEndTime, "trace1", "", "", nil, false},
+							}, false},
+						}, false},
 					},
 				},
 				"trace2": {
 					0: {
 						{"0", 0, 0, NoEndTime, NoEndTime, "trace2", "", "", []*CallTreeP{
 							{"1", 0, 0, NoEndTime, NoEndTime, "trace2", "", "", []*CallTreeP{
-								{"2", 0, 0, NoEndTime, NoEndTime, "trace2", "", "", nil},
-							}},
-						}},
+								{"2", 0, 0, NoEndTime, NoEndTime, "trace2", "", "", nil, false},
+							}, false},
+						}, false},
 					},
 				},
 			},
@@ -444,18 +444,18 @@ func TestMultiTraceBacktracePAggregation(t *testing.T) {
 					0: {
 						{"0", 0, 0, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
 							{"1", 0, 0, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
-								{"2", 0, 0, NoEndTime, NoEndTime, "trace1", "", "", nil},
-							}},
-						}},
+								{"2", 0, 0, NoEndTime, NoEndTime, "trace1", "", "", nil, false},
+							}, false},
+						}, false},
 					},
 				},
 				"trace2": {
 					0: {
 						{"3", 0, 0, NoEndTime, NoEndTime, "trace2", "", "", []*CallTreeP{
 							{"4", 0, 0, NoEndTime, NoEndTime, "trace2", "", "", []*CallTreeP{
-								{"5", 0, 0, NoEndTime, NoEndTime, "trace2", "", "", nil},
-							}},
-						}},
+								{"5", 0, 0, NoEndTime, NoEndTime, "trace2", "", "", nil, false},
+							}, false},
+						}, false},
 					},
 				},
 			},
@@ -471,18 +471,18 @@ func TestMultiTraceBacktracePAggregation(t *testing.T) {
 					0: {
 						{"0", 0, 0, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
 							{"1", 0, 0, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
-								{"2", 0, 0, NoEndTime, NoEndTime, "trace1", "", "", nil},
-							}},
-						}},
+								{"2", 0, 0, NoEndTime, NoEndTime, "trace1", "", "", nil, false},
+							}, false},
+						}, false},
 					},
 				},
 				"trace2": {
 					1: {
 						{"0", 1, 0, NoEndTime, NoEndTime, "trace2", "", "", []*CallTreeP{
 							{"1", 1, 0, NoEndTime, NoEndTime, "trace2", "", "", []*CallTreeP{
-								{"2", 1, 0, NoEndTime, NoEndTime, "trace2", "", "", nil},
-							}},
-						}},
+								{"2", 1, 0, NoEndTime, NoEndTime, "trace2", "", "", nil, false},
+							}, false},
+						}, false},
 					},
 				},
 			},
@@ -498,18 +498,18 @@ func TestMultiTraceBacktracePAggregation(t *testing.T) {
 					0: {
 						{"0", 0, 0, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
 							{"1", 0, 0, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
-								{"2", 0, 0, NoEndTime, NoEndTime, "trace1", "", "", nil},
-							}},
-						}},
+								{"2", 0, 0, NoEndTime, NoEndTime, "trace1", "", "", nil, false},
+							}, false},
+						}, false},
 					},
 				},
 				"trace2": {
 					1: {
 						{"3", 1, 0, NoEndTime, NoEndTime, "trace2", "", "", []*CallTreeP{
 							{"4", 1, 0, NoEndTime, NoEndTime, "trace2", "", "", []*CallTreeP{
-								{"5", 1, 0, NoEndTime, NoEndTime, "trace2", "", "", nil},
-							}},
-						}},
+								{"5", 1, 0, NoEndTime, NoEndTime, "trace2", "", "", nil, false},
+							}, false},
+						}, false},
 					},
 				},
 			},
@@ -527,18 +527,18 @@ func TestMultiTraceBacktracePAggregation(t *testing.T) {
 					0: {
 						{"0", 0, 0, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
 							{"1", 0, 0, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
-								{"2", 0, 0, 10, 10, "trace1", "", "", nil},
-							}},
-						}},
+								{"2", 0, 0, 10, 10, "trace1", "", "", nil, false},
+							}, false},
+						}, false},
 					},
 				},
 				"trace2": {
 					0: {
 						{"3", 0, 0, NoEndTime, NoEndTime, "trace2", "", "", []*CallTreeP{
 							{"4", 0, 0, NoEndTime, NoEndTime, "trace2", "", "", []*CallTreeP{
-								{"5", 0, 0, 10, 10, "trace2", "", "", nil},
-							}},
-						}},
+								{"5", 0, 0, 10, 10, "trace2", "", "", nil, false},
+							}, false},
+						}, false},
 					},
 				},
 			},
@@ -556,18 +556,18 @@ func TestMultiTraceBacktracePAggregation(t *testing.T) {
 					0: {
 						{"0", 0, 0, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
 							{"1", 0, 0, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
-								{"2", 0, 0, 10, 10, "trace1", "", "", nil},
-							}},
-						}},
+								{"2", 0, 0, 10, 10, "trace1", "", "", nil, false},
+							}, false},
+						}, false},
 					},
 				},
 				"trace2": {
 					0: {
 						{"3", 0, 20, NoEndTime, NoEndTime, "trace2", "", "", []*CallTreeP{
 							{"4", 0, 20, NoEndTime, NoEndTime, "trace2", "", "", []*CallTreeP{
-								{"5", 0, 20, 30, 10, "trace2", "", "", nil},
-							}},
-						}},
+								{"5", 0, 20, 30, 10, "trace2", "", "", nil, false},
+							}, false},
+						}, false},
 					},
 				},
 			},
@@ -584,15 +584,15 @@ func TestMultiTraceBacktracePAggregation(t *testing.T) {
 				"trace1": {
 					0: {
 						{"0", 0, 10, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
-							{"1", 0, 10, NoEndTime, NoEndTime, "trace1", "", "", nil},
-						}},
+							{"1", 0, 10, NoEndTime, NoEndTime, "trace1", "", "", nil, false},
+						}, false},
 					},
 				},
 				"trace2": {
 					0: {
 						{"3", 0, 10, NoEndTime, NoEndTime, "trace2", "", "", []*CallTreeP{
-							{"4", 0, 10, NoEndTime, NoEndTime, "trace2", "", "", nil},
-						}},
+							{"4", 0, 10, NoEndTime, NoEndTime, "trace2", "", "", nil, false},
+						}, false},
 					},
 				},
 			},
@@ -609,15 +609,15 @@ func TestMultiTraceBacktracePAggregation(t *testing.T) {
 				"trace1": {
 					0: {
 						{"0", 0, 10, NoEndTime, NoEndTime, "trace1", "", "", []*CallTreeP{
-							{"1", 0, 10, NoEndTime, NoEndTime, "trace1", "", "", nil},
-						}},
+							{"1", 0, 10, NoEndTime, NoEndTime, "trace1", "", "", nil, false},
+						}, false},
 					},
 				},
 				"trace2": {
 					0: {
 						{"3", 0, 30, NoEndTime, NoEndTime, "trace2", "", "", []*CallTreeP{
-							{"4", 0, 30, NoEndTime, NoEndTime, "trace2", "", "", nil},
-						}},
+							{"4", 0, 30, NoEndTime, NoEndTime, "trace2", "", "", nil, false},
+						}, false},
 					},
 				},
 			},

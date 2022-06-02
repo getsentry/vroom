@@ -1,10 +1,5 @@
 package chrometrace
 
-const (
-	iosMainThreadName   = "com.apple.main-thread"
-	iosMainFunctionName = "UIApplicationMain"
-)
-
 type (
 	frame struct {
 		Col           int    `json:"col,omitempty"`
