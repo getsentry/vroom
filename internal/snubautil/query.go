@@ -158,7 +158,7 @@ func GetFilters(sqb QueryBuilder) (map[string][]interface{}, error) {
 			filters[k] = make([]interface{}, 0, len(values))
 			for _, v := range values {
 				if versions, ok := v.([]interface{}); ok {
-					filters[k] = append(filters[k], fmt.Sprintf("%s (build %s)", versions[0], versions[1]))
+					filters[k] = append(filters[k], FormatVersion(versions[0], versions[1]))
 				}
 			}
 		default:
