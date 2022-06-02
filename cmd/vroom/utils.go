@@ -15,7 +15,7 @@ import (
 )
 
 var (
-	appVersionRegex = regexp.MustCompile(`(.+)\s\(build\s(.+)\)`)
+	appVersionRegex = regexp.MustCompile(`(.+)\s\((.+)\)`)
 
 	snubaFilterFields = []string{
 		"device_classification",
