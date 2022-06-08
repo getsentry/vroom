@@ -3,7 +3,6 @@ package chrometrace
 import (
 	"encoding/json"
 	"fmt"
-	"sort"
 	"strconv"
 	"time"
 
@@ -155,7 +154,7 @@ func iosSpeedscopeTraceFromProfile(profile *aggregate.IosProfile) (output, error
 				symbolName := fr.Function
 				if symbolName == "" {
 					symbolName = fmt.Sprintf("unknown (%s)", fr.InstructionAddr)
-				} else if fr.IsMain() {
+				} else if mainFunctionFrameIndex == -1 && fr.IsMain() {
 					mainFunctionFrameIndex = frameIndex
 				}
 				addressToFrameIndex[fr.InstructionAddr] = frameIndex
@@ -171,22 +170,9 @@ func iosSpeedscopeTraceFromProfile(profile *aggregate.IosProfile) (output, error
 		}
 		sampProfile.Samples = append(sampProfile.Samples, samp)
 	} // end loop sampledProfiles
-
-	threadIDs := make([]uint64, 0, len(threadIDToProfile))
-	for threadID := range threadIDToProfile {
-		threadIDs = append(threadIDs, threadID)
-	}
-	sort.SliceStable(threadIDs, func(i, j int) bool {
-		return threadIDs[i] < threadIDs[j]
-	})
-
 	var mainThreadProfileIndex int
 	allProfiles := make([]interface{}, 0)
-	for _, threadID := range threadIDs {
-		prof, ok := threadIDToProfile[threadID]
-		if !ok {
-			continue
-		}
+	for _, prof := range threadIDToProfile {
 		if prof.IsMainThread {
 			mainThreadProfileIndex = len(allProfiles)
 
