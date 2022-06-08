@@ -31,7 +31,7 @@ func GetTransactions(sqb QueryBuilder) ([]Transaction, error) {
 		"transaction_name",
 		"groupUniqArray(tuple(version_name, version_code)) AS versions",
 		"quantiles(0.5, 0.75, 0.9, 0.95, 0.99)(duration_ns) AS duration_ns",
-		"anyLast(received) AS last_profile_at",
+		"max(received) AS last_profile_at",
 		"count() AS profiles_count",
 	}
 	sqb.GroupBy = "project_id, transaction_name"
