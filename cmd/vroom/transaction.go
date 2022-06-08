@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"sort"
 	"strconv"
 	"time"
 
@@ -13,7 +12,6 @@ import (
 	"github.com/getsentry/vroom/internal/httputil"
 	"github.com/getsentry/vroom/internal/snubautil"
 	"github.com/julienschmidt/httprouter"
-	"github.com/maruel/natural"
 )
 
 type (
@@ -23,7 +21,6 @@ type (
 		Name          string              `json:"name"`
 		ProfilesCount int                 `json:"profiles_count"`
 		ProjectID     string              `json:"project_id"`
-		Versions      []string            `json:"versions"`
 	}
 
 	GetTransactionsResponse struct {
@@ -95,11 +92,6 @@ func (env *environment) getTransactions(w http.ResponseWriter, r *http.Request) 
 }
 
 func snubaTransactionToTransaction(t snubautil.Transaction) Transaction {
-	versions := make([]string, 0, len(t.Versions))
-	for _, v := range t.Versions {
-		versions = append(versions, snubautil.FormatVersion(v[0], v[1]))
-	}
-	sort.Sort(natural.StringSlice(versions))
 	return Transaction{
 		DurationMS: aggregate.Quantiles{
 			P50: t.DurationNS[0] / 1_000_000,
@@ -112,6 +104,5 @@ func snubaTransactionToTransaction(t snubautil.Transaction) Transaction {
 		Name:          t.TransactionName,
 		ProfilesCount: t.ProfilesCount,
 		ProjectID:     strconv.FormatUint(t.ProjectID, 10),
-		Versions:      versions,
 	}
 }
