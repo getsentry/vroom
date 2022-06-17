@@ -100,7 +100,9 @@ func (a *BacktraceAggregatorP) UpdateFromProfile(profile snubautil.Profile) erro
 	}
 	a.profileIDToTransactionName[profile.ProfileID] = profile.TransactionName
 	for _, sample := range iosProfile.Samples {
-		if sample.ShouldBeIgnored() {
+		onMainThread := sample.ContainsMain()
+		queueMetadata := iosProfile.QueueMetadata[sample.QueueAddress]
+		if queueMetadata.IsMainThread() && !onMainThread {
 			continue
 		}
 		var threadID uint64
@@ -139,7 +141,6 @@ func (a *BacktraceAggregatorP) UpdateFromProfile(profile snubautil.Profile) erro
 			threadName = fmt.Sprintf("%d", threadID)
 		}
 		addresses := make([]string, len(sample.Frames), len(sample.Frames))
-		var isMainThread bool
 		for i, frame := range sample.Frames {
 			addresses[i] = frame.InstructionAddr
 
@@ -162,15 +163,11 @@ func (a *BacktraceAggregatorP) UpdateFromProfile(profile snubautil.Profile) erro
 				a.symbolsByProfileID[profile.ProfileID] = make(map[string]Symbol)
 			}
 			a.symbolsByProfileID[profile.ProfileID][frame.InstructionAddr] = symbol
-
-			if !isMainThread && frame.IsMain() {
-				isMainThread = true
-			}
 		}
 		a.bta.Update(calltree.BacktraceP{
 			ProfileID:    profile.ProfileID,
 			Addresses:    addresses,
-			IsMainThread: isMainThread,
+			IsMainThread: onMainThread,
 			ThreadID:     threadID,
 			ThreadName:   threadName,
 			TimestampNs:  relativeTimestampNS,

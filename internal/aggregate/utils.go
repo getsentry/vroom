@@ -269,10 +269,6 @@ func (f IosFrame) IsMain() bool {
 	return f.Function == "main" || f.Function == "UIApplicationMain"
 }
 
-func (f IosFrame) ShoudBeIgnored() bool {
-	return f.Function == "pthread_workqueue_addthreads_np"
-}
-
 type Sample struct {
 	Frames              []IosFrame  `json:"frames,omitempty"`
 	Priority            int         `json:"priority,omitempty"`
@@ -281,13 +277,11 @@ type Sample struct {
 	ThreadID            interface{} `json:"thread_id,omitempty"`
 }
 
-func (s Sample) ShouldBeIgnored() bool {
-	// Is there a frame that should make us ignore the sample?
+func (s Sample) ContainsMain() bool {
 	i := sort.Search(len(s.Frames), func(i int) bool {
 		f := s.Frames[i]
-		return f.ShoudBeIgnored()
+		return f.IsMain()
 	})
-	// Frame was found
 	return i < len(s.Frames)
 }
 
@@ -304,6 +298,10 @@ type ThreadMedata struct {
 
 type QueueMetadata struct {
 	Label string `json:"label"`
+}
+
+func (q QueueMetadata) IsMainThread() bool {
+	return q.Label == "com.apple.main-thread"
 }
 
 type Symbol struct {
