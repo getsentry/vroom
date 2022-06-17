@@ -70,6 +70,14 @@ func iosSpeedscopeTraceFromProfile(profile *aggregate.IosProfile) (output, error
 	// we need to find the frame index of the main function so we can remove the frames before it
 	mainFunctionFrameIndex := -1
 	for _, sample := range profile.Samples {
+		onMainThread := sample.ContainsMain()
+		queueMetadata, qmExists := profile.QueueMetadata[sample.QueueAddress]
+		// Skip samples with a queue called "com.apple.main-thread"
+		// but not being scheduled on what we detected as the main thread.
+		if queueMetadata.IsMainThread() && !onMainThread {
+			continue
+		}
+
 		var threadID uint64
 		switch v := sample.ThreadID.(type) {
 		case string:
@@ -100,21 +108,22 @@ func iosSpeedscopeTraceFromProfile(profile *aggregate.IosProfile) (output, error
 		default:
 			return output{}, fmt.Errorf("unknown relativeTimestampNS value type: %T for %v", v, v)
 		}
+
 		sampProfile, ok := threadIDToProfile[threadID]
 		if !ok {
 			threadMetadata, tmExists := profile.ThreadMetadata[strconv.FormatUint(threadID, 10)]
-			queueMetadata, qmExists := profile.QueueMetadata[sample.QueueAddress]
 			threadName := threadMetadata.Name
 			if threadName == "" {
 				threadName = queueMetadata.Label
 			}
 			sampProfile = &sampledProfile{
-				Name:       threadName,
-				Queues:     make(map[string]queue),
-				StartValue: relativeTimestampNS,
-				ThreadID:   threadID,
-				Type:       profileTypeSampled,
-				Unit:       valueUnitNanoseconds,
+				Name:         threadName,
+				Queues:       make(map[string]queue),
+				StartValue:   relativeTimestampNS,
+				ThreadID:     threadID,
+				IsMainThread: onMainThread,
+				Type:         profileTypeSampled,
+				Unit:         valueUnitNanoseconds,
 			}
 			if qmExists {
 				sampProfile.Queues[queueMetadata.Label] = queue{Label: queueMetadata.Label, StartNS: relativeTimestampNS, EndNS: relativeTimestampNS}
@@ -124,7 +133,6 @@ func iosSpeedscopeTraceFromProfile(profile *aggregate.IosProfile) (output, error
 			}
 			threadIDToProfile[threadID] = sampProfile
 		} else {
-			queueMetadata, qmExists := profile.QueueMetadata[sample.QueueAddress]
 			if qmExists {
 				q, qExists := sampProfile.Queues[queueMetadata.Label]
 				if !qExists {
@@ -143,11 +151,6 @@ func iosSpeedscopeTraceFromProfile(profile *aggregate.IosProfile) (output, error
 		samp := make([]int, 0, len(sample.Frames))
 		for i := len(sample.Frames) - 1; i >= 0; i-- {
 			fr := sample.Frames[i]
-			// the main thread may not always have the correct name if the thread
-			// contains the main function, we should consider it the main thread too
-			if !sampProfile.IsMainThread {
-				sampProfile.IsMainThread, _ = fr.IsMain()
-			}
 			frameIndex, ok := addressToFrameIndex[fr.InstructionAddr]
 			if !ok {
 				frameIndex = len(frames)
@@ -177,7 +180,6 @@ func iosSpeedscopeTraceFromProfile(profile *aggregate.IosProfile) (output, error
 	for _, prof := range threadIDToProfile {
 		if prof.IsMainThread {
 			mainThreadProfileIndex = len(allProfiles)
-
 			// Remove all frames before main is called on the main thread
 			if mainFunctionFrameIndex != -1 {
 				for i, sample := range prof.Samples {

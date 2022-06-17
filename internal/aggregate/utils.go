@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"hash"
 	"io"
+	"sort"
 	"strings"
 
 	"github.com/getsentry/vroom/internal/calltree"
@@ -283,6 +284,15 @@ type Sample struct {
 	ThreadID            interface{} `json:"thread_id,omitempty"`
 }
 
+func (s Sample) ContainsMain() bool {
+	i := sort.Search(len(s.Frames), func(i int) bool {
+		f := s.Frames[i]
+		isMain, _ := f.IsMain()
+		return isMain
+	})
+	return i < len(s.Frames)
+}
+
 type IosProfile struct {
 	QueueMetadata  map[string]QueueMetadata `json:"queue_metadata"`
 	Samples        []Sample                 `json:"samples"`
@@ -296,6 +306,10 @@ type ThreadMedata struct {
 
 type QueueMetadata struct {
 	Label string `json:"label"`
+}
+
+func (q QueueMetadata) IsMainThread() bool {
+	return q.Label == "com.apple.main-thread"
 }
 
 type Symbol struct {
