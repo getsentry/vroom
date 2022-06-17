@@ -70,6 +70,9 @@ func iosSpeedscopeTraceFromProfile(profile *aggregate.IosProfile) (output, error
 	// we need to find the frame index of the main function so we can remove the frames before it
 	mainFunctionFrameIndex := -1
 	for _, sample := range profile.Samples {
+		if sample.ShouldBeIgnored() {
+			continue
+		}
 		var threadID uint64
 		switch v := sample.ThreadID.(type) {
 		case string:

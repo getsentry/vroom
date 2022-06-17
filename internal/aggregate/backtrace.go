@@ -100,6 +100,9 @@ func (a *BacktraceAggregatorP) UpdateFromProfile(profile snubautil.Profile) erro
 	}
 	a.profileIDToTransactionName[profile.ProfileID] = profile.TransactionName
 	for _, sample := range iosProfile.Samples {
+		if sample.ShouldBeIgnored() {
+			continue
+		}
 		var threadID uint64
 		switch v := sample.ThreadID.(type) {
 		case string:

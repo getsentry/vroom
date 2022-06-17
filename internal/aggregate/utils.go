@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"hash"
 	"io"
+	"sort"
 	"strings"
 
 	"github.com/getsentry/vroom/internal/calltree"
@@ -268,12 +269,26 @@ func (f IosFrame) IsMain() bool {
 	return f.Function == "main" || f.Function == "UIApplicationMain"
 }
 
+func (f IosFrame) ShoudBeIgnored() bool {
+	return f.Function == "pthread_workqueue_addthreads_np"
+}
+
 type Sample struct {
 	Frames              []IosFrame  `json:"frames,omitempty"`
 	Priority            int         `json:"priority,omitempty"`
 	QueueAddress        string      `json:"queue_address,omitempty"`
 	RelativeTimestampNS interface{} `json:"relative_timestamp_ns,omitempty"`
 	ThreadID            interface{} `json:"thread_id,omitempty"`
+}
+
+func (s Sample) ShouldBeIgnored() bool {
+	// Is there a frame that should make us ignore the sample?
+	i := sort.Search(len(s.Frames), func(i int) bool {
+		f := s.Frames[i]
+		return f.ShoudBeIgnored()
+	})
+	// Frame was found
+	return i < len(s.Frames)
 }
 
 type IosProfile struct {
