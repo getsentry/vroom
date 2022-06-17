@@ -102,6 +102,8 @@ func (a *BacktraceAggregatorP) UpdateFromProfile(profile snubautil.Profile) erro
 	for _, sample := range iosProfile.Samples {
 		onMainThread := sample.ContainsMain()
 		queueMetadata := iosProfile.QueueMetadata[sample.QueueAddress]
+		// Skip samples with a queue called "com.apple.main-thread"
+		// but not being scheduled on what we detected as the main thread.
 		if queueMetadata.IsMainThread() && !onMainThread {
 			continue
 		}

@@ -72,6 +72,8 @@ func iosSpeedscopeTraceFromProfile(profile *aggregate.IosProfile) (output, error
 	for _, sample := range profile.Samples {
 		onMainThread := sample.ContainsMain()
 		queueMetadata, qmExists := profile.QueueMetadata[sample.QueueAddress]
+		// Skip samples with a queue called "com.apple.main-thread"
+		// but not being scheduled on what we detected as the main thread.
 		if queueMetadata.IsMainThread() && !onMainThread {
 			continue
 		}
