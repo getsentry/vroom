@@ -264,8 +264,15 @@ type IosFrame struct {
 	Symbol          string `json:"symbol,omitempty"`
 }
 
-func (f IosFrame) IsMain() bool {
-	return f.Function == "main" || f.Function == "UIApplicationMain"
+// IsMain returns true if the function is considered the main function.
+// It also returns an offset indicate if we need to keep the previous frame or not.
+func (f IosFrame) IsMain() (bool, int) {
+	if f.Function == "main" {
+		return true, 0
+	} else if f.Function == "UIApplicationMain" {
+		return true, -1
+	}
+	return false, 0
 }
 
 type Sample struct {
