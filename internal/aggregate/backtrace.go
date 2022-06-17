@@ -160,8 +160,8 @@ func (a *BacktraceAggregatorP) UpdateFromProfile(profile snubautil.Profile) erro
 			}
 			a.symbolsByProfileID[profile.ProfileID][frame.InstructionAddr] = symbol
 
-			if !isMainThread && frame.IsMain() {
-				isMainThread = true
+			if !isMainThread {
+				isMainThread, _ = frame.IsMain()
 			}
 		}
 		a.bta.Update(calltree.BacktraceP{

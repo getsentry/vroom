@@ -145,8 +145,8 @@ func iosSpeedscopeTraceFromProfile(profile *aggregate.IosProfile) (output, error
 			fr := sample.Frames[i]
 			// the main thread may not always have the correct name if the thread
 			// contains the main function, we should consider it the main thread too
-			if !sampProfile.IsMainThread && fr.IsMain() {
-				sampProfile.IsMainThread = true
+			if !sampProfile.IsMainThread {
+				sampProfile.IsMainThread, _ = fr.IsMain()
 			}
 			frameIndex, ok := addressToFrameIndex[fr.InstructionAddr]
 			if !ok {
@@ -154,8 +154,10 @@ func iosSpeedscopeTraceFromProfile(profile *aggregate.IosProfile) (output, error
 				symbolName := fr.Function
 				if symbolName == "" {
 					symbolName = fmt.Sprintf("unknown (%s)", fr.InstructionAddr)
-				} else if mainFunctionFrameIndex == -1 && fr.IsMain() {
-					mainFunctionFrameIndex = frameIndex
+				} else if mainFunctionFrameIndex == -1 {
+					if isMainFrame, i := fr.IsMain(); isMainFrame {
+						mainFunctionFrameIndex = frameIndex + i
+					}
 				}
 				addressToFrameIndex[fr.InstructionAddr] = frameIndex
 				frames = append(frames, frame{
