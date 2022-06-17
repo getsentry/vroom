@@ -155,8 +155,10 @@ func iosSpeedscopeTraceFromProfile(profile *aggregate.IosProfile) (output, error
 				symbolName := fr.Function
 				if symbolName == "" {
 					symbolName = fmt.Sprintf("unknown (%s)", fr.InstructionAddr)
-				} else if mainFunctionFrameIndex == -1 && fr.IsMain() {
-					mainFunctionFrameIndex = frameIndex
+				} else if mainFunctionFrameIndex == -1 {
+					if isMainFrame, i := fr.IsMain(); isMainFrame {
+						mainFunctionFrameIndex = frameIndex + i
+					}
 				}
 				addressToFrameIndex[fr.InstructionAddr] = frameIndex
 				frames = append(frames, frame{

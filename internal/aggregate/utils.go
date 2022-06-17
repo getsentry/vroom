@@ -265,8 +265,15 @@ type IosFrame struct {
 	Symbol          string `json:"symbol,omitempty"`
 }
 
-func (f IosFrame) IsMain() bool {
-	return f.Function == "main" || f.Function == "UIApplicationMain"
+// IsMain returns true if the function is considered the main function.
+// It also returns an offset indicate if we need to keep the previous frame or not.
+func (f IosFrame) IsMain() (bool, int) {
+	if f.Function == "main" {
+		return true, 0
+	} else if f.Function == "UIApplicationMain" {
+		return true, -1
+	}
+	return false, 0
 }
 
 type Sample struct {
@@ -280,7 +287,8 @@ type Sample struct {
 func (s Sample) ContainsMain() bool {
 	i := sort.Search(len(s.Frames), func(i int) bool {
 		f := s.Frames[i]
-		return f.IsMain()
+		isMain, _ := f.IsMain()
+		return isMain
 	})
 	return i < len(s.Frames)
 }
