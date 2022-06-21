@@ -101,46 +101,19 @@ func (a *BacktraceAggregatorP) UpdateFromProfile(profile snubautil.Profile) erro
 	a.profileIDToTransactionName[profile.ProfileID] = profile.TransactionName
 	for _, sample := range iosProfile.Samples {
 		onMainThread := sample.ContainsMain()
-		queueMetadata := iosProfile.QueueMetadata[sample.QueueAddress]
+		queueMetadata, qmExists := iosProfile.QueueMetadata[sample.QueueAddress]
 		// Skip samples with a queue called "com.apple.main-thread"
 		// but not being scheduled on what we detected as the main thread.
 		if queueMetadata.IsMainThread() && !onMainThread {
 			continue
 		}
-		var threadID uint64
-		switch v := sample.ThreadID.(type) {
-		case string:
-			threadID, err = strconv.ParseUint(v, 10, 64)
-			if err != nil {
-				return err
-			}
-		case float64:
-			threadID = uint64(v)
-		case uint64:
-			threadID = v
-		default:
-			return fmt.Errorf("unknown threadID value type: %T for %v", v, v)
-		}
-		var relativeTimestampNS uint64
-		switch v := sample.RelativeTimestampNS.(type) {
-		case string:
-			relativeTimestampNS, err = strconv.ParseUint(v, 10, 64)
-			if err != nil {
-				return err
-			}
-		case float64:
-			relativeTimestampNS = uint64(v)
-		case uint64:
-			relativeTimestampNS = v
-		default:
-			return fmt.Errorf("unknown relativeTimestampNS value type: %T for %v", v, v)
-		}
-		var threadName string
-		metadata, ok := iosProfile.ThreadMetadata[strconv.FormatUint(threadID, 10)]
-		if ok && metadata.Name != "" {
-			threadName = metadata.Name
+		threadID := strconv.FormatUint(sample.ThreadID, 10)
+		threadMetadata := iosProfile.ThreadMetadata[threadID]
+		threadName := threadMetadata.Name
+		if threadName == "" && qmExists {
+			threadName = queueMetadata.Label
 		} else {
-			threadName = fmt.Sprintf("%d", threadID)
+			threadName = threadID
 		}
 		addresses := make([]string, len(sample.Frames), len(sample.Frames))
 		for i, frame := range sample.Frames {
@@ -170,9 +143,9 @@ func (a *BacktraceAggregatorP) UpdateFromProfile(profile snubautil.Profile) erro
 			ProfileID:    profile.ProfileID,
 			Addresses:    addresses,
 			IsMainThread: onMainThread,
-			ThreadID:     threadID,
+			ThreadID:     sample.ThreadID,
 			ThreadName:   threadName,
-			TimestampNs:  relativeTimestampNS,
+			TimestampNs:  sample.RelativeTimestampNS,
 		})
 	}
 
