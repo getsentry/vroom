@@ -277,11 +277,11 @@ func (f IosFrame) IsMain() (bool, int) {
 }
 
 type Sample struct {
-	Frames              []IosFrame  `json:"frames,omitempty"`
-	Priority            int         `json:"priority,omitempty"`
-	QueueAddress        string      `json:"queue_address,omitempty"`
-	RelativeTimestampNS interface{} `json:"relative_timestamp_ns,omitempty"`
-	ThreadID            interface{} `json:"thread_id,omitempty"`
+	Frames              []IosFrame `json:"frames,omitempty"`
+	Priority            int        `json:"priority,omitempty"`
+	QueueAddress        string     `json:"queue_address,omitempty"`
+	RelativeTimestampNS uint64     `json:"relative_timestamp_ns,omitempty"`
+	ThreadID            uint64     `json:"thread_id,omitempty"`
 }
 
 func (s Sample) ContainsMain() bool {

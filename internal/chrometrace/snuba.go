@@ -78,75 +78,47 @@ func iosSpeedscopeTraceFromProfile(profile *aggregate.IosProfile) (output, error
 			continue
 		}
 
-		var threadID uint64
-		switch v := sample.ThreadID.(type) {
-		case string:
-			var err error
-			threadID, err = strconv.ParseUint(v, 10, 64)
-			if err != nil {
-				return output{}, err
-			}
-		case float64:
-			threadID = uint64(v)
-		case uint64:
-			threadID = v
-		default:
-			return output{}, fmt.Errorf("unknown threadID value type: %T for %v", v, v)
-		}
-		var relativeTimestampNS uint64
-		switch v := sample.RelativeTimestampNS.(type) {
-		case string:
-			var err error
-			relativeTimestampNS, err = strconv.ParseUint(v, 10, 64)
-			if err != nil {
-				return output{}, err
-			}
-		case float64:
-			relativeTimestampNS = uint64(v)
-		case uint64:
-			relativeTimestampNS = v
-		default:
-			return output{}, fmt.Errorf("unknown relativeTimestampNS value type: %T for %v", v, v)
-		}
-
-		sampProfile, ok := threadIDToProfile[threadID]
+		threadID := strconv.FormatUint(sample.ThreadID, 10)
+		sampProfile, ok := threadIDToProfile[sample.ThreadID]
 		if !ok {
-			threadMetadata, tmExists := profile.ThreadMetadata[strconv.FormatUint(threadID, 10)]
+			threadMetadata, tmExists := profile.ThreadMetadata[threadID]
 			threadName := threadMetadata.Name
-			if threadName == "" {
+			if threadName == "" && qmExists {
 				threadName = queueMetadata.Label
+			} else {
+				threadName = threadID
 			}
 			sampProfile = &sampledProfile{
 				Name:         threadName,
 				Queues:       make(map[string]queue),
-				StartValue:   relativeTimestampNS,
-				ThreadID:     threadID,
+				StartValue:   sample.RelativeTimestampNS,
+				ThreadID:     sample.ThreadID,
 				IsMainThread: onMainThread,
 				Type:         profileTypeSampled,
 				Unit:         valueUnitNanoseconds,
 			}
 			if qmExists {
-				sampProfile.Queues[queueMetadata.Label] = queue{Label: queueMetadata.Label, StartNS: relativeTimestampNS, EndNS: relativeTimestampNS}
+				sampProfile.Queues[queueMetadata.Label] = queue{Label: queueMetadata.Label, StartNS: sample.RelativeTimestampNS, EndNS: sample.RelativeTimestampNS}
 			}
 			if tmExists {
 				sampProfile.Priority = threadMetadata.Priority
 			}
-			threadIDToProfile[threadID] = sampProfile
+			threadIDToProfile[sample.ThreadID] = sampProfile
 		} else {
 			if qmExists {
 				q, qExists := sampProfile.Queues[queueMetadata.Label]
 				if !qExists {
-					sampProfile.Queues[queueMetadata.Label] = queue{Label: queueMetadata.Label, StartNS: relativeTimestampNS, EndNS: relativeTimestampNS}
+					sampProfile.Queues[queueMetadata.Label] = queue{Label: queueMetadata.Label, StartNS: sample.RelativeTimestampNS, EndNS: sample.RelativeTimestampNS}
 				} else {
-					q.EndNS = relativeTimestampNS
+					q.EndNS = sample.RelativeTimestampNS
 					sampProfile.Queues[queueMetadata.Label] = q
 				}
 			}
-			sampProfile.Weights = append(sampProfile.Weights, relativeTimestampNS-threadIDToPreviousTimestampNS[threadID])
+			sampProfile.Weights = append(sampProfile.Weights, sample.RelativeTimestampNS-threadIDToPreviousTimestampNS[sample.ThreadID])
 		}
 
-		sampProfile.EndValue = relativeTimestampNS
-		threadIDToPreviousTimestampNS[threadID] = relativeTimestampNS
+		sampProfile.EndValue = sample.RelativeTimestampNS
+		threadIDToPreviousTimestampNS[sample.ThreadID] = sample.RelativeTimestampNS
 
 		samp := make([]int, 0, len(sample.Frames))
 		for i := len(sample.Frames) - 1; i >= 0; i-- {
