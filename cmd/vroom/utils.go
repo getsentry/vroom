@@ -27,6 +27,7 @@ var (
 		"device_os_version",
 		"environment",
 		"platform",
+		"transaction_id",
 		"transaction_name",
 	}
 )

@@ -168,3 +168,43 @@ func GetFilters(sqb QueryBuilder) (map[string][]interface{}, error) {
 
 	return filters, err
 }
+
+func GetProfileIDByTransactionID(organizationID, projectID uint64, transactionID string, sqb QueryBuilder) (string, error) {
+	t := sentry.TransactionFromContext(sqb.ctx)
+	rs := t.StartChild("snuba")
+	rs.Description = "Get a profile ID from a transaction ID"
+	defer rs.Finish()
+
+	sqb.SelectCols = []string{"profile_id"}
+	now := time.Now().UTC()
+	sqb.WhereConditions = append(sqb.WhereConditions,
+		fmt.Sprintf("organization_id=%d", organizationID),
+		fmt.Sprintf("project_id=%d", projectID),
+		fmt.Sprintf("transaction_id='%s'", Escape(transactionID)),
+		fmt.Sprintf("received >= toDateTime('%s')", now.AddDate(0, 0, -MaxRetentionInDays).Format(time.RFC3339)),
+		fmt.Sprintf("received < toDateTime('%s')", now.Format(time.RFC3339)),
+	)
+	sqb.Limit = 1
+
+	rb, err := sqb.Do(rs)
+	if err != nil {
+		return "", err
+	}
+	defer rb.Close()
+
+	s := rs.StartChild("json.unmarshal")
+	s.Description = "Decode response from Snuba"
+	defer s.Finish()
+
+	var sr SnubaProfilesResponse
+	err = json.NewDecoder(rb).Decode(&sr)
+	if err != nil {
+		return "", err
+	}
+
+	if len(sr.Profiles) == 0 {
+		return "", ErrProfileNotFound
+	}
+
+	return sr.Profiles[0].ProfileID, nil
+}
