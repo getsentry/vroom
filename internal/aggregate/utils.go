@@ -301,9 +301,14 @@ type IosProfile struct {
 	ThreadMetadata map[string]ThreadMedata  `json:"thread_metadata"`
 }
 
+type candidate struct {
+	ThreadID   uint64
+	FrameCount int
+}
+
 func (p IosProfile) MainThread() uint64 {
 	// Check for a main frame
-	queues := make(map[uint64]map[QueueMetadata]struct{})
+	queues := make(map[uint64]map[QueueMetadata]int)
 	for _, s := range p.Samples {
 		var isMain bool
 		for _, f := range s.Frames {
@@ -313,22 +318,29 @@ func (p IosProfile) MainThread() uint64 {
 			}
 		}
 		// Otherwise, we collect queue information to select which queue seems the right one
-		if q, qExists := p.QueueMetadata[s.QueueAddress]; qExists {
+		if tq, qExists := p.QueueMetadata[s.QueueAddress]; qExists {
 			if qm, qmExists := queues[s.ThreadID]; !qmExists {
-				queues[s.ThreadID] = make(map[QueueMetadata]struct{})
+				queues[s.ThreadID] = make(map[QueueMetadata]int)
 			} else {
-				qm[q] = struct{}{}
+				frameCount := len(s.Frames)
+				if q, qExists := qm[tq]; qExists {
+					if q < frameCount {
+						qm[tq] = frameCount
+					}
+				} else {
+					qm[tq] = frameCount
+				}
 			}
 		}
 	}
 	// Check for the right queue name
-	var candidates []uint64
+	var candidates []candidate
 	for threadID, qm := range queues {
 		// Only threads with 1 main queue are considered
 		if len(qm) == 1 {
-			for q := range qm {
+			for q, frameCount := range qm {
 				if q.IsMainThread() {
-					candidates = append(candidates, threadID)
+					candidates = append(candidates, candidate{threadID, frameCount})
 				}
 			}
 		}
@@ -337,9 +349,14 @@ func (p IosProfile) MainThread() uint64 {
 	if len(candidates) == 0 {
 		return 0
 	}
-	// Return the lowest thread ID
-	sort.Slice(candidates, func(i, j int) bool { return candidates[i] < candidates[j] })
-	return candidates[0]
+	// Sort possible candidates by deepest stack then lowest thread ID
+	sort.Slice(candidates, func(i, j int) bool {
+		if candidates[i].FrameCount == candidates[j].FrameCount {
+			return candidates[i].ThreadID < candidates[j].ThreadID
+		}
+		return candidates[i].FrameCount > candidates[j].FrameCount
+	})
+	return candidates[0].ThreadID
 }
 
 type ThreadMedata struct {
