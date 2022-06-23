@@ -69,12 +69,12 @@ func iosSpeedscopeTraceFromProfile(profile *aggregate.IosProfile) (output, error
 	frames := make([]frame, 0)
 	// we need to find the frame index of the main function so we can remove the frames before it
 	mainFunctionFrameIndex := -1
+	mainThreadID := profile.MainThread()
 	for _, sample := range profile.Samples {
-		onMainThread := sample.ContainsMain()
 		queueMetadata, qmExists := profile.QueueMetadata[sample.QueueAddress]
 		// Skip samples with a queue called "com.apple.main-thread"
 		// but not being scheduled on what we detected as the main thread.
-		if queueMetadata.IsMainThread() && !onMainThread {
+		if queueMetadata.IsMainThread() && sample.ThreadID != mainThreadID {
 			continue
 		}
 
@@ -93,7 +93,7 @@ func iosSpeedscopeTraceFromProfile(profile *aggregate.IosProfile) (output, error
 				Queues:       make(map[string]queue),
 				StartValue:   sample.RelativeTimestampNS,
 				ThreadID:     sample.ThreadID,
-				IsMainThread: onMainThread,
+				IsMainThread: sample.ThreadID == mainThreadID,
 				Type:         profileTypeSampled,
 				Unit:         valueUnitNanoseconds,
 			}

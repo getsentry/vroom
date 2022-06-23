@@ -268,7 +268,9 @@ type IosFrame struct {
 // IsMain returns true if the function is considered the main function.
 // It also returns an offset indicate if we need to keep the previous frame or not.
 func (f IosFrame) IsMain() (bool, int) {
-	if f.Function == "main" {
+	if f.Status != "symbolicated" {
+		return false, 0
+	} else if f.Function == "main" {
 		return true, 0
 	} else if f.Function == "UIApplicationMain" {
 		return true, -1
@@ -297,6 +299,47 @@ type IosProfile struct {
 	QueueMetadata  map[string]QueueMetadata `json:"queue_metadata"`
 	Samples        []Sample                 `json:"samples"`
 	ThreadMetadata map[string]ThreadMedata  `json:"thread_metadata"`
+}
+
+func (p IosProfile) MainThread() uint64 {
+	// Check for a main frame
+	queues := make(map[uint64]map[QueueMetadata]struct{})
+	for _, s := range p.Samples {
+		var isMain bool
+		for _, f := range s.Frames {
+			if isMain, _ = f.IsMain(); isMain {
+				// If we found a frame identified as a main frame, we're sure it's the main thread
+				return s.ThreadID
+			}
+		}
+		// Otherwise, we collect queue information to select which queue seems the right one
+		if q, qExists := p.QueueMetadata[s.QueueAddress]; qExists {
+			if qm, qmExists := queues[s.ThreadID]; !qmExists {
+				queues[s.ThreadID] = make(map[QueueMetadata]struct{})
+			} else {
+				qm[q] = struct{}{}
+			}
+		}
+	}
+	// Check for the right queue name
+	var candidates []uint64
+	for threadID, qm := range queues {
+		// Only threads with 1 main queue are considered
+		if len(qm) == 1 {
+			for q := range qm {
+				if q.IsMainThread() {
+					candidates = append(candidates, threadID)
+				}
+			}
+		}
+	}
+	// Whoops
+	if len(candidates) == 0 {
+		return 0
+	}
+	// Return the lowest thread ID
+	sort.Slice(candidates, func(i, j int) bool { return candidates[i] < candidates[j] })
+	return candidates[0]
 }
 
 type ThreadMedata struct {
