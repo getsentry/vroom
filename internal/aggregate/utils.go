@@ -306,6 +306,7 @@ type candidate struct {
 	FrameCount int
 }
 
+// MainThread returns what we believe is the main thread ID in the profile
 func (p IosProfile) MainThread() uint64 {
 	// Check for a main frame
 	queues := make(map[uint64]map[QueueMetadata]int)
@@ -323,11 +324,9 @@ func (p IosProfile) MainThread() uint64 {
 				queues[s.ThreadID] = make(map[QueueMetadata]int)
 			} else {
 				frameCount := len(s.Frames)
-				if q, qExists := qm[tq]; qExists {
-					if q < frameCount {
-						qm[tq] = frameCount
-					}
-				} else {
+				if q, qExists := qm[tq]; !qExists {
+					qm[tq] = frameCount
+				} else if q < frameCount {
 					qm[tq] = frameCount
 				}
 			}
