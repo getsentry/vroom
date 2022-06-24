@@ -268,7 +268,9 @@ type IosFrame struct {
 // IsMain returns true if the function is considered the main function.
 // It also returns an offset indicate if we need to keep the previous frame or not.
 func (f IosFrame) IsMain() (bool, int) {
-	if f.Function == "main" {
+	if f.Status != "symbolicated" {
+		return false, 0
+	} else if f.Function == "main" {
 		return true, 0
 	} else if f.Function == "UIApplicationMain" {
 		return true, -1
@@ -297,6 +299,63 @@ type IosProfile struct {
 	QueueMetadata  map[string]QueueMetadata `json:"queue_metadata"`
 	Samples        []Sample                 `json:"samples"`
 	ThreadMetadata map[string]ThreadMedata  `json:"thread_metadata"`
+}
+
+type candidate struct {
+	ThreadID   uint64
+	FrameCount int
+}
+
+// MainThread returns what we believe is the main thread ID in the profile
+func (p IosProfile) MainThread() uint64 {
+	// Check for a main frame
+	queues := make(map[uint64]map[QueueMetadata]int)
+	for _, s := range p.Samples {
+		var isMain bool
+		for _, f := range s.Frames {
+			if isMain, _ = f.IsMain(); isMain {
+				// If we found a frame identified as a main frame, we're sure it's the main thread
+				return s.ThreadID
+			}
+		}
+		// Otherwise, we collect queue information to select which queue seems the right one
+		if tq, qExists := p.QueueMetadata[s.QueueAddress]; qExists {
+			if qm, qmExists := queues[s.ThreadID]; !qmExists {
+				queues[s.ThreadID] = make(map[QueueMetadata]int)
+			} else {
+				frameCount := len(s.Frames)
+				if q, qExists := qm[tq]; !qExists {
+					qm[tq] = frameCount
+				} else if q < frameCount {
+					qm[tq] = frameCount
+				}
+			}
+		}
+	}
+	// Check for the right queue name
+	var candidates []candidate
+	for threadID, qm := range queues {
+		// Only threads with 1 main queue are considered
+		if len(qm) == 1 {
+			for q, frameCount := range qm {
+				if q.IsMainThread() {
+					candidates = append(candidates, candidate{threadID, frameCount})
+				}
+			}
+		}
+	}
+	// Whoops
+	if len(candidates) == 0 {
+		return 0
+	}
+	// Sort possible candidates by deepest stack then lowest thread ID
+	sort.Slice(candidates, func(i, j int) bool {
+		if candidates[i].FrameCount == candidates[j].FrameCount {
+			return candidates[i].ThreadID < candidates[j].ThreadID
+		}
+		return candidates[i].FrameCount > candidates[j].FrameCount
+	})
+	return candidates[0].ThreadID
 }
 
 type ThreadMedata struct {
