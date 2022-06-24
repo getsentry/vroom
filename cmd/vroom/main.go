@@ -71,6 +71,7 @@ func (env *environment) newRouter() (*httprouter.Router, error) {
 		{http.MethodGet, "/organizations/:organization_id/projects/:project_id/functions_versions", env.getFunctions},
 		{http.MethodGet, "/organizations/:organization_id/projects/:project_id/profiles/:profile_id", env.getProfile},
 		{http.MethodGet, "/organizations/:organization_id/projects/:project_id/profiles/:profile_id/call_tree", env.getProfileCallTree},
+		{http.MethodGet, "/organizations/:organization_id/projects/:project_id/transactions/:transaction_id", env.getProfileIDByTransactionID},
 	}
 
 	router := httprouter.New()
