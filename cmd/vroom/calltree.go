@@ -140,6 +140,7 @@ func (env *environment) postCallTree(w http.ResponseWriter, r *http.Request) {
 	s = sentry.StartSpan(ctx, "json.marshal")
 	defer s.Finish()
 
+	profile.Profile = ""
 	b, err := json.Marshal(PostCallTreeResponse{
 		Profile:   profile,
 		CallTrees: merged,

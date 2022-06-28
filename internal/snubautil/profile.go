@@ -17,7 +17,7 @@ type Profile struct {
 	Environment          string    `json:"environment,omitempty"`
 	OrganizationID       uint64    `json:"organization_id"`
 	Platform             string    `json:"platform"`
-	Profile              string    `json:"-"`
+	Profile              string    `json:"profile,omitempty"`
 	ProfileID            string    `json:"profile_id"`
 	ProjectID            uint64    `json:"project_id"`
 	Received             time.Time `json:"received"`
