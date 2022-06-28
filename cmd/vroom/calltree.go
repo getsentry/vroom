@@ -53,7 +53,7 @@ func (env *environment) getProfileCallTree(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	profiles, err := snubautil.GetProfile(organizationID, projectID, profileID, sqb)
+	profile, err := snubautil.GetProfile(organizationID, projectID, profileID, sqb)
 	if err != nil {
 		if errors.Is(err, snubautil.ErrProfileNotFound) {
 			w.WriteHeader(http.StatusNotFound)
@@ -66,7 +66,7 @@ func (env *environment) getProfileCallTree(w http.ResponseWriter, r *http.Reques
 
 	s := sentry.StartSpan(ctx, "aggregation")
 	s.Description = "Aggregate profiles"
-	aggRes, err := aggregate.AggregateProfiles([]snubautil.Profile{profiles}, math.MaxInt)
+	aggRes, err := aggregate.AggregateProfiles([]snubautil.Profile{profile}, math.MaxInt)
 	s.Finish()
 	if err != nil {
 		hub.CaptureException(err)
@@ -98,4 +98,59 @@ func (env *environment) getProfileCallTree(w http.ResponseWriter, r *http.Reques
 
 	w.Header().Set("Content-Type", "application/json")
 	_, _ = w.Write(b)
+}
+
+type PostCallTreeResponse struct {
+	Profile   snubautil.Profile    `json:"profile"`
+	CallTrees []aggregate.CallTree `json:"call_trees"`
+}
+
+func (env *environment) postCallTree(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	hub := sentry.GetHubFromContext(ctx)
+
+	var profile snubautil.Profile
+	err := json.NewDecoder(r.Body).Decode(&profile)
+	if err != nil {
+		hub.CaptureException(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	s := sentry.StartSpan(ctx, "aggregation")
+	s.Description = "Aggregate profiles"
+	aggRes, err := aggregate.AggregateProfiles([]snubautil.Profile{profile}, math.MaxInt)
+	s.Finish()
+	if err != nil {
+		hub.CaptureException(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	s = sentry.StartSpan(ctx, "merge")
+	s.Description = "Merge all call trees in one"
+	merged, err := aggregate.MergeAllCallTreesInBacktrace(&aggRes.Aggregation)
+	s.Finish()
+	if err != nil {
+		hub.CaptureException(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	s = sentry.StartSpan(ctx, "json.marshal")
+	defer s.Finish()
+
+	b, err := json.Marshal(PostCallTreeResponse{
+		Profile:   profile,
+		CallTrees: merged,
+	})
+	if err != nil {
+		hub.CaptureException(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	_, _ = w.Write(b)
+
 }
