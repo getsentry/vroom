@@ -283,7 +283,7 @@ func (a *AndroidTraceAggregatorP) methodsToCallTrees() (map[string][]CallTreeInf
 				ct := &calltree.AggregateCallTree{
 					Image:  packageName,
 					Symbol: simpleMethodName,
-					Line:   uint32(method.SourceLine),
+					Line:   method.SourceLine,
 					Path:   method.SourceFile,
 				}
 				n := &node{
@@ -471,7 +471,7 @@ func (a *AndroidTraceAggregatorP) computeFunctionCall(mwd *methodWithDuration) (
 		Frequency:           quantileToAggQuantiles(quantile.Quantile{Xs: frequency}),
 		MainThreadPercent:   float32(mainThreadCallCount) / callCount,
 		ThreadNameToPercent: threadNameToPercent,
-		Line:                int(method.SourceLine),
+		Line:                method.SourceLine,
 		Path:                method.SourceFile,
 		ProfileIDs:          profileIDs,
 		ProfileIDToThreadID: profileIDToThreadID,

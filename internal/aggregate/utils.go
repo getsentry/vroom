@@ -41,7 +41,7 @@ func newCallTreeFrameP(root *calltree.AggregateCallTree, hashOfParents []byte, d
 	case DisplayModeIOS:
 		image = root.Image
 		symbol = root.Symbol
-		isApplicationSymbol = IsIOSApplicationImage(root.Path)
+		isApplicationSymbol = IsIOSApplicationImage(root.Package)
 	case DisplayModeAndroid:
 		image = root.Image
 		symbol = root.Symbol
@@ -159,11 +159,11 @@ type FunctionCall struct {
 	ThreadNameToPercent map[string]float32 `json:"thread_name_to_percent"`
 	// Line is the line number for the function in its original source file,
 	// if that information is available, otherwise 0.
-	Line int `json:"line"`
+	Line uint32 `json:"line,omitempty"`
 
 	// Path is the path to the original source file that contains the function,
 	// if that information is available, otherwise "".
-	Path string `json:"path"`
+	Path string `json:"path,omitempty"`
 
 	// ProfileIDs is a unique list of the profile identifiers that this function
 	// appears in.
@@ -218,11 +218,11 @@ type Frame struct {
 
 	// Line is the line number for the function in its original source file,
 	// if that information is available, otherwise 0.
-	Line uint32 `json:"line"`
+	Line uint32 `json:"line,omitempty"`
 
 	// Path is the path to the original source file that contains the
 	// function, if that information is available, otherwise "".
-	Path string `json:"-"`
+	Path string `json:"path,omitempty"`
 
 	// Wall time duration for the execution of the function and its children.
 	TotalDurationNs       Quantiles `json:"total_duration_ns"`
@@ -257,7 +257,7 @@ type IosFrame struct {
 	Function        string `json:"function,omitempty"`
 	InstructionAddr string `json:"instruction_addr,omitempty"`
 	Lang            string `json:"lang,omitempty"`
-	LineNo          int    `json:"lineno,omitempty"`
+	LineNo          uint32 `json:"lineno,omitempty"`
 	OriginalIndex   int    `json:"original_index,omitempty"`
 	Package         string `json:"package"`
 	Status          string `json:"status,omitempty"`
@@ -375,14 +375,15 @@ type Symbol struct {
 	Image    string `json:"image"`
 	Name     string `json:"name"`
 	Path     string `json:"path"`
+	Package  string `json:"package"`
 	Filename string `json:"filename"`
-	Line     int    `json:"line"`
+	Line     uint32 `json:"line"`
 }
 
 // Path() returns (line, path, ok) where ok indicates whether the
 // values are valid and can be used.
-func (s *Symbol) GetPath() (int, string, bool) {
-	if s.Filename != "" && s.Filename != "<compiler-generated>" {
+func (s *Symbol) GetPath() (uint32, string, bool) {
+	if s.Path != "" && s.Path != "<compiler-generated>" {
 		return s.Line, s.Path, true
 	}
 	return 0, "", false

@@ -57,7 +57,7 @@ type (
 		count               int
 		durationsNs         quantile.Quantile
 		image               string
-		line                int
+		line                uint32
 		mainThreadCount     int
 		path                string
 		profileIDToCount    map[string]int
@@ -128,11 +128,12 @@ func (a *BacktraceAggregatorP) UpdateFromProfile(profile snubautil.Profile) erro
 				symbolName = fmt.Sprintf("unknown (%s)", frame.InstructionAddr)
 			}
 			symbol := Symbol{
-				Image:    imageName,
-				Name:     symbolName,
 				Filename: frame.Filename,
-				Path:     frame.Package,
+				Image:    imageName,
 				Line:     frame.LineNo,
+				Name:     symbolName,
+				Package:  frame.Package,
+				Path:     frame.AbsPath,
 			}
 			if _, exists := a.symbolsByProfileID[profile.ProfileID]; !exists {
 				a.symbolsByProfileID[profile.ProfileID] = make(map[string]Symbol)
@@ -441,8 +442,9 @@ func newCallTreeP(root *calltree.CallTreeP, symbols map[string]Symbol) (act *cal
 	}
 	act.Image = symbol.Image
 	act.Symbol = symbol.Name
+	act.Package = symbol.Package
 	if line, path, ok := symbol.GetPath(); ok {
-		act.Line = uint32(line)
+		act.Line = line
 		act.Path = path
 	}
 	return act
