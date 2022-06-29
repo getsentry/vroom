@@ -352,8 +352,8 @@ func (a *BacktraceAggregatorP) computeCallTreesForFunctionP(f functionCallWithDu
 		// 25  libsystem_pthread.dylib             0x00007fff60c8e498 _pthread_wqthread + 313
 		// 26  libsystem_pthread.dylib             0x00007fff60c8d466 start_wqthread + 14
 		// 27  ???                                 0xffffffffffffffff 0x0 + 18446744073709551615
-		if tree.Address == "0xffffffffc" && len(tree.Children) == 1 {
-			rootAct = newCallTreeP(tree.Children[0], symbolsByProfileID[tree.Children[0].ProfileID])
+		if tree.Address == "0xffffffffc" && len(tree.Children) == 1 && len(tree.Children[0].Children) == 1 {
+			rootAct = newCallTreeP(tree.Children[0].Children[0], symbolsByProfileID[tree.Children[0].Children[0].ProfileID])
 		} else {
 			rootAct = newCallTreeP(tree, symbolsByProfileID[tree.ProfileID])
 		}
