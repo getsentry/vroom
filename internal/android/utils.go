@@ -12,7 +12,7 @@ type AndroidMethod struct {
 	Name         string          `json:"name,omitempty"`
 	Signature    string          `json:"signature,omitempty"`
 	SourceFile   string          `json:"source_file,omitempty"`
-	SourceLine   uint64          `json:"source_line,omitempty"`
+	SourceLine   uint32          `json:"source_line,omitempty"`
 }
 
 type EventMonotonic struct {

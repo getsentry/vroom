@@ -19,6 +19,7 @@ type AggregateCallTree struct {
 	DemangledSymbol  string
 	Line             uint32
 	Path             string
+	Package          string
 	TotalDurationsNs []float64
 	SelfDurationsNs  []float64
 	Children         []*AggregateCallTree
@@ -52,6 +53,7 @@ func (act *AggregateCallTree) shallowCopy() *AggregateCallTree {
 		DemangledSymbol:  act.DemangledSymbol,
 		Line:             act.Line,
 		Path:             act.Path,
+		Package:          act.Package,
 		TotalDurationsNs: totalDurationsCopy,
 		SelfDurationsNs:  selfDurationsCopy,
 		Children:         nil, // shallow copy, not copying children

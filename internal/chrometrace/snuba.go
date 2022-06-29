@@ -184,7 +184,7 @@ func androidSpeedscopeTraceFromProfile(profile *android.AndroidProfile) (output,
 				frames = append(frames, frame{
 					Name:          m.Name,
 					File:          m.SourceFile,
-					Line:          int(m.SourceLine),
+					Line:          m.SourceLine,
 					IsApplication: !aggregate.IsAndroidSystemPackage(m.ClassName),
 					Image:         m.ClassName,
 				})
@@ -203,7 +203,7 @@ func androidSpeedscopeTraceFromProfile(profile *android.AndroidProfile) (output,
 			frames = append(frames, frame{
 				Name:          fullMethodName,
 				File:          method.SourceFile,
-				Line:          int(method.SourceLine),
+				Line:          method.SourceLine,
 				IsApplication: !aggregate.IsAndroidSystemPackage(fullMethodName),
 				Image:         packageName,
 			})

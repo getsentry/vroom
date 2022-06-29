@@ -6,7 +6,7 @@ type (
 		File          string `json:"file,omitempty"`
 		Image         string `json:"image,omitempty"`
 		IsApplication bool   `json:"is_application"`
-		Line          int    `json:"line,omitempty"`
+		Line          uint32 `json:"line,omitempty"`
 		Name          string `json:"name"`
 	}
 
