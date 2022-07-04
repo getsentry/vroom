@@ -9,6 +9,8 @@ import (
 
 	"github.com/getsentry/sentry-go"
 	"github.com/getsentry/vroom/internal/aggregate"
+	"github.com/getsentry/vroom/internal/android"
+	"github.com/getsentry/vroom/internal/nodetree"
 	"github.com/getsentry/vroom/internal/snubautil"
 	"github.com/julienschmidt/httprouter"
 )
@@ -101,8 +103,8 @@ func (env *environment) getProfileCallTree(w http.ResponseWriter, r *http.Reques
 }
 
 type PostCallTreeResponse struct {
-	Profile   snubautil.Profile    `json:"profile"`
-	CallTrees []aggregate.CallTree `json:"call_trees"`
+	Profile   snubautil.Profile           `json:"profile"`
+	CallTrees map[uint64][]*nodetree.Node `json:"call_trees"`
 }
 
 func (env *environment) postCallTree(w http.ResponseWriter, r *http.Request) {
@@ -117,33 +119,48 @@ func (env *environment) postCallTree(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s := sentry.StartSpan(ctx, "aggregation")
-	s.Description = "Aggregate profiles"
-	aggRes, err := aggregate.AggregateProfiles([]snubautil.Profile{profile}, math.MaxInt)
-	s.Finish()
-	if err != nil {
-		hub.CaptureException(err)
-		w.WriteHeader(http.StatusInternalServerError)
+	s := sentry.StartSpan(ctx, "json.unmarshal")
+	s.Description = "Unmarshal profile"
+
+	var p aggregate.Profile
+	switch profile.Platform {
+	case "cocoa":
+		var cp aggregate.IosProfile
+		err := json.Unmarshal([]byte(profile.Profile), &cp)
+		if err != nil {
+			hub.CaptureException(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		p = cp
+	case "android":
+		var ap android.AndroidProfile
+		err := json.Unmarshal([]byte(profile.Profile), &ap)
+		if err != nil {
+			hub.CaptureException(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		p = ap
+	default:
+		hub.CaptureMessage("unknown platform")
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	s = sentry.StartSpan(ctx, "merge")
-	s.Description = "Merge all call trees in one"
-	merged, err := aggregate.MergeAllCallTreesInBacktrace(&aggRes.Aggregation)
+	s = sentry.StartSpan(ctx, "calltree")
+	s.Description = "Generate call trees"
+	callTrees := p.CallTrees()
 	s.Finish()
-	if err != nil {
-		hub.CaptureException(err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
 
 	s = sentry.StartSpan(ctx, "json.marshal")
+	s.Description = "Marshal call trees"
 	defer s.Finish()
 
 	profile.Profile = ""
 	b, err := json.Marshal(PostCallTreeResponse{
 		Profile:   profile,
-		CallTrees: merged,
+		CallTrees: callTrees,
 	})
 	if err != nil {
 		hub.CaptureException(err)
@@ -153,5 +170,4 @@ func (env *environment) postCallTree(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	_, _ = w.Write(b)
-
 }
