@@ -145,6 +145,7 @@ func (act *AggregateCallTree) shallowMerge(other *AggregateCallTree) {
 	if other.Path != "" {
 		act.Path = other.Path
 		act.Line = other.Line
+		act.Package = other.Package
 	}
 	act.TotalDurationsNs = append(act.TotalDurationsNs, other.TotalDurationsNs...)
 	act.SelfDurationsNs = append(act.SelfDurationsNs, other.SelfDurationsNs...)
