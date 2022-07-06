@@ -44,12 +44,13 @@ type Sample struct {
 }
 
 func (s Sample) ContainsMain() bool {
-	i := sort.Search(len(s.Frames), func(i int) bool {
-		f := s.Frames[i]
-		isMain, _ := f.IsMain()
-		return isMain
-	})
-	return i < len(s.Frames)
+	for i := len(s.Frames) - 1; i >= 0; i-- {
+		isMain, _ := s.Frames[i].IsMain()
+		if isMain {
+			return true
+		}
+	}
+	return false
 }
 
 type IosProfile struct {
