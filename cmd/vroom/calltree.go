@@ -103,7 +103,6 @@ func (env *environment) getProfileCallTree(w http.ResponseWriter, r *http.Reques
 }
 
 type PostCallTreeResponse struct {
-	Profile   snubautil.Profile           `json:"profile"`
 	CallTrees map[uint64][]*nodetree.Node `json:"call_trees"`
 }
 
@@ -163,9 +162,7 @@ func (env *environment) postCallTree(w http.ResponseWriter, r *http.Request) {
 	s.Description = "Marshal call trees"
 	defer s.Finish()
 
-	profile.Profile = ""
 	b, err := json.Marshal(PostCallTreeResponse{
-		Profile:   profile,
 		CallTrees: callTrees,
 	})
 	if err != nil {
