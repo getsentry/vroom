@@ -3,6 +3,7 @@ package android
 import (
 	"encoding/binary"
 	"hash/fnv"
+	"strings"
 	"time"
 
 	"github.com/getsentry/vroom/internal/nodetree"
@@ -97,7 +98,7 @@ func (p AndroidProfile) CallTrees() map[uint64][]*nodetree.Node {
 		switch e.Action {
 		case EnterAction:
 			m := p.Methods[e.MethodID]
-			n := nodetree.NodeFromFrame(m.ClassName, m.Name, m.SourceFile, m.SourceLine, buildTimestamp(e.Time), 0, m.ID)
+			n := nodetree.NodeFromFrame(m.ClassName, m.Name, m.SourceFile, m.SourceLine, buildTimestamp(e.Time), 0, m.ID, !IsSystemPackage(m.ClassName))
 			if len(stacks[e.ThreadID]) == 0 {
 				trees[e.ThreadID] = append(trees[e.ThreadID], n)
 			} else {
@@ -130,4 +131,30 @@ func generateFingerprint(threadID uint64, stack []*nodetree.Node) uint64 {
 		h.Write(buffer)
 	}
 	return h.Sum64()
+}
+
+var (
+	androidPackagePrefixes = []string{
+		"android.",
+		"androidx.",
+		"com.android.",
+		"com.google.android.",
+		"com.motorola.",
+		"java.",
+		"javax.",
+		"kotlin.",
+		"kotlinx.",
+		"retrofit2.",
+		"sun.",
+	}
+)
+
+// Checking if synmbol belongs to an Android system package
+func IsSystemPackage(packageName string) bool {
+	for _, p := range androidPackagePrefixes {
+		if strings.HasPrefix(packageName, p) {
+			return true
+		}
+	}
+	return false
 }

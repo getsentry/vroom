@@ -141,7 +141,7 @@ func (p IosProfile) CallTrees() map[uint64][]*nodetree.Node {
 					}
 				}
 				if current == nil {
-					n := nodetree.NodeFromFrame(f.Package, f.Symbol, f.AbsPath, f.LineNo, previousTimestamp[s.ThreadID], s.RelativeTimestampNS, fingerprint)
+					n := nodetree.NodeFromFrame(f.Package, f.Symbol, f.AbsPath, f.LineNo, previousTimestamp[s.ThreadID], s.RelativeTimestampNS, fingerprint, IsIOSApplicationImage(f.Package))
 					trees[s.ThreadID] = append(trees[s.ThreadID], n)
 					current = n
 				}
@@ -155,7 +155,7 @@ func (p IosProfile) CallTrees() map[uint64][]*nodetree.Node {
 					if count > 0 {
 						parentTimestamp = current.Children[count-1].EndNS
 					}
-					n := nodetree.NodeFromFrame(f.Package, f.Symbol, f.AbsPath, f.LineNo, parentTimestamp, s.RelativeTimestampNS, fingerprint)
+					n := nodetree.NodeFromFrame(f.Package, f.Symbol, f.AbsPath, f.LineNo, parentTimestamp, s.RelativeTimestampNS, fingerprint, IsIOSApplicationImage(f.Package))
 					current.Children = append(current.Children, n)
 					current = n
 				}

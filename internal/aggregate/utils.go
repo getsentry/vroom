@@ -7,6 +7,7 @@ import (
 	"io"
 	"strings"
 
+	"github.com/getsentry/vroom/internal/android"
 	"github.com/getsentry/vroom/internal/calltree"
 	"github.com/getsentry/vroom/internal/quantile"
 )
@@ -65,30 +66,9 @@ func newCallTreeFrameP(root *calltree.AggregateCallTree, hashOfParents []byte, d
 	}
 }
 
-var (
-	androidPackagePrefixes = []string{
-		"android.",
-		"androidx.",
-		"com.android.",
-		"com.google.android.",
-		"com.motorola.",
-		"java.",
-		"javax.",
-		"kotlin.",
-		"kotlinx.",
-		"retrofit2.",
-		"sun.",
-	}
-)
-
 // Checking if synmbol belongs to an Android system package
 func IsAndroidSystemPackage(packageName string) bool {
-	for _, p := range androidPackagePrefixes {
-		if strings.HasPrefix(packageName, p) {
-			return true
-		}
-	}
-	return false
+	return android.IsSystemPackage(packageName)
 }
 
 // isApplicationSymbol determines whether the image represents that of the application
