@@ -133,27 +133,24 @@ func (p IosProfile) CallTrees() map[uint64][]*nodetree.Node {
 			h.Write([]byte(f.InstructionAddr))
 			fingerprint := h.Sum64()
 			if current == nil {
-				for _, r := range trees[s.ThreadID] {
-					if r.Fingerprint == fingerprint {
-						r.SetDuration(s.RelativeTimestampNS)
-						current = r
-						break
-					}
-				}
-				if current == nil {
+				i := len(trees[s.ThreadID]) - 1
+				if i >= 0 && trees[s.ThreadID][i].Fingerprint == fingerprint {
+					current = trees[s.ThreadID][i]
+					current.SetDuration(s.RelativeTimestampNS)
+				} else {
 					n := nodetree.NodeFromFrame(f.Package, f.Symbol, f.AbsPath, f.LineNo, previousTimestamp[s.ThreadID], s.RelativeTimestampNS, fingerprint, IsIOSApplicationImage(f.Package))
 					trees[s.ThreadID] = append(trees[s.ThreadID], n)
 					current = n
 				}
 			} else {
-				count := len(current.Children)
-				if count > 0 && current.Children[count-1].Fingerprint == fingerprint {
-					current.Children[count-1].SetDuration(s.RelativeTimestampNS)
-					current = current.Children[count-1]
+				i := len(current.Children) - 1
+				if i >= 0 && current.Children[i].Fingerprint == fingerprint {
+					current = current.Children[i]
+					current.SetDuration(s.RelativeTimestampNS)
 				} else {
 					parentTimestamp := previousTimestamp[s.ThreadID]
-					if count > 0 {
-						parentTimestamp = current.Children[count-1].EndNS
+					if i >= 0 {
+						parentTimestamp = current.Children[i].EndNS
 					}
 					n := nodetree.NodeFromFrame(f.Package, f.Symbol, f.AbsPath, f.LineNo, parentTimestamp, s.RelativeTimestampNS, fingerprint, IsIOSApplicationImage(f.Package))
 					current.Children = append(current.Children, n)
