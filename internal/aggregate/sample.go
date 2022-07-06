@@ -133,15 +133,14 @@ func (p IosProfile) CallTrees() map[uint64][]*nodetree.Node {
 			fingerprint.Write([]byte(f.InstructionAddr))
 			id := fingerprint.Sum64()
 			if current == nil {
-				if len(trees[s.ThreadID]) > 0 {
-					for _, r := range trees[s.ThreadID] {
-						if r.ID == id {
-							r.SetDuration(s.RelativeTimestampNS)
-							current = r
-							break
-						}
+				for _, r := range trees[s.ThreadID] {
+					if r.ID == id {
+						r.SetDuration(s.RelativeTimestampNS)
+						current = r
+						break
 					}
-				} else {
+				}
+				if current == nil {
 					n := nodetree.NodeFromFrame(f.Package, f.Symbol, f.AbsPath, f.LineNo, previousTimestamp[s.ThreadID], s.RelativeTimestampNS, id)
 					trees[s.ThreadID] = append(trees[s.ThreadID], n)
 					current = n
