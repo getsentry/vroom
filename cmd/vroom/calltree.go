@@ -111,22 +111,25 @@ func (env *environment) postCallTree(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	hub := sentry.GetHubFromContext(ctx)
 
+	s := sentry.StartSpan(ctx, "json.unmarshal")
+	s.Description = "Unmarshal Snuba profile"
 	var profile snubautil.Profile
 	err := json.NewDecoder(r.Body).Decode(&profile)
+	s.Finish()
 	if err != nil {
 		hub.CaptureException(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	s := sentry.StartSpan(ctx, "json.unmarshal")
-	s.Description = "Unmarshal profile"
-
 	var p aggregate.Profile
 	switch profile.Platform {
 	case "cocoa":
 		var cp aggregate.IosProfile
+		s := sentry.StartSpan(ctx, "json.unmarshal")
+		s.Description = "Unmarshal iOS profile"
 		err := json.Unmarshal([]byte(profile.Profile), &cp)
+		s.Finish()
 		if err != nil {
 			hub.CaptureException(err)
 			w.WriteHeader(http.StatusInternalServerError)
@@ -135,7 +138,10 @@ func (env *environment) postCallTree(w http.ResponseWriter, r *http.Request) {
 		p = cp
 	case "android":
 		var ap android.AndroidProfile
+		s := sentry.StartSpan(ctx, "json.unmarshal")
+		s.Description = "Unmarshal Android profile"
 		err := json.Unmarshal([]byte(profile.Profile), &ap)
+		s.Finish()
 		if err != nil {
 			hub.CaptureException(err)
 			w.WriteHeader(http.StatusInternalServerError)
