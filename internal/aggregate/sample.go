@@ -122,32 +122,32 @@ func (p IosProfile) CallTrees() map[uint64][]*nodetree.Node {
 
 	var current *nodetree.Node
 	trees := make(map[uint64][]*nodetree.Node)
-	fingerprint := fnv.New64()
+	h := fnv.New64()
 	previousTimestamp := make(map[uint64]uint64)
 	buffer := make([]byte, 8)
 	for _, s := range p.Samples {
 		binary.LittleEndian.PutUint64(buffer, s.ThreadID)
-		fingerprint.Write(buffer)
+		h.Write(buffer)
 		for i := len(s.Frames) - 1; i >= 0; i-- {
 			f := s.Frames[i]
-			fingerprint.Write([]byte(f.InstructionAddr))
-			id := fingerprint.Sum64()
+			h.Write([]byte(f.InstructionAddr))
+			fingerprint := h.Sum64()
 			if current == nil {
 				for _, r := range trees[s.ThreadID] {
-					if r.ID == id {
+					if r.Fingerprint == fingerprint {
 						r.SetDuration(s.RelativeTimestampNS)
 						current = r
 						break
 					}
 				}
 				if current == nil {
-					n := nodetree.NodeFromFrame(f.Package, f.Symbol, f.AbsPath, f.LineNo, previousTimestamp[s.ThreadID], s.RelativeTimestampNS, id)
+					n := nodetree.NodeFromFrame(f.Package, f.Symbol, f.AbsPath, f.LineNo, previousTimestamp[s.ThreadID], s.RelativeTimestampNS, fingerprint)
 					trees[s.ThreadID] = append(trees[s.ThreadID], n)
 					current = n
 				}
 			} else {
 				count := len(current.Children)
-				if count > 0 && current.Children[count-1].ID == id {
+				if count > 0 && current.Children[count-1].Fingerprint == fingerprint {
 					current.Children[count-1].SetDuration(s.RelativeTimestampNS)
 					current = current.Children[count-1]
 				} else {
@@ -155,13 +155,13 @@ func (p IosProfile) CallTrees() map[uint64][]*nodetree.Node {
 					if count > 0 {
 						parentTimestamp = current.Children[count-1].EndNS
 					}
-					n := nodetree.NodeFromFrame(f.Package, f.Symbol, f.AbsPath, f.LineNo, parentTimestamp, s.RelativeTimestampNS, id)
+					n := nodetree.NodeFromFrame(f.Package, f.Symbol, f.AbsPath, f.LineNo, parentTimestamp, s.RelativeTimestampNS, fingerprint)
 					current.Children = append(current.Children, n)
 					current = n
 				}
 			}
 		}
-		fingerprint.Reset()
+		h.Reset()
 		previousTimestamp[s.ThreadID] = s.RelativeTimestampNS
 		current = nil
 	}

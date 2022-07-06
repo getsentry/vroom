@@ -3,8 +3,6 @@ package android
 import (
 	"encoding/binary"
 	"hash/fnv"
-	"math"
-	"sort"
 	"time"
 
 	"github.com/getsentry/vroom/internal/nodetree"
@@ -93,44 +91,43 @@ func (p AndroidProfile) TimestampGetter() func(EventTime) uint64 {
 
 func (p AndroidProfile) CallTrees() map[uint64][]*nodetree.Node {
 	buildTimestamp := p.TimestampGetter()
-	sort.SliceStable(p.Events, func(i, j int) bool {
-		a, b := p.Events[i], p.Events[j]
-		return a.ThreadID < b.ThreadID && buildTimestamp(a.Time) < buildTimestamp(b.Time)
-	})
-
-	nodesPerThread := make(map[uint64][]*nodetree.Node)
-	enters := make(map[uint64][]AndroidEvent)
+	trees := make(map[uint64][]*nodetree.Node)
+	stacks := make(map[uint64][]*nodetree.Node)
 	for _, e := range p.Events {
 		switch e.Action {
 		case EnterAction:
-			enters[e.ThreadID] = append(enters[e.ThreadID], e)
+			m := p.Methods[e.MethodID]
+			n := nodetree.NodeFromFrame(m.ClassName, m.Name, m.SourceFile, m.SourceLine, buildTimestamp(e.Time), 0, m.ID)
+			if len(stacks[e.ThreadID]) == 0 {
+				trees[e.ThreadID] = append(trees[e.ThreadID], n)
+			} else {
+				i := len(stacks[e.ThreadID]) - 1
+				stacks[e.ThreadID][i].Children = append(stacks[e.ThreadID][i].Children, n)
+			}
+			stacks[e.ThreadID] = append(stacks[e.ThreadID], n)
+			n.Fingerprint = generateFingerprint(e.ThreadID, stacks[e.ThreadID])
 		case ExitAction, UnwindAction:
-			if len(enters[e.ThreadID]) == 0 {
+			if len(stacks[e.ThreadID]) == 0 {
 				continue
 			}
-			i := len(enters[e.ThreadID]) - 1
-			enterEvent := enters[e.ThreadID][i]
-			enters[e.ThreadID] = enters[e.ThreadID][:i]
-
-			start := buildTimestamp(enterEvent.Time)
-			end := buildTimestamp(e.Time)
-			m := p.Methods[e.MethodID]
-			nodesPerThread[e.ThreadID] = append(nodesPerThread[e.ThreadID], nodetree.NodeFromFrame(m.ClassName, m.Name, m.SourceFile, m.SourceLine, start, end, m.ID))
+			i := len(stacks[e.ThreadID]) - 1
+			n := stacks[e.ThreadID][i]
+			n.DurationNS = buildTimestamp(e.Time) - n.StartNS
+			stacks[e.ThreadID] = stacks[e.ThreadID][:i]
 		}
-	}
-
-	trees := make(map[uint64][]*nodetree.Node)
-	for threadID, nodes := range nodesPerThread {
-		root := nodetree.NodeFromFrame("root", "root", "", 0, 0, math.MaxUint64, 0)
-		fingerprint := fnv.New64()
-		buffer := make([]byte, 8)
-		binary.LittleEndian.PutUint64(buffer, threadID)
-		fingerprint.Write(buffer)
-		for _, n := range nodes {
-			root.Insert(n, fingerprint)
-		}
-		trees[threadID] = root.Children
 	}
 
 	return trees
+}
+
+func generateFingerprint(threadID uint64, stack []*nodetree.Node) uint64 {
+	h := fnv.New64()
+	buffer := make([]byte, 8)
+	binary.LittleEndian.PutUint64(buffer, threadID)
+	h.Write(buffer)
+	for _, n := range stack {
+		binary.LittleEndian.PutUint64(buffer, n.ID)
+		h.Write(buffer)
+	}
+	return h.Sum64()
 }
