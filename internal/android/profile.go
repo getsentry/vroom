@@ -109,10 +109,10 @@ func (p AndroidProfile) CallTrees() map[uint64][]*nodetree.Node {
 				continue
 			}
 			i := len(enters[e.ThreadID]) - 1
-			ee := enters[e.ThreadID][i]
+			enterEvent := enters[e.ThreadID][i]
 			enters[e.ThreadID] = enters[e.ThreadID][:i]
 
-			start := buildTimestamp(ee.Time)
+			start := buildTimestamp(enterEvent.Time)
 			end := buildTimestamp(e.Time)
 			m := p.Methods[e.MethodID]
 			nodesPerThread[e.ThreadID] = append(nodesPerThread[e.ThreadID], nodetree.NodeFromFrame(m.ClassName, m.Name, m.SourceFile, m.SourceLine, start, end, m.ID))
