@@ -117,7 +117,7 @@ func (env *environment) postCallTree(w http.ResponseWriter, r *http.Request) {
 	s.Finish()
 	if err != nil {
 		hub.CaptureException(err)
-		w.WriteHeader(http.StatusInternalServerError)
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
@@ -131,7 +131,7 @@ func (env *environment) postCallTree(w http.ResponseWriter, r *http.Request) {
 		s.Finish()
 		if err != nil {
 			hub.CaptureException(err)
-			w.WriteHeader(http.StatusInternalServerError)
+			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 		p = cp
@@ -143,7 +143,7 @@ func (env *environment) postCallTree(w http.ResponseWriter, r *http.Request) {
 		s.Finish()
 		if err != nil {
 			hub.CaptureException(err)
-			w.WriteHeader(http.StatusInternalServerError)
+			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 		p = ap
