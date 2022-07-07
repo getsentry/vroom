@@ -400,11 +400,7 @@ func rustSpeedscopeTraceFromProfile(profile *aggregate.RustProfile) (output, err
 				frameIndex = len(frames)
 				symbolName := fr.Function
 				if symbolName == "" {
-					addr := fr.SymAddr
-					if addr == "" {
-						addr = fr.InstructionAddr
-					}
-					symbolName = fmt.Sprintf("unknown (%s)", addr)
+					symbolName = fmt.Sprintf("unknown (%s)", fr.InstructionAddr)
 				} else if mainFunctionFrameIndex == -1 {
 					if isMainFrame := fr.IsMain(); isMainFrame {
 						mainFunctionFrameIndex = frameIndex
