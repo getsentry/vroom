@@ -140,10 +140,11 @@ func (act *AggregateCallTree) shallowMerge(other *AggregateCallTree) {
 	if act.DemangledSymbol == "" {
 		act.DemangledSymbol = other.DemangledSymbol
 	}
-	// Paths and line numbers can change as the source code of an application
+	// Paths, packages and line numbers can change as the source code of an application
 	// changes, so always bias toward the newer value when merging.
 	if other.Path != "" {
 		act.Path = other.Path
+		act.Package = other.Package
 		act.Line = other.Line
 	}
 	act.TotalDurationsNs = append(act.TotalDurationsNs, other.TotalDurationsNs...)
