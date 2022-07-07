@@ -51,7 +51,7 @@ func (env *environment) getTransactions(w http.ResponseWriter, r *http.Request) 
 
 	hub.Scope().SetTag("organization_id", rawOrganizationID)
 
-	sqb, err := env.snubaQueryBuilderFromRequest(ctx, r.URL.Query())
+	sqb, err := env.profilesQueryBuilderFromRequest(ctx, r.URL.Query())
 	if err != nil {
 		hub.CaptureException(err)
 		w.WriteHeader(http.StatusBadRequest)
