@@ -431,7 +431,7 @@ type RustProfile struct {
 func (f RustFrame) IsMain() bool {
 	if f.Status != "symbolicated" {
 		return false
-	} else if splitName := strings.Split(f.Function, "::"); splitName[len(splitName)-1] == "main" {
+	} else if f.Function == "main" {
 		return true
 	}
 	return false

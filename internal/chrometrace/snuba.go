@@ -357,7 +357,8 @@ func rustSpeedscopeTraceFromProfile(profile *aggregate.RustProfile) (output, err
 	addressToFrameIndex := make(map[string]int)
 	threadIDToPreviousTimestampNS := make(map[uint64]uint64)
 	frames := make([]frame, 0)
-
+	// we need to find the frame index of the main function so we can remove the frames before it
+	mainFunctionFrameIndex := -1
 	mainThreadID := profile.MainThread()
 	// sorting here is necessary because the timing info for each sample is given by
 	// a Rust SystemTime type, which is measurement of the system clock and is not monotonic
@@ -400,6 +401,10 @@ func rustSpeedscopeTraceFromProfile(profile *aggregate.RustProfile) (output, err
 				symbolName := fr.Function
 				if symbolName == "" {
 					symbolName = fmt.Sprintf("unknown (%s)", fr.InstructionAddr)
+				} else if mainFunctionFrameIndex == -1 {
+					if isMainFrame := fr.IsMain(); isMainFrame {
+						mainFunctionFrameIndex = frameIndex
+					}
 				}
 				addressToFrameIndex[fr.InstructionAddr] = frameIndex
 				frames = append(frames, frame{
@@ -420,6 +425,17 @@ func rustSpeedscopeTraceFromProfile(profile *aggregate.RustProfile) (output, err
 	for _, prof := range threadIDToProfile {
 		if prof.IsMainThread {
 			mainThreadProfileIndex = len(allProfiles)
+			// Remove all frames before main is called on the main thread
+			if mainFunctionFrameIndex != -1 {
+				for i, sample := range prof.Samples {
+					for j, frameIndex := range sample {
+						if frameIndex == mainFunctionFrameIndex {
+							prof.Samples[i] = prof.Samples[i][j:]
+							break
+						}
+					}
+				}
+			}
 		}
 		prof.Weights = append(prof.Weights, 0)
 		allProfiles = append(allProfiles, prof)
