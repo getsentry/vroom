@@ -395,18 +395,22 @@ func rustSpeedscopeTraceFromProfile(profile *aggregate.RustProfile) (output, err
 		samp := make([]int, 0, len(sample.Frames))
 		for i := len(sample.Frames) - 1; i >= 0; i-- {
 			fr := sample.Frames[i]
-			frameIndex, ok := addressToFrameIndex[fr.InstructionAddr]
+			frameIndex, ok := addressToFrameIndex[fr.SymAddr]
 			if !ok {
 				frameIndex = len(frames)
 				symbolName := fr.Function
 				if symbolName == "" {
-					symbolName = fmt.Sprintf("unknown (%s)", fr.InstructionAddr)
+					addr := fr.SymAddr
+					if addr == "" {
+						addr = fr.InstructionAddr
+					}
+					symbolName = fmt.Sprintf("unknown (%s)", addr)
 				} else if mainFunctionFrameIndex == -1 {
 					if isMainFrame := fr.IsMain(); isMainFrame {
 						mainFunctionFrameIndex = frameIndex
 					}
 				}
-				addressToFrameIndex[fr.InstructionAddr] = frameIndex
+				addressToFrameIndex[fr.SymAddr] = frameIndex
 				frames = append(frames, frame{
 					File:          fr.Filename,
 					Image:         calltree.ImageBaseName(fr.Package),
