@@ -1,9 +1,12 @@
 package aggregate
 
 import (
+	"encoding/json"
+	"os"
 	"testing"
 
 	"github.com/getsentry/vroom/internal/nodetree"
+	"github.com/getsentry/vroom/internal/snubautil"
 	"github.com/getsentry/vroom/internal/testutil"
 )
 
@@ -833,4 +836,30 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 			}
 		})
 	}
+}
+
+func BenchmarkCallTrees(b *testing.B) {
+	var p snubautil.Profile
+	f, err := os.Open("../../test/data/cocoa.json")
+	if err != nil {
+		b.Fatal(err)
+	}
+	err = json.NewDecoder(f).Decode(&p)
+	if err != nil {
+		b.Fatal(err)
+	}
+	var profile IosProfile
+	err = json.Unmarshal([]byte(p.Profile), &profile)
+	if err != nil {
+		b.Fatal(err)
+	}
+
+	b.ReportAllocs()
+
+	var total int
+	for n := 0; n < b.N; n++ {
+		c := profile.CallTrees()
+		total += len(c)
+	}
+	b.Logf("Total call trees generated: %d", total)
 }
