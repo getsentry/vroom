@@ -10,7 +10,9 @@ gcloud beta run deploy vroom \
   --execution-environment gen2 \
   --image $image \
   --memory 1Gi \
-  --no-allow-unauthenticated \
+  --allow-unauthenticated \
+  --ingress internal-and-cloud-load-balancing \
+  --vpc-egress all-traffic \
   --region us-central1 \
   --service-account service-vroom@specto-dev.iam.gserviceaccount.com \
   --set-env-vars=SENTRY_SNUBA_HOST=http://snuba-api.profiling \
