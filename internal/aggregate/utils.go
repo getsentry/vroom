@@ -455,6 +455,9 @@ func (p RustProfile) MainThread() uint64 {
 // isApplicationSymbol determines whether the image represents that of the application
 // binary (or a binary embedded in the application binary) by checking its path.
 func IsRustApplicationImage(image string) bool {
+	// `/library/std/src/` and `/usr/lib/system/` come from a real profile collected on macos.
+	// In this case the function belongs to a shared library,
+	// not to the profiled application
 	return !strings.Contains(image, "/library/std/src/") &&
 		!strings.HasPrefix(image, "/usr/lib/system/") &&
 		!(image == "")
