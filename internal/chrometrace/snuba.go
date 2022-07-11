@@ -377,7 +377,7 @@ func rustSpeedscopeTraceFromProfile(profile *aggregate.RustProfile) (output, err
 			}
 			sampProfile = &sampledProfile{
 				Name:         threadName,
-				Queues:       make(map[string]queue),
+				Queues:       nil,
 				StartValue:   sample.RelativeTimestampNS,
 				ThreadID:     sample.ThreadID,
 				IsMainThread: sample.ThreadID == mainThreadID,
