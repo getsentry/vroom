@@ -1,7 +1,6 @@
 package aggregate
 
 import (
-	"encoding/binary"
 	"hash/fnv"
 	"sort"
 
@@ -125,10 +124,7 @@ func (p IosProfile) CallTrees() map[uint64][]*nodetree.Node {
 	trees := make(map[uint64][]*nodetree.Node)
 	h := fnv.New64()
 	previousTimestamp := make(map[uint64]uint64)
-	buffer := make([]byte, 8)
 	for _, s := range p.Samples {
-		binary.LittleEndian.PutUint64(buffer, s.ThreadID)
-		h.Write(buffer)
 		for i := len(s.Frames) - 1; i >= 0; i-- {
 			f := s.Frames[i]
 			h.Write([]byte(f.InstructionAddr))

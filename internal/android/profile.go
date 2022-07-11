@@ -124,8 +124,6 @@ func (p AndroidProfile) CallTrees() map[uint64][]*nodetree.Node {
 func generateFingerprint(threadID uint64, stack []*nodetree.Node) uint64 {
 	h := fnv.New64()
 	buffer := make([]byte, 8)
-	binary.LittleEndian.PutUint64(buffer, threadID)
-	h.Write(buffer)
 	for _, n := range stack {
 		binary.LittleEndian.PutUint64(buffer, n.ID)
 		h.Write(buffer)
