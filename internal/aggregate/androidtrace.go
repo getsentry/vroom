@@ -663,7 +663,7 @@ func RecordedAt(r AndroidtraceRecord) uint64 {
 
 func eventToAndroidTraceRecord(event android.AndroidEvent) AndroidtraceRecord {
 	return AndroidtraceRecord{
-		MethodAction:          event.Action,
+		MethodAction:          string(event.Action),
 		ThreadID:              uint32(event.ThreadID),
 		MethodID:              uint32(event.MethodID),
 		TimeDeltaSinceStartNs: event.Time.Monotonic.Cpu.Nanos,

@@ -3,7 +3,6 @@ package testutil
 import (
 	"math"
 	"math/big"
-	"sort"
 
 	"github.com/google/go-cmp/cmp"
 	"google.golang.org/protobuf/testing/protocmp"
@@ -36,28 +35,4 @@ var (
 func Diff(a, b interface{}, opts ...cmp.Option) string {
 	opts = append(opts, defaultCmpOptions...)
 	return cmp.Diff(a, b, opts...)
-}
-
-func DedupStrings(sl []string) (uniq []string) {
-	m := make(map[string]bool)
-	for _, s := range sl {
-		if _, ok := m[s]; !ok {
-			uniq = append(uniq, s)
-			m[s] = true
-		}
-	}
-	sort.Strings(uniq)
-	return uniq
-}
-
-// MergeMap merges a into b and returns b.
-// It overrides keys existing in both by values from a.
-func MergeMap(a, b map[string]interface{}) map[string]interface{} {
-	if b == nil {
-		return a
-	}
-	for k, v := range a {
-		b[k] = v
-	}
-	return b
 }

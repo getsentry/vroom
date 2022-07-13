@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
-	"time"
 
 	"github.com/getsentry/vroom/internal/aggregate"
 	"github.com/getsentry/vroom/internal/android"
@@ -238,23 +237,7 @@ func androidSpeedscopeTraceFromProfile(profile *android.AndroidProfile) (output,
 
 	threadIDToProfile := make(map[uint64]*eventedProfile)
 	methodStacks := make(map[uint64][]uint64) // map of thread ID -> stack of method IDs
-
-	var buildTimestamp func(t android.EventTime) uint64
-
-	switch profile.Clock {
-	case android.GlobalClock:
-		buildTimestamp = func(t android.EventTime) uint64 {
-			return t.Global.Secs*uint64(time.Second) + t.Global.Nanos - profile.StartTime
-		}
-	case android.CPUClock:
-		buildTimestamp = func(t android.EventTime) uint64 {
-			return t.Monotonic.Cpu.Secs*uint64(time.Second) + t.Monotonic.Cpu.Nanos
-		}
-	default:
-		buildTimestamp = func(t android.EventTime) uint64 {
-			return t.Monotonic.Wall.Secs*uint64(time.Second) + t.Monotonic.Wall.Nanos
-		}
-	}
+	buildTimestamp := profile.TimestampGetter()
 
 	for _, event := range profile.Events {
 		ts := buildTimestamp(event.Time)
