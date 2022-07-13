@@ -828,7 +828,807 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			got := tt.profile.CallTrees()
+			if diff := testutil.Diff(got, tt.want); diff != "" {
+				t.Fatalf("Result mismatch: got - want +\n%s", diff)
+			}
+		})
+	}
+}
+
+func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
+	tests := []struct {
+		name    string
+		profile IosProfile
+		want    map[uint64][]*nodetree.Node
+	}{
+		{
+			name: "multiple threads with the same call tree",
+			profile: IosProfile{
+				Samples: []Sample{
+					{
+						ThreadID:            1,
+						RelativeTimestampNS: 1,
+						Frames: []IosFrame{
+							{InstructionAddr: "2", Symbol: "symbol2"},
+							{InstructionAddr: "1", Symbol: "symbol1"},
+							{InstructionAddr: "0", Symbol: "symbol0"},
+						},
+					},
+					{
+						ThreadID:            2,
+						RelativeTimestampNS: 1,
+						Frames: []IosFrame{
+							{InstructionAddr: "2", Symbol: "symbol2"},
+							{InstructionAddr: "1", Symbol: "symbol1"},
+							{InstructionAddr: "0", Symbol: "symbol0"},
+						},
+					},
+				},
+			},
+			want: map[uint64][]*nodetree.Node{
+				1: []*nodetree.Node{
+					{
+						DurationNS:  1,
+						EndNS:       1,
+						Fingerprint: 12638153115695167471,
+						ID:          12638153115695167471,
+						Name:        "symbol0",
+						Children: []*nodetree.Node{
+							{
+								DurationNS:  1,
+								EndNS:       1,
+								Fingerprint: 590701660006484780,
+								ID:          590701660006484780,
+								Name:        "symbol1",
+								Children: []*nodetree.Node{
+									{
+										DurationNS:  1,
+										EndNS:       1,
+										Fingerprint: 15673513070074625014,
+										ID:          15673513070074625014,
+										Name:        "symbol2",
+									},
+								},
+							},
+						},
+					},
+				},
+				2: []*nodetree.Node{
+					{
+						DurationNS:  1,
+						EndNS:       1,
+						Fingerprint: 12638153115695167471,
+						ID:          12638153115695167471,
+						Name:        "symbol0",
+						Children: []*nodetree.Node{
+							{
+								DurationNS:  1,
+								EndNS:       1,
+								Fingerprint: 590701660006484780,
+								ID:          590701660006484780,
+								Name:        "symbol1",
+								Children: []*nodetree.Node{
+									{
+										DurationNS:  1,
+										EndNS:       1,
+										Fingerprint: 15673513070074625014,
+										ID:          15673513070074625014,
+										Name:        "symbol2",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "multiple threads with different call trees",
+			profile: IosProfile{
+				Samples: []Sample{
+					{
+						ThreadID:            1,
+						RelativeTimestampNS: 1,
+						Frames: []IosFrame{
+							{InstructionAddr: "2", Symbol: "symbol2"},
+							{InstructionAddr: "1", Symbol: "symbol1"},
+							{InstructionAddr: "0", Symbol: "symbol0"},
+						},
+					},
+					{
+						ThreadID:            2,
+						RelativeTimestampNS: 1,
+						Frames: []IosFrame{
+							{InstructionAddr: "5", Symbol: "symbol5"},
+							{InstructionAddr: "4", Symbol: "symbol4"},
+							{InstructionAddr: "3", Symbol: "symbol3"},
+						},
+					},
+				},
+			},
+			want: map[uint64][]*nodetree.Node{
+				1: []*nodetree.Node{
+					{
+						DurationNS:  1,
+						EndNS:       1,
+						Fingerprint: 12638153115695167471,
+						ID:          12638153115695167471,
+						Name:        "symbol0",
+						Children: []*nodetree.Node{
+							{
+								DurationNS:  1,
+								EndNS:       1,
+								Fingerprint: 590701660006484780,
+								ID:          590701660006484780,
+								Name:        "symbol1",
+								Children: []*nodetree.Node{
+									{
+										DurationNS:  1,
+										EndNS:       1,
+										Fingerprint: 15673513070074625014,
+										ID:          15673513070074625014,
+										Name:        "symbol2",
+									},
+								},
+							},
+						},
+					},
+				},
+				2: []*nodetree.Node{
+					{
+						DurationNS:  1,
+						EndNS:       1,
+						Fingerprint: 12638153115695167468,
+						ID:          12638153115695167468,
+						Name:        "symbol3",
+						Children: []*nodetree.Node{
+							{
+								DurationNS:  1,
+								EndNS:       1,
+								Fingerprint: 590698361471600176,
+								ID:          590698361471600176,
+								Name:        "symbol4",
+								Children: []*nodetree.Node{
+									{
+										DurationNS:  1,
+										EndNS:       1,
+										Fingerprint: 15670675230562780069,
+										ID:          15670675230562780069,
+										Name:        "symbol5",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "multiple threads with sequential samples",
+			profile: IosProfile{
+				Samples: []Sample{
+					{
+						ThreadID:            1,
+						RelativeTimestampNS: 1,
+						Frames: []IosFrame{
+							{InstructionAddr: "2", Symbol: "symbol2"},
+							{InstructionAddr: "1", Symbol: "symbol1"},
+							{InstructionAddr: "0", Symbol: "symbol0"},
+						},
+					},
+					{
+						ThreadID:            1,
+						RelativeTimestampNS: 2,
+						Frames: []IosFrame{
+							{InstructionAddr: "5", Symbol: "symbol5"},
+							{InstructionAddr: "4", Symbol: "symbol4"},
+							{InstructionAddr: "3", Symbol: "symbol3"},
+						},
+					},
+					{
+						ThreadID:            2,
+						RelativeTimestampNS: 1,
+						Frames: []IosFrame{
+							{InstructionAddr: "2", Symbol: "symbol2"},
+							{InstructionAddr: "1", Symbol: "symbol1"},
+							{InstructionAddr: "0", Symbol: "symbol0"},
+						},
+					},
+					{
+						ThreadID:            2,
+						RelativeTimestampNS: 2,
+						Frames: []IosFrame{
+							{InstructionAddr: "5", Symbol: "symbol5"},
+							{InstructionAddr: "4", Symbol: "symbol4"},
+							{InstructionAddr: "3", Symbol: "symbol3"},
+						},
+					},
+				},
+			},
+			want: map[uint64][]*nodetree.Node{
+				1: []*nodetree.Node{
+					{
+						DurationNS:  1,
+						EndNS:       1,
+						Fingerprint: 12638153115695167471,
+						ID:          12638153115695167471,
+						Name:        "symbol0",
+						Children: []*nodetree.Node{
+							{
+								DurationNS:  1,
+								EndNS:       1,
+								Fingerprint: 590701660006484780,
+								ID:          590701660006484780,
+								Name:        "symbol1",
+								Children: []*nodetree.Node{
+									{
+										DurationNS:  1,
+										EndNS:       1,
+										Fingerprint: 15673513070074625014,
+										ID:          15673513070074625014,
+										Name:        "symbol2",
+									},
+								},
+							},
+						},
+					},
+					{
+						DurationNS:  1,
+						EndNS:       2,
+						Fingerprint: 12638153115695167468,
+						ID:          12638153115695167468,
+						Name:        "symbol3",
+						StartNS:     1,
+						Children: []*nodetree.Node{
+							{
+								DurationNS:  1,
+								EndNS:       2,
+								Fingerprint: 590698361471600176,
+								ID:          590698361471600176,
+								Name:        "symbol4",
+								StartNS:     1,
+								Children: []*nodetree.Node{
+									{
+										DurationNS:  1,
+										EndNS:       2,
+										Fingerprint: 15670675230562780069,
+										ID:          15670675230562780069,
+										Name:        "symbol5",
+										StartNS:     1,
+									},
+								},
+							},
+						},
+					},
+				},
+				2: []*nodetree.Node{
+					{
+						DurationNS:  1,
+						EndNS:       1,
+						Fingerprint: 12638153115695167471,
+						ID:          12638153115695167471,
+						Name:        "symbol0",
+						Children: []*nodetree.Node{
+							{
+								DurationNS:  1,
+								EndNS:       1,
+								Fingerprint: 590701660006484780,
+								ID:          590701660006484780,
+								Name:        "symbol1",
+								Children: []*nodetree.Node{
+									{
+										DurationNS:  1,
+										EndNS:       1,
+										Fingerprint: 15673513070074625014,
+										ID:          15673513070074625014,
+										Name:        "symbol2",
+									},
+								},
+							},
+						},
+					},
+					{
+						DurationNS:  1,
+						EndNS:       2,
+						Fingerprint: 12638153115695167468,
+						ID:          12638153115695167468,
+						Name:        "symbol3",
+						StartNS:     1,
+						Children: []*nodetree.Node{
+							{
+								DurationNS:  1,
+								EndNS:       2,
+								Fingerprint: 590698361471600176,
+								ID:          590698361471600176,
+								Name:        "symbol4",
+								StartNS:     1,
+								Children: []*nodetree.Node{
+									{
+										DurationNS:  1,
+										EndNS:       2,
+										Fingerprint: 15670675230562780069,
+										ID:          15670675230562780069,
+										Name:        "symbol5",
+										StartNS:     1,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "multiple threads with non-sequential samples",
+			profile: IosProfile{
+				Samples: []Sample{
+					{
+						ThreadID:            1,
+						RelativeTimestampNS: 1,
+						Frames: []IosFrame{
+							{InstructionAddr: "2", Symbol: "symbol2"},
+							{InstructionAddr: "1", Symbol: "symbol1"},
+							{InstructionAddr: "0", Symbol: "symbol0"},
+						},
+					},
+					{
+						ThreadID:            1,
+						RelativeTimestampNS: 2,
+						Frames: []IosFrame{
+							{InstructionAddr: "5", Symbol: "symbol5"},
+							{InstructionAddr: "4", Symbol: "symbol4"},
+							{InstructionAddr: "3", Symbol: "symbol3"},
+						},
+					},
+					{
+						ThreadID:            2,
+						RelativeTimestampNS: 5,
+						Frames: []IosFrame{
+							{InstructionAddr: "2", Symbol: "symbol2"},
+							{InstructionAddr: "1", Symbol: "symbol1"},
+							{InstructionAddr: "0", Symbol: "symbol0"},
+						},
+					},
+					{
+						ThreadID:            2,
+						RelativeTimestampNS: 6,
+						Frames: []IosFrame{
+							{InstructionAddr: "5", Symbol: "symbol5"},
+							{InstructionAddr: "4", Symbol: "symbol4"},
+							{InstructionAddr: "3", Symbol: "symbol3"},
+						},
+					},
+				},
+			},
+			want: map[uint64][]*nodetree.Node{
+				1: []*nodetree.Node{
+					{
+						DurationNS:  1,
+						EndNS:       1,
+						Fingerprint: 12638153115695167471,
+						ID:          12638153115695167471,
+						Name:        "symbol0",
+						Children: []*nodetree.Node{
+							{
+								DurationNS:  1,
+								EndNS:       1,
+								Fingerprint: 590701660006484780,
+								ID:          590701660006484780,
+								Name:        "symbol1",
+								Children: []*nodetree.Node{
+									{
+										DurationNS:  1,
+										EndNS:       1,
+										Fingerprint: 15673513070074625014,
+										ID:          15673513070074625014,
+										Name:        "symbol2",
+									},
+								},
+							},
+						},
+					},
+					{
+						DurationNS:  1,
+						EndNS:       2,
+						Fingerprint: 12638153115695167468,
+						ID:          12638153115695167468,
+						Name:        "symbol3",
+						StartNS:     1,
+						Children: []*nodetree.Node{
+							{
+								DurationNS:  1,
+								EndNS:       2,
+								Fingerprint: 590698361471600176,
+								ID:          590698361471600176,
+								Name:        "symbol4",
+								StartNS:     1,
+								Children: []*nodetree.Node{
+									{
+										DurationNS:  1,
+										EndNS:       2,
+										Fingerprint: 15670675230562780069,
+										ID:          15670675230562780069,
+										Name:        "symbol5",
+										StartNS:     1,
+									},
+								},
+							},
+						},
+					},
+				},
+				2: []*nodetree.Node{
+					{
+						DurationNS:  5,
+						EndNS:       5,
+						Fingerprint: 12638153115695167471,
+						ID:          12638153115695167471,
+						Name:        "symbol0",
+						Children: []*nodetree.Node{
+							{
+								DurationNS:  5,
+								EndNS:       5,
+								Fingerprint: 590701660006484780,
+								ID:          590701660006484780,
+								Name:        "symbol1",
+								Children: []*nodetree.Node{
+									{
+										DurationNS:  5,
+										EndNS:       5,
+										Fingerprint: 15673513070074625014,
+										ID:          15673513070074625014,
+										Name:        "symbol2",
+									},
+								},
+							},
+						},
+					},
+					{
+						DurationNS:  1,
+						EndNS:       6,
+						Fingerprint: 12638153115695167468,
+						ID:          12638153115695167468,
+						Name:        "symbol3",
+						StartNS:     5,
+						Children: []*nodetree.Node{
+							{
+								DurationNS:  1,
+								EndNS:       6,
+								Fingerprint: 590698361471600176,
+								ID:          590698361471600176,
+								Name:        "symbol4",
+								StartNS:     5,
+								Children: []*nodetree.Node{
+									{
+										DurationNS:  1,
+										EndNS:       6,
+										Fingerprint: 15670675230562780069,
+										ID:          15670675230562780069,
+										Name:        "symbol5",
+										StartNS:     5,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "multiple threads with interleaved sequential samples",
+			profile: IosProfile{
+				Samples: []Sample{
+					{
+						ThreadID:            1,
+						RelativeTimestampNS: 1,
+						Frames: []IosFrame{
+							{InstructionAddr: "2", Symbol: "symbol2"},
+							{InstructionAddr: "1", Symbol: "symbol1"},
+							{InstructionAddr: "0", Symbol: "symbol0"},
+						},
+					},
+					{
+						ThreadID:            2,
+						RelativeTimestampNS: 1,
+						Frames: []IosFrame{
+							{InstructionAddr: "2", Symbol: "symbol2"},
+							{InstructionAddr: "1", Symbol: "symbol1"},
+							{InstructionAddr: "0", Symbol: "symbol0"},
+						},
+					},
+					{
+						ThreadID:            1,
+						RelativeTimestampNS: 2,
+						Frames: []IosFrame{
+							{InstructionAddr: "5", Symbol: "symbol5"},
+							{InstructionAddr: "4", Symbol: "symbol4"},
+							{InstructionAddr: "3", Symbol: "symbol3"},
+						},
+					},
+
+					{
+						ThreadID:            2,
+						RelativeTimestampNS: 2,
+						Frames: []IosFrame{
+							{InstructionAddr: "5", Symbol: "symbol5"},
+							{InstructionAddr: "4", Symbol: "symbol4"},
+							{InstructionAddr: "3", Symbol: "symbol3"},
+						},
+					},
+				},
+			},
+			want: map[uint64][]*nodetree.Node{
+				1: []*nodetree.Node{
+					{
+						DurationNS:  1,
+						EndNS:       1,
+						Fingerprint: 12638153115695167471,
+						ID:          12638153115695167471,
+						Name:        "symbol0",
+						Children: []*nodetree.Node{
+							{
+								DurationNS:  1,
+								EndNS:       1,
+								Fingerprint: 590701660006484780,
+								ID:          590701660006484780,
+								Name:        "symbol1",
+								Children: []*nodetree.Node{
+									{
+										DurationNS:  1,
+										EndNS:       1,
+										Fingerprint: 15673513070074625014,
+										ID:          15673513070074625014,
+										Name:        "symbol2",
+									},
+								},
+							},
+						},
+					},
+					{
+						DurationNS:  1,
+						EndNS:       2,
+						Fingerprint: 12638153115695167468,
+						ID:          12638153115695167468,
+						Name:        "symbol3",
+						StartNS:     1,
+						Children: []*nodetree.Node{
+							{
+								DurationNS:  1,
+								EndNS:       2,
+								Fingerprint: 590698361471600176,
+								ID:          590698361471600176,
+								Name:        "symbol4",
+								StartNS:     1,
+								Children: []*nodetree.Node{
+									{
+										DurationNS:  1,
+										EndNS:       2,
+										Fingerprint: 15670675230562780069,
+										ID:          15670675230562780069,
+										Name:        "symbol5",
+										StartNS:     1,
+									},
+								},
+							},
+						},
+					},
+				},
+				2: []*nodetree.Node{
+					{
+						DurationNS:  1,
+						EndNS:       1,
+						Fingerprint: 12638153115695167471,
+						ID:          12638153115695167471,
+						Name:        "symbol0",
+						Children: []*nodetree.Node{
+							{
+								DurationNS:  1,
+								EndNS:       1,
+								Fingerprint: 590701660006484780,
+								ID:          590701660006484780,
+								Name:        "symbol1",
+								Children: []*nodetree.Node{
+									{
+										DurationNS:  1,
+										EndNS:       1,
+										Fingerprint: 15673513070074625014,
+										ID:          15673513070074625014,
+										Name:        "symbol2",
+									},
+								},
+							},
+						},
+					},
+					{
+						DurationNS:  1,
+						EndNS:       2,
+						Fingerprint: 12638153115695167468,
+						ID:          12638153115695167468,
+						Name:        "symbol3",
+						StartNS:     1,
+						Children: []*nodetree.Node{
+							{
+								DurationNS:  1,
+								EndNS:       2,
+								Fingerprint: 590698361471600176,
+								ID:          590698361471600176,
+								Name:        "symbol4",
+								StartNS:     1,
+								Children: []*nodetree.Node{
+									{
+										DurationNS:  1,
+										EndNS:       2,
+										Fingerprint: 15670675230562780069,
+										ID:          15670675230562780069,
+										Name:        "symbol5",
+										StartNS:     1,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "multiple threads with interleaved non-sequential samples",
+			profile: IosProfile{
+				Samples: []Sample{
+					{
+						ThreadID:            1,
+						RelativeTimestampNS: 1,
+						Frames: []IosFrame{
+							{InstructionAddr: "2", Symbol: "symbol2"},
+							{InstructionAddr: "1", Symbol: "symbol1"},
+							{InstructionAddr: "0", Symbol: "symbol0"},
+						},
+					},
+					{
+						ThreadID:            2,
+						RelativeTimestampNS: 2,
+						Frames: []IosFrame{
+							{InstructionAddr: "2", Symbol: "symbol2"},
+							{InstructionAddr: "1", Symbol: "symbol1"},
+							{InstructionAddr: "0", Symbol: "symbol0"},
+						},
+					},
+					{
+						ThreadID:            1,
+						RelativeTimestampNS: 3,
+						Frames: []IosFrame{
+							{InstructionAddr: "5", Symbol: "symbol5"},
+							{InstructionAddr: "4", Symbol: "symbol4"},
+							{InstructionAddr: "3", Symbol: "symbol3"},
+						},
+					},
+					{
+						ThreadID:            2,
+						RelativeTimestampNS: 4,
+						Frames: []IosFrame{
+							{InstructionAddr: "5", Symbol: "symbol5"},
+							{InstructionAddr: "4", Symbol: "symbol4"},
+							{InstructionAddr: "3", Symbol: "symbol3"},
+						},
+					},
+				},
+			},
+			want: map[uint64][]*nodetree.Node{
+				1: []*nodetree.Node{
+					{
+						DurationNS:  1,
+						EndNS:       1,
+						Fingerprint: 12638153115695167471,
+						ID:          12638153115695167471,
+						Name:        "symbol0",
+						Children: []*nodetree.Node{
+							{
+								DurationNS:  1,
+								EndNS:       1,
+								Fingerprint: 590701660006484780,
+								ID:          590701660006484780,
+								Name:        "symbol1",
+								Children: []*nodetree.Node{
+									{
+										DurationNS:  1,
+										EndNS:       1,
+										Fingerprint: 15673513070074625014,
+										ID:          15673513070074625014,
+										Name:        "symbol2",
+									},
+								},
+							},
+						},
+					},
+					{
+						DurationNS:  2,
+						EndNS:       3,
+						Fingerprint: 12638153115695167468,
+						ID:          12638153115695167468,
+						Name:        "symbol3",
+						StartNS:     1,
+						Children: []*nodetree.Node{
+							{
+								DurationNS:  2,
+								EndNS:       3,
+								Fingerprint: 590698361471600176,
+								ID:          590698361471600176,
+								Name:        "symbol4",
+								StartNS:     1,
+								Children: []*nodetree.Node{
+									{
+										DurationNS:  2,
+										EndNS:       3,
+										Fingerprint: 15670675230562780069,
+										ID:          15670675230562780069,
+										Name:        "symbol5",
+										StartNS:     1,
+									},
+								},
+							},
+						},
+					},
+				},
+				2: []*nodetree.Node{
+					{
+						DurationNS:  2,
+						EndNS:       2,
+						Fingerprint: 12638153115695167471,
+						ID:          12638153115695167471,
+						Name:        "symbol0",
+						Children: []*nodetree.Node{
+							{
+								DurationNS:  2,
+								EndNS:       2,
+								Fingerprint: 590701660006484780,
+								ID:          590701660006484780,
+								Name:        "symbol1",
+								Children: []*nodetree.Node{
+									{
+										DurationNS:  2,
+										EndNS:       2,
+										Fingerprint: 15673513070074625014,
+										ID:          15673513070074625014,
+										Name:        "symbol2",
+									},
+								},
+							},
+						},
+					},
+					{
+						DurationNS:  2,
+						EndNS:       4,
+						Fingerprint: 12638153115695167468,
+						ID:          12638153115695167468,
+						Name:        "symbol3",
+						StartNS:     2,
+						Children: []*nodetree.Node{
+							{
+								DurationNS:  2,
+								EndNS:       4,
+								Fingerprint: 590698361471600176,
+								ID:          590698361471600176,
+								Name:        "symbol4",
+								StartNS:     2,
+								Children: []*nodetree.Node{
+									{
+										DurationNS:  2,
+										EndNS:       4,
+										Fingerprint: 15670675230562780069,
+										ID:          15670675230562780069,
+										Name:        "symbol5",
+										StartNS:     2,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := tt.profile.CallTrees()
 			if diff := testutil.Diff(got, tt.want); diff != "" {
