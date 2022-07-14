@@ -3,6 +3,7 @@ package chrometrace
 import (
 	"encoding/json"
 	"fmt"
+	"sort"
 	"strconv"
 
 	"github.com/getsentry/vroom/internal/aggregate"
@@ -46,6 +47,16 @@ func SpeedscopeFromSnuba(profile snubautil.Profile) ([]byte, error) {
 			return nil, err
 		}
 		p, err = iosSpeedscopeTraceFromProfile(&iosProfile)
+		if err != nil {
+			return nil, err
+		}
+	case "rust":
+		var rustProfile aggregate.RustProfile
+		err := json.Unmarshal([]byte(profile.Profile), &rustProfile)
+		if err != nil {
+			return nil, err
+		}
+		p, err = rustSpeedscopeTraceFromProfile(&rustProfile)
 		if err != nil {
 			return nil, err
 		}
@@ -319,6 +330,102 @@ func androidSpeedscopeTraceFromProfile(profile *android.AndroidProfile) (output,
 	return output{
 		ActiveProfileIndex: mainThreadProfileIndex,
 		AndroidClock:       profile.Clock,
+		Profiles:           allProfiles,
+		Shared:             sharedData{Frames: frames},
+	}, nil
+}
+
+func rustSpeedscopeTraceFromProfile(profile *aggregate.RustProfile) (output, error) {
+	threadIDToProfile := make(map[uint64]*sampledProfile)
+	addressToFrameIndex := make(map[string]int)
+	threadIDToPreviousTimestampNS := make(map[uint64]uint64)
+	frames := make([]frame, 0)
+	// we need to find the frame index of the main function so we can remove the frames before it
+	mainFunctionFrameIndex := -1
+	mainThreadID := profile.MainThread()
+	// sorting here is necessary because the timing info for each sample is given by
+	// a Rust SystemTime type, which is measurement of the system clock and is not monotonic
+	//
+	// see: https://doc.rust-lang.org/std/time/struct.SystemTime.html
+	sort.Slice(profile.Samples, func(i, j int) bool {
+		return profile.Samples[i].RelativeTimestampNS <= profile.Samples[j].RelativeTimestampNS
+	})
+	for _, sample := range profile.Samples {
+		threadID := strconv.FormatUint(sample.ThreadID, 10)
+		sampProfile, ok := threadIDToProfile[sample.ThreadID]
+		if !ok {
+			threadName := sample.ThreadName
+			if threadName == "" {
+				threadName = threadID
+			}
+			sampProfile = &sampledProfile{
+				Name:         threadName,
+				Queues:       nil,
+				StartValue:   sample.RelativeTimestampNS,
+				ThreadID:     sample.ThreadID,
+				IsMainThread: sample.ThreadID == mainThreadID,
+				Type:         profileTypeSampled,
+				Unit:         valueUnitNanoseconds,
+			}
+			threadIDToProfile[sample.ThreadID] = sampProfile
+		} else {
+			sampProfile.Weights = append(sampProfile.Weights, sample.RelativeTimestampNS-threadIDToPreviousTimestampNS[sample.ThreadID])
+		}
+
+		sampProfile.EndValue = sample.RelativeTimestampNS
+		threadIDToPreviousTimestampNS[sample.ThreadID] = sample.RelativeTimestampNS
+
+		samp := make([]int, 0, len(sample.Frames))
+		for i := len(sample.Frames) - 1; i >= 0; i-- {
+			fr := sample.Frames[i]
+			frameIndex, ok := addressToFrameIndex[fr.SymAddr]
+			if !ok {
+				frameIndex = len(frames)
+				symbolName := fr.Function
+				if symbolName == "" {
+					symbolName = fmt.Sprintf("unknown (%s)", fr.InstructionAddr)
+				} else if mainFunctionFrameIndex == -1 {
+					if isMainFrame := fr.IsMain(); isMainFrame {
+						mainFunctionFrameIndex = frameIndex
+					}
+				}
+				addressToFrameIndex[fr.SymAddr] = frameIndex
+				frames = append(frames, frame{
+					File:          fr.Filename,
+					Image:         calltree.ImageBaseName(fr.Package),
+					IsApplication: aggregate.IsRustApplicationImage(fr.Package),
+					Line:          fr.LineNo,
+					Name:          symbolName,
+				})
+			}
+			samp = append(samp, frameIndex)
+		}
+		sampProfile.Samples = append(sampProfile.Samples, samp)
+	} // end loop sampledProfiles
+
+	var mainThreadProfileIndex int
+	allProfiles := make([]interface{}, 0)
+	for _, prof := range threadIDToProfile {
+		if prof.IsMainThread {
+			mainThreadProfileIndex = len(allProfiles)
+			// Remove all frames before main is called on the main thread
+			if mainFunctionFrameIndex != -1 {
+				for i, sample := range prof.Samples {
+					for j, frameIndex := range sample {
+						if frameIndex == mainFunctionFrameIndex {
+							prof.Samples[i] = prof.Samples[i][j:]
+							break
+						}
+					}
+				}
+			}
+		}
+		prof.Weights = append(prof.Weights, 0)
+		allProfiles = append(allProfiles, prof)
+	}
+
+	return output{
+		ActiveProfileIndex: mainThreadProfileIndex,
 		Profiles:           allProfiles,
 		Shared:             sharedData{Frames: frames},
 	}, nil
