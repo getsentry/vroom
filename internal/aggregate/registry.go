@@ -18,6 +18,7 @@ func NewAggregatorFromPlatform(platform string) (AggregatorP, error) {
 			bta:                        calltree.NewBacktraceAggregatorP(),
 			profileIDToTransactionName: make(map[string]string),
 			symbolsByProfileID:         make(map[string]map[string]Symbol),
+			platform:                   "cocoa",
 		}, nil
 	case "android":
 		return &AndroidTraceAggregatorP{
@@ -26,6 +27,14 @@ func NewAggregatorFromPlatform(platform string) (AggregatorP, error) {
 			methodKeyToProfileIDs:  make(map[methodKey][]string),
 			numFunctions:           defaultNTopFunctions,
 			profileIDToInteraction: make(map[string]string),
+		}, nil
+	case "rust":
+		return &BacktraceAggregatorP{
+			n:                          defaultNTopFunctions,
+			bta:                        calltree.NewBacktraceAggregatorP(),
+			profileIDToTransactionName: make(map[string]string),
+			symbolsByProfileID:         make(map[string]map[string]Symbol),
+			platform:                   "rust",
 		}, nil
 	default:
 		return nil, fmt.Errorf("platform <%s> not supported", platform)

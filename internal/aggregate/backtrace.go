@@ -46,6 +46,7 @@ type (
 		n                          int
 		profileIDToTransactionName map[string]string
 		symbolsByProfileID         map[string]map[string]Symbol
+		platform                   string
 	}
 
 	sessionDataP struct {
@@ -93,6 +94,17 @@ func (a *BacktraceAggregatorP) SetTopNFunctions(n int) {
 }
 
 func (a *BacktraceAggregatorP) UpdateFromProfile(profile snubautil.Profile) error {
+	switch profile.Platform {
+	case "cocoa":
+		return a.UpdateFromIosProfile(profile)
+	case "rust":
+		return a.UpdateFromRustProfile(profile)
+	default:
+		return fmt.Errorf("unsupported platform: <%s>", profile.Platform)
+	}
+}
+
+func (a *BacktraceAggregatorP) UpdateFromIosProfile(profile snubautil.Profile) error {
 	var iosProfile IosProfile
 	err := json.Unmarshal([]byte(profile.Profile), &iosProfile)
 	if err != nil {
@@ -153,6 +165,58 @@ func (a *BacktraceAggregatorP) UpdateFromProfile(profile snubautil.Profile) erro
 	return nil
 }
 
+func (a *BacktraceAggregatorP) UpdateFromRustProfile(profile snubautil.Profile) error {
+	var rustProfile RustProfile
+	err := json.Unmarshal([]byte(profile.Profile), &rustProfile)
+	if err != nil {
+		return err
+	}
+	a.profileIDToTransactionName[profile.ProfileID] = profile.TransactionName
+	mainThreadID := rustProfile.MainThread()
+	for _, sample := range rustProfile.Samples {
+		threadID := strconv.FormatUint(sample.ThreadID, 10)
+		threadName := sample.ThreadName
+		if threadName == "" {
+			threadName = threadID
+		}
+		addresses := make([]string, len(sample.Frames), len(sample.Frames))
+		for i, frame := range sample.Frames {
+			addresses[i] = frame.SymAddr
+
+			var symbolName, imageName string
+			if frame.Function != "" {
+				symbolName = frame.Function
+				imageName = calltree.ImageBaseName(frame.Package)
+			}
+			if symbolName == "" {
+				symbolName = fmt.Sprintf("unknown (%s)", frame.SymAddr)
+			}
+			symbol := Symbol{
+				Filename: frame.Filename,
+				Image:    imageName,
+				Line:     frame.LineNo,
+				Name:     symbolName,
+				Package:  frame.Package,
+				Path:     frame.AbsPath,
+			}
+			if _, exists := a.symbolsByProfileID[profile.ProfileID]; !exists {
+				a.symbolsByProfileID[profile.ProfileID] = make(map[string]Symbol)
+			}
+			a.symbolsByProfileID[profile.ProfileID][frame.SymAddr] = symbol
+		}
+		a.bta.Update(calltree.BacktraceP{
+			ProfileID:    profile.ProfileID,
+			Addresses:    addresses,
+			IsMainThread: sample.ThreadID == mainThreadID,
+			ThreadID:     sample.ThreadID,
+			ThreadName:   threadName,
+			TimestampNs:  sample.RelativeTimestampNS,
+		})
+	}
+
+	return nil
+}
+
 func (a *BacktraceAggregatorP) Result() (Aggregate, error) {
 	a.bta.Finalize()
 
@@ -197,7 +261,7 @@ func (a *BacktraceAggregatorP) Result() (Aggregate, error) {
 			if !ok {
 				continue
 			}
-			if waitingSymbols[symbol.Name] {
+			if a.platform == "cocoa" && waitingSymbols[symbol.Name] {
 				continue
 			}
 			h := computeFunctionHash(symbol.Image, symbol.Name)

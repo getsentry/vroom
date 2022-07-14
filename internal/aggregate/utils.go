@@ -19,6 +19,7 @@ type (
 const (
 	DisplayModeIOS DisplayModeType = iota
 	DisplayModeAndroid
+	DisplayModeRust
 )
 
 func newCallTreeFrameP(root *calltree.AggregateCallTree, hashOfParents []byte, displayMode DisplayModeType) Frame {
@@ -46,6 +47,10 @@ func newCallTreeFrameP(root *calltree.AggregateCallTree, hashOfParents []byte, d
 		image = root.Image
 		symbol = root.Symbol
 		isApplicationSymbol = !IsAndroidSystemPackage(root.Image)
+	case DisplayModeRust:
+		image = root.Image
+		symbol = root.Symbol
+		isApplicationSymbol = IsRustApplicationImage(root.Package)
 	default:
 		image = root.Image
 		symbol = root.Symbol
