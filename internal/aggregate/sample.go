@@ -1,6 +1,7 @@
 package aggregate
 
 import (
+	"hash"
 	"hash/fnv"
 	"sort"
 
@@ -32,6 +33,15 @@ func (f IosFrame) IsMain() (bool, int) {
 		return true, -1
 	}
 	return false, 0
+}
+
+func (f IosFrame) WriteToHash(h hash.Hash) {
+	if f.Package == "" && f.Symbol == "" {
+		h.Write([]byte("-"))
+	} else {
+		h.Write([]byte(f.Package))
+		h.Write([]byte(f.Symbol))
+	}
 }
 
 type Sample struct {
@@ -127,8 +137,7 @@ func (p IosProfile) CallTrees() map[uint64][]*nodetree.Node {
 	for _, s := range p.Samples {
 		for i := len(s.Frames) - 1; i >= 0; i-- {
 			f := s.Frames[i]
-			h.Write([]byte(f.Package))
-			h.Write([]byte(f.Symbol))
+			f.WriteToHash(h)
 			fingerprint := h.Sum64()
 			if current == nil {
 				i := len(trees[s.ThreadID]) - 1
