@@ -94,10 +94,21 @@ func (p AndroidProfile) CallTrees() map[uint64][]*nodetree.Node {
 	buildTimestamp := p.TimestampGetter()
 	trees := make(map[uint64][]*nodetree.Node)
 	stacks := make(map[uint64][]*nodetree.Node)
+	methods := make(map[uint64]AndroidMethod)
+	for _, m := range p.Methods {
+		methods[m.ID] = m
+	}
 	for _, e := range p.Events {
 		switch e.Action {
 		case EnterAction:
-			m := p.Methods[e.MethodID]
+			m, exists := methods[e.MethodID]
+			if !exists {
+				methods[e.MethodID] = AndroidMethod{
+					ClassName: "unknown",
+					ID:        e.MethodID,
+					Name:      "unknown",
+				}
+			}
 			n := nodetree.NodeFromFrame(m.ClassName, m.Name, m.SourceFile, m.SourceLine, buildTimestamp(e.Time), 0, m.ID, !IsSystemPackage(m.ClassName))
 			if len(stacks[e.ThreadID]) == 0 {
 				trees[e.ThreadID] = append(trees[e.ThreadID], n)
