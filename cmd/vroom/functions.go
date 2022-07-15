@@ -64,7 +64,6 @@ func (env *environment) getFunctions(w http.ResponseWriter, r *http.Request) {
 
 	rawOrderBy := queryParams.Get("sort")
 	if rawOrderBy == "" {
-		fmt.Printf("no sort in request")
 		hub.CaptureException(errors.New("no sort in the request"))
 		w.WriteHeader(http.StatusBadRequest)
 		return
