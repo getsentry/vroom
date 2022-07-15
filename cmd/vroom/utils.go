@@ -36,6 +36,23 @@ var (
 		snubautil.MakeAndroidApiLevelFilter,
 		snubautil.MakeVersionNameAndCodeFilter,
 	}
+
+	functionFilterFields = map[string]string{
+		"device_os_name":    "os_name",
+		"device_os_version": "os_version",
+		"environment":       "environment",
+		"platform":          "platform",
+		"version":           "release",
+	}
+
+	functionsQueryFilterMakers = []func(url.Values) ([]string, error){
+		func(params url.Values) ([]string, error) {
+			return snubautil.MakeTimeRangeFilter("timestamp", params)
+		},
+		func(params url.Values) ([]string, error) {
+			return snubautil.MakeFieldsFilter(functionFilterFields, params)
+		},
+	}
 )
 
 type (
@@ -44,6 +61,28 @@ type (
 		Code string
 	}
 )
+
+func setLimitAndOffsetFromRequest(sqb *snubautil.QueryBuilder, p url.Values) error {
+	if v := p.Get("limit"); v != "" {
+		limit, err := strconv.Atoi(v)
+		if err != nil {
+			log.Err(err).Str("limit", v).Msg("can't parse limit value")
+			return err
+		}
+		sqb.Limit = limit
+	}
+
+	if v := p.Get("offset"); v != "" {
+		offset, err := strconv.ParseUint(v, 10, 64)
+		if err != nil {
+			log.Err(err).Str("offset", v).Msg("can't parse offset value")
+			return err
+		}
+		sqb.Offset = offset
+	}
+
+	return nil
+}
 
 func (e *environment) profilesQueryBuilderFromRequest(ctx context.Context, p url.Values) (snubautil.QueryBuilder, error) {
 	sqb, err := e.snuba.NewQuery(ctx, "profiles")
@@ -60,22 +99,32 @@ func (e *environment) profilesQueryBuilderFromRequest(ctx context.Context, p url
 		sqb.WhereConditions = append(sqb.WhereConditions, conditions...)
 	}
 
-	if v := p.Get("limit"); v != "" {
-		limit, err := strconv.Atoi(v)
-		if err != nil {
-			log.Err(err).Str("limit", v).Msg("can't parse limit value")
-			return snubautil.QueryBuilder{}, err
-		}
-		sqb.Limit = limit
+	err = setLimitAndOffsetFromRequest(&sqb, p)
+	if err != nil {
+		return snubautil.QueryBuilder{}, err
 	}
 
-	if v := p.Get("offset"); v != "" {
-		offset, err := strconv.ParseUint(v, 10, 64)
+	return sqb, nil
+}
+
+func (e *environment) functionsQueryBuilderFromRequest(ctx context.Context, p url.Values) (snubautil.QueryBuilder, error) {
+	sqb, err := e.snuba.NewQuery(ctx, "functions")
+	if err != nil {
+		return snubautil.QueryBuilder{}, err
+	}
+	sqb.WhereConditions = make([]string, 0, 5)
+
+	for _, makeFilter := range functionsQueryFilterMakers {
+		conditions, err := makeFilter(p)
 		if err != nil {
-			log.Err(err).Str("offset", v).Msg("can't parse offset value")
 			return snubautil.QueryBuilder{}, err
 		}
-		sqb.Offset = offset
+		sqb.WhereConditions = append(sqb.WhereConditions, conditions...)
+	}
+
+	err = setLimitAndOffsetFromRequest(&sqb, p)
+	if err != nil {
+		return snubautil.QueryBuilder{}, err
 	}
 
 	return sqb, nil
