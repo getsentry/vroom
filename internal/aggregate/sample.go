@@ -127,7 +127,8 @@ func (p IosProfile) CallTrees() map[uint64][]*nodetree.Node {
 	for _, s := range p.Samples {
 		for i := len(s.Frames) - 1; i >= 0; i-- {
 			f := s.Frames[i]
-			h.Write([]byte(f.SymAddr))
+			h.Write([]byte(f.Package))
+			h.Write([]byte(f.Symbol))
 			fingerprint := h.Sum64()
 			if current == nil {
 				i := len(trees[s.ThreadID]) - 1
