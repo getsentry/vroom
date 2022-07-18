@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"sort"
 	"strconv"
+	"strings"
 
 	"github.com/getsentry/vroom/internal/aggregate"
 	"github.com/getsentry/vroom/internal/android"
@@ -413,7 +414,10 @@ func rustSpeedscopeTraceFromProfile(profile *aggregate.RustProfile) (output, err
 				for i, sample := range prof.Samples {
 					for j, frameIndex := range sample {
 						if frameIndex == mainFunctionFrameIndex {
-							prof.Samples[i] = prof.Samples[i][j:]
+							// only skip the frames before main if they're not symbolicated
+							if j > 0 && strings.HasPrefix(frames[prof.Samples[i][j-1]].Name, "unknown (") {
+								prof.Samples[i] = prof.Samples[i][j:]
+							}
 							break
 						}
 					}
