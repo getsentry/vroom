@@ -293,7 +293,7 @@ type RustProfile struct {
 func (f RustFrame) IsMain() bool {
 	if f.Status != "symbolicated" {
 		return false
-	} else if strings.HasSuffix(f.Function, "::main") {
+	} else if f.Function == "main" {
 		return true
 	}
 	return false
