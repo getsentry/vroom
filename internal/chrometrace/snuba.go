@@ -344,13 +344,11 @@ func pythonSpeedscopeTraceFromProfile(profile *aggregate.PythonProfile) (output,
 	samples := make([][]int, len(profile.Samples))
 	weights := make([]uint64, len(profile.Samples))
 
+	previousTimestamp := uint64(0)
 	for i, pythonSample := range profile.Samples {
 		samples[i] = pythonSample.Frames
-		if i == 0 {
-			weights[i] = pythonSample.RelativeTimestampNS
-		} else {
-			weights[i] = pythonSample.RelativeTimestampNS - weights[i-1]
-		}
+		weights[i] = pythonSample.RelativeTimestampNS - previousTimestamp
+		previousTimestamp = pythonSample.RelativeTimestampNS
 	}
 
 	frames := make([]frame, len(profile.Frames))
