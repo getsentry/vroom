@@ -36,22 +36,19 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 					{
 						DurationNS:  1,
 						EndNS:       1,
-						Fingerprint: 12638153115695167471,
-						ID:          12638153115695167471,
+						Fingerprint: 1124161485517443911,
 						Name:        "symbol0",
 						Children: []*nodetree.Node{
 							{
 								DurationNS:  1,
 								EndNS:       1,
-								Fingerprint: 590701660006484780,
-								ID:          590701660006484780,
+								Fingerprint: 17905447077897174944,
 								Name:        "symbol1",
 								Children: []*nodetree.Node{
 									{
 										DurationNS:  1,
 										EndNS:       1,
-										Fingerprint: 15673513070074625014,
-										ID:          15673513070074625014,
+										Fingerprint: 16084607411097338726,
 										Name:        "symbol2",
 									},
 								},
@@ -90,22 +87,19 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 					{
 						DurationNS:  1,
 						EndNS:       1,
-						Fingerprint: 12638153115695167471,
-						ID:          12638153115695167471,
+						Fingerprint: 1124161485517443911,
 						Name:        "symbol0",
 						Children: []*nodetree.Node{
 							{
 								DurationNS:  1,
 								EndNS:       1,
-								Fingerprint: 590701660006484780,
-								ID:          590701660006484780,
+								Fingerprint: 17905447077897174944,
 								Name:        "symbol1",
 								Children: []*nodetree.Node{
 									{
 										DurationNS:  1,
 										EndNS:       1,
-										Fingerprint: 15673513070074625014,
-										ID:          15673513070074625014,
+										Fingerprint: 16084607411097338726,
 										Name:        "symbol2",
 									},
 								},
@@ -115,24 +109,21 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 					{
 						DurationNS:  1,
 						EndNS:       2,
-						Fingerprint: 12638153115695167468,
-						ID:          12638153115695167468,
+						Fingerprint: 1124161485517443908,
 						Name:        "symbol3",
 						StartNS:     1,
 						Children: []*nodetree.Node{
 							{
 								DurationNS:  1,
 								EndNS:       2,
-								Fingerprint: 590698361471600176,
-								ID:          590698361471600176,
+								Fingerprint: 7967440964543288636,
 								Name:        "symbol4",
 								StartNS:     1,
 								Children: []*nodetree.Node{
 									{
 										DurationNS:  1,
 										EndNS:       2,
-										Fingerprint: 15670675230562780069,
-										ID:          15670675230562780069,
+										Fingerprint: 13274796176329250277,
 										Name:        "symbol5",
 										StartNS:     1,
 									},
@@ -171,22 +162,19 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 					{
 						DurationNS:  2,
 						EndNS:       2,
-						Fingerprint: 12638153115695167471,
-						ID:          12638153115695167471,
+						Fingerprint: 1124161485517443911,
 						Name:        "symbol0",
 						Children: []*nodetree.Node{
 							{
 								DurationNS:  2,
 								EndNS:       2,
-								Fingerprint: 590701660006484780,
-								ID:          590701660006484780,
+								Fingerprint: 17905447077897174944,
 								Name:        "symbol1",
 								Children: []*nodetree.Node{
 									{
 										DurationNS:  1,
 										EndNS:       1,
-										Fingerprint: 15673513070074625014,
-										ID:          15673513070074625014,
+										Fingerprint: 16084607411097338726,
 										Name:        "symbol2",
 									},
 								},
@@ -224,22 +212,19 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 					{
 						DurationNS:  2,
 						EndNS:       2,
-						Fingerprint: 12638153115695167471,
-						ID:          12638153115695167471,
+						Fingerprint: 1124161485517443911,
 						Name:        "symbol0",
 						Children: []*nodetree.Node{
 							{
 								DurationNS:  2,
 								EndNS:       2,
-								Fingerprint: 590701660006484780,
-								ID:          590701660006484780,
+								Fingerprint: 17905447077897174944,
 								Name:        "symbol1",
 								Children: []*nodetree.Node{
 									{
 										DurationNS:  1,
 										EndNS:       2,
-										Fingerprint: 15673513070074625014,
-										ID:          15673513070074625014,
+										Fingerprint: 16084607411097338726,
 										Name:        "symbol2",
 										StartNS:     1,
 									},
@@ -295,30 +280,26 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 					{
 						DurationNS:  4,
 						EndNS:       4,
-						Fingerprint: 12638153115695167471,
-						ID:          12638153115695167471,
+						Fingerprint: 1124161485517443911,
 						Name:        "symbol0",
 						Children: []*nodetree.Node{
 							{
 								DurationNS:  4,
 								EndNS:       4,
-								Fingerprint: 590701660006484780,
-								ID:          590701660006484780,
+								Fingerprint: 17905447077897174944,
 								Name:        "symbol1",
 								Children: []*nodetree.Node{
 									{
 										DurationNS:  1,
 										EndNS:       1,
-										Fingerprint: 15673513070074625014,
-										ID:          15673513070074625014,
+										Fingerprint: 16084607411097338726,
 										Name:        "symbol2",
 									},
 									{
 										DurationNS:  1,
 										EndNS:       3,
 										StartNS:     2,
-										Fingerprint: 15673513070074625014,
-										ID:          15673513070074625014,
+										Fingerprint: 16084607411097338726,
 										Name:        "symbol2",
 									},
 								},
@@ -373,30 +354,26 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 					{
 						DurationNS:  4,
 						EndNS:       4,
-						Fingerprint: 12638153115695167471,
-						ID:          12638153115695167471,
+						Fingerprint: 1124161485517443911,
 						Name:        "symbol0",
 						Children: []*nodetree.Node{
 							{
 								DurationNS:  4,
 								EndNS:       4,
-								Fingerprint: 590701660006484780,
-								ID:          590701660006484780,
+								Fingerprint: 17905447077897174944,
 								Name:        "symbol1",
 								Children: []*nodetree.Node{
 									{
 										DurationNS:  1,
 										EndNS:       2,
-										Fingerprint: 15673513070074625014,
-										ID:          15673513070074625014,
+										Fingerprint: 16084607411097338726,
 										Name:        "symbol2",
 										StartNS:     1,
 									},
 									{
 										DurationNS:  1,
 										EndNS:       4,
-										Fingerprint: 15673513070074625014,
-										ID:          15673513070074625014,
+										Fingerprint: 16084607411097338726,
 										Name:        "symbol2",
 										StartNS:     3,
 									},
@@ -452,29 +429,25 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 					{
 						DurationNS:  4,
 						EndNS:       4,
-						Fingerprint: 12638153115695167471,
-						ID:          12638153115695167471,
+						Fingerprint: 1124161485517443911,
 						Name:        "symbol0",
 						Children: []*nodetree.Node{
 							{
 								DurationNS:  3,
 								EndNS:       3,
-								Fingerprint: 590701660006484780,
-								ID:          590701660006484780,
+								Fingerprint: 17905447077897174944,
 								Name:        "symbol1",
 								Children: []*nodetree.Node{
 									{
 										DurationNS:  2,
 										EndNS:       2,
-										Fingerprint: 15673513070074625014,
-										ID:          15673513070074625014,
+										Fingerprint: 16084607411097338726,
 										Name:        "symbol2",
 										Children: []*nodetree.Node{
 											{
 												DurationNS:  1,
 												EndNS:       1,
-												Fingerprint: 15560027421946782513,
-												ID:          15560027421946782513,
+												Fingerprint: 14019447401716285969,
 												Name:        "symbol3",
 											},
 										},
@@ -531,31 +504,27 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 					{
 						DurationNS:  4,
 						EndNS:       4,
-						Fingerprint: 12638153115695167471,
-						ID:          12638153115695167471,
+						Fingerprint: 1124161485517443911,
 						Name:        "symbol0",
 						Children: []*nodetree.Node{
 							{
 								DurationNS:  3,
 								EndNS:       4,
-								Fingerprint: 590701660006484780,
-								ID:          590701660006484780,
+								Fingerprint: 17905447077897174944,
 								Name:        "symbol1",
 								StartNS:     1,
 								Children: []*nodetree.Node{
 									{
 										DurationNS:  2,
 										EndNS:       4,
-										Fingerprint: 15673513070074625014,
-										ID:          15673513070074625014,
+										Fingerprint: 16084607411097338726,
 										Name:        "symbol2",
 										StartNS:     2,
 										Children: []*nodetree.Node{
 											{
 												DurationNS:  1,
 												EndNS:       4,
-												Fingerprint: 15560027421946782513,
-												ID:          15560027421946782513,
+												Fingerprint: 14019447401716285969,
 												Name:        "symbol3",
 												StartNS:     3,
 											},
@@ -614,38 +583,33 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 					{
 						DurationNS:  4,
 						EndNS:       4,
-						Fingerprint: 12638153115695167471,
-						ID:          12638153115695167471,
+						Fingerprint: 1124161485517443911,
 						Name:        "symbol0",
 						Children: []*nodetree.Node{
 							{
 								DurationNS:  4,
 								EndNS:       4,
-								Fingerprint: 590701660006484780,
-								ID:          590701660006484780,
+								Fingerprint: 17905447077897174944,
 								Name:        "symbol1",
 								Children: []*nodetree.Node{
 									{
 										DurationNS:  1,
 										EndNS:       2,
-										Fingerprint: 15673513070074625014,
-										ID:          15673513070074625014,
+										Fingerprint: 16084607411097338726,
 										Name:        "symbol2",
 										StartNS:     1,
 									},
 									{
 										DurationNS:  1,
 										EndNS:       3,
-										Fingerprint: 15673513070074625015,
-										ID:          15673513070074625015,
+										Fingerprint: 16084607411097338727,
 										Name:        "symbol3",
 										StartNS:     2,
 									},
 									{
 										DurationNS:  1,
 										EndNS:       4,
-										Fingerprint: 15673513070074625008,
-										ID:          15673513070074625008,
+										Fingerprint: 16084607411097338720,
 										Name:        "symbol4",
 										StartNS:     3,
 									},
@@ -737,30 +701,26 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 					{
 						DurationNS:  7,
 						EndNS:       7,
-						Fingerprint: 12638153115695167471,
-						ID:          12638153115695167471,
+						Fingerprint: 1124161485517443911,
 						Name:        "symbol0",
 						Children: []*nodetree.Node{
 							{
 								DurationNS:  4,
 								EndNS:       4,
-								Fingerprint: 590701660006484780,
-								ID:          590701660006484780,
+								Fingerprint: 17905447077897174944,
 								Name:        "symbol1",
 								Children: []*nodetree.Node{
 									{
 										DurationNS:  2,
 										EndNS:       3,
-										Fingerprint: 15673513070074625010,
-										ID:          15673513070074625010,
+										Fingerprint: 16084607411097338722,
 										Name:        "symbol6",
 										StartNS:     1,
 										Children: []*nodetree.Node{
 											{
 												DurationNS:  1,
 												EndNS:       3,
-												Fingerprint: 15560023023900269569,
-												ID:          15560023023900269569,
+												Fingerprint: 3157437670125180841,
 												Name:        "symbol7",
 												StartNS:     2,
 											},
@@ -769,16 +729,14 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 									{
 										DurationNS:  1,
 										EndNS:       4,
-										Fingerprint: 15673513070074625009,
-										ID:          15673513070074625009,
+										Fingerprint: 16084607411097338721,
 										Name:        "symbol5",
 										StartNS:     3,
 										Children: []*nodetree.Node{
 											{
 												DurationNS:  1,
 												EndNS:       4,
-												Fingerprint: 15560021924388641460,
-												ID:          15560021924388641460,
+												Fingerprint: 18225866209492738612,
 												Name:        "symbol7",
 												StartNS:     3,
 											},
@@ -789,16 +747,14 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 							{
 								DurationNS:  2,
 								EndNS:       6,
-								Fingerprint: 590701660006484783,
-								ID:          590701660006484783,
+								Fingerprint: 17905447077897174947,
 								Name:        "symbol2",
 								StartNS:     4,
 								Children: []*nodetree.Node{
 									{
 										DurationNS:  2,
 										EndNS:       6,
-										Fingerprint: 15673516368609509609,
-										ID:          15673516368609509609,
+										Fingerprint: 11661425725218473465,
 										Name:        "symbol4",
 										StartNS:     4,
 									},
@@ -807,8 +763,7 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 							{
 								DurationNS:  1,
 								EndNS:       7,
-								Fingerprint: 590701660006484782,
-								ID:          590701660006484782,
+								Fingerprint: 17905447077897174946,
 								Name:        "symbol3",
 								StartNS:     6,
 							},
@@ -817,8 +772,7 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 					{
 						DurationNS:  1,
 						EndNS:       8,
-						Fingerprint: 12638153115695167463,
-						ID:          12638153115695167463,
+						Fingerprint: 1124161485517443919,
 						Name:        "symbol8",
 						StartNS:     7,
 					},
@@ -872,22 +826,19 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 					{
 						DurationNS:  1,
 						EndNS:       1,
-						Fingerprint: 12638153115695167471,
-						ID:          12638153115695167471,
+						Fingerprint: 1124161485517443911,
 						Name:        "symbol0",
 						Children: []*nodetree.Node{
 							{
 								DurationNS:  1,
 								EndNS:       1,
-								Fingerprint: 590701660006484780,
-								ID:          590701660006484780,
+								Fingerprint: 17905447077897174944,
 								Name:        "symbol1",
 								Children: []*nodetree.Node{
 									{
 										DurationNS:  1,
 										EndNS:       1,
-										Fingerprint: 15673513070074625014,
-										ID:          15673513070074625014,
+										Fingerprint: 16084607411097338726,
 										Name:        "symbol2",
 									},
 								},
@@ -899,22 +850,19 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 					{
 						DurationNS:  1,
 						EndNS:       1,
-						Fingerprint: 12638153115695167471,
-						ID:          12638153115695167471,
+						Fingerprint: 1124161485517443911,
 						Name:        "symbol0",
 						Children: []*nodetree.Node{
 							{
 								DurationNS:  1,
 								EndNS:       1,
-								Fingerprint: 590701660006484780,
-								ID:          590701660006484780,
+								Fingerprint: 17905447077897174944,
 								Name:        "symbol1",
 								Children: []*nodetree.Node{
 									{
 										DurationNS:  1,
 										EndNS:       1,
-										Fingerprint: 15673513070074625014,
-										ID:          15673513070074625014,
+										Fingerprint: 16084607411097338726,
 										Name:        "symbol2",
 									},
 								},
@@ -953,22 +901,19 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 					{
 						DurationNS:  1,
 						EndNS:       1,
-						Fingerprint: 12638153115695167471,
-						ID:          12638153115695167471,
+						Fingerprint: 1124161485517443911,
 						Name:        "symbol0",
 						Children: []*nodetree.Node{
 							{
 								DurationNS:  1,
 								EndNS:       1,
-								Fingerprint: 590701660006484780,
-								ID:          590701660006484780,
+								Fingerprint: 17905447077897174944,
 								Name:        "symbol1",
 								Children: []*nodetree.Node{
 									{
 										DurationNS:  1,
 										EndNS:       1,
-										Fingerprint: 15673513070074625014,
-										ID:          15673513070074625014,
+										Fingerprint: 16084607411097338726,
 										Name:        "symbol2",
 									},
 								},
@@ -980,22 +925,19 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 					{
 						DurationNS:  1,
 						EndNS:       1,
-						Fingerprint: 12638153115695167468,
-						ID:          12638153115695167468,
+						Fingerprint: 1124161485517443908,
 						Name:        "symbol3",
 						Children: []*nodetree.Node{
 							{
 								DurationNS:  1,
 								EndNS:       1,
-								Fingerprint: 590698361471600176,
-								ID:          590698361471600176,
+								Fingerprint: 7967440964543288636,
 								Name:        "symbol4",
 								Children: []*nodetree.Node{
 									{
 										DurationNS:  1,
 										EndNS:       1,
-										Fingerprint: 15670675230562780069,
-										ID:          15670675230562780069,
+										Fingerprint: 13274796176329250277,
 										Name:        "symbol5",
 									},
 								},
@@ -1052,22 +994,19 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 					{
 						DurationNS:  1,
 						EndNS:       1,
-						Fingerprint: 12638153115695167471,
-						ID:          12638153115695167471,
+						Fingerprint: 1124161485517443911,
 						Name:        "symbol0",
 						Children: []*nodetree.Node{
 							{
 								DurationNS:  1,
 								EndNS:       1,
-								Fingerprint: 590701660006484780,
-								ID:          590701660006484780,
+								Fingerprint: 17905447077897174944,
 								Name:        "symbol1",
 								Children: []*nodetree.Node{
 									{
 										DurationNS:  1,
 										EndNS:       1,
-										Fingerprint: 15673513070074625014,
-										ID:          15673513070074625014,
+										Fingerprint: 16084607411097338726,
 										Name:        "symbol2",
 									},
 								},
@@ -1077,24 +1016,21 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 					{
 						DurationNS:  1,
 						EndNS:       2,
-						Fingerprint: 12638153115695167468,
-						ID:          12638153115695167468,
+						Fingerprint: 1124161485517443908,
 						Name:        "symbol3",
 						StartNS:     1,
 						Children: []*nodetree.Node{
 							{
 								DurationNS:  1,
 								EndNS:       2,
-								Fingerprint: 590698361471600176,
-								ID:          590698361471600176,
+								Fingerprint: 7967440964543288636,
 								Name:        "symbol4",
 								StartNS:     1,
 								Children: []*nodetree.Node{
 									{
 										DurationNS:  1,
 										EndNS:       2,
-										Fingerprint: 15670675230562780069,
-										ID:          15670675230562780069,
+										Fingerprint: 13274796176329250277,
 										Name:        "symbol5",
 										StartNS:     1,
 									},
@@ -1107,22 +1043,19 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 					{
 						DurationNS:  1,
 						EndNS:       1,
-						Fingerprint: 12638153115695167471,
-						ID:          12638153115695167471,
+						Fingerprint: 1124161485517443911,
 						Name:        "symbol0",
 						Children: []*nodetree.Node{
 							{
 								DurationNS:  1,
 								EndNS:       1,
-								Fingerprint: 590701660006484780,
-								ID:          590701660006484780,
+								Fingerprint: 17905447077897174944,
 								Name:        "symbol1",
 								Children: []*nodetree.Node{
 									{
 										DurationNS:  1,
 										EndNS:       1,
-										Fingerprint: 15673513070074625014,
-										ID:          15673513070074625014,
+										Fingerprint: 16084607411097338726,
 										Name:        "symbol2",
 									},
 								},
@@ -1132,24 +1065,21 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 					{
 						DurationNS:  1,
 						EndNS:       2,
-						Fingerprint: 12638153115695167468,
-						ID:          12638153115695167468,
+						Fingerprint: 1124161485517443908,
 						Name:        "symbol3",
 						StartNS:     1,
 						Children: []*nodetree.Node{
 							{
 								DurationNS:  1,
 								EndNS:       2,
-								Fingerprint: 590698361471600176,
-								ID:          590698361471600176,
+								Fingerprint: 7967440964543288636,
 								Name:        "symbol4",
 								StartNS:     1,
 								Children: []*nodetree.Node{
 									{
 										DurationNS:  1,
 										EndNS:       2,
-										Fingerprint: 15670675230562780069,
-										ID:          15670675230562780069,
+										Fingerprint: 13274796176329250277,
 										Name:        "symbol5",
 										StartNS:     1,
 									},
@@ -1207,22 +1137,19 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 					{
 						DurationNS:  1,
 						EndNS:       1,
-						Fingerprint: 12638153115695167471,
-						ID:          12638153115695167471,
+						Fingerprint: 1124161485517443911,
 						Name:        "symbol0",
 						Children: []*nodetree.Node{
 							{
 								DurationNS:  1,
 								EndNS:       1,
-								Fingerprint: 590701660006484780,
-								ID:          590701660006484780,
+								Fingerprint: 17905447077897174944,
 								Name:        "symbol1",
 								Children: []*nodetree.Node{
 									{
 										DurationNS:  1,
 										EndNS:       1,
-										Fingerprint: 15673513070074625014,
-										ID:          15673513070074625014,
+										Fingerprint: 16084607411097338726,
 										Name:        "symbol2",
 									},
 								},
@@ -1232,24 +1159,21 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 					{
 						DurationNS:  1,
 						EndNS:       2,
-						Fingerprint: 12638153115695167468,
-						ID:          12638153115695167468,
+						Fingerprint: 1124161485517443908,
 						Name:        "symbol3",
 						StartNS:     1,
 						Children: []*nodetree.Node{
 							{
 								DurationNS:  1,
 								EndNS:       2,
-								Fingerprint: 590698361471600176,
-								ID:          590698361471600176,
+								Fingerprint: 7967440964543288636,
 								Name:        "symbol4",
 								StartNS:     1,
 								Children: []*nodetree.Node{
 									{
 										DurationNS:  1,
 										EndNS:       2,
-										Fingerprint: 15670675230562780069,
-										ID:          15670675230562780069,
+										Fingerprint: 13274796176329250277,
 										Name:        "symbol5",
 										StartNS:     1,
 									},
@@ -1262,22 +1186,19 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 					{
 						DurationNS:  5,
 						EndNS:       5,
-						Fingerprint: 12638153115695167471,
-						ID:          12638153115695167471,
+						Fingerprint: 1124161485517443911,
 						Name:        "symbol0",
 						Children: []*nodetree.Node{
 							{
 								DurationNS:  5,
 								EndNS:       5,
-								Fingerprint: 590701660006484780,
-								ID:          590701660006484780,
+								Fingerprint: 17905447077897174944,
 								Name:        "symbol1",
 								Children: []*nodetree.Node{
 									{
 										DurationNS:  5,
 										EndNS:       5,
-										Fingerprint: 15673513070074625014,
-										ID:          15673513070074625014,
+										Fingerprint: 16084607411097338726,
 										Name:        "symbol2",
 									},
 								},
@@ -1287,24 +1208,21 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 					{
 						DurationNS:  1,
 						EndNS:       6,
-						Fingerprint: 12638153115695167468,
-						ID:          12638153115695167468,
+						Fingerprint: 1124161485517443908,
 						Name:        "symbol3",
 						StartNS:     5,
 						Children: []*nodetree.Node{
 							{
 								DurationNS:  1,
 								EndNS:       6,
-								Fingerprint: 590698361471600176,
-								ID:          590698361471600176,
+								Fingerprint: 7967440964543288636,
 								Name:        "symbol4",
 								StartNS:     5,
 								Children: []*nodetree.Node{
 									{
 										DurationNS:  1,
 										EndNS:       6,
-										Fingerprint: 15670675230562780069,
-										ID:          15670675230562780069,
+										Fingerprint: 13274796176329250277,
 										Name:        "symbol5",
 										StartNS:     5,
 									},
@@ -1363,22 +1281,19 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 					{
 						DurationNS:  1,
 						EndNS:       1,
-						Fingerprint: 12638153115695167471,
-						ID:          12638153115695167471,
+						Fingerprint: 1124161485517443911,
 						Name:        "symbol0",
 						Children: []*nodetree.Node{
 							{
 								DurationNS:  1,
 								EndNS:       1,
-								Fingerprint: 590701660006484780,
-								ID:          590701660006484780,
+								Fingerprint: 17905447077897174944,
 								Name:        "symbol1",
 								Children: []*nodetree.Node{
 									{
 										DurationNS:  1,
 										EndNS:       1,
-										Fingerprint: 15673513070074625014,
-										ID:          15673513070074625014,
+										Fingerprint: 16084607411097338726,
 										Name:        "symbol2",
 									},
 								},
@@ -1388,24 +1303,21 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 					{
 						DurationNS:  1,
 						EndNS:       2,
-						Fingerprint: 12638153115695167468,
-						ID:          12638153115695167468,
+						Fingerprint: 1124161485517443908,
 						Name:        "symbol3",
 						StartNS:     1,
 						Children: []*nodetree.Node{
 							{
 								DurationNS:  1,
 								EndNS:       2,
-								Fingerprint: 590698361471600176,
-								ID:          590698361471600176,
+								Fingerprint: 7967440964543288636,
 								Name:        "symbol4",
 								StartNS:     1,
 								Children: []*nodetree.Node{
 									{
 										DurationNS:  1,
 										EndNS:       2,
-										Fingerprint: 15670675230562780069,
-										ID:          15670675230562780069,
+										Fingerprint: 13274796176329250277,
 										Name:        "symbol5",
 										StartNS:     1,
 									},
@@ -1418,22 +1330,19 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 					{
 						DurationNS:  1,
 						EndNS:       1,
-						Fingerprint: 12638153115695167471,
-						ID:          12638153115695167471,
+						Fingerprint: 1124161485517443911,
 						Name:        "symbol0",
 						Children: []*nodetree.Node{
 							{
 								DurationNS:  1,
 								EndNS:       1,
-								Fingerprint: 590701660006484780,
-								ID:          590701660006484780,
+								Fingerprint: 17905447077897174944,
 								Name:        "symbol1",
 								Children: []*nodetree.Node{
 									{
 										DurationNS:  1,
 										EndNS:       1,
-										Fingerprint: 15673513070074625014,
-										ID:          15673513070074625014,
+										Fingerprint: 16084607411097338726,
 										Name:        "symbol2",
 									},
 								},
@@ -1443,24 +1352,21 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 					{
 						DurationNS:  1,
 						EndNS:       2,
-						Fingerprint: 12638153115695167468,
-						ID:          12638153115695167468,
+						Fingerprint: 1124161485517443908,
 						Name:        "symbol3",
 						StartNS:     1,
 						Children: []*nodetree.Node{
 							{
 								DurationNS:  1,
 								EndNS:       2,
-								Fingerprint: 590698361471600176,
-								ID:          590698361471600176,
+								Fingerprint: 7967440964543288636,
 								Name:        "symbol4",
 								StartNS:     1,
 								Children: []*nodetree.Node{
 									{
 										DurationNS:  1,
 										EndNS:       2,
-										Fingerprint: 15670675230562780069,
-										ID:          15670675230562780069,
+										Fingerprint: 13274796176329250277,
 										Name:        "symbol5",
 										StartNS:     1,
 									},
@@ -1518,22 +1424,19 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 					{
 						DurationNS:  1,
 						EndNS:       1,
-						Fingerprint: 12638153115695167471,
-						ID:          12638153115695167471,
+						Fingerprint: 1124161485517443911,
 						Name:        "symbol0",
 						Children: []*nodetree.Node{
 							{
 								DurationNS:  1,
 								EndNS:       1,
-								Fingerprint: 590701660006484780,
-								ID:          590701660006484780,
+								Fingerprint: 17905447077897174944,
 								Name:        "symbol1",
 								Children: []*nodetree.Node{
 									{
 										DurationNS:  1,
 										EndNS:       1,
-										Fingerprint: 15673513070074625014,
-										ID:          15673513070074625014,
+										Fingerprint: 16084607411097338726,
 										Name:        "symbol2",
 									},
 								},
@@ -1543,24 +1446,21 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 					{
 						DurationNS:  2,
 						EndNS:       3,
-						Fingerprint: 12638153115695167468,
-						ID:          12638153115695167468,
+						Fingerprint: 1124161485517443908,
 						Name:        "symbol3",
 						StartNS:     1,
 						Children: []*nodetree.Node{
 							{
 								DurationNS:  2,
 								EndNS:       3,
-								Fingerprint: 590698361471600176,
-								ID:          590698361471600176,
+								Fingerprint: 7967440964543288636,
 								Name:        "symbol4",
 								StartNS:     1,
 								Children: []*nodetree.Node{
 									{
 										DurationNS:  2,
 										EndNS:       3,
-										Fingerprint: 15670675230562780069,
-										ID:          15670675230562780069,
+										Fingerprint: 13274796176329250277,
 										Name:        "symbol5",
 										StartNS:     1,
 									},
@@ -1573,22 +1473,19 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 					{
 						DurationNS:  2,
 						EndNS:       2,
-						Fingerprint: 12638153115695167471,
-						ID:          12638153115695167471,
+						Fingerprint: 1124161485517443911,
 						Name:        "symbol0",
 						Children: []*nodetree.Node{
 							{
 								DurationNS:  2,
 								EndNS:       2,
-								Fingerprint: 590701660006484780,
-								ID:          590701660006484780,
+								Fingerprint: 17905447077897174944,
 								Name:        "symbol1",
 								Children: []*nodetree.Node{
 									{
 										DurationNS:  2,
 										EndNS:       2,
-										Fingerprint: 15673513070074625014,
-										ID:          15673513070074625014,
+										Fingerprint: 16084607411097338726,
 										Name:        "symbol2",
 									},
 								},
@@ -1598,24 +1495,21 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 					{
 						DurationNS:  2,
 						EndNS:       4,
-						Fingerprint: 12638153115695167468,
-						ID:          12638153115695167468,
+						Fingerprint: 1124161485517443908,
 						Name:        "symbol3",
 						StartNS:     2,
 						Children: []*nodetree.Node{
 							{
 								DurationNS:  2,
 								EndNS:       4,
-								Fingerprint: 590698361471600176,
-								ID:          590698361471600176,
+								Fingerprint: 7967440964543288636,
 								Name:        "symbol4",
 								StartNS:     2,
 								Children: []*nodetree.Node{
 									{
 										DurationNS:  2,
 										EndNS:       4,
-										Fingerprint: 15670675230562780069,
-										ID:          15670675230562780069,
+										Fingerprint: 13274796176329250277,
 										Name:        "symbol5",
 										StartNS:     2,
 									},
