@@ -237,6 +237,40 @@ func TestMakeFilterFuncs(t *testing.T) {
 			},
 			err: "",
 		},
+		{
+			name:           "skips empty is_application",
+			makeFilterFunc: MakeApplicationFilter,
+			params:         map[string][]string{},
+			filter:         []string{},
+			err:            "",
+		},
+		{
+			name:           "is_application is true",
+			makeFilterFunc: MakeApplicationFilter,
+			params: map[string][]string{
+				"is_application": []string{"1"},
+			},
+			filter: []string{"is_application = 1"},
+			err:    "",
+		},
+		{
+			name:           "is_application is false",
+			makeFilterFunc: MakeApplicationFilter,
+			params: map[string][]string{
+				"is_application": []string{"0"},
+			},
+			filter: []string{"is_application = 0"},
+			err:    "",
+		},
+		{
+			name:           "invalid is_application",
+			makeFilterFunc: MakeApplicationFilter,
+			params: map[string][]string{
+				"is_application": []string{"asdf"},
+			},
+			filter: []string{},
+			err:    "cannot parse is_application: asdf",
+		},
 	}
 
 	for _, tt := range tests {

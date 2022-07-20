@@ -49,6 +49,7 @@ var (
 		func(params url.Values) ([]string, error) {
 			return snubautil.MakeTimeRangeFilter("timestamp", params)
 		},
+		snubautil.MakeApplicationFilter,
 		func(params url.Values) ([]string, error) {
 			return snubautil.MakeFieldsFilter(functionFilterFields, params)
 		},
