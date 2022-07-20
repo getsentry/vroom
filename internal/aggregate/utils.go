@@ -289,6 +289,23 @@ type RustProfile struct {
 	Samples      []RustSample `json:"samples"`
 }
 
+type PythonSample struct {
+	Frames              []int  `json:"frames"`
+	RelativeTimestampNS uint64 `json:"relative_timestamp_ns"`
+	ThreadID            uint64 `json:"thread_id"`
+}
+
+type PythonFrame struct {
+	Name string `json:"name"`
+	File string `json:"file"`
+	Line uint32 `json:"line"`
+}
+
+type PythonProfile struct {
+	Samples []PythonSample `json:"samples"`
+	Frames  []PythonFrame  `json:"frames"`
+}
+
 // IsMain returns true if the function is considered the main function.
 func (f RustFrame) IsMain() bool {
 	if f.Status != "symbolicated" {

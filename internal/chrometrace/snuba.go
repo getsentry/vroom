@@ -336,6 +336,49 @@ func androidSpeedscopeTraceFromProfile(profile *android.AndroidProfile) (output,
 	}, nil
 }
 
+func pythonSpeedscopeTraceFromProfile(profile *aggregate.PythonProfile) (output, error) {
+	if len(profile.Samples) == 0 {
+		return output{}, nil
+	}
+
+	samples := make([][]int, len(profile.Samples))
+	weights := make([]uint64, len(profile.Samples))
+
+	previousTimestamp := uint64(0)
+	for i, pythonSample := range profile.Samples {
+		samples[i] = pythonSample.Frames
+		weights[i] = pythonSample.RelativeTimestampNS - previousTimestamp
+		previousTimestamp = pythonSample.RelativeTimestampNS
+	}
+
+	frames := make([]frame, len(profile.Frames))
+	for i, pythonFrame := range profile.Frames {
+		frames[i] = frame{
+			File: pythonFrame.File,
+			Name: pythonFrame.Name,
+			Line: pythonFrame.Line,
+			// TODO: Add application frame field
+		}
+	}
+
+	outputProfile := sampledProfile{
+		EndValue:   profile.Samples[len(profile.Samples)-1].RelativeTimestampNS,
+		Name:       "main", // TODO: Get thread name from the client
+		Samples:    samples,
+		StartValue: profile.Samples[0].RelativeTimestampNS,
+		ThreadID:   profile.Samples[0].ThreadID,
+		Type:       profileTypeSampled,
+		Unit:       valueUnitNanoseconds,
+		Weights:    weights,
+	}
+
+	return output{
+		ActiveProfileIndex: 0,
+		Profiles:           []interface{}{outputProfile},
+		Shared:             sharedData{frames},
+	}, nil
+}
+
 func rustSpeedscopeTraceFromProfile(profile *aggregate.RustProfile) (output, error) {
 	threadIDToProfile := make(map[uint64]*sampledProfile)
 	addressToFrameIndex := make(map[string]int)
