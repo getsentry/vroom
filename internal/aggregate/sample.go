@@ -36,11 +36,11 @@ func (f IosFrame) IsMain() (bool, int) {
 }
 
 func (f IosFrame) WriteToHash(h hash.Hash) {
-	if f.Package == "" && f.Symbol == "" {
+	if f.Package == "" && f.Function == "" {
 		h.Write([]byte("-"))
 	} else {
 		h.Write([]byte(f.Package))
-		h.Write([]byte(f.Symbol))
+		h.Write([]byte(f.Function))
 	}
 }
 
@@ -150,7 +150,7 @@ func (p IosProfile) CallTrees() map[uint64][]*nodetree.Node {
 					current = trees[s.ThreadID][i]
 					current.SetDuration(s.RelativeTimestampNS)
 				} else {
-					n := nodetree.NodeFromFrame(f.Package, f.Symbol, f.AbsPath, f.LineNo, previousTimestamp[s.ThreadID], s.RelativeTimestampNS, fingerprint, IsIOSApplicationImage(f.Package))
+					n := nodetree.NodeFromFrame(f.Package, f.Function, f.AbsPath, f.LineNo, previousTimestamp[s.ThreadID], s.RelativeTimestampNS, fingerprint, IsIOSApplicationImage(f.Package))
 					trees[s.ThreadID] = append(trees[s.ThreadID], n)
 					current = n
 				}
@@ -160,7 +160,7 @@ func (p IosProfile) CallTrees() map[uint64][]*nodetree.Node {
 					current = current.Children[i]
 					current.SetDuration(s.RelativeTimestampNS)
 				} else {
-					n := nodetree.NodeFromFrame(f.Package, f.Symbol, f.AbsPath, f.LineNo, previousTimestamp[s.ThreadID], s.RelativeTimestampNS, fingerprint, IsIOSApplicationImage(f.Package))
+					n := nodetree.NodeFromFrame(f.Package, f.Function, f.AbsPath, f.LineNo, previousTimestamp[s.ThreadID], s.RelativeTimestampNS, fingerprint, IsIOSApplicationImage(f.Package))
 					current.Children = append(current.Children, n)
 					current = n
 				}
