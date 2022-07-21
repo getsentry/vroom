@@ -42,6 +42,7 @@ var (
 		"device_os_version": "os_version",
 		"environment":       "environment",
 		"platform":          "platform",
+		"transaction_name":  "transaction_name",
 		"version":           "release",
 	}
 
