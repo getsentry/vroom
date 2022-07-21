@@ -61,6 +61,16 @@ func SpeedscopeFromSnuba(profile snubautil.Profile) ([]byte, error) {
 		if err != nil {
 			return nil, err
 		}
+	case "python":
+		var pythonProfile aggregate.PythonProfile
+		err := json.Unmarshal([]byte(profile.Profile), &pythonProfile)
+		if err != nil {
+			return nil, err
+		}
+		p, err = pythonSpeedscopeTraceFromProfile(&pythonProfile)
+		if err != nil {
+			return nil, err
+		}
 	default:
 		return nil, fmt.Errorf("chrometrace: %w: %s is not a supported platform", errorutil.ErrDataIntegrity, profile.Platform)
 	}
