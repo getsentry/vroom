@@ -34,7 +34,7 @@ func assertFilterEquals(t *testing.T, actual []string, expected []string) {
 	})
 
 	if diff := testutil.Diff(actual, expected, trans); diff != "" {
-		t.Fatalf("expected \"%v\" but was \"%v\"", expected, actual)
+		t.Fatalf(`expected "%v" but was "%v"`, expected, actual)
 	}
 }
 
