@@ -82,6 +82,8 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 		}
 		p = ap
 	case "python", "rust", "node":
+		w.WriteHeader(http.StatusNoContent)
+		return
 	default:
 		hub.CaptureMessage("unknown platform")
 		w.WriteHeader(http.StatusBadRequest)
