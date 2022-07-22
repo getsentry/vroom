@@ -1,7 +1,6 @@
 package android
 
 import (
-	"encoding/binary"
 	"hash/fnv"
 	"strings"
 	"time"
@@ -94,11 +93,22 @@ func (p AndroidProfile) CallTrees() map[uint64][]*nodetree.Node {
 	buildTimestamp := p.TimestampGetter()
 	trees := make(map[uint64][]*nodetree.Node)
 	stacks := make(map[uint64][]*nodetree.Node)
+	methods := make(map[uint64]AndroidMethod)
+	for _, m := range p.Methods {
+		methods[m.ID] = m
+	}
 	for _, e := range p.Events {
 		switch e.Action {
 		case EnterAction:
-			m := p.Methods[e.MethodID]
-			n := nodetree.NodeFromFrame(m.ClassName, m.Name, m.SourceFile, m.SourceLine, buildTimestamp(e.Time), 0, m.ID, !IsSystemPackage(m.ClassName))
+			m, exists := methods[e.MethodID]
+			if !exists {
+				methods[e.MethodID] = AndroidMethod{
+					ClassName: "unknown",
+					ID:        e.MethodID,
+					Name:      "unknown",
+				}
+			}
+			n := nodetree.NodeFromFrame(m.ClassName, m.Name, m.SourceFile, m.SourceLine, buildTimestamp(e.Time), 0, 0, !IsSystemPackage(m.ClassName))
 			if len(stacks[e.ThreadID]) == 0 {
 				trees[e.ThreadID] = append(trees[e.ThreadID], n)
 			} else {
@@ -106,7 +116,7 @@ func (p AndroidProfile) CallTrees() map[uint64][]*nodetree.Node {
 				stacks[e.ThreadID][i].Children = append(stacks[e.ThreadID][i].Children, n)
 			}
 			stacks[e.ThreadID] = append(stacks[e.ThreadID], n)
-			n.Fingerprint = generateFingerprint(e.ThreadID, stacks[e.ThreadID])
+			n.Fingerprint = generateFingerprint(stacks[e.ThreadID])
 		case ExitAction, UnwindAction:
 			if len(stacks[e.ThreadID]) == 0 {
 				continue
@@ -121,12 +131,10 @@ func (p AndroidProfile) CallTrees() map[uint64][]*nodetree.Node {
 	return trees
 }
 
-func generateFingerprint(threadID uint64, stack []*nodetree.Node) uint64 {
+func generateFingerprint(stack []*nodetree.Node) uint64 {
 	h := fnv.New64()
-	buffer := make([]byte, 8)
 	for _, n := range stack {
-		binary.LittleEndian.PutUint64(buffer, n.ID)
-		h.Write(buffer)
+		n.WriteToHash(h)
 	}
 	return h.Sum64()
 }
