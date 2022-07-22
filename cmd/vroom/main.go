@@ -76,8 +76,9 @@ func (env *environment) newRouter() (*httprouter.Router, error) {
 	}{
 		{http.MethodGet, "/organizations/:organization_id/filters", env.getFilters},
 		{http.MethodGet, "/organizations/:organization_id/profiles", env.getProfiles},
+		{http.MethodGet, "/organizations/:organization_id/projects/:project_id/functions", env.getFunctions},
 		{http.MethodGet, "/organizations/:organization_id/projects/:project_id/functions_call_trees", env.getFunctionsCallTrees},
-		{http.MethodGet, "/organizations/:organization_id/projects/:project_id/functions_versions", env.getFunctions},
+		{http.MethodGet, "/organizations/:organization_id/projects/:project_id/functions_versions", env.getFunctionsVersions},
 		{http.MethodGet, "/organizations/:organization_id/projects/:project_id/profiles/:profile_id", env.getProfile},
 		{http.MethodGet, "/organizations/:organization_id/projects/:project_id/profiles/:profile_id/call_tree", env.getProfileCallTree},
 		{http.MethodGet, "/organizations/:organization_id/projects/:project_id/transactions/:transaction_id", env.getProfileIDByTransactionID},
@@ -287,7 +288,7 @@ func (env *environment) getProfiles(w http.ResponseWriter, r *http.Request) {
 
 	hub.Scope().SetTag("organization_id", rawOrganizationID)
 
-	sqb, err := env.snubaQueryBuilderFromRequest(ctx, r.URL.Query())
+	sqb, err := env.profilesQueryBuilderFromRequest(ctx, r.URL.Query())
 	if err != nil {
 		hub.CaptureException(err)
 		w.WriteHeader(http.StatusBadRequest)
@@ -345,7 +346,7 @@ func (env *environment) getFilters(w http.ResponseWriter, r *http.Request) {
 
 	hub.Scope().SetTag("organization_id", rawOrganizationID)
 
-	sqb, err := env.snubaQueryBuilderFromRequest(ctx, r.URL.Query())
+	sqb, err := env.profilesQueryBuilderFromRequest(ctx, r.URL.Query())
 	if err != nil {
 		hub.CaptureException(err)
 		w.WriteHeader(http.StatusBadRequest)
@@ -416,7 +417,7 @@ func (env *environment) getFunctionsCallTrees(w http.ResponseWriter, r *http.Req
 
 	hub.Scope().SetTag("project_id", rawProjectID)
 
-	sqb, err := env.snubaQueryBuilderFromRequest(ctx, r.URL.Query())
+	sqb, err := env.profilesQueryBuilderFromRequest(ctx, r.URL.Query())
 	if err != nil {
 		hub.CaptureException(err)
 		w.WriteHeader(http.StatusBadRequest)
@@ -489,12 +490,12 @@ func (env *environment) getFunctionsCallTrees(w http.ResponseWriter, r *http.Req
 }
 
 type (
-	GetFunctionsResponse struct {
+	GetFunctionsVersionsResponse struct {
 		Functions []aggregate.FunctionCall `json:"functions"`
 	}
 )
 
-func (env *environment) getFunctions(w http.ResponseWriter, r *http.Request) {
+func (env *environment) getFunctionsVersions(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	hub := sentry.GetHubFromContext(ctx)
 	p, ok := httputil.GetRequiredQueryParameters(w, r, "transaction_name")
@@ -536,7 +537,7 @@ func (env *environment) getFunctions(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	sqb, err := env.snubaQueryBuilderFromRequest(ctx, r.URL.Query())
+	sqb, err := env.profilesQueryBuilderFromRequest(ctx, r.URL.Query())
 	if err != nil {
 		hub.CaptureException(err)
 		w.WriteHeader(http.StatusBadRequest)
@@ -566,7 +567,7 @@ func (env *environment) getFunctions(w http.ResponseWriter, r *http.Request) {
 	s = sentry.StartSpan(ctx, "json.marshal")
 	defer s.Finish()
 
-	b, err := json.Marshal(GetFunctionsResponse{
+	b, err := json.Marshal(GetFunctionsVersionsResponse{
 		Functions: aggResult.Aggregation.FunctionCalls,
 	})
 	if err != nil {
