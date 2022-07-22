@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"errors"
+	"io"
 	"math"
 	"net/http"
 	"strconv"
@@ -110,14 +111,38 @@ func (env *environment) postCallTree(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	hub := sentry.GetHubFromContext(ctx)
 
-	s := sentry.StartSpan(ctx, "json.unmarshal")
+	s := sentry.StartSpan(ctx, "request.body")
+	s.Description = "Read request body"
+	body, err := io.ReadAll(r.Body)
+	s.Finish()
+	if err != nil {
+		hub.CaptureException(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	s = sentry.StartSpan(ctx, "json.unmarshal")
 	s.Description = "Unmarshal Snuba profile"
 	var profile snubautil.Profile
-	err := json.NewDecoder(r.Body).Decode(&profile)
+	err = json.Unmarshal(body, &profile)
 	s.Finish()
 	if err != nil {
 		hub.CaptureException(err)
 		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	ow := env.profilesBucket.Object(profile.StoragePath()).NewWriter(ctx)
+	_, err = ow.Write(body)
+	if err != nil {
+		hub.CaptureException(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	err = ow.Close()
+	if err != nil {
+		hub.CaptureException(err)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
@@ -147,6 +172,7 @@ func (env *environment) postCallTree(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		p = ap
+	case "python", "rust", "node":
 	default:
 		hub.CaptureMessage("unknown platform")
 		w.WriteHeader(http.StatusBadRequest)

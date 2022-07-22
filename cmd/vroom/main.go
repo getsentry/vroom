@@ -12,6 +12,7 @@ import (
 	"syscall"
 	"time"
 
+	"cloud.google.com/go/storage"
 	"github.com/CAFxX/httpcompression"
 	"github.com/getsentry/sentry-go"
 	sentryhttp "github.com/getsentry/sentry-go/http"
@@ -28,11 +29,15 @@ import (
 )
 
 type environment struct {
-	Port      string `default:"8080"`
-	SnubaHost string `envconfig:"SENTRY_SNUBA_HOST" required:"true"`
-	SnubaPort string `envconfig:"SENTRY_SNUBA_PORT"`
+	Port           string `default:"8080"`
+	ProfilesBucket string `envconfig:"SENTRY_PROFILES_BUCKET_NAME" required:"true"`
+	SnubaHost      string `envconfig:"SENTRY_SNUBA_HOST" required:"true"`
+	SnubaPort      string `envconfig:"SENTRY_SNUBA_PORT"`
 
 	snuba snubautil.Client
+
+	storage        *storage.Client
+	profilesBucket *storage.BucketHandle
 }
 
 func newEnvironment() (*environment, error) {
@@ -45,12 +50,17 @@ func newEnvironment() (*environment, error) {
 	if err != nil {
 		return nil, err
 	}
+	e.storage, err = storage.NewClient(context.Background())
+	if err != nil {
+		return nil, err
+	}
+	e.profilesBucket = e.storage.Bucket(e.ProfilesBucket)
 	return &e, nil
 }
 
 func (env *environment) shutdown() error {
 	sentry.Flush(5 * time.Second)
-	return nil
+	return env.storage.Close()
 }
 
 func (env *environment) newRouter() (*httprouter.Router, error) {
@@ -178,21 +188,36 @@ func (env *environment) getProfile(w http.ResponseWriter, r *http.Request) {
 
 	hub.Scope().SetTag("profile_id", profileID)
 
-	sqb, err := env.snuba.NewQuery(ctx, "profiles")
+	var profile snubautil.Profile
+	rc, err := env.profilesBucket.Object(snubautil.ProfileStoragePath(organizationID, projectID, profileID)).NewReader(ctx)
 	if err != nil {
-		hub.CaptureException(err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-	profile, err := snubautil.GetProfile(organizationID, projectID, profileID, sqb)
-	if err != nil {
-		if errors.Is(err, snubautil.ErrProfileNotFound) {
-			w.WriteHeader(http.StatusNotFound)
-		} else {
+		if err != storage.ErrObjectNotExist {
+			hub.CaptureException(err)
+		}
+		sqb, err := env.snuba.NewQuery(ctx, "profiles")
+		if err != nil {
 			hub.CaptureException(err)
 			w.WriteHeader(http.StatusInternalServerError)
+			return
 		}
-		return
+		profile, err = snubautil.GetProfile(organizationID, projectID, profileID, sqb)
+		if err != nil {
+			if errors.Is(err, snubautil.ErrProfileNotFound) {
+				w.WriteHeader(http.StatusNotFound)
+			} else {
+				hub.CaptureException(err)
+				w.WriteHeader(http.StatusInternalServerError)
+			}
+			return
+		}
+	} else {
+		err := json.NewDecoder(rc).Decode(&profile)
+		rc.Close()
+		if err != nil {
+			hub.CaptureException(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 	}
 
 	hub.Scope().SetTag("platform", profile.Platform)
