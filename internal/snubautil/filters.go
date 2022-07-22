@@ -128,3 +128,16 @@ func MakeFieldsFilter(fields map[string]string, params url.Values) ([]string, er
 	}
 	return filter, nil
 }
+
+func MakeApplicationFilter(params url.Values) ([]string, error) {
+	if is_application := params.Get("is_application"); is_application != "" {
+		if is_application == "1" {
+			return []string{"is_application = 1"}, nil
+		} else if is_application == "0" {
+			return []string{"is_application = 0"}, nil
+		} else {
+			return []string{}, fmt.Errorf("cannot parse is_application: %v", is_application)
+		}
+	}
+	return []string{}, nil
+}
