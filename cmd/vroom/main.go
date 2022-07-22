@@ -261,7 +261,7 @@ func (env *environment) getProfiles(w http.ResponseWriter, r *http.Request) {
 
 	hub.Scope().SetTag("organization_id", rawOrganizationID)
 
-	sqb, err := env.snubaQueryBuilderFromRequest(ctx, r.URL.Query())
+	sqb, err := env.profilesQueryBuilderFromRequest(ctx, r.URL.Query())
 	if err != nil {
 		hub.CaptureException(err)
 		w.WriteHeader(http.StatusBadRequest)
@@ -319,7 +319,7 @@ func (env *environment) getFilters(w http.ResponseWriter, r *http.Request) {
 
 	hub.Scope().SetTag("organization_id", rawOrganizationID)
 
-	sqb, err := env.snubaQueryBuilderFromRequest(ctx, r.URL.Query())
+	sqb, err := env.profilesQueryBuilderFromRequest(ctx, r.URL.Query())
 	if err != nil {
 		hub.CaptureException(err)
 		w.WriteHeader(http.StatusBadRequest)
@@ -390,7 +390,7 @@ func (env *environment) getFunctionsCallTrees(w http.ResponseWriter, r *http.Req
 
 	hub.Scope().SetTag("project_id", rawProjectID)
 
-	sqb, err := env.snubaQueryBuilderFromRequest(ctx, r.URL.Query())
+	sqb, err := env.profilesQueryBuilderFromRequest(ctx, r.URL.Query())
 	if err != nil {
 		hub.CaptureException(err)
 		w.WriteHeader(http.StatusBadRequest)
@@ -510,7 +510,7 @@ func (env *environment) getFunctions(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	sqb, err := env.snubaQueryBuilderFromRequest(ctx, r.URL.Query())
+	sqb, err := env.profilesQueryBuilderFromRequest(ctx, r.URL.Query())
 	if err != nil {
 		hub.CaptureException(err)
 		w.WriteHeader(http.StatusBadRequest)
