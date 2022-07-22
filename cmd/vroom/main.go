@@ -76,13 +76,14 @@ func (env *environment) newRouter() (*httprouter.Router, error) {
 	}{
 		{http.MethodGet, "/organizations/:organization_id/filters", env.getFilters},
 		{http.MethodGet, "/organizations/:organization_id/profiles", env.getProfiles},
-		{http.MethodGet, "/organizations/:organization_id/transactions", env.getTransactions},
 		{http.MethodGet, "/organizations/:organization_id/projects/:project_id/functions_call_trees", env.getFunctionsCallTrees},
 		{http.MethodGet, "/organizations/:organization_id/projects/:project_id/functions_versions", env.getFunctions},
 		{http.MethodGet, "/organizations/:organization_id/projects/:project_id/profiles/:profile_id", env.getProfile},
 		{http.MethodGet, "/organizations/:organization_id/projects/:project_id/profiles/:profile_id/call_tree", env.getProfileCallTree},
 		{http.MethodGet, "/organizations/:organization_id/projects/:project_id/transactions/:transaction_id", env.getProfileIDByTransactionID},
-		{http.MethodPost, "/call_tree", env.postCallTree},
+		{http.MethodGet, "/organizations/:organization_id/transactions", env.getTransactions},
+		{http.MethodPost, "/call_tree", env.postProfile},
+		{http.MethodPost, "/profile", env.postProfile},
 	}
 
 	router := httprouter.New()
