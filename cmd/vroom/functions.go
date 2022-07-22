@@ -76,6 +76,7 @@ func (env *environment) getFunctions(w http.ResponseWriter, r *http.Request) {
 	if rawOrderBy != "p75" && rawOrderBy != "p99" && rawOrderBy != "count" {
 		hub.CaptureException(fmt.Errorf("unknown sort: %s", rawOrderBy))
 		w.WriteHeader(http.StatusBadRequest)
+		return
 	}
 	sqb.OrderBy = strings.Join([]string{rawOrderBy, direction}, " ")
 
@@ -92,9 +93,10 @@ func (env *environment) getFunctions(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		hub.CaptureException(err)
 		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
 	_, _ = w.Write(b)
-	return
 }
