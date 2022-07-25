@@ -23,7 +23,7 @@ type (
 func (env *environment) getFunctions(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	hub := sentry.GetHubFromContext(ctx)
-	p, ok := httputil.GetRequiredQueryParameters(w, r, "transaction_name")
+	p, ok := httputil.GetRequiredQueryParameters(w, r, "project_id", "start", "end", "transaction_name")
 	if !ok {
 		return
 	}

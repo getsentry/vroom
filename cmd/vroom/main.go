@@ -67,6 +67,7 @@ func (env *environment) newRouter() (*httprouter.Router, error) {
 		{http.MethodGet, "/organizations/:organization_id/filters", env.getFilters},
 		{http.MethodGet, "/organizations/:organization_id/profiles", env.getProfiles},
 		{http.MethodGet, "/organizations/:organization_id/transactions", env.getTransactions},
+		{http.MethodGet, "/organizations/:organization_id/stats", env.getProfilesStats},
 		{http.MethodGet, "/organizations/:organization_id/projects/:project_id/functions", env.getFunctions},
 		{http.MethodGet, "/organizations/:organization_id/projects/:project_id/functions_call_trees", env.getFunctionsCallTrees},
 		{http.MethodGet, "/organizations/:organization_id/projects/:project_id/functions_versions", env.getFunctionsVersions},
