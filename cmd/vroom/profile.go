@@ -10,6 +10,7 @@ import (
 	"github.com/getsentry/vroom/internal/android"
 	"github.com/getsentry/vroom/internal/nodetree"
 	"github.com/getsentry/vroom/internal/snubautil"
+	"github.com/getsentry/vroom/internal/storageutil"
 )
 
 type PostProfileResponse struct {
@@ -41,14 +42,10 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ow := env.profilesBucket.Object(profile.StoragePath()).NewWriter(ctx)
-	_, err = ow.Write(body)
-	if err != nil {
-		hub.CaptureException(err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-	err = ow.Close()
+	s = sentry.StartSpan(ctx, "gcs.write")
+	s.Description = "Write profile to GCS"
+	_, err = storageutil.CompressedWrite(ctx, env.profilesBucket, profile.StoragePath(), body)
+	s.Finish()
 	if err != nil {
 		hub.CaptureException(err)
 		w.WriteHeader(http.StatusInternalServerError)

@@ -26,6 +26,7 @@ import (
 	"github.com/getsentry/vroom/internal/httputil"
 	"github.com/getsentry/vroom/internal/logutil"
 	"github.com/getsentry/vroom/internal/snubautil"
+	"github.com/getsentry/vroom/internal/storageutil"
 )
 
 type environment struct {
@@ -191,7 +192,10 @@ func (env *environment) getProfile(w http.ResponseWriter, r *http.Request) {
 	hub.Scope().SetTag("profile_id", profileID)
 
 	var profile snubautil.Profile
-	rc, err := env.profilesBucket.Object(snubautil.ProfileStoragePath(organizationID, projectID, profileID)).NewReader(ctx)
+	s := sentry.StartSpan(ctx, "gcs.read")
+	s.Description = "Read profile from GCS"
+	err = storageutil.UnmarshalCompressed(ctx, env.profilesBucket, snubautil.ProfileStoragePath(organizationID, projectID, profileID), &profile)
+	s.Finish()
 	if err != nil {
 		if err != storage.ErrObjectNotExist {
 			hub.CaptureException(err)
@@ -212,19 +216,11 @@ func (env *environment) getProfile(w http.ResponseWriter, r *http.Request) {
 			}
 			return
 		}
-	} else {
-		err := json.NewDecoder(rc).Decode(&profile)
-		rc.Close()
-		if err != nil {
-			hub.CaptureException(err)
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
 	}
 
 	hub.Scope().SetTag("platform", profile.Platform)
 
-	s := sentry.StartSpan(ctx, "json.marshal")
+	s = sentry.StartSpan(ctx, "json.marshal")
 	defer s.Finish()
 
 	var b []byte
