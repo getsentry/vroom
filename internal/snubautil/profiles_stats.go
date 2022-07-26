@@ -31,7 +31,7 @@ func GetProfilesStats(sqb QueryBuilder) ([]ProfilesStats, error) {
 		"count() AS `count()`",
 	}
 	sqb.GroupBy = "time"
-	sqb.OrderBy = "time DESC"
+	sqb.OrderBy = "time ASC"
 	sqb.Limit = 10000
 
 	rb, err := sqb.Do(rs)
