@@ -1,0 +1,9 @@
+version: "3.9"
+services:
+  gcs:
+    image: "fsouza/fake-gcs-server:latest"
+    ports:
+      - "8888:8888"
+    volumes:
+      - ../test/gcs:/data
+    command: -scheme http -public-host 0.0.0.0:8888 -external-url http://0.0.0.0:8888 -port 8888
