@@ -69,7 +69,6 @@ func FormatStats(rawStats RawStats, meta StatsMeta) (StatsTimestamps, []StatsDat
 	for i, timestamp := 0, meta.Start; timestamp <= meta.End; i, timestamp = i+1, timestamp+meta.Granularity {
 		timestamps[i] = timestamp
 
-		fmt.Printf("timestamp %d %d\n", timestamp, rawStats.TimestampAt(rawIdx))
 		if rawStats.TimestampAt(rawIdx) == timestamp {
 			for _, axis := range rawStats.Axes() {
 				value, err := rawStats.ValueAt(axis, rawIdx)
