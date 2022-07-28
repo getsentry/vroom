@@ -92,19 +92,13 @@ func iosSpeedscopeTraceFromProfile(profile *aggregate.IosProfile) (output, error
 	mainFunctionFrameIndex := -1
 	mainThreadID := profile.MainThread()
 	for _, sample := range profile.Samples {
-		queueMetadata, qmExists := profile.QueueMetadata[sample.QueueAddress]
-		// Skip samples with a queue called "com.apple.main-thread"
-		// but not being scheduled on what we detected as the main thread.
-		if queueMetadata.IsMainThread() && sample.ThreadID != mainThreadID {
-			continue
-		}
-
 		threadID := strconv.FormatUint(sample.ThreadID, 10)
 		sampProfile, ok := threadIDToProfile[sample.ThreadID]
+		queueMetadata, qmExists := profile.QueueMetadata[sample.QueueAddress]
 		if !ok {
 			threadMetadata, tmExists := profile.ThreadMetadata[threadID]
 			threadName := threadMetadata.Name
-			if threadName == "" && qmExists {
+			if threadName == "" && qmExists && (!queueMetadata.LabeledAsMainThread() || sample.ThreadID != mainThreadID) {
 				threadName = queueMetadata.Label
 			} else {
 				threadName = threadID
