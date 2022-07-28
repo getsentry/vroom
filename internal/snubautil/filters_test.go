@@ -19,12 +19,6 @@ func assertFails(t *testing.T, err error, contains string) {
 	}
 }
 
-func assertNoErr(t *testing.T, err error) {
-	if err != nil {
-		t.Fatalf("expected no error: %q", err.Error())
-	}
-}
-
 func assertFilterEquals(t *testing.T, actual []string, expected []string) {
 	// the order of the filters are unimportant since they will be ANDed together
 	trans := cmp.Transformer("Sort", func(in []string) []string {
