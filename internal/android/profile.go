@@ -89,6 +89,7 @@ func (p AndroidProfile) TimestampGetter() func(EventTime) uint64 {
 	return buildTimestamp
 }
 
+// CallTrees generates call trees for a given profile
 func (p AndroidProfile) CallTrees() map[uint64][]*nodetree.Node {
 	buildTimestamp := p.TimestampGetter()
 	trees := make(map[uint64][]*nodetree.Node)
@@ -108,7 +109,16 @@ func (p AndroidProfile) CallTrees() map[uint64][]*nodetree.Node {
 					Name:      "unknown",
 				}
 			}
-			n := nodetree.NodeFromFrame(m.ClassName, m.Name, m.SourceFile, m.SourceLine, buildTimestamp(e.Time), 0, 0, !IsSystemPackage(m.ClassName))
+			className, _, err := ExtractPackageNameAndSimpleMethodNameFromAndroidMethod(&m)
+			if err != nil {
+				className = m.ClassName
+			}
+			methodName, err := FullMethodNameFromAndroidMethod(&m)
+			if err != nil {
+				methodName = m.Name
+			}
+
+			n := nodetree.NodeFromFrame(className, methodName, m.SourceFile, m.SourceLine, buildTimestamp(e.Time), 0, 0, !IsSystemPackage(m.ClassName))
 			if len(stacks[e.ThreadID]) == 0 {
 				trees[e.ThreadID] = append(trees[e.ThreadID], n)
 			} else {
