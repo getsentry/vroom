@@ -4,6 +4,8 @@ Vroom is the profiling service returning profiles and aggregated data about your
 
 The service is currently hosted on Google Cloud Run and requires access to Google Cloud Storage.
 
+The name was inspired by this [video](https://www.youtube.com/watch?v=t_rzYnXEQlE).
+
 ## Development
 
 In order to develop for `vroom`, you will need:
