@@ -1,4 +1,5 @@
 version: "3.9"
+name: vroom
 services:
   gcs:
     image: "fsouza/fake-gcs-server:latest"
