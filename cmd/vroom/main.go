@@ -60,8 +60,12 @@ func newEnvironment() (*environment, error) {
 }
 
 func (env *environment) shutdown() error {
+	err := env.storage.Close()
+	if err != nil {
+		sentry.CaptureException(err)
+	}
 	sentry.Flush(5 * time.Second)
-	return env.storage.Close()
+	return nil
 }
 
 func (env *environment) newRouter() (*httprouter.Router, error) {
@@ -152,7 +156,6 @@ func main() {
 
 	// Shutdown the rest of the environment after the HTTP connections are closed
 	if err := env.shutdown(); err != nil {
-		sentry.CaptureException(err)
 		log.Err(err).Msg("error tearing down environment")
 	}
 }
