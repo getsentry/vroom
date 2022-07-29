@@ -4,6 +4,7 @@ import (
 	"hash"
 	"hash/fnv"
 	"sort"
+	"strconv"
 
 	"github.com/getsentry/vroom/internal/nodetree"
 )
@@ -75,6 +76,17 @@ type candidate struct {
 
 // MainThread returns what we believe is the main thread ID in the profile
 func (p IosProfile) MainThread() uint64 {
+	// Use metadata
+	for threadID, m := range p.ThreadMetadata {
+		if m.IsMain {
+			id, err := strconv.ParseUint(threadID, 10, 64)
+			if err != nil {
+				break
+			}
+			return id
+		}
+	}
+
 	// Check for a main frame
 	queues := make(map[uint64]map[QueueMetadata]int)
 	for _, s := range p.Samples {
@@ -105,7 +117,7 @@ func (p IosProfile) MainThread() uint64 {
 		// Only threads with 1 main queue are considered
 		if len(qm) == 1 {
 			for q, frameCount := range qm {
-				if q.IsMainThread() {
+				if q.LabeledAsMainThread() {
 					candidates = append(candidates, candidate{threadID, frameCount})
 				}
 			}
@@ -175,6 +187,7 @@ func (p IosProfile) CallTrees() map[uint64][]*nodetree.Node {
 }
 
 type ThreadMedata struct {
+	IsMain   bool   `json:"is_main_thread"`
 	Name     string `json:"name"`
 	Priority int    `json:"priority"`
 }
@@ -183,6 +196,6 @@ type QueueMetadata struct {
 	Label string `json:"label"`
 }
 
-func (q QueueMetadata) IsMainThread() bool {
+func (q QueueMetadata) LabeledAsMainThread() bool {
 	return q.Label == "com.apple.main-thread"
 }

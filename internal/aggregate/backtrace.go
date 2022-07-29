@@ -114,15 +114,10 @@ func (a *BacktraceAggregatorP) UpdateFromIosProfile(profile snubautil.Profile) e
 	mainThreadID := iosProfile.MainThread()
 	for _, sample := range iosProfile.Samples {
 		queueMetadata, qmExists := iosProfile.QueueMetadata[sample.QueueAddress]
-		// Skip samples with a queue called "com.apple.main-thread"
-		// but not being scheduled on what we detected as the main thread.
-		if queueMetadata.IsMainThread() && sample.ThreadID != mainThreadID {
-			continue
-		}
 		threadID := strconv.FormatUint(sample.ThreadID, 10)
 		threadMetadata := iosProfile.ThreadMetadata[threadID]
 		threadName := threadMetadata.Name
-		if threadName == "" && qmExists {
+		if threadName == "" && qmExists && (!queueMetadata.LabeledAsMainThread() || sample.ThreadID == mainThreadID) {
 			threadName = queueMetadata.Label
 		} else {
 			threadName = threadID
