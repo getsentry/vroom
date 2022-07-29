@@ -1,6 +1,8 @@
 package snubautil
 
 import (
+	"fmt"
+	"strings"
 	"time"
 )
 
@@ -30,4 +32,12 @@ type Profile struct {
 
 func (p Profile) Version() string {
 	return FormatVersion(p.VersionName, p.VersionCode)
+}
+
+func ProfileStoragePath(organizationID, projectID uint64, profileID string) string {
+	return fmt.Sprintf("%d/%d/%s", organizationID, projectID, strings.Replace(profileID, "-", "", -1))
+}
+
+func (p Profile) StoragePath() string {
+	return ProfileStoragePath(p.OrganizationID, p.ProjectID, p.ProfileID)
 }
