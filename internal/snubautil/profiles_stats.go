@@ -20,7 +20,7 @@ type (
 	}
 )
 
-func GetProfilesStats(sqb QueryBuilder) ([]ProfilesStats, error) {
+func GetProfilesStats(sqb QueryBuilder) (map[int64]map[string]interface{}, error) {
 	t := sentry.TransactionFromContext(sqb.ctx)
 	rs := t.StartChild("snuba")
 	defer rs.Finish()
@@ -46,5 +46,15 @@ func GetProfilesStats(sqb QueryBuilder) ([]ProfilesStats, error) {
 		return nil, err
 	}
 
-	return sr.Stats, nil
+	result := make(map[int64]map[string]interface{})
+
+	for _, stat := range sr.Stats {
+		bucket := make(map[string]interface{})
+		bucket["p75"] = stat.P75
+		bucket["p99"] = stat.P99
+		bucket["count"] = stat.Count
+		result[stat.Time.Unix()] = bucket
+	}
+
+	return result, nil
 }

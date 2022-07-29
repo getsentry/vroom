@@ -14,39 +14,11 @@ import (
 
 type (
 	getProfilesStatsResponse struct {
-		Data       []snubautil.StatsData     `json:"data"`
-		Meta       snubautil.StatsMeta       `json:"meta"`
-		Timestamps snubautil.StatsTimestamps `json:"timestamps"`
-	}
-
-	RawProfilesStats struct {
-		data []snubautil.ProfilesStats
+		Data       []snubautil.StatsData `json:"data"`
+		Meta       snubautil.StatsMeta   `json:"meta"`
+		Timestamps []snubautil.UnixTime  `json:"timestamps"`
 	}
 )
-
-func (s RawProfilesStats) Axes() []string {
-	return []string{"count()", "p75()", "p99()"}
-}
-
-func (s RawProfilesStats) TimestampAt(idx int) int64 {
-	if idx >= len(s.data) {
-		return -1
-	}
-	return s.data[idx].Time.Unix()
-}
-
-func (s RawProfilesStats) ValueAt(axis string, idx int) (float64, error) {
-	switch axis {
-	case "count()":
-		return float64(s.data[idx].Count), nil
-	case "p75()":
-		return s.data[idx].P75, nil
-	case "p99()":
-		return s.data[idx].P99, nil
-	default:
-		return 0, fmt.Errorf("unknown axis: %s", axis)
-	}
-}
 
 func (env *environment) getProfilesStats(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
@@ -54,7 +26,6 @@ func (env *environment) getProfilesStats(w http.ResponseWriter, r *http.Request)
 
 	p, ok := httputil.GetRequiredQueryParameters(w, r, "project_id", "start", "end", "granularity")
 	if !ok {
-		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
@@ -83,13 +54,6 @@ func (env *environment) getProfilesStats(w http.ResponseWriter, r *http.Request)
 		fmt.Sprintf("organization_id=%d", organizationID),
 	)
 
-	meta, err := snubautil.FormatStatsMeta("profiles", p["start"], p["end"], int64(sqb.Granularity))
-	if err != nil {
-		hub.CaptureException(err)
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-
 	rawStats, err := snubautil.GetProfilesStats(sqb)
 	if err != nil {
 		hub.CaptureException(err)
@@ -97,12 +61,14 @@ func (env *environment) getProfilesStats(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	timestamps, data, err := snubautil.FormatStats(RawProfilesStats{data: rawStats}, meta)
+	meta, err := snubautil.NewStatsMeta("profiles", p["start"], p["end"], sqb.Granularity)
 	if err != nil {
 		hub.CaptureException(err)
-		w.WriteHeader(http.StatusInternalServerError)
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+
+	data, timestamps := snubautil.FormatStats(meta, rawStats, []string{"p75", "p99", "count"})
 
 	b, err := json.Marshal(getProfilesStatsResponse{
 		Data:       data,

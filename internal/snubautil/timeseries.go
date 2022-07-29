@@ -1,91 +1,109 @@
 package snubautil
 
 import (
+	"encoding/json"
 	"fmt"
 	"time"
 )
 
 type (
-	StatsMeta struct {
-		Dataset     string `json:"dataset"`
-		Start       int64  `json:"start"`
-		End         int64  `json:"end"`
-		Granularity int64  `json:"-"`
-	}
+	UnixTime time.Time
 
-	StatsTimestamps []int64
+	StatsMeta struct {
+		Dataset     string        `json:"dataset"`
+		Start       UnixTime      `json:"start"`
+		End         UnixTime      `json:"end"`
+		Granularity time.Duration `json:"-"`
+	}
 
 	StatsData struct {
-		Axis   string     `json:"axis"`
-		Values []*float64 `json:"values"`
-	}
-
-	RawStats interface {
-		Axes() []string
-		TimestampAt(idx int) int64
-		ValueAt(axis string, idx int) (float64, error)
+		Axis   string         `json:"axis"`
+		Values []*interface{} `json:"values"`
 	}
 )
 
-const TIME_LAYOUT = "2006-01-02T15:04:05.000000+00:00"
+func (t UnixTime) MarshalJSON() ([]byte, error) {
+	return json.Marshal(time.Time(t).Unix())
+}
 
-func FormatStatsMeta(datasetStr, startStr, endStr string, granularity int64) (StatsMeta, error) {
-	start, err := time.Parse(TIME_LAYOUT, startStr)
+func NewStatsMeta(dataset, rawStart, rawEnd string, rawGranularity uint64) (StatsMeta, error) {
+	if rawGranularity <= 0 {
+		return StatsMeta{}, fmt.Errorf("invalid granularity must be non zero: %d", rawGranularity)
+	}
+	granularity := time.Duration(rawGranularity) * time.Second
+
+	start, err := truncateTime(rawStart, granularity)
 	if err != nil {
 		return StatsMeta{}, err
 	}
 
-	end, err := time.Parse(TIME_LAYOUT, endStr)
+	end, err := truncateTime(rawEnd, granularity)
 	if err != nil {
 		return StatsMeta{}, err
-	}
-
-	if granularity <= 0 {
-		return StatsMeta{}, fmt.Errorf("invalid granularity: %d must be greater than 0", granularity)
 	}
 
 	return StatsMeta{
-		Dataset:     datasetStr,
-		Start:       start.Unix() / granularity * granularity,
-		End:         end.Unix() / granularity * granularity,
+		Dataset:     dataset,
+		Start:       start,
+		End:         end,
 		Granularity: granularity,
 	}, nil
 }
 
-func FormatStats(rawStats RawStats, meta StatsMeta) (StatsTimestamps, []StatsData, error) {
-	n := (meta.End-meta.Start)/meta.Granularity + 1
-	timestamps := make([]int64, n, n)
+func (m StatsMeta) Timestamps() []UnixTime {
+	start := time.Time(m.Start)
+	end := time.Time(m.End)
+	n := end.Sub(start) / m.Granularity
 
-	data := make(map[string]StatsData)
-	for _, axis := range rawStats.Axes() {
-		data[axis] = StatsData{
-			Values: make([]*float64, n, n),
+	timestamps := make([]UnixTime, 0, n)
+
+	for timestamp := start; !timestamp.After(end); timestamp = timestamp.Add(m.Granularity) {
+		timestamps = append(timestamps, UnixTime(timestamp))
+	}
+
+	return timestamps
+}
+
+func FormatStats(meta StatsMeta, stats map[int64]map[string]interface{}, axes []string) ([]StatsData, []UnixTime) {
+	timestamps := meta.Timestamps()
+
+	dataMap := map[string]StatsData{}
+
+	for _, axis := range axes {
+		statsData := StatsData{
 			Axis:   axis,
+			Values: make([]*interface{}, 0, len(timestamps)),
 		}
-	}
 
-	rawIdx := 0
-
-	for i, timestamp := 0, meta.Start; timestamp <= meta.End; i, timestamp = i+1, timestamp+meta.Granularity {
-		timestamps[i] = timestamp
-
-		if rawStats.TimestampAt(rawIdx) == timestamp {
-			for _, axis := range rawStats.Axes() {
-				value, err := rawStats.ValueAt(axis, rawIdx)
-				if err != nil {
-					return []int64{}, []StatsData{}, err
+		for _, timestamp := range timestamps {
+			bucket, ok := stats[time.Time(timestamp).Unix()]
+			if !ok {
+				statsData.Values = append(statsData.Values, nil)
+			} else {
+				value, ok := bucket[axis]
+				if !ok {
+					statsData.Values = append(statsData.Values, nil)
+				} else {
+					statsData.Values = append(statsData.Values, &value)
 				}
-				data[axis].Values[i] = &value
 			}
-
-			rawIdx += 1
 		}
+
+		dataMap[axis] = statsData
 	}
 
-	statsData := make([]StatsData, 0, len(data))
-	for _, axisData := range data {
-		statsData = append(statsData, axisData)
+	data := make([]StatsData, 0, len(dataMap))
+	for _, value := range dataMap {
+		data = append(data, value)
 	}
 
-	return timestamps, statsData, nil
+	return data, timestamps
+}
+
+func truncateTime(timeStr string, granularity time.Duration) (UnixTime, error) {
+	rawTime, err := time.Parse(time.RFC3339Nano, timeStr)
+	if err != nil {
+		return UnixTime{}, err
+	}
+	return UnixTime(rawTime.Truncate(granularity)), nil
 }

@@ -4,19 +4,20 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/getsentry/vroom/internal/testutil"
 )
 
-func TestFormatStatsMeta(t *testing.T) {
+func TestNewStatsMeta(t *testing.T) {
 	tests := []struct {
 		name        string
 		dataset     string
 		startStr    string
 		endStr      string
-		start       int64
-		end         int64
-		granularity int64
+		start       time.Time
+		end         time.Time
+		granularity uint64
 		err         string
 	}{
 		{
@@ -24,8 +25,8 @@ func TestFormatStatsMeta(t *testing.T) {
 			dataset:     "profiles",
 			startStr:    "2022-07-01T04:00:00.000000+00:00",
 			endStr:      "2022-07-14T04:00:00.000000+00:00",
-			start:       1656633600,
-			end:         1657756800,
+			start:       time.Date(2022, time.July, 1, 0, 0, 0, 0, time.UTC),
+			end:         time.Date(2022, time.July, 14, 0, 0, 0, 0, time.UTC),
 			granularity: 86400,
 			err:         "",
 		},
@@ -34,36 +35,36 @@ func TestFormatStatsMeta(t *testing.T) {
 			dataset:     "profiles",
 			startStr:    "2022-07-01T04:00:00.000000+00:00",
 			endStr:      "2022-07-14T04:00:00.000000+00:00",
-			start:       0,
-			end:         0,
+			start:       time.Time{},
+			end:         time.Time{},
 			granularity: 0,
-			err:         "invalid granularity: 0 must be greater than 0",
+			err:         "invalid granularity must be non zero: 0",
 		},
 		{
 			name:        "bad start format",
 			dataset:     "profiles",
 			startStr:    "hi",
 			endStr:      "2022-07-14:00:00.000000+00:00",
-			start:       0,
-			end:         0,
-			granularity: 0,
-			err:         `parsing time "hi" as "2006-01-02T15:04:05.000000+00:00": cannot parse "hi" as "2006"`,
+			start:       time.Time{},
+			end:         time.Time{},
+			granularity: 86400,
+			err:         `cannot parse "hi"`,
 		},
 		{
 			name:        "bad end format",
 			dataset:     "profiles",
 			startStr:    "2022-07-01T04:00:00.000000+00:00",
 			endStr:      "hi",
-			start:       0,
-			end:         0,
-			granularity: 0,
-			err:         `parsing time "hi" as "2006-01-02T15:04:05.000000+00:00": cannot parse "hi" as "2006"`,
+			start:       time.Time{},
+			end:         time.Time{},
+			granularity: 86400,
+			err:         `cannot parse "hi"`,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			meta, err := FormatStatsMeta(tt.dataset, tt.startStr, tt.endStr, tt.granularity)
+			meta, err := NewStatsMeta(tt.dataset, tt.startStr, tt.endStr, tt.granularity)
 
 			if tt.err != "" {
 				if err == nil {
@@ -80,15 +81,15 @@ func TestFormatStatsMeta(t *testing.T) {
 					t.Fatalf(`expected dataset: "%v" but was "%v"`, tt.dataset, meta.Dataset)
 				}
 
-				if meta.Start != tt.start {
-					t.Fatalf(`expected start: "%v" but was "%v"`, tt.start, meta.Start)
+				if !time.Time(meta.Start).Equal(tt.start) {
+					t.Fatalf(`expected start: "%v" but was "%v"`, tt.start, time.Time(meta.Start))
 				}
 
-				if meta.End != tt.end {
-					t.Fatalf(`expected end: "%v" but was "%v"`, tt.end, meta.End)
+				if !time.Time(meta.End).Equal(tt.end) {
+					t.Fatalf(`expected end: "%v" but was "%v"`, tt.end, time.Time(meta.End))
 				}
 
-				if meta.Granularity != tt.granularity {
+				if meta.Granularity != time.Duration(tt.granularity)*time.Second {
 					t.Fatalf(`expected granularity: "%v" but was "%v"`, tt.granularity, meta.Granularity)
 				}
 			}
@@ -121,69 +122,55 @@ func (s SimpleRawStats) ValueAt(axis string, idx int) (float64, error) {
 	return 0, fmt.Errorf("no value for axis: %s", axis)
 }
 
-func TestFormatStatsBadAxis(t *testing.T) {
-	_, _, err := FormatStats(
-		SimpleRawStats{
-			axes:       []string{"a"},
-			data:       map[string][]float64{},
-			timestamps: []int64{1656633600},
-		},
-		StatsMeta{
-			Dataset:     "profiles",
-			Start:       1656633600,
-			End:         1657756800,
-			Granularity: 86400,
-		},
-	)
-
-	expectedErr := "no value for axis: a"
-	if err == nil {
-		t.Fatal("expected error to be non-nil")
-	} else if !strings.Contains(err.Error(), expectedErr) {
-		t.Fatalf("expected error message to contain %q but was %q", expectedErr, err.Error())
-	}
-}
-
 func TestFormatStatsSimpleStats(t *testing.T) {
-	timestamps, data, err := FormatStats(
-		SimpleRawStats{
-			axes: []string{"a", "b"},
-			data: map[string][]float64{
-				"a": []float64{0, 1, 2},
-				"b": []float64{3, 4, 5},
-			},
-			timestamps: []int64{10, 25, 30},
-		},
+	granularity := 5 * time.Second
+	data, timestamps := FormatStats(
 		StatsMeta{
 			Dataset:     "profiles",
-			Start:       10,
-			End:         30,
-			Granularity: 5,
+			Start:       UnixTime(time.Unix(10, 0)),
+			End:         UnixTime(time.Unix(30, 0)),
+			Granularity: granularity,
 		},
+		map[int64]map[string]interface{}{
+			10: map[string]interface{}{
+				"a": 0,
+				"b": 3,
+			},
+			25: map[string]interface{}{
+				"a": 1,
+				"b": 4,
+			},
+			30: map[string]interface{}{
+				"a": 2,
+				"b": 5,
+			},
+		},
+		[]string{"a", "b"},
 	)
 
-	if err != nil {
-		t.Fatalf("expected error to be nil but was %q", err.Error())
+	expectedTs := make([]time.Time, 0, 5)
+	actualTs := make([]time.Time, 0, 5)
+	for i := 0; i < 5; i += 1 {
+		expectedTs = append(expectedTs, time.Unix(10, 0).Add(time.Duration(i)*granularity))
+		actualTs = append(actualTs, time.Time(timestamps[i]))
+	}
+	if diff := testutil.Diff(actualTs, expectedTs); diff != "" {
+		t.Fatalf(`expected timestamps "%v" but was "%v"`, expectedTs, actualTs)
 	}
 
-	expectedTs := StatsTimestamps{10, 15, 20, 25, 30}
-	if diff := testutil.Diff(timestamps, expectedTs); diff != "" {
-		t.Fatalf(`expected timestamps "%v" but was "%v"`, timestamps, expectedTs)
-	}
-
-	nums := []float64{0, 1, 2, 3, 4, 5}
+	nums := []interface{}{0, 1, 2, 3, 4, 5}
 	expectedData := []StatsData{
 		StatsData{
 			Axis:   "a",
-			Values: []*float64{&nums[0], nil, nil, &nums[1], &nums[2]},
+			Values: []*interface{}{&nums[0], nil, nil, &nums[1], &nums[2]},
 		},
 		StatsData{
 			Axis:   "b",
-			Values: []*float64{&nums[3], nil, nil, &nums[4], &nums[5]},
+			Values: []*interface{}{&nums[3], nil, nil, &nums[4], &nums[5]},
 		},
 	}
 
 	if diff := testutil.Diff(data, expectedData); diff != "" {
-		t.Fatalf(`expected timestamps "%v" but was "%v"`, data, expectedData)
+		t.Fatalf(`expected data "%v" but was "%v"`, expectedData, data)
 	}
 }

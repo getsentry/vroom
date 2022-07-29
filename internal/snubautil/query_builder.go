@@ -176,6 +176,7 @@ func (q *QueryBuilder) body(s *sentry.Span) (io.Reader, error) {
 		s.Data = make(map[string]interface{})
 	}
 	s.Data["query"] = query
+	fmt.Printf("query: %s\n", query)
 	spb := body{
 		Query:      query,
 		Turbo:      q.client.turbo,
