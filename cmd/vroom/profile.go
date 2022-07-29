@@ -11,6 +11,7 @@ import (
 	"github.com/getsentry/vroom/internal/nodetree"
 	"github.com/getsentry/vroom/internal/snubautil"
 	"github.com/getsentry/vroom/internal/storageutil"
+	"github.com/rs/zerolog/log"
 )
 
 type PostProfileResponse struct {
@@ -37,6 +38,7 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 	err = json.Unmarshal(body, &profile)
 	s.Finish()
 	if err != nil {
+		log.Err(err).Str("profile", string(body)).Msg("profile can't be unmarshaled")
 		hub.CaptureException(err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
