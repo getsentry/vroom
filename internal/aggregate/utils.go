@@ -310,10 +310,8 @@ type PythonProfile struct {
 func (f RustFrame) IsMain() bool {
 	if f.Status != "symbolicated" {
 		return false
-	} else if f.Function == "main" {
-		return true
 	}
-	return false
+	return strings.HasSuffix(f.Function, "::main")
 }
 
 // MainThread returns what we believe is the main thread ID in the profile

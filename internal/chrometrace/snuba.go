@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"sort"
 	"strconv"
-	"strings"
 
 	"github.com/getsentry/vroom/internal/aggregate"
 	"github.com/getsentry/vroom/internal/android"
@@ -422,11 +421,16 @@ func rustSpeedscopeTraceFromProfile(profile *aggregate.RustProfile) (output, err
 
 		sampProfile.EndValue = sample.RelativeTimestampNS
 		threadIDToPreviousTimestampNS[sample.ThreadID] = sample.RelativeTimestampNS
-
 		samp := make([]int, 0, len(sample.Frames))
 		for i := len(sample.Frames) - 1; i >= 0; i-- {
 			fr := sample.Frames[i]
-			frameIndex, ok := addressToFrameIndex[fr.SymAddr]
+			var address string
+			if fr.SymAddr != "" {
+				address = fr.SymAddr
+			} else {
+				address = fr.InstructionAddr
+			}
+			frameIndex, ok := addressToFrameIndex[address]
 			if !ok {
 				frameIndex = len(frames)
 				symbolName := fr.Function
@@ -437,7 +441,7 @@ func rustSpeedscopeTraceFromProfile(profile *aggregate.RustProfile) (output, err
 						mainFunctionFrameIndex = frameIndex
 					}
 				}
-				addressToFrameIndex[fr.SymAddr] = frameIndex
+				addressToFrameIndex[address] = frameIndex
 				frames = append(frames, frame{
 					File:          fr.Filename,
 					Image:         calltree.ImageBaseName(fr.Package),
@@ -461,10 +465,7 @@ func rustSpeedscopeTraceFromProfile(profile *aggregate.RustProfile) (output, err
 				for i, sample := range prof.Samples {
 					for j, frameIndex := range sample {
 						if frameIndex == mainFunctionFrameIndex {
-							// only skip the frames before main if they're not symbolicated
-							if j > 0 && strings.HasPrefix(frames[prof.Samples[i][j-1]].Name, "unknown (") {
-								prof.Samples[i] = prof.Samples[i][j:]
-							}
+							prof.Samples[i] = prof.Samples[i][j:]
 							break
 						}
 					}
