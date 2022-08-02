@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"strconv"
@@ -13,6 +14,7 @@ import (
 	"github.com/getsentry/vroom/internal/snubautil"
 	"github.com/getsentry/vroom/internal/storageutil"
 	"github.com/rs/zerolog/log"
+	"google.golang.org/api/googleapi"
 )
 
 type PostProfileResponse struct {
@@ -57,7 +59,12 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 	s.Finish()
 	if err != nil {
 		hub.CaptureException(err)
-		w.WriteHeader(http.StatusInternalServerError)
+		var e *googleapi.Error
+		if ok := errors.As(err, &e); ok {
+			w.WriteHeader(http.StatusBadGateway)
+		} else {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
 		return
 	}
 
