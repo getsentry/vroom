@@ -57,13 +57,6 @@ var (
 	}
 )
 
-type (
-	VersionBuild struct {
-		Name string
-		Code string
-	}
-)
-
 func setExtrasFromRequest(sqb *snubautil.QueryBuilder, p url.Values) error {
 	if v := p.Get("limit"); v != "" {
 		limit, err := strconv.ParseUint(v, 10, 64)
