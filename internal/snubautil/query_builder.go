@@ -33,11 +33,12 @@ type (
 		ctx    context.Context
 
 		GroupBy         string
-		Limit           int
+		Limit           uint64
 		Offset          uint64
 		OrderBy         string
 		SelectCols      []string
 		WhereConditions []string
+		Granularity     uint64
 	}
 
 	body struct {
@@ -126,6 +127,10 @@ func (q *QueryBuilder) Query() (string, error) {
 		sb.WriteString(fmt.Sprintf(" OFFSET %d", q.Offset))
 	}
 
+	if q.Granularity > 0 {
+		sb.WriteString(fmt.Sprintf(" GRANULARITY %d", q.Granularity))
+	}
+
 	return sb.String(), nil
 }
 
@@ -171,6 +176,7 @@ func (q *QueryBuilder) body(s *sentry.Span) (io.Reader, error) {
 		s.Data = make(map[string]interface{})
 	}
 	s.Data["query"] = query
+	fmt.Printf("query: %s\n", query)
 	spb := body{
 		Query:      query,
 		Turbo:      q.client.turbo,

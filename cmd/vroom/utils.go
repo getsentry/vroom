@@ -57,9 +57,9 @@ var (
 	}
 )
 
-func setLimitAndOffsetFromRequest(sqb *snubautil.QueryBuilder, p url.Values) error {
+func setExtrasFromRequest(sqb *snubautil.QueryBuilder, p url.Values) error {
 	if v := p.Get("limit"); v != "" {
-		limit, err := strconv.Atoi(v)
+		limit, err := strconv.ParseUint(v, 10, 64)
 		if err != nil {
 			log.Err(err).Str("limit", v).Msg("can't parse limit value")
 			return err
@@ -74,6 +74,15 @@ func setLimitAndOffsetFromRequest(sqb *snubautil.QueryBuilder, p url.Values) err
 			return err
 		}
 		sqb.Offset = offset
+	}
+
+	if v := p.Get("granularity"); v != "" {
+		granularity, err := strconv.ParseUint(v, 10, 64)
+		if err != nil {
+			log.Err(err).Str("offset", v).Msg("can't parse granularity value")
+			return err
+		}
+		sqb.Granularity = granularity
 	}
 
 	return nil
@@ -94,7 +103,7 @@ func (e *environment) profilesQueryBuilderFromRequest(ctx context.Context, p url
 		sqb.WhereConditions = append(sqb.WhereConditions, conditions...)
 	}
 
-	err = setLimitAndOffsetFromRequest(&sqb, p)
+	err = setExtrasFromRequest(&sqb, p)
 	if err != nil {
 		return snubautil.QueryBuilder{}, err
 	}
@@ -117,7 +126,7 @@ func (e *environment) functionsQueryBuilderFromRequest(ctx context.Context, p ur
 		sqb.WhereConditions = append(sqb.WhereConditions, conditions...)
 	}
 
-	err = setLimitAndOffsetFromRequest(&sqb, p)
+	err = setExtrasFromRequest(&sqb, p)
 	if err != nil {
 		return snubautil.QueryBuilder{}, err
 	}
