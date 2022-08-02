@@ -80,7 +80,7 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		p = ap
-	case "python", "rust", "node":
+	case "python", "rust", "node", "typescript":
 		w.WriteHeader(http.StatusNoContent)
 		return
 	default:
