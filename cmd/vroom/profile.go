@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"strconv"
 
 	"github.com/getsentry/sentry-go"
 	"github.com/getsentry/vroom/internal/aggregate"
@@ -43,6 +44,12 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+
+	hub.Scope().SetTags(map[string]string{
+		"organization_id": strconv.FormatUint(profile.OrganizationID, 10),
+		"project_id":      strconv.FormatUint(profile.ProjectID, 10),
+		"profile_id":      profile.ProfileID,
+	})
 
 	s = sentry.StartSpan(ctx, "gcs.write")
 	s.Description = "Write profile to GCS"
