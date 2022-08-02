@@ -1,10 +1,13 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 
+	"cloud.google.com/go/storage"
 	"github.com/getsentry/sentry-go"
 	"github.com/getsentry/vroom/internal/aggregate"
 	"github.com/getsentry/vroom/internal/android"
@@ -109,4 +112,39 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	_, _ = w.Write(b)
+}
+
+func getRawProfile(ctx context.Context,
+	organizationID uint64,
+	projectID uint64,
+	profileID string,
+	profilesBucket *storage.BucketHandle,
+	snuba snubautil.Client) (snubautil.Profile, error) {
+
+	hub := sentry.GetHubFromContext(ctx)
+	hub.Scope().SetTag("profile_id", profileID)
+
+	var profile snubautil.Profile
+	s := sentry.StartSpan(ctx, "gcs.read")
+	s.Description = "Read profile from GCS"
+	err := storageutil.UnmarshalCompressed(ctx, profilesBucket, snubautil.ProfileStoragePath(organizationID, projectID, profileID), &profile)
+	s.Finish()
+	if err != nil {
+		if err != storage.ErrObjectNotExist {
+			hub.CaptureException(err)
+		}
+		sqb, err := snuba.NewQuery(ctx, "profiles")
+		if err != nil {
+			hub.CaptureException(err)
+			return snubautil.Profile{}, err
+		}
+		profile, err = snubautil.GetProfile(organizationID, projectID, profileID, sqb)
+		if err != nil {
+			if !errors.Is(err, snubautil.ErrProfileNotFound) {
+				hub.CaptureException(err)
+			}
+			return snubautil.Profile{}, err
+		}
+	}
+	return profile, nil
 }

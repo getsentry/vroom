@@ -26,7 +26,6 @@ import (
 	"github.com/getsentry/vroom/internal/httputil"
 	"github.com/getsentry/vroom/internal/logutil"
 	"github.com/getsentry/vroom/internal/snubautil"
-	"github.com/getsentry/vroom/internal/storageutil"
 )
 
 type environment struct {
@@ -85,6 +84,7 @@ func (env *environment) newRouter() (*httprouter.Router, error) {
 		{http.MethodGet, "/organizations/:organization_id/projects/:project_id/functions_call_trees", env.getFunctionsCallTrees},
 		{http.MethodGet, "/organizations/:organization_id/projects/:project_id/functions_versions", env.getFunctionsVersions},
 		{http.MethodGet, "/organizations/:organization_id/projects/:project_id/profiles/:profile_id", env.getProfile},
+		{http.MethodGet, "/organizations/:organization_id/projects/:project_id/raw_profiles/:profile_id", env.getRawProfile},
 		{http.MethodGet, "/organizations/:organization_id/projects/:project_id/profiles/:profile_id/call_tree", env.getProfileCallTree},
 		{http.MethodGet, "/organizations/:organization_id/projects/:project_id/transactions/:transaction_id", env.getProfileIDByTransactionID},
 		{http.MethodGet, "/organizations/:organization_id/stats", env.getProfilesStats},
@@ -193,38 +193,19 @@ func (env *environment) getProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	hub.Scope().SetTag("profile_id", profileID)
-
-	var profile snubautil.Profile
-	s := sentry.StartSpan(ctx, "gcs.read")
-	s.Description = "Read profile from GCS"
-	err = storageutil.UnmarshalCompressed(ctx, env.profilesBucket, snubautil.ProfileStoragePath(organizationID, projectID, profileID), &profile)
-	s.Finish()
+	profile, err := getRawProfile(ctx, organizationID, projectID, profileID, env.profilesBucket, env.snuba)
 	if err != nil {
-		if err != storage.ErrObjectNotExist {
-			hub.CaptureException(err)
-		}
-		sqb, err := env.snuba.NewQuery(ctx, "profiles")
-		if err != nil {
-			hub.CaptureException(err)
+		if errors.Is(err, snubautil.ErrProfileNotFound) {
+			w.WriteHeader(http.StatusNotFound)
+		} else {
 			w.WriteHeader(http.StatusInternalServerError)
-			return
 		}
-		profile, err = snubautil.GetProfile(organizationID, projectID, profileID, sqb)
-		if err != nil {
-			if errors.Is(err, snubautil.ErrProfileNotFound) {
-				w.WriteHeader(http.StatusNotFound)
-			} else {
-				hub.CaptureException(err)
-				w.WriteHeader(http.StatusInternalServerError)
-			}
-			return
-		}
+		return
 	}
 
 	hub.Scope().SetTag("platform", profile.Platform)
 
-	s = sentry.StartSpan(ctx, "json.marshal")
+	s := sentry.StartSpan(ctx, "json.marshal")
 	defer s.Finish()
 
 	var b []byte
@@ -234,6 +215,63 @@ func (env *environment) getProfile(w http.ResponseWriter, r *http.Request) {
 	default:
 		b, err = chrometrace.SpeedscopeFromSnuba(profile)
 	}
+	if err != nil {
+		hub.CaptureException(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Cache-Control", "public, max-age=3600, immutable")
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write(b)
+}
+
+func (env *environment) getRawProfile(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	hub := sentry.GetHubFromContext(ctx)
+	ps := httprouter.ParamsFromContext(ctx)
+	rawOrganizationID := ps.ByName("organization_id")
+	organizationID, err := strconv.ParseUint(rawOrganizationID, 10, 64)
+	if err != nil {
+		hub.CaptureException(err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	hub.Scope().SetTag("organization_id", rawOrganizationID)
+
+	rawProjectID := ps.ByName("project_id")
+	projectID, err := strconv.ParseUint(rawProjectID, 10, 64)
+	if err != nil {
+		sentry.CaptureException(err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	hub.Scope().SetTag("project_id", rawProjectID)
+
+	profileID := ps.ByName("profile_id")
+	_, err = uuid.Parse(profileID)
+	if err != nil {
+		hub.CaptureException(err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	profile, err := getRawProfile(ctx, organizationID, projectID, profileID, env.profilesBucket, env.snuba)
+	if err != nil {
+		if errors.Is(err, snubautil.ErrProfileNotFound) {
+			w.WriteHeader(http.StatusNotFound)
+		} else {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+		return
+	}
+
+	s := sentry.StartSpan(ctx, "json.marshal")
+	defer s.Finish()
+	b, err := json.Marshal(profile)
 	if err != nil {
 		hub.CaptureException(err)
 		w.WriteHeader(http.StatusInternalServerError)
