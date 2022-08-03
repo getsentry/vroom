@@ -121,28 +121,19 @@ func getRawProfile(ctx context.Context,
 	profilesBucket *storage.BucketHandle,
 	snuba snubautil.Client) (snubautil.Profile, error) {
 
-	hub := sentry.GetHubFromContext(ctx)
-	hub.Scope().SetTag("profile_id", profileID)
-
 	var profile snubautil.Profile
-	s := sentry.StartSpan(ctx, "gcs.read")
-	s.Description = "Read profile from GCS"
+
 	err := storageutil.UnmarshalCompressed(ctx, profilesBucket, snubautil.ProfileStoragePath(organizationID, projectID, profileID), &profile)
-	s.Finish()
 	if err != nil {
-		if err != storage.ErrObjectNotExist {
-			hub.CaptureException(err)
+		if !errors.Is(err, storage.ErrObjectNotExist) {
+			return snubautil.Profile{}, err
 		}
 		sqb, err := snuba.NewQuery(ctx, "profiles")
 		if err != nil {
-			hub.CaptureException(err)
 			return snubautil.Profile{}, err
 		}
 		profile, err = snubautil.GetProfile(organizationID, projectID, profileID, sqb)
 		if err != nil {
-			if !errors.Is(err, snubautil.ErrProfileNotFound) {
-				hub.CaptureException(err)
-			}
 			return snubautil.Profile{}, err
 		}
 	}

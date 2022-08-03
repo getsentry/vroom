@@ -193,7 +193,12 @@ func (env *environment) getProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	hub.Scope().SetTag("profile_id", profileID)
+	s := sentry.StartSpan(ctx, "profile.read")
+	s.Description = "Read profile from GCS or Snuba"
+
 	profile, err := getRawProfile(ctx, organizationID, projectID, profileID, env.profilesBucket, env.snuba)
+	s.Finish()
 	if err != nil {
 		if errors.Is(err, snubautil.ErrProfileNotFound) {
 			w.WriteHeader(http.StatusNotFound)
@@ -205,7 +210,7 @@ func (env *environment) getProfile(w http.ResponseWriter, r *http.Request) {
 
 	hub.Scope().SetTag("platform", profile.Platform)
 
-	s := sentry.StartSpan(ctx, "json.marshal")
+	s = sentry.StartSpan(ctx, "json.marshal")
 	defer s.Finish()
 
 	var b []byte
