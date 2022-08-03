@@ -150,5 +150,6 @@ func getRawProfile(ctx context.Context,
 			return snubautil.Profile{}, err
 		}
 	}
+
 	return profile, nil
 }
