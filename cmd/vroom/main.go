@@ -287,7 +287,9 @@ func (env *environment) getRawProfile(w http.ResponseWriter, r *http.Request) {
 	var parsedProfile interface{}
 	err = json.Unmarshal([]byte(profile.Profile), &parsedProfile)
 	if err != nil {
-		panic(err)
+		hub.CaptureException(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 
 	// set the original profile raw string to empty
