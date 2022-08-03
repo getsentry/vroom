@@ -398,17 +398,15 @@ func rustSpeedscopeTraceFromProfile(profile *aggregate.RustProfile) (output, err
 		return profile.Samples[i].RelativeTimestampNS <= profile.Samples[j].RelativeTimestampNS
 	})
 	for _, sample := range profile.Samples {
-		threadID := strconv.FormatUint(sample.ThreadID, 10)
 		sampProfile, ok := threadIDToProfile[sample.ThreadID]
 		if !ok {
 			threadName := sample.ThreadName
-			if threadName == "" {
-				if sample.ThreadID == mainThreadID {
-					threadName = "main"
-				} else {
-					threadName = threadID
-				}
-
+			// the rust profiler automatically use thread_id as a thread_name
+			// when the thread_name is not available.
+			// So if thread_name == mainThreadID we now it's the main thread
+			// and we can replace it with `main`
+			if threadName == strconv.FormatUint(mainThreadID, 10) {
+				threadName = "main"
 			}
 			sampProfile = &sampledProfile{
 				Name:         threadName,
