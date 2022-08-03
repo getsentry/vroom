@@ -403,7 +403,12 @@ func rustSpeedscopeTraceFromProfile(profile *aggregate.RustProfile) (output, err
 		if !ok {
 			threadName := sample.ThreadName
 			if threadName == "" {
-				threadName = threadID
+				if sample.ThreadID == mainThreadID {
+					threadName = "main"
+				} else {
+					threadName = threadID
+				}
+
 			}
 			sampProfile = &sampledProfile{
 				Name:         threadName,
