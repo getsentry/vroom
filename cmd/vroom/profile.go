@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"strconv"
@@ -12,6 +13,7 @@ import (
 	"github.com/getsentry/sentry-go"
 	"github.com/getsentry/vroom/internal/aggregate"
 	"github.com/getsentry/vroom/internal/android"
+	"github.com/getsentry/vroom/internal/errorutil"
 	"github.com/getsentry/vroom/internal/nodetree"
 	"github.com/getsentry/vroom/internal/snubautil"
 	"github.com/getsentry/vroom/internal/storageutil"
@@ -127,6 +129,35 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 	_, _ = w.Write(b)
 }
 
+func getParsedProfile(profile snubautil.Profile) (interface{}, error) {
+	var parsedProfile interface{}
+	switch profile.Platform {
+	case "android":
+		err := json.Unmarshal([]byte(profile.Profile), &parsedProfile)
+		if err != nil {
+			return nil, err
+		}
+	case "cocoa":
+		err := json.Unmarshal([]byte(profile.Profile), &parsedProfile)
+		if err != nil {
+			return nil, err
+		}
+	case "rust":
+		err := json.Unmarshal([]byte(profile.Profile), &parsedProfile)
+		if err != nil {
+			return nil, err
+		}
+	case "python":
+		err := json.Unmarshal([]byte(profile.Profile), &parsedProfile)
+		if err != nil {
+			return nil, err
+		}
+	default:
+		return nil, fmt.Errorf("chrometrace: %w: %s is not a supported platform", errorutil.ErrDataIntegrity, profile.Platform)
+	}
+	return parsedProfile, nil
+}
+
 func getRawProfile(ctx context.Context,
 	organizationID uint64,
 	projectID uint64,
@@ -150,5 +181,6 @@ func getRawProfile(ctx context.Context,
 			return snubautil.Profile{}, err
 		}
 	}
+
 	return profile, nil
 }

@@ -232,6 +232,11 @@ func (env *environment) getProfile(w http.ResponseWriter, r *http.Request) {
 	_, _ = w.Write(b)
 }
 
+type RawProfile struct {
+	snubautil.Profile
+	ParsedProfile interface{} `json:"profile,omitempty"`
+}
+
 func (env *environment) getRawProfile(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	hub := sentry.GetHubFromContext(ctx)
@@ -279,9 +284,21 @@ func (env *environment) getRawProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	parsedProfile, err := getParsedProfile(profile)
+	if err != nil {
+		hub.CaptureException(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	// set the original profile raw string to empty
+	// so that this field is not serialized
+	profile.Profile = ""
+
+	rawProfile := RawProfile{profile, parsedProfile}
+
 	s = sentry.StartSpan(ctx, "json.marshal")
 	defer s.Finish()
-	b, err := json.Marshal(profile)
+	b, err := json.Marshal(rawProfile)
 	if err != nil {
 		hub.CaptureException(err)
 		w.WriteHeader(http.StatusInternalServerError)
