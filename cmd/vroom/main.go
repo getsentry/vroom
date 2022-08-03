@@ -284,12 +284,12 @@ func (env *environment) getRawProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	parsedProfile, err := getParsedProfile(profile)
+	var parsedProfile interface{}
+	err = json.Unmarshal([]byte(profile.Profile), &parsedProfile)
 	if err != nil {
-		hub.CaptureException(err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
+		panic(err)
 	}
+
 	// set the original profile raw string to empty
 	// so that this field is not serialized
 	profile.Profile = ""
