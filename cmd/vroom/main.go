@@ -279,7 +279,7 @@ func (env *environment) getRawProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s := sentry.StartSpan(ctx, "json.marshal")
+	s = sentry.StartSpan(ctx, "json.marshal")
 	defer s.Finish()
 	b, err := json.Marshal(profile)
 	if err != nil {
