@@ -2,11 +2,13 @@ package snubautil
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/getsentry/vroom/internal/testutil"
+	"github.com/google/go-cmp/cmp"
 )
 
 func TestNewStatsMeta(t *testing.T) {
@@ -122,6 +124,20 @@ func (s SimpleRawStats) ValueAt(axis string, idx int) (float64, error) {
 	return 0, fmt.Errorf("no value for axis: %s", axis)
 }
 
+type StatsDatas []StatsData
+
+func (x StatsDatas) Len() int {
+	return len(x)
+}
+
+func (x StatsDatas) Less(i, j int) bool {
+	return x[i].Axis < x[j].Axis
+}
+
+func (x StatsDatas) Swap(i, j int) {
+	x[i], x[j] = x[j], x[i]
+}
+
 func TestFormatStatsSimpleStats(t *testing.T) {
 	granularity := 5 * time.Second
 	data, timestamps := FormatStats(
@@ -170,7 +186,12 @@ func TestFormatStatsSimpleStats(t *testing.T) {
 		},
 	}
 
-	if diff := testutil.Diff(data, expectedData); diff != "" {
+	trans := cmp.Transformer("Sort", func(in []StatsData) []StatsData {
+		sort.Sort(StatsDatas(in))
+		return in
+	})
+
+	if diff := testutil.Diff(data, expectedData, trans); diff != "" {
 		t.Fatalf(`expected data "%v" but was "%v"`, expectedData, data)
 	}
 }
