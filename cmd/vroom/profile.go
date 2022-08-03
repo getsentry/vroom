@@ -1,12 +1,14 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"io"
 	"net/http"
 	"strconv"
 
+	"cloud.google.com/go/storage"
 	"github.com/getsentry/sentry-go"
 	"github.com/getsentry/vroom/internal/aggregate"
 	"github.com/getsentry/vroom/internal/android"
@@ -123,4 +125,30 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	_, _ = w.Write(b)
+}
+
+func getRawProfile(ctx context.Context,
+	organizationID uint64,
+	projectID uint64,
+	profileID string,
+	profilesBucket *storage.BucketHandle,
+	snuba snubautil.Client) (snubautil.Profile, error) {
+
+	var profile snubautil.Profile
+
+	err := storageutil.UnmarshalCompressed(ctx, profilesBucket, snubautil.ProfileStoragePath(organizationID, projectID, profileID), &profile)
+	if err != nil {
+		if !errors.Is(err, storage.ErrObjectNotExist) {
+			return snubautil.Profile{}, err
+		}
+		sqb, err := snuba.NewQuery(ctx, "profiles")
+		if err != nil {
+			return snubautil.Profile{}, err
+		}
+		profile, err = snubautil.GetProfile(organizationID, projectID, profileID, sqb)
+		if err != nil {
+			return snubautil.Profile{}, err
+		}
+	}
+	return profile, nil
 }
