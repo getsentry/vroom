@@ -175,6 +175,7 @@ func (q *QueryBuilder) body(s *sentry.Span) (io.Reader, error) {
 	if s.Data == nil {
 		s.Data = make(map[string]interface{})
 	}
+	fmt.Println(query)
 	s.Data["query"] = query
 	sqb := body{
 		Query:      query,
