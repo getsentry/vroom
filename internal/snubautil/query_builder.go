@@ -176,15 +176,14 @@ func (q *QueryBuilder) body(s *sentry.Span) (io.Reader, error) {
 		s.Data = make(map[string]interface{})
 	}
 	s.Data["query"] = query
-	fmt.Printf("query: %s\n", query)
-	spb := body{
+	sqb := body{
 		Query:      query,
 		Turbo:      q.client.turbo,
 		Consistent: q.client.consistent,
 		Debug:      q.client.debug,
 		DryRun:     q.client.dryRun,
 	}
-	body, err := json.Marshal(spb)
+	body, err := json.Marshal(sqb)
 	if err != nil {
 		return nil, err
 	}
