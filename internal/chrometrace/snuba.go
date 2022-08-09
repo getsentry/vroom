@@ -449,7 +449,7 @@ func rustSpeedscopeTraceFromProfile(profile *aggregate.RustProfile) (output, err
 				frames = append(frames, frame{
 					File:          fr.Filename,
 					Image:         calltree.ImageBaseName(fr.Package),
-					Inline:        fr.SymAddr == "",
+					Inline:        fr.Status == "symbolicated" && fr.SymAddr == "",
 					IsApplication: aggregate.IsRustApplicationImage(fr.Package),
 					Line:          fr.LineNo,
 					Name:          symbolName,
