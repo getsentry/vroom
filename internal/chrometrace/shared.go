@@ -5,6 +5,7 @@ type (
 		Col           int    `json:"col,omitempty"`
 		File          string `json:"file,omitempty"`
 		Image         string `json:"image,omitempty"`
+		Inline        bool   `json:"inline,omitempty"`
 		IsApplication bool   `json:"is_application"`
 		Line          uint32 `json:"line,omitempty"`
 		Name          string `json:"name"`

@@ -196,11 +196,12 @@ func androidSpeedscopeTraceFromProfile(profile *android.AndroidProfile) (output,
 			for _, m := range method.InlineFrames {
 				methodIDToFrameIndex[method.ID] = append(methodIDToFrameIndex[method.ID], len(frames))
 				frames = append(frames, frame{
-					Name:          m.Name,
 					File:          m.SourceFile,
-					Line:          m.SourceLine,
-					IsApplication: !aggregate.IsAndroidSystemPackage(m.ClassName),
 					Image:         m.ClassName,
+					Inline:        true,
+					IsApplication: !aggregate.IsAndroidSystemPackage(m.ClassName),
+					Line:          m.SourceLine,
+					Name:          m.Name,
 				})
 
 			}
@@ -448,6 +449,7 @@ func rustSpeedscopeTraceFromProfile(profile *aggregate.RustProfile) (output, err
 				frames = append(frames, frame{
 					File:          fr.Filename,
 					Image:         calltree.ImageBaseName(fr.Package),
+					Inline:        fr.Status == "symbolicated" && fr.SymAddr == "",
 					IsApplication: aggregate.IsRustApplicationImage(fr.Package),
 					Line:          fr.LineNo,
 					Name:          symbolName,
