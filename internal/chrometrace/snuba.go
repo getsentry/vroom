@@ -388,6 +388,9 @@ func pythonSpeedscopeTraceFromProfile(profile *aggregate.PythonProfile) (output,
 
 	allProfiles := make([]interface{}, 0)
 	for threadID, prof := range threadIDToProfile {
+		// There is no thread metadata being sent by the python profiler at the moment,
+		// so we use this heuristic to find a main thread. not perfect but good enough
+		// until we start sending the metadata needed.
 		if threadID < mainThreadID {
 			mainThreadID = threadID
 		}
