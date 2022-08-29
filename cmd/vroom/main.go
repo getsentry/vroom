@@ -207,7 +207,7 @@ func (env *environment) getProfile(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-	profile.DebugMeta = ""
+	profile.DebugMeta = nil
 
 	hub.Scope().SetTag("platform", profile.Platform)
 
