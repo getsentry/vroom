@@ -341,45 +341,67 @@ func androidSpeedscopeTraceFromProfile(profile *android.AndroidProfile) (output,
 }
 
 func pythonSpeedscopeTraceFromProfile(profile *aggregate.PythonProfile) (output, error) {
-	if len(profile.Samples) == 0 {
-		return output{}, nil
+	threadIDToProfile := make(map[uint64]*sampledProfile)
+	threadIDToPreviousTimestampNS := make(map[uint64]uint64)
+
+	sort.Slice(profile.Samples, func(i, j int) bool {
+		return profile.Samples[i].RelativeTimestampNS <= profile.Samples[j].RelativeTimestampNS
+	})
+	for _, sample := range profile.Samples {
+		sampProfile, ok := threadIDToProfile[sample.ThreadID]
+		if !ok {
+			sampProfile = &sampledProfile{
+				Name:         strconv.FormatUint(sample.ThreadID, 10),
+				Queues:       nil,
+				StartValue:   sample.RelativeTimestampNS,
+				ThreadID:     sample.ThreadID,
+				IsMainThread: false,
+				Type:         profileTypeSampled,
+				Unit:         valueUnitNanoseconds,
+			}
+			threadIDToProfile[sample.ThreadID] = sampProfile
+		} else {
+			sampProfile.Weights = append(sampProfile.Weights, sample.RelativeTimestampNS-threadIDToPreviousTimestampNS[sample.ThreadID])
+		}
+
+		samp := make([]int, 0, len(sample.Frames))
+		for i := len(sample.Frames) - 1; i >= 0; i-- {
+			samp = append(samp, sample.Frames[i])
+		}
+
+		sampProfile.Samples = append(sampProfile.Samples, samp)
+		sampProfile.EndValue = sample.RelativeTimestampNS
+		threadIDToPreviousTimestampNS[sample.ThreadID] = sample.RelativeTimestampNS
 	}
 
-	samples := make([][]int, len(profile.Samples))
-	weights := make([]uint64, len(profile.Samples))
-
-	previousTimestamp := uint64(0)
-	for i, pythonSample := range profile.Samples {
-		samples[i] = pythonSample.Frames
-		weights[i] = pythonSample.RelativeTimestampNS - previousTimestamp
-		previousTimestamp = pythonSample.RelativeTimestampNS
-	}
-
-	frames := make([]frame, len(profile.Frames))
-	for i, pythonFrame := range profile.Frames {
-		frames[i] = frame{
+	frames := make([]frame, 0, len(profile.Frames))
+	for _, pythonFrame := range profile.Frames {
+		frames = append(frames, frame{
 			File: pythonFrame.File,
 			Name: pythonFrame.Name,
 			Line: pythonFrame.Line,
-			// TODO: Add application frame field
-		}
+		})
 	}
 
-	outputProfile := sampledProfile{
-		EndValue:   profile.Samples[len(profile.Samples)-1].RelativeTimestampNS,
-		Name:       "main", // TODO: Get thread name from the client
-		Samples:    samples,
-		StartValue: profile.Samples[0].RelativeTimestampNS,
-		ThreadID:   profile.Samples[0].ThreadID,
-		Type:       profileTypeSampled,
-		Unit:       valueUnitNanoseconds,
-		Weights:    weights,
+	mainThreadProfileIndex := 0
+	var mainThreadID uint64 = 0
+
+	allProfiles := make([]interface{}, 0)
+	for threadID, prof := range threadIDToProfile {
+		// There is no thread metadata being sent by the python profiler at the moment,
+		// so we use this heuristic to find a main thread. not perfect but good enough
+		// until we start sending the metadata needed.
+		if threadID < mainThreadID {
+			mainThreadID = threadID
+		}
+		prof.Weights = append(prof.Weights, 0)
+		allProfiles = append(allProfiles, prof)
 	}
 
 	return output{
-		ActiveProfileIndex: 0,
-		Profiles:           []interface{}{outputProfile},
-		Shared:             sharedData{frames},
+		ActiveProfileIndex: mainThreadProfileIndex,
+		Profiles:           allProfiles,
+		Shared:             sharedData{Frames: frames},
 	}, nil
 }
 
