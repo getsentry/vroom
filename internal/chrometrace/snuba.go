@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"sort"
 	"strconv"
+	"time"
 
 	"github.com/getsentry/vroom/internal/aggregate"
 	"github.com/getsentry/vroom/internal/android"
@@ -13,17 +14,56 @@ import (
 	"github.com/getsentry/vroom/internal/snubautil"
 )
 
-type output struct {
-	ActiveProfileIndex int           `json:"activeProfileIndex"`
-	AndroidClock       android.Clock `json:"androidClock,omitempty"`
-	DurationNS         uint64        `json:"durationNS"`
-	Platform           string        `json:"platform"`
-	ProfileID          string        `json:"profileID"`
-	Profiles           []interface{} `json:"profiles"`
-	ProjectID          uint64        `json:"projectID"`
-	Shared             sharedData    `json:"shared"`
-	TransactionName    string        `json:"transactionName"`
-	Version            string        `json:"version"`
+type (
+	output struct {
+		ActiveProfileIndex int             `json:"activeProfileIndex"`
+		AndroidClock       android.Clock   `json:"androidClock,omitempty"`
+		DurationNS         uint64          `json:"durationNS"`
+		Metadata           profileMetadata `json:"metadata"`
+		Platform           string          `json:"platform"`
+		ProfileID          string          `json:"profileID"`
+		Profiles           []interface{}   `json:"profiles"`
+		ProjectID          uint64          `json:"projectID"`
+		Shared             sharedData      `json:"shared"`
+		TransactionName    string          `json:"transactionName"`
+		Version            string          `json:"version"`
+	}
+
+	profileMetadata struct {
+		profileView
+
+		Version string `json:"version"`
+	}
+
+	profileView struct {
+		AndroidAPILevel      uint32      `json:"androidAPILevel,omitempty"`
+		DebugMeta            interface{} `json:"-"`
+		DeviceClassification string      `json:"deviceClassification"`
+		DeviceLocale         string      `json:"deviceLocale"`
+		DeviceManufacturer   string      `json:"deviceManufacturer"`
+		DeviceModel          string      `json:"deviceModel"`
+		DeviceOsBuildNumber  string      `json:"deviceOSBuild_number,omitempty"`
+		DeviceOsName         string      `json:"deviceOSName"`
+		DeviceOsVersion      string      `json:"deviceOSVersion"`
+		DurationNs           uint64      `json:"durationNS"`
+		Environment          string      `json:"environment,omitempty"`
+		OrganizationID       uint64      `json:"organizationID"`
+		Platform             string      `json:"platform"`
+		Profile              string      `json:"-"`
+		ProfileID            string      `json:"profileID"`
+		ProjectID            uint64      `json:"projectID"`
+		Received             time.Time   `json:"received"`
+		TraceID              string      `json:"traceID"`
+		TransactionID        string      `json:"transactionID"`
+		TransactionName      string      `json:"transactionName"`
+		VersionCode          string      `json:"-"`
+		VersionName          string      `json:"-"`
+	}
+)
+
+func (o *output) SetVersion() {
+	version := snubautil.FormatVersion(o.Metadata.VersionName, o.Metadata.VersionCode)
+	o.Version, o.Metadata.Version = version, version
 }
 
 // SpeedscopeFromSnuba generates a profile using the Speedscope format from data in Snuba
@@ -74,11 +114,14 @@ func SpeedscopeFromSnuba(profile snubautil.Profile) ([]byte, error) {
 		return nil, fmt.Errorf("chrometrace: %w: %s is not a supported platform", errorutil.ErrDataIntegrity, profile.Platform)
 	}
 	p.DurationNS = profile.DurationNs
+	p.Metadata = profileMetadata{profileView: profileView(profile)}
 	p.Platform = profile.Platform
 	p.ProfileID = profile.ProfileID
 	p.ProjectID = profile.ProjectID
 	p.TransactionName = profile.TransactionName
-	p.Version = profile.Version()
+
+	p.SetVersion()
+
 	return json.Marshal(p)
 }
 

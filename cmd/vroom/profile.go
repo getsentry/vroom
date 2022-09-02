@@ -12,9 +12,12 @@ import (
 	"github.com/getsentry/sentry-go"
 	"github.com/getsentry/vroom/internal/aggregate"
 	"github.com/getsentry/vroom/internal/android"
+	"github.com/getsentry/vroom/internal/chrometrace"
 	"github.com/getsentry/vroom/internal/nodetree"
 	"github.com/getsentry/vroom/internal/snubautil"
 	"github.com/getsentry/vroom/internal/storageutil"
+	"github.com/google/uuid"
+	"github.com/julienschmidt/httprouter"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/api/googleapi"
 )
@@ -152,4 +155,157 @@ func getRawProfile(ctx context.Context,
 	}
 
 	return profile, nil
+}
+
+type RawProfile struct {
+	snubautil.Profile
+	ParsedProfile interface{} `json:"profile,omitempty"`
+}
+
+func (env *environment) getRawProfile(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	hub := sentry.GetHubFromContext(ctx)
+	ps := httprouter.ParamsFromContext(ctx)
+	rawOrganizationID := ps.ByName("organization_id")
+	organizationID, err := strconv.ParseUint(rawOrganizationID, 10, 64)
+	if err != nil {
+		hub.CaptureException(err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	hub.Scope().SetTag("organization_id", rawOrganizationID)
+
+	rawProjectID := ps.ByName("project_id")
+	projectID, err := strconv.ParseUint(rawProjectID, 10, 64)
+	if err != nil {
+		sentry.CaptureException(err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	hub.Scope().SetTag("project_id", rawProjectID)
+
+	profileID := ps.ByName("profile_id")
+	_, err = uuid.Parse(profileID)
+	if err != nil {
+		hub.CaptureException(err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	hub.Scope().SetTag("profile_id", profileID)
+	s := sentry.StartSpan(ctx, "profile.read")
+	s.Description = "Read profile from GCS or Snuba"
+
+	profile, err := getRawProfile(ctx, organizationID, projectID, profileID, env.profilesBucket, env.snuba)
+	s.Finish()
+	if err != nil {
+		if errors.Is(err, snubautil.ErrProfileNotFound) {
+			w.WriteHeader(http.StatusNotFound)
+		} else {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+		return
+	}
+
+	var parsedProfile interface{}
+	err = json.Unmarshal([]byte(profile.Profile), &parsedProfile)
+	if err != nil {
+		hub.CaptureException(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	// set the original profile raw string to empty
+	// so that this field is not serialized
+	profile.Profile = ""
+
+	rawProfile := RawProfile{profile, parsedProfile}
+
+	s = sentry.StartSpan(ctx, "json.marshal")
+	defer s.Finish()
+	b, err := json.Marshal(rawProfile)
+	if err != nil {
+		hub.CaptureException(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Cache-Control", "public, max-age=3600, immutable")
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write(b)
+}
+
+func (env *environment) getProfile(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	hub := sentry.GetHubFromContext(ctx)
+	ps := httprouter.ParamsFromContext(ctx)
+	rawOrganizationID := ps.ByName("organization_id")
+	organizationID, err := strconv.ParseUint(rawOrganizationID, 10, 64)
+	if err != nil {
+		hub.CaptureException(err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	hub.Scope().SetTag("organization_id", rawOrganizationID)
+
+	rawProjectID := ps.ByName("project_id")
+	projectID, err := strconv.ParseUint(rawProjectID, 10, 64)
+	if err != nil {
+		sentry.CaptureException(err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	hub.Scope().SetTag("project_id", rawProjectID)
+
+	profileID := ps.ByName("profile_id")
+	_, err = uuid.Parse(profileID)
+	if err != nil {
+		hub.CaptureException(err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	hub.Scope().SetTag("profile_id", profileID)
+	s := sentry.StartSpan(ctx, "profile.read")
+	s.Description = "Read profile from GCS or Snuba"
+
+	profile, err := getRawProfile(ctx, organizationID, projectID, profileID, env.profilesBucket, env.snuba)
+	s.Finish()
+	if err != nil {
+		if errors.Is(err, snubautil.ErrProfileNotFound) {
+			w.WriteHeader(http.StatusNotFound)
+		} else {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+		return
+	}
+	profile.DebugMeta = nil
+
+	hub.Scope().SetTag("platform", profile.Platform)
+
+	s = sentry.StartSpan(ctx, "json.marshal")
+	defer s.Finish()
+
+	var b []byte
+	switch profile.Platform {
+	case "typescript", "javascript":
+		b = []byte(profile.Profile)
+	default:
+		b, err = chrometrace.SpeedscopeFromSnuba(profile)
+	}
+	if err != nil {
+		hub.CaptureException(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Cache-Control", "public, max-age=3600, immutable")
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write(b)
 }

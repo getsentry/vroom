@@ -8,6 +8,7 @@ import (
 
 type Profile struct {
 	AndroidAPILevel      uint32      `json:"android_api_level,omitempty"`
+	DebugMeta            interface{} `json:"debug_meta,omitempty"`
 	DeviceClassification string      `json:"device_classification"`
 	DeviceLocale         string      `json:"device_locale"`
 	DeviceManufacturer   string      `json:"device_manufacturer"`
@@ -19,7 +20,6 @@ type Profile struct {
 	Environment          string      `json:"environment,omitempty"`
 	OrganizationID       uint64      `json:"organization_id"`
 	Platform             string      `json:"platform"`
-	DebugMeta            interface{} `json:"debug_meta,omitempty"`
 	Profile              string      `json:"profile,omitempty"`
 	ProfileID            string      `json:"profile_id"`
 	ProjectID            uint64      `json:"project_id"`
