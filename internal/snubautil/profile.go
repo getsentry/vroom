@@ -8,6 +8,7 @@ import (
 
 type Profile struct {
 	AndroidAPILevel      uint32      `json:"android_api_level,omitempty"`
+	Architecture         string      `json:"architecture,omitempty"`
 	DebugMeta            interface{} `json:"debug_meta,omitempty"`
 	DeviceClassification string      `json:"device_classification"`
 	DeviceLocale         string      `json:"device_locale"`
