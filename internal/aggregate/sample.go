@@ -45,6 +45,13 @@ func (f IosFrame) WriteToHash(h hash.Hash) {
 	}
 }
 
+func (f IosFrame) Address() string {
+	if f.SymAddr != "" {
+		return f.SymAddr
+	}
+	return f.InstructionAddr
+}
+
 type Sample struct {
 	Frames              []IosFrame `json:"frames,omitempty"`
 	Priority            int        `json:"priority,omitempty"`

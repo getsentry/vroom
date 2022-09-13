@@ -181,18 +181,19 @@ func iosSpeedscopeTraceFromProfile(profile *aggregate.IosProfile) (output, error
 		samp := make([]int, 0, len(sample.Frames))
 		for i := len(sample.Frames) - 1; i >= 0; i-- {
 			fr := sample.Frames[i]
-			frameIndex, ok := addressToFrameIndex[fr.InstructionAddr]
+			address := fr.Address()
+			frameIndex, ok := addressToFrameIndex[address]
 			if !ok {
 				frameIndex = len(frames)
 				symbolName := fr.Function
 				if symbolName == "" {
-					symbolName = fmt.Sprintf("unknown (%s)", fr.InstructionAddr)
+					symbolName = fmt.Sprintf("unknown (%s)", address)
 				} else if mainFunctionFrameIndex == -1 {
 					if isMainFrame, i := fr.IsMain(); isMainFrame {
 						mainFunctionFrameIndex = frameIndex + i
 					}
 				}
-				addressToFrameIndex[fr.InstructionAddr] = frameIndex
+				addressToFrameIndex[address] = frameIndex
 				frames = append(frames, frame{
 					File:          fr.Filename,
 					Image:         calltree.ImageBaseName(fr.Package),
