@@ -86,6 +86,7 @@ func SpeedscopeFromSnuba(profile snubautil.Profile) ([]byte, error) {
 		if err != nil {
 			return nil, err
 		}
+		iosProfile.ReplaceIdleStacks()
 		p, err = iosSpeedscopeTraceFromProfile(&iosProfile)
 		if err != nil {
 			return nil, err
