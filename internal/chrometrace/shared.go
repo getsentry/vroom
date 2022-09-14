@@ -41,6 +41,7 @@ type (
 		Queues       map[string]queue `json:"queues,omitempty"`
 		Samples      [][]int          `json:"samples"`
 		StartValue   uint64           `json:"startValue"`
+		State        string           `json:"state,omitempty"`
 		ThreadID     uint64           `json:"threadID"`
 		Type         profileType      `json:"type"`
 		Unit         valueUnit        `json:"unit"`

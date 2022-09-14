@@ -45,11 +45,19 @@ func (f IosFrame) WriteToHash(h hash.Hash) {
 	}
 }
 
+func (f IosFrame) Address() string {
+	if f.SymAddr != "" {
+		return f.SymAddr
+	}
+	return f.InstructionAddr
+}
+
 type Sample struct {
 	Frames              []IosFrame `json:"frames,omitempty"`
 	Priority            int        `json:"priority,omitempty"`
 	QueueAddress        string     `json:"queue_address,omitempty"`
 	RelativeTimestampNS uint64     `json:"relative_timestamp_ns,omitempty"`
+	State               string     `json:"state,omitempty"`
 	ThreadID            uint64     `json:"thread_id,omitempty"`
 }
 
@@ -184,6 +192,71 @@ func (p IosProfile) CallTrees() map[uint64][]*nodetree.Node {
 	}
 
 	return trees
+}
+
+func (p IosProfile) FindNextActiveSample(threadID uint64, i int) Sample {
+	for ; i < len(p.Samples); i++ {
+		if p.Samples[i].ThreadID == threadID && len(p.Samples[i].Frames) != 0 {
+			return p.Samples[i]
+		}
+	}
+	return Sample{}
+}
+
+func findCommonFrames(a, b []IosFrame) []IosFrame {
+	var c []IosFrame
+	for i, j := len(a)-1, len(b)-1; i >= 0 && j >= 0; i, j = i-1, j-1 {
+		if a[i].SymAddr == b[j].SymAddr {
+			c = append(c, a[i])
+			continue
+		}
+		break
+	}
+	reverse(c)
+	return c
+}
+
+func reverse(a []IosFrame) {
+	for i, j := 0, len(a)-1; i < j; i, j = i+1, j-1 {
+		a[i], a[j] = a[j], a[i]
+	}
+}
+
+func (p *IosProfile) ReplaceIdleStacks() {
+	previousActiveSamplePerThreadID := make(map[uint64]int)
+
+	for i, s := range p.Samples {
+		if len(s.Frames) != 0 {
+			// keep track of the previous active sample as we go
+			previousActiveSamplePerThreadID[s.ThreadID] = i
+			continue
+		}
+
+		// if there's no frame, the thread is considired idle
+		p.Samples[i].State = "idle"
+
+		previousSample, exists := previousActiveSamplePerThreadID[s.ThreadID]
+		if !exists {
+			continue
+		}
+
+		previousFrames := p.Samples[previousSample].Frames
+		nextFrames := p.FindNextActiveSample(s.ThreadID, i).Frames
+		if len(previousFrames) == 0 || len(nextFrames) == 0 {
+			continue
+		}
+
+		common := findCommonFrames(previousFrames, nextFrames)
+
+		// replace all idle stacks until next active sample
+		for j := i; j < len(p.Samples); j++ {
+			if p.Samples[j].ThreadID == s.ThreadID && len(p.Samples[j].Frames) == 0 {
+				p.Samples[j].Frames = common
+				continue
+			}
+			break
+		}
+	}
 }
 
 type ThreadMedata struct {
