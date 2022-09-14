@@ -232,6 +232,9 @@ func (p *IosProfile) ReplaceIdleStacks() {
 			continue
 		}
 
+		// if there's no frame, the thread is considired idle
+		p.Samples[i].State = "idle"
+
 		previousSample, exists := previousActiveSamplePerThreadID[s.ThreadID]
 		if !exists {
 			continue
@@ -249,7 +252,6 @@ func (p *IosProfile) ReplaceIdleStacks() {
 		for j := i; j < len(p.Samples); j++ {
 			if p.Samples[j].ThreadID == s.ThreadID && len(p.Samples[j].Frames) == 0 {
 				p.Samples[j].Frames = common
-				p.Samples[j].State = "idle"
 				continue
 			}
 			break
