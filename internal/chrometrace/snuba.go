@@ -37,6 +37,7 @@ type (
 
 	profileView struct {
 		AndroidAPILevel      uint32      `json:"androidAPILevel,omitempty"`
+		Architecture         string      `json:"architecture,omitempty"`
 		DebugMeta            interface{} `json:"-"`
 		DeviceClassification string      `json:"deviceClassification"`
 		DeviceLocale         string      `json:"deviceLocale"`

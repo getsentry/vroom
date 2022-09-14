@@ -25,11 +25,25 @@ func GetProfile(organizationID, projectID uint64, profileID string, sqb QueryBui
 	defer rs.Finish()
 
 	sqb.SelectCols = []string{
+		"android_api_level",
+		"architecture",
+		"device_classification",
+		"device_locale",
+		"device_manufacturer",
+		"device_model",
+		"device_os_build_number",
+		"device_os_name",
+		"device_os_version",
 		"duration_ns",
+		"environment",
+		"organization_id",
 		"platform",
 		"profile",
 		"profile_id",
 		"project_id",
+		"received",
+		"trace_id",
+		"transaction_id",
 		"transaction_name",
 		"version_code",
 		"version_name",
@@ -74,11 +88,26 @@ func GetProfiles(sqb QueryBuilder, fetchPayload bool) ([]Profile, error) {
 	defer rs.Finish()
 
 	sqb.SelectCols = []string{
-		"organization_id", "project_id", "transaction_id", "profile_id", "received",
-		"android_api_level", "device_classification", "device_locale", "device_manufacturer",
-		"device_model", "device_os_build_number", "device_os_name", "device_os_version",
-		"duration_ns", "environment", "platform", "trace_id", "transaction_name",
-		"version_name", "version_code",
+		"android_api_level",
+		"device_classification",
+		"device_locale",
+		"device_manufacturer",
+		"device_model",
+		"device_os_build_number",
+		"device_os_name",
+		"device_os_version",
+		"duration_ns",
+		"environment",
+		"organization_id",
+		"platform",
+		"profile_id",
+		"project_id",
+		"received",
+		"trace_id",
+		"transaction_id",
+		"transaction_name",
+		"version_code",
+		"version_name",
 	}
 
 	// Since the profile column containing the payload can be a few MB
