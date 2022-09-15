@@ -155,10 +155,11 @@ func (p IosProfile) CallTrees() map[uint64][]*nodetree.Node {
 	h := fnv.New64()
 	previousTimestamp := make(map[uint64]uint64)
 	for _, s := range p.Samples {
+		frameCount := len(s.Frames)
 		// Filter out a bogus root address that appears in some iOS backtraces, this symbol
 		// can never be symbolicated and usually contains 1 child.
-		if len(s.Frames) > 2 && s.Frames[0].InstructionAddr == "0xffffffffc" {
-			s.Frames = s.Frames[2:]
+		if frameCount > 2 && s.Frames[frameCount-1].InstructionAddr == "0xffffffffc" {
+			s.Frames = s.Frames[:frameCount-2]
 		}
 		for i := len(s.Frames) - 1; i >= 0; i-- {
 			f := s.Frames[i]
