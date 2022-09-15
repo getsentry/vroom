@@ -1532,6 +1532,57 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 	}
 }
 
+func TestCallTreeGenerationFromMultipleProfiles(t *testing.T) {
+	p1 := IosProfile{
+		Samples: []Sample{
+			{
+				ThreadID:            1,
+				RelativeTimestampNS: 1,
+				Frames: []IosFrame{
+					{InstructionAddr: "2", Function: "symbol2", Package: "/home/pierre/release1/package1"},
+					{InstructionAddr: "1", Function: "symbol1", Package: "/home/pierre/release1/package1"},
+					{InstructionAddr: "0", Function: "symbol0", Package: "/home/pierre/release1/package1"},
+				},
+			},
+			{
+				ThreadID:            2,
+				RelativeTimestampNS: 1,
+				Frames: []IosFrame{
+					{InstructionAddr: "2", Function: "symbol2", Package: "/home/pierre/release1/package1"},
+					{InstructionAddr: "1", Function: "symbol1", Package: "/home/pierre/release1/package1"},
+					{InstructionAddr: "0", Function: "symbol0", Package: "/home/pierre/release1/package1"},
+				},
+			},
+		},
+	}
+	p2 := IosProfile{
+		Samples: []Sample{
+			{
+				ThreadID:            1,
+				RelativeTimestampNS: 1,
+				Frames: []IosFrame{
+					{InstructionAddr: "2", Function: "symbol2", Package: "/home/pierre/release2/package1"},
+					{InstructionAddr: "1", Function: "symbol1", Package: "/home/pierre/release2/package1"},
+					{InstructionAddr: "0", Function: "symbol0", Package: "/home/pierre/release2/package1"},
+				},
+			},
+			{
+				ThreadID:            2,
+				RelativeTimestampNS: 1,
+				Frames: []IosFrame{
+					{InstructionAddr: "2", Function: "symbol2", Package: "/home/pierre/release2/package1"},
+					{InstructionAddr: "1", Function: "symbol1", Package: "/home/pierre/release2/package1"},
+					{InstructionAddr: "0", Function: "symbol0", Package: "/home/pierre/release2/package1"},
+				},
+			},
+		},
+	}
+
+	if diff := testutil.Diff(p1.CallTrees(), p2.CallTrees()); diff != "" {
+		t.Fatalf("Result mismatch: got - want +\n%s", diff)
+	}
+}
+
 func BenchmarkCallTrees(b *testing.B) {
 	var p snubautil.Profile
 	f, err := os.Open("../../test/data/cocoa.json")
