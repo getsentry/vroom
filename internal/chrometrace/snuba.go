@@ -144,8 +144,6 @@ func iosSpeedscopeTraceFromProfile(profile *aggregate.IosProfile) (output, error
 			threadName := threadMetadata.Name
 			if threadName == "" && qmExists && (!queueMetadata.LabeledAsMainThread() || sample.ThreadID != mainThreadID) {
 				threadName = queueMetadata.Label
-			} else {
-				threadName = threadID
 			}
 			sampProfile = &sampledProfile{
 				Name:         threadName,
@@ -397,7 +395,6 @@ func pythonSpeedscopeTraceFromProfile(profile *aggregate.PythonProfile) (output,
 		sampProfile, ok := threadIDToProfile[sample.ThreadID]
 		if !ok {
 			sampProfile = &sampledProfile{
-				Name:         strconv.FormatUint(sample.ThreadID, 10),
 				Queues:       nil,
 				StartValue:   sample.RelativeTimestampNS,
 				ThreadID:     sample.ThreadID,
@@ -470,11 +467,12 @@ func rustSpeedscopeTraceFromProfile(profile *aggregate.RustProfile) (output, err
 		sampProfile, ok := threadIDToProfile[sample.ThreadID]
 		if !ok {
 			threadName := sample.ThreadName
+			isMainThread := sample.ThreadID == mainThreadID
 			// the rust profiler automatically use thread_id as a thread_name
 			// when the thread_name is not available.
 			// So if thread_name == mainThreadID we now it's the main thread
 			// and we can replace it with `main`
-			if threadName == strconv.FormatUint(mainThreadID, 10) {
+			if isMainThread {
 				threadName = "main"
 			}
 			sampProfile = &sampledProfile{
@@ -482,7 +480,7 @@ func rustSpeedscopeTraceFromProfile(profile *aggregate.RustProfile) (output, err
 				Queues:       nil,
 				StartValue:   sample.RelativeTimestampNS,
 				ThreadID:     sample.ThreadID,
-				IsMainThread: sample.ThreadID == mainThreadID,
+				IsMainThread: isMainThread,
 				Type:         profileTypeSampled,
 				Unit:         valueUnitNanoseconds,
 			}
