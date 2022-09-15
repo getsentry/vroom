@@ -6,6 +6,7 @@ import (
 	"sort"
 	"strconv"
 
+	"github.com/getsentry/vroom/internal/calltree"
 	"github.com/getsentry/vroom/internal/nodetree"
 )
 
@@ -40,7 +41,7 @@ func (f IosFrame) WriteToHash(h hash.Hash) {
 	if f.Package == "" && f.Function == "" {
 		h.Write([]byte("-"))
 	} else {
-		h.Write([]byte(f.Package))
+		h.Write([]byte(calltree.ImageBaseName(f.Package)))
 		h.Write([]byte(f.Function))
 	}
 }
