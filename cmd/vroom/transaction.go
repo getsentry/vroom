@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/getsentry/sentry-go"
@@ -30,6 +31,20 @@ type (
 	}
 )
 
+var (
+	transactionsColumnMap = map[string]string{
+		"project":     "project_id",
+		"transaction": "transaction_name",
+		"p50()":       "arrayElement(durations, 1)",
+		"p75()":       "arrayElement(durations, 2)",
+		"p90()":       "arrayElement(durations, 3)",
+		"p95()":       "arrayElement(durations, 4)",
+		"p99()":       "arrayElement(durations, 5)",
+		"last_seen()": "last_profile_at",
+		"count()":     "profiles_count",
+	}
+)
+
 func (env *environment) getTransactions(w http.ResponseWriter, r *http.Request) {
 	hub := sentry.GetHubFromContext(r.Context())
 	p, ok := httputil.GetRequiredQueryParameters(w, r, "project_id", "start", "end")
@@ -51,14 +66,35 @@ func (env *environment) getTransactions(w http.ResponseWriter, r *http.Request) 
 
 	hub.Scope().SetTag("organization_id", rawOrganizationID)
 
-	sqb, err := env.profilesQueryBuilderFromRequest(ctx, r.URL.Query())
+	queryParams := r.URL.Query()
+	sqb, err := env.profilesQueryBuilderFromRequest(ctx, queryParams)
 	if err != nil {
 		hub.CaptureException(err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	sqb.OrderBy = "transaction_name ASC"
+	rawOrderBy := queryParams.Get("sort")
+	if rawOrderBy == "" {
+		hub.CaptureException(errors.New("no sort in the request"))
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	direction := "ASC"
+	if strings.HasPrefix(rawOrderBy, "-") {
+		direction = "DESC"
+		rawOrderBy = strings.TrimPrefix(rawOrderBy, "-")
+	}
+
+	if alias, exists := transactionsColumnMap[rawOrderBy]; exists {
+		sqb.OrderBy = strings.Join([]string{alias, direction}, " ")
+	} else {
+		hub.CaptureException(fmt.Errorf("unknown sort: %s", rawOrderBy))
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
 	sqb.WhereConditions = append(sqb.WhereConditions,
 		fmt.Sprintf("organization_id=%d", organizationID),
 	)
