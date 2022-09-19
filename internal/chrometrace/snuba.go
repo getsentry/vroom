@@ -323,7 +323,10 @@ func androidSpeedscopeTraceFromProfile(profile *android.AndroidProfile) (output,
 		case "Exit", "Unwind":
 			stack := methodStacks[event.ThreadID]
 			if len(stack) == 0 {
-				return output{}, fmt.Errorf("chrometrace: %w: ending event %v but stack for thread %v is empty", errorutil.ErrDataIntegrity, event, event.ThreadID)
+				// This case happens when we filter events for a given transaction.
+				// The enter event might be started before the transaction but finishes during.
+				// In this case, we choose to ignore it.
+				continue
 			}
 			i := len(stack) - 1
 			// Iterate from top -> bottom of stack, looking for the method we're attempting to end.
