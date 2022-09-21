@@ -2,7 +2,8 @@
 
 set -euo pipefail
 
-image="us-central1-docker.pkg.dev/specto-dev/vroom/vroom:latest"
+git_commit_id="$(git rev-parse HEAD)"
+image="us-central1-docker.pkg.dev/specto-dev/vroom/vroom:$git_commit_id"
 
 gcloud beta run deploy vroom \
   --concurrency 10 \
@@ -18,7 +19,7 @@ gcloud beta run deploy vroom \
   --set-env-vars=SENTRY_DSN=https://91f2762536314cbd9cc4a163fe072682@o1.ingest.sentry.io/6424467 \
   --set-env-vars=SENTRY_ENVIRONMENT=production \
   --set-env-vars=SENTRY_PROFILES_BUCKET_NAME=sentry-profiles \
-  --set-env-vars=SENTRY_RELEASE="$(git rev-parse HEAD)" \
+  --set-env-vars=SENTRY_RELEASE="$git_commit_id" \
   --set-env-vars=SENTRY_SNUBA_HOST=http://snuba-api.profiling \
   --timeout 30s \
   --vpc-connector sentry-ingest
