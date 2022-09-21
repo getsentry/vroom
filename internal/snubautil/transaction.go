@@ -12,7 +12,7 @@ type (
 		Transactions []Transaction `json:"data"`
 	}
 	Transaction struct {
-		DurationNS      []float64 `json:"duration_ns"`
+		DurationNS      []float64 `json:"durations"`
 		LastProfileAt   time.Time `json:"last_profile_at"`
 		ProfilesCount   int       `json:"profiles_count"`
 		ProjectID       uint64    `json:"project_id"`
@@ -28,12 +28,11 @@ func GetTransactions(sqb QueryBuilder) ([]Transaction, error) {
 	sqb.SelectCols = []string{
 		"project_id",
 		"transaction_name",
-		"quantiles(0.5, 0.75, 0.9, 0.95, 0.99)(duration_ns) AS duration_ns",
+		"quantiles(0.5, 0.75, 0.9, 0.95, 0.99)(duration_ns) AS durations",
 		"max(received) AS last_profile_at",
 		"count() AS profiles_count",
 	}
 	sqb.GroupBy = "project_id, transaction_name"
-	sqb.OrderBy = "transaction_name ASC"
 
 	rb, err := sqb.Do(rs)
 	if err != nil {
