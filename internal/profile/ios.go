@@ -1,4 +1,4 @@
-package aggregate
+package profile
 
 import (
 	"hash"
@@ -72,7 +72,7 @@ func (s Sample) ContainsMain() bool {
 	return false
 }
 
-type IosProfile struct {
+type IOS struct {
 	QueueMetadata  map[string]QueueMetadata `json:"queue_metadata"`
 	Samples        []Sample                 `json:"samples"`
 	ThreadMetadata map[string]ThreadMedata  `json:"thread_metadata"`
@@ -84,7 +84,7 @@ type candidate struct {
 }
 
 // MainThread returns what we believe is the main thread ID in the profile
-func (p IosProfile) MainThread() uint64 {
+func (p IOS) MainThread() uint64 {
 	// Use metadata
 	for threadID, m := range p.ThreadMetadata {
 		if m.IsMain {
@@ -146,7 +146,7 @@ func (p IosProfile) MainThread() uint64 {
 	return candidates[0].ThreadID
 }
 
-func (p IosProfile) CallTrees() map[uint64][]*nodetree.Node {
+func (p IOS) CallTrees() map[uint64][]*nodetree.Node {
 	sort.Slice(p.Samples, func(i, j int) bool {
 		return p.Samples[i].RelativeTimestampNS < p.Samples[j].RelativeTimestampNS
 	})
@@ -196,7 +196,7 @@ func (p IosProfile) CallTrees() map[uint64][]*nodetree.Node {
 	return trees
 }
 
-func (p IosProfile) FindNextActiveSample(threadID uint64, i int) Sample {
+func (p IOS) FindNextActiveSample(threadID uint64, i int) Sample {
 	for ; i < len(p.Samples); i++ {
 		if p.Samples[i].ThreadID == threadID && len(p.Samples[i].Frames) != 0 {
 			return p.Samples[i]
@@ -224,7 +224,7 @@ func reverse(a []IosFrame) {
 	}
 }
 
-func (p *IosProfile) ReplaceIdleStacks() {
+func (p *IOS) ReplaceIdleStacks() {
 	previousActiveSamplePerThreadID := make(map[uint64]int)
 
 	for i, s := range p.Samples {

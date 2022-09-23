@@ -10,10 +10,10 @@ import (
 
 	"cloud.google.com/go/storage"
 	"github.com/getsentry/sentry-go"
-	"github.com/getsentry/vroom/internal/aggregate"
-	"github.com/getsentry/vroom/internal/android"
 	"github.com/getsentry/vroom/internal/chrometrace"
 	"github.com/getsentry/vroom/internal/nodetree"
+	"github.com/getsentry/vroom/internal/profile"
+	"github.com/getsentry/vroom/internal/sample"
 	"github.com/getsentry/vroom/internal/snubautil"
 	"github.com/getsentry/vroom/internal/storageutil"
 	"github.com/google/uuid"
@@ -24,6 +24,11 @@ import (
 
 type PostProfileResponse struct {
 	CallTrees map[uint64][]*nodetree.Node `json:"call_trees"`
+}
+
+type MinimalProfile struct {
+	Platform string `json:"platform"`
+	Version  string `json:"version"`
 }
 
 func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
@@ -42,25 +47,52 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 
 	s = sentry.StartSpan(ctx, "json.unmarshal")
 	s.Description = "Unmarshal Snuba profile"
-	var profile snubautil.Profile
-	err = json.Unmarshal(body, &profile)
+	var minimalProfile MinimalProfile
+	err = json.Unmarshal(body, &minimalProfile)
 	s.Finish()
 	if err != nil {
-		log.Err(err).Str("profile", string(body)).Msg("profile can't be unmarshaled")
+		log.Err(err).Str("profile", string(body)).Msg("minimal profile can't be unmarshaled")
 		hub.CaptureException(err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
+	var p profile.Profile
+
+	// if it's a sample format
+	if len(minimalProfile.Version) > 0 {
+		var sampleProfile sample.Profile
+		err = json.Unmarshal(body, &sampleProfile)
+		s.Finish()
+		if err != nil {
+			log.Err(err).Str("profile", string(body)).Msg("profile can't be unmarshaled")
+			hub.CaptureException(err)
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		p = sampleProfile
+	} else {
+		var legacyProfile profile.LegacyProfile
+		err = json.Unmarshal(body, &legacyProfile)
+		s.Finish()
+		if err != nil {
+			log.Err(err).Str("profile", string(body)).Msg("profile can't be unmarshaled")
+			hub.CaptureException(err)
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		p = legacyProfile
+	}
+
 	hub.Scope().SetTags(map[string]string{
-		"organization_id": strconv.FormatUint(profile.OrganizationID, 10),
-		"project_id":      strconv.FormatUint(profile.ProjectID, 10),
-		"profile_id":      profile.ProfileID,
+		"organization_id": strconv.FormatUint(p.GetOrganizationID(), 10),
+		"project_id":      strconv.FormatUint(p.GetProjectID(), 10),
+		"profile_id":      p.GetID(),
 	})
 
 	s = sentry.StartSpan(ctx, "gcs.write")
 	s.Description = "Write profile to GCS"
-	_, err = storageutil.CompressedWrite(ctx, env.profilesBucket, profile.StoragePath(), body)
+	_, err = storageutil.CompressedWrite(ctx, env.profilesBucket, p.StoragePath(), body)
 	s.Finish()
 	if err != nil {
 		hub.CaptureException(err)
@@ -73,45 +105,9 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var p aggregate.Profile
-	switch profile.Platform {
-	case "cocoa":
-		var cp aggregate.IosProfile
-		s := sentry.StartSpan(ctx, "json.unmarshal")
-		s.Description = "Unmarshal iOS profile"
-		err := json.Unmarshal([]byte(profile.Profile), &cp)
-		s.Finish()
-		if err != nil {
-			hub.CaptureException(err)
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
-		cp.ReplaceIdleStacks()
-		p = cp
-	case "android":
-		var ap android.AndroidProfile
-		s := sentry.StartSpan(ctx, "json.unmarshal")
-		s.Description = "Unmarshal Android profile"
-		err := json.Unmarshal([]byte(profile.Profile), &ap)
-		s.Finish()
-		if err != nil {
-			hub.CaptureException(err)
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
-		p = ap
-	case "python", "rust", "node", "typescript":
-		w.WriteHeader(http.StatusNoContent)
-		return
-	default:
-		hub.CaptureMessage("unknown platform")
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-
 	s = sentry.StartSpan(ctx, "calltree")
 	s.Description = "Generate call trees"
-	callTrees := p.CallTrees()
+	callTrees, _ := p.CallTrees()
 	s.Finish()
 
 	s = sentry.StartSpan(ctx, "json.marshal")
@@ -136,30 +132,31 @@ func getRawProfile(ctx context.Context,
 	projectID uint64,
 	profileID string,
 	profilesBucket *storage.BucketHandle,
-	snuba snubautil.Client) (snubautil.Profile, error) {
+	snuba snubautil.Client) (profile.LegacyProfile, error) {
 
-	var profile snubautil.Profile
+	var p profile.LegacyProfile
 
-	err := storageutil.UnmarshalCompressed(ctx, profilesBucket, snubautil.ProfileStoragePath(organizationID, projectID, profileID), &profile)
+	err := storageutil.UnmarshalCompressed(ctx, profilesBucket, profile.StoragePath(organizationID, projectID, profileID), &p)
 	if err != nil {
 		if !errors.Is(err, storage.ErrObjectNotExist) {
-			return snubautil.Profile{}, err
+			return profile.LegacyProfile{}, err
 		}
 		sqb, err := snuba.NewQuery(ctx, "profiles")
 		if err != nil {
-			return snubautil.Profile{}, err
+			return profile.LegacyProfile{}, err
 		}
-		profile, err = snubautil.GetProfile(organizationID, projectID, profileID, sqb)
+		sp, err := snubautil.GetProfile(organizationID, projectID, profileID, sqb)
 		if err != nil {
-			return snubautil.Profile{}, err
+			return profile.LegacyProfile{}, err
 		}
+		p = profile.LegacyProfile(sp)
 	}
 
-	return profile, nil
+	return p, nil
 }
 
 type RawProfile struct {
-	snubautil.Profile
+	profile.LegacyProfile
 	ParsedProfile interface{} `json:"profile,omitempty"`
 }
 
@@ -199,7 +196,7 @@ func (env *environment) getRawProfile(w http.ResponseWriter, r *http.Request) {
 	s := sentry.StartSpan(ctx, "profile.read")
 	s.Description = "Read profile from GCS or Snuba"
 
-	profile, err := getRawProfile(ctx, organizationID, projectID, profileID, env.profilesBucket, env.snuba)
+	p, err := getRawProfile(ctx, organizationID, projectID, profileID, env.profilesBucket, env.snuba)
 	s.Finish()
 	if err != nil {
 		if errors.Is(err, snubautil.ErrProfileNotFound) {
@@ -211,7 +208,7 @@ func (env *environment) getRawProfile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var parsedProfile interface{}
-	err = json.Unmarshal([]byte(profile.Profile), &parsedProfile)
+	err = json.Unmarshal([]byte(p.Profile), &parsedProfile)
 	if err != nil {
 		hub.CaptureException(err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -220,9 +217,9 @@ func (env *environment) getRawProfile(w http.ResponseWriter, r *http.Request) {
 
 	// set the original profile raw string to empty
 	// so that this field is not serialized
-	profile.Profile = ""
+	p.Profile = ""
 
-	rawProfile := RawProfile{profile, parsedProfile}
+	rawProfile := RawProfile{p, parsedProfile}
 
 	s = sentry.StartSpan(ctx, "json.marshal")
 	defer s.Finish()
@@ -275,7 +272,7 @@ func (env *environment) getProfile(w http.ResponseWriter, r *http.Request) {
 	s := sentry.StartSpan(ctx, "profile.read")
 	s.Description = "Read profile from GCS or Snuba"
 
-	profile, err := getRawProfile(ctx, organizationID, projectID, profileID, env.profilesBucket, env.snuba)
+	p, err := getRawProfile(ctx, organizationID, projectID, profileID, env.profilesBucket, env.snuba)
 	s.Finish()
 	if err != nil {
 		if errors.Is(err, snubautil.ErrProfileNotFound) {
@@ -285,19 +282,18 @@ func (env *environment) getProfile(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-	profile.DebugMeta = nil
 
-	hub.Scope().SetTag("platform", profile.Platform)
+	hub.Scope().SetTag("platform", p.Platform)
 
 	s = sentry.StartSpan(ctx, "json.marshal")
 	defer s.Finish()
 
 	var b []byte
-	switch profile.Platform {
+	switch p.Platform {
 	case "typescript", "javascript":
-		b = []byte(profile.Profile)
+		b = []byte(p.Profile)
 	default:
-		b, err = chrometrace.SpeedscopeFromSnuba(profile)
+		b, err = chrometrace.SpeedscopeFromSnuba(p)
 	}
 	if err != nil {
 		hub.CaptureException(err)

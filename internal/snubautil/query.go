@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/getsentry/sentry-go"
+	"github.com/getsentry/vroom/internal/profile"
 )
 
 var ErrProfileNotFound = errors.New("profile not found")
@@ -15,10 +16,10 @@ var ErrProfileNotFound = errors.New("profile not found")
 const MaxRetentionInDays = 90
 
 type SnubaProfilesResponse struct {
-	Profiles []Profile `json:"data"`
+	Profiles []profile.LegacyProfile `json:"data"`
 }
 
-func GetProfile(organizationID, projectID uint64, profileID string, sqb QueryBuilder) (Profile, error) {
+func GetProfile(organizationID, projectID uint64, profileID string, sqb QueryBuilder) (profile.LegacyProfile, error) {
 	t := sentry.TransactionFromContext(sqb.ctx)
 	rs := t.StartChild("snuba")
 	rs.Description = "Get a profile"
@@ -60,7 +61,7 @@ func GetProfile(organizationID, projectID uint64, profileID string, sqb QueryBui
 
 	rb, err := sqb.Do(rs)
 	if err != nil {
-		return Profile{}, err
+		return profile.LegacyProfile{}, err
 	}
 	defer rb.Close()
 
@@ -71,17 +72,17 @@ func GetProfile(organizationID, projectID uint64, profileID string, sqb QueryBui
 	var sr SnubaProfilesResponse
 	err = json.NewDecoder(rb).Decode(&sr)
 	if err != nil {
-		return Profile{}, err
+		return profile.LegacyProfile{}, err
 	}
 
 	if len(sr.Profiles) == 0 {
-		return Profile{}, ErrProfileNotFound
+		return profile.LegacyProfile{}, ErrProfileNotFound
 	}
 
 	return sr.Profiles[0], nil
 }
 
-func GetProfiles(sqb QueryBuilder, fetchPayload bool) ([]Profile, error) {
+func GetProfiles(sqb QueryBuilder, fetchPayload bool) ([]profile.LegacyProfile, error) {
 	t := sentry.TransactionFromContext(sqb.ctx)
 	rs := t.StartChild("snuba")
 	rs.Description = "Get profiles"
@@ -135,7 +136,7 @@ func GetProfiles(sqb QueryBuilder, fetchPayload bool) ([]Profile, error) {
 	}
 
 	if len(sr.Profiles) == 0 {
-		return []Profile{}, nil
+		return []profile.LegacyProfile{}, nil
 	}
 
 	return sr.Profiles, err
@@ -187,7 +188,7 @@ func GetFilters(sqb QueryBuilder) (map[string][]interface{}, error) {
 			filters[k] = make([]interface{}, 0, len(values))
 			for _, v := range values {
 				if versions, ok := v.([]interface{}); ok {
-					filters[k] = append(filters[k], FormatVersion(versions[0], versions[1]))
+					filters[k] = append(filters[k], profile.FormatVersion(versions[0], versions[1]))
 				}
 			}
 		default:

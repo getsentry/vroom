@@ -1,10 +1,11 @@
-package android
+package profile
 
 import (
 	"hash/fnv"
 	"strings"
 	"time"
 
+	"github.com/getsentry/vroom/internal/android"
 	"github.com/getsentry/vroom/internal/nodetree"
 )
 
@@ -21,6 +22,47 @@ type AndroidMethod struct {
 	Signature    string          `json:"signature,omitempty"`
 	SourceFile   string          `json:"source_file,omitempty"`
 	SourceLine   uint32          `json:"source_line,omitempty"`
+}
+
+func (m AndroidMethod) ExtractPackageNameAndSimpleMethodNameFromAndroidMethod() (string, string, error) {
+	fullMethodName, err := m.FullMethodNameFromAndroidMethod()
+
+	if err != nil {
+		return "", "", err
+	}
+
+	packageName := m.packageNameFromAndroidMethod()
+
+	return packageName, android.StripPackageNameFromFullMethodName(fullMethodName, packageName), nil
+}
+
+func (m AndroidMethod) FullMethodNameFromAndroidMethod() (string, error) {
+	convertedSignature, err := android.ConvertedSignatureFromBytecodeSignature(m.Signature)
+	if err != nil {
+		return "", err
+	}
+
+	var builder strings.Builder
+	builder.WriteString(m.ClassName)
+	// "<init>" refers to the constructor in which case it's more readable to omit the method name. Note the method name
+	// can also be a static initializer "<clinit>" but I don't know of any better ways to represent it so leaving as is.
+	if m.Name != "<init>" {
+		builder.WriteRune('.')
+		builder.WriteString(m.Name)
+	}
+	builder.WriteString(convertedSignature)
+
+	return builder.String(), nil
+}
+
+func (m AndroidMethod) packageNameFromAndroidMethod() string {
+	index := strings.LastIndex(m.ClassName, ".")
+
+	if index == -1 {
+		return m.ClassName
+	}
+
+	return m.ClassName[:index]
 }
 
 type EventMonotonic struct {
@@ -53,7 +95,7 @@ type AndroidEvent struct {
 	Time     EventTime `json:"time,omitempty"`
 }
 
-type AndroidProfile struct {
+type Android struct {
 	Clock     Clock           `json:"clock"`
 	Events    []AndroidEvent  `json:"events,omitempty"`
 	Methods   []AndroidMethod `json:"methods,omitempty"`
@@ -70,7 +112,7 @@ const (
 	GlobalClock Clock = "Global"
 )
 
-func (p AndroidProfile) TimestampGetter() func(EventTime) uint64 {
+func (p Android) TimestampGetter() func(EventTime) uint64 {
 	var buildTimestamp func(t EventTime) uint64
 	switch p.Clock {
 	case GlobalClock:
@@ -90,7 +132,7 @@ func (p AndroidProfile) TimestampGetter() func(EventTime) uint64 {
 }
 
 // CallTrees generates call trees for a given profile
-func (p AndroidProfile) CallTrees() map[uint64][]*nodetree.Node {
+func (p Android) CallTrees() map[uint64][]*nodetree.Node {
 	buildTimestamp := p.TimestampGetter()
 	trees := make(map[uint64][]*nodetree.Node)
 	stacks := make(map[uint64][]*nodetree.Node)
@@ -109,11 +151,11 @@ func (p AndroidProfile) CallTrees() map[uint64][]*nodetree.Node {
 					Name:      "unknown",
 				}
 			}
-			className, _, err := ExtractPackageNameAndSimpleMethodNameFromAndroidMethod(&m)
+			className, _, err := m.ExtractPackageNameAndSimpleMethodNameFromAndroidMethod()
 			if err != nil {
 				className = m.ClassName
 			}
-			methodName, err := FullMethodNameFromAndroidMethod(&m)
+			methodName, err := m.FullMethodNameFromAndroidMethod()
 			if err != nil {
 				methodName = m.Name
 			}

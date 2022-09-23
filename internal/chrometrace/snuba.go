@@ -7,17 +7,15 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/getsentry/vroom/internal/aggregate"
-	"github.com/getsentry/vroom/internal/android"
 	"github.com/getsentry/vroom/internal/calltree"
 	"github.com/getsentry/vroom/internal/errorutil"
-	"github.com/getsentry/vroom/internal/snubautil"
+	"github.com/getsentry/vroom/internal/profile"
 )
 
 type (
 	output struct {
 		ActiveProfileIndex int             `json:"activeProfileIndex"`
-		AndroidClock       android.Clock   `json:"androidClock,omitempty"`
+		AndroidClock       profile.Clock   `json:"androidClock,omitempty"`
 		DurationNS         uint64          `json:"durationNS"`
 		Metadata           profileMetadata `json:"metadata"`
 		Platform           string          `json:"platform"`
@@ -36,111 +34,112 @@ type (
 	}
 
 	profileView struct {
-		AndroidAPILevel      uint32      `json:"androidAPILevel,omitempty"`
-		Architecture         string      `json:"architecture,omitempty"`
-		DebugMeta            interface{} `json:"-"`
-		DeviceClassification string      `json:"deviceClassification"`
-		DeviceLocale         string      `json:"deviceLocale"`
-		DeviceManufacturer   string      `json:"deviceManufacturer"`
-		DeviceModel          string      `json:"deviceModel"`
-		DeviceOsBuildNumber  string      `json:"deviceOSBuild_number,omitempty"`
-		DeviceOsName         string      `json:"deviceOSName"`
-		DeviceOsVersion      string      `json:"deviceOSVersion"`
-		DurationNs           uint64      `json:"durationNS"`
-		Environment          string      `json:"environment,omitempty"`
-		OrganizationID       uint64      `json:"organizationID"`
-		Platform             string      `json:"platform"`
-		Profile              string      `json:"-"`
-		ProfileID            string      `json:"profileID"`
-		ProjectID            uint64      `json:"projectID"`
-		Received             time.Time   `json:"received"`
-		TraceID              string      `json:"traceID"`
-		TransactionID        string      `json:"transactionID"`
-		TransactionName      string      `json:"transactionName"`
-		VersionCode          string      `json:"-"`
-		VersionName          string      `json:"-"`
+		AndroidAPILevel      uint32        `json:"androidAPILevel,omitempty"`
+		Architecture         string        `json:"architecture,omitempty"`
+		DebugMeta            interface{}   `json:"-"`
+		DeviceClassification string        `json:"deviceClassification"`
+		DeviceLocale         string        `json:"deviceLocale"`
+		DeviceManufacturer   string        `json:"deviceManufacturer"`
+		DeviceModel          string        `json:"deviceModel"`
+		DeviceOSBuildNumber  string        `json:"deviceOSBuildNumber,omitempty"`
+		DeviceOSName         string        `json:"deviceOSName"`
+		DeviceOSVersion      string        `json:"deviceOSVersion"`
+		DurationNS           uint64        `json:"durationNS"`
+		Environment          string        `json:"environment,omitempty"`
+		OrganizationID       uint64        `json:"organizationID"`
+		Platform             string        `json:"platform"`
+		Profile              string        `json:"-"`
+		ProfileID            string        `json:"profileID"`
+		ProjectID            uint64        `json:"projectID"`
+		Received             time.Time     `json:"received"`
+		Trace                profile.Trace `json:"-"`
+		TraceID              string        `json:"traceID"`
+		TransactionID        string        `json:"transactionID"`
+		TransactionName      string        `json:"transactionName"`
+		VersionCode          string        `json:"-"`
+		VersionName          string        `json:"-"`
 	}
 )
 
 func (o *output) SetVersion() {
-	version := snubautil.FormatVersion(o.Metadata.VersionName, o.Metadata.VersionCode)
+	version := profile.FormatVersion(o.Metadata.VersionName, o.Metadata.VersionCode)
 	o.Version, o.Metadata.Version = version, version
 }
 
 // SpeedscopeFromSnuba generates a profile using the Speedscope format from data in Snuba
-func SpeedscopeFromSnuba(profile snubautil.Profile) ([]byte, error) {
-	var p output
-	switch profile.Platform {
+func SpeedscopeFromSnuba(p profile.LegacyProfile) ([]byte, error) {
+	var o output
+	switch p.Platform {
 	case "android":
-		var androidProfile android.AndroidProfile
-		err := json.Unmarshal([]byte(profile.Profile), &androidProfile)
+		var androidProfile profile.Android
+		err := json.Unmarshal([]byte(p.Profile), &androidProfile)
 		if err != nil {
 			return nil, err
 		}
-		p, err = androidSpeedscopeTraceFromProfile(&androidProfile)
+		o, err = androidSpeedscopeTraceFromProfile(&androidProfile)
 		if err != nil {
 			return nil, err
 		}
 	case "cocoa":
-		var iosProfile aggregate.IosProfile
-		err := json.Unmarshal([]byte(profile.Profile), &iosProfile)
+		var iosProfile profile.IOS
+		err := json.Unmarshal([]byte(p.Profile), &iosProfile)
 		if err != nil {
 			return nil, err
 		}
 		iosProfile.ReplaceIdleStacks()
-		p, err = iosSpeedscopeTraceFromProfile(&iosProfile)
+		o = iosSpeedscopeTraceFromProfile(&iosProfile)
 		if err != nil {
 			return nil, err
 		}
 	case "rust":
-		var rustProfile aggregate.RustProfile
-		err := json.Unmarshal([]byte(profile.Profile), &rustProfile)
+		var rustProfile profile.Rust
+		err := json.Unmarshal([]byte(p.Profile), &rustProfile)
 		if err != nil {
 			return nil, err
 		}
-		p, err = rustSpeedscopeTraceFromProfile(&rustProfile)
+		o = rustSpeedscopeTraceFromProfile(&rustProfile)
 		if err != nil {
 			return nil, err
 		}
 	case "python":
-		var pythonProfile aggregate.PythonProfile
-		err := json.Unmarshal([]byte(profile.Profile), &pythonProfile)
+		var pythonProfile profile.Python
+		err := json.Unmarshal([]byte(p.Profile), &pythonProfile)
 		if err != nil {
 			return nil, err
 		}
-		p, err = pythonSpeedscopeTraceFromProfile(&pythonProfile)
+		o = pythonSpeedscopeTraceFromProfile(&pythonProfile)
 		if err != nil {
 			return nil, err
 		}
 	default:
-		return nil, fmt.Errorf("chrometrace: %w: %s is not a supported platform", errorutil.ErrDataIntegrity, profile.Platform)
+		return nil, fmt.Errorf("chrometrace: %w: %s is not a supported platform", errorutil.ErrDataIntegrity, p.Platform)
 	}
-	p.DurationNS = profile.DurationNs
-	p.Metadata = profileMetadata{profileView: profileView(profile)}
-	p.Platform = profile.Platform
-	p.ProfileID = profile.ProfileID
-	p.ProjectID = profile.ProjectID
-	p.TransactionName = profile.TransactionName
+	o.DurationNS = p.DurationNS
+	o.Metadata = profileMetadata{profileView: profileView(p)}
+	o.Platform = p.Platform
+	o.ProfileID = p.ProfileID
+	o.ProjectID = p.ProjectID
+	o.TransactionName = p.TransactionName
 
-	p.SetVersion()
+	o.SetVersion()
 
-	return json.Marshal(p)
+	return json.Marshal(o)
 }
 
-func iosSpeedscopeTraceFromProfile(profile *aggregate.IosProfile) (output, error) {
+func iosSpeedscopeTraceFromProfile(p *profile.IOS) output {
 	threadIDToProfile := make(map[uint64]*sampledProfile)
 	addressToFrameIndex := make(map[string]int)
 	threadIDToPreviousTimestampNS := make(map[uint64]uint64)
 	frames := make([]frame, 0)
 	// we need to find the frame index of the main function so we can remove the frames before it
 	mainFunctionFrameIndex := -1
-	mainThreadID := profile.MainThread()
-	for _, sample := range profile.Samples {
+	mainThreadID := p.MainThread()
+	for _, sample := range p.Samples {
 		threadID := strconv.FormatUint(sample.ThreadID, 10)
 		sampProfile, ok := threadIDToProfile[sample.ThreadID]
-		queueMetadata, qmExists := profile.QueueMetadata[sample.QueueAddress]
+		queueMetadata, qmExists := p.QueueMetadata[sample.QueueAddress]
 		if !ok {
-			threadMetadata, tmExists := profile.ThreadMetadata[threadID]
+			threadMetadata, tmExists := p.ThreadMetadata[threadID]
 			threadName := threadMetadata.Name
 			if threadName == "" && qmExists && (!queueMetadata.LabeledAsMainThread() || sample.ThreadID != mainThreadID) {
 				threadName = queueMetadata.Label
@@ -196,7 +195,7 @@ func iosSpeedscopeTraceFromProfile(profile *aggregate.IosProfile) (output, error
 				frames = append(frames, frame{
 					File:          fr.Filename,
 					Image:         calltree.ImageBaseName(fr.Package),
-					IsApplication: aggregate.IsIOSApplicationImage(fr.Package),
+					IsApplication: profile.IsIOSApplicationImage(fr.Package),
 					Line:          fr.LineNo,
 					Name:          symbolName,
 				})
@@ -229,13 +228,13 @@ func iosSpeedscopeTraceFromProfile(profile *aggregate.IosProfile) (output, error
 		ActiveProfileIndex: mainThreadProfileIndex,
 		Profiles:           allProfiles,
 		Shared:             sharedData{Frames: frames},
-	}, nil
+	}
 }
 
-func androidSpeedscopeTraceFromProfile(profile *android.AndroidProfile) (output, error) {
+func androidSpeedscopeTraceFromProfile(p *profile.Android) (output, error) {
 	frames := make([]frame, 0)
 	methodIDToFrameIndex := make(map[uint64][]int)
-	for _, method := range profile.Methods {
+	for _, method := range p.Methods {
 		if len(method.InlineFrames) > 0 {
 			for _, m := range method.InlineFrames {
 				methodIDToFrameIndex[method.ID] = append(methodIDToFrameIndex[method.ID], len(frames))
@@ -243,18 +242,18 @@ func androidSpeedscopeTraceFromProfile(profile *android.AndroidProfile) (output,
 					File:          m.SourceFile,
 					Image:         m.ClassName,
 					Inline:        true,
-					IsApplication: !aggregate.IsAndroidSystemPackage(m.ClassName),
+					IsApplication: !profile.IsAndroidSystemPackage(m.ClassName),
 					Line:          m.SourceLine,
 					Name:          m.Name,
 				})
 
 			}
 		} else {
-			packageName, _, err := android.ExtractPackageNameAndSimpleMethodNameFromAndroidMethod(&method)
+			packageName, _, err := method.ExtractPackageNameAndSimpleMethodNameFromAndroidMethod()
 			if err != nil {
 				return output{}, err
 			}
-			fullMethodName, err := android.FullMethodNameFromAndroidMethod(&method)
+			fullMethodName, err := method.FullMethodNameFromAndroidMethod()
 			if err != nil {
 				return output{}, err
 			}
@@ -263,13 +262,13 @@ func androidSpeedscopeTraceFromProfile(profile *android.AndroidProfile) (output,
 				Name:          fullMethodName,
 				File:          method.SourceFile,
 				Line:          method.SourceLine,
-				IsApplication: !aggregate.IsAndroidSystemPackage(fullMethodName),
+				IsApplication: !profile.IsAndroidSystemPackage(fullMethodName),
 				Image:         packageName,
 			})
 		}
 	}
 
-	emitEvent := func(profile *eventedProfile, et eventType, methodID, ts uint64) error {
+	emitEvent := func(p *eventedProfile, et eventType, methodID, ts uint64) {
 		frameIndexes, ok := methodIDToFrameIndex[methodID]
 		if !ok {
 			// sometimes it might happen that a method is listed in events but an entry definition
@@ -286,20 +285,19 @@ func androidSpeedscopeTraceFromProfile(profile *android.AndroidProfile) (output,
 			})
 		}
 		for _, fi := range frameIndexes {
-			profile.Events = append(profile.Events, event{
+			p.Events = append(p.Events, event{
 				Type:  et,
 				Frame: fi,
 				At:    ts,
 			})
 		}
-		return nil
 	}
 
 	threadIDToProfile := make(map[uint64]*eventedProfile)
 	methodStacks := make(map[uint64][]uint64) // map of thread ID -> stack of method IDs
-	buildTimestamp := profile.TimestampGetter()
+	buildTimestamp := p.TimestampGetter()
 
-	for _, event := range profile.Events {
+	for _, event := range p.Events {
 		ts := buildTimestamp(event.Time)
 		prof, ok := threadIDToProfile[event.ThreadID]
 		if !ok {
@@ -317,9 +315,7 @@ func androidSpeedscopeTraceFromProfile(profile *android.AndroidProfile) (output,
 		switch event.Action {
 		case "Enter":
 			methodStacks[event.ThreadID] = append(methodStacks[event.ThreadID], event.MethodID)
-			if err := emitEvent(prof, eventTypeOpenFrame, event.MethodID, ts); err != nil {
-				return output{}, err
-			}
+			emitEvent(prof, eventTypeOpenFrame, event.MethodID, ts)
 		case "Exit", "Unwind":
 			stack := methodStacks[event.ThreadID]
 			if len(stack) == 0 {
@@ -338,9 +334,8 @@ func androidSpeedscopeTraceFromProfile(profile *android.AndroidProfile) (output,
 			// indefinite durations.
 			for ; i >= 0; i-- {
 				methodID := stack[i]
-				if err := emitEvent(prof, eventTypeCloseFrame, methodID, ts); err != nil {
-					return output{}, err
-				}
+				emitEvent(prof, eventTypeCloseFrame, methodID, ts)
+
 				if methodID == event.MethodID {
 					break
 				}
@@ -360,15 +355,13 @@ func androidSpeedscopeTraceFromProfile(profile *android.AndroidProfile) (output,
 	for threadID, stack := range methodStacks {
 		prof := threadIDToProfile[threadID]
 		for i := len(stack) - 1; i >= 0; i-- {
-			if err := emitEvent(prof, eventTypeCloseFrame, stack[i], prof.EndValue); err != nil {
-				return output{}, err
-			}
+			emitEvent(prof, eventTypeCloseFrame, stack[i], prof.EndValue)
 		}
 	}
 
 	allProfiles := make([]interface{}, 0)
 	var mainThreadProfileIndex int
-	for _, thread := range profile.Threads {
+	for _, thread := range p.Threads {
 		prof, ok := threadIDToProfile[thread.ID]
 		if !ok {
 			continue
@@ -381,20 +374,20 @@ func androidSpeedscopeTraceFromProfile(profile *android.AndroidProfile) (output,
 	}
 	return output{
 		ActiveProfileIndex: mainThreadProfileIndex,
-		AndroidClock:       profile.Clock,
+		AndroidClock:       p.Clock,
 		Profiles:           allProfiles,
 		Shared:             sharedData{Frames: frames},
 	}, nil
 }
 
-func pythonSpeedscopeTraceFromProfile(profile *aggregate.PythonProfile) (output, error) {
+func pythonSpeedscopeTraceFromProfile(p *profile.Python) output {
 	threadIDToProfile := make(map[uint64]*sampledProfile)
 	threadIDToPreviousTimestampNS := make(map[uint64]uint64)
 
-	sort.Slice(profile.Samples, func(i, j int) bool {
-		return profile.Samples[i].RelativeTimestampNS <= profile.Samples[j].RelativeTimestampNS
+	sort.Slice(p.Samples, func(i, j int) bool {
+		return p.Samples[i].RelativeTimestampNS <= p.Samples[j].RelativeTimestampNS
 	})
-	for _, sample := range profile.Samples {
+	for _, sample := range p.Samples {
 		sampProfile, ok := threadIDToProfile[sample.ThreadID]
 		if !ok {
 			sampProfile = &sampledProfile{
@@ -419,8 +412,8 @@ func pythonSpeedscopeTraceFromProfile(profile *aggregate.PythonProfile) (output,
 		threadIDToPreviousTimestampNS[sample.ThreadID] = sample.RelativeTimestampNS
 	}
 
-	frames := make([]frame, 0, len(profile.Frames))
-	for _, pythonFrame := range profile.Frames {
+	frames := make([]frame, 0, len(p.Frames))
+	for _, pythonFrame := range p.Frames {
 		frames = append(frames, frame{
 			File: pythonFrame.File,
 			Name: pythonFrame.Name,
@@ -428,8 +421,8 @@ func pythonSpeedscopeTraceFromProfile(profile *aggregate.PythonProfile) (output,
 		})
 	}
 
-	mainThreadProfileIndex := 0
-	var mainThreadID uint64 = 0
+	var mainThreadProfileIndex int
+	var mainThreadID uint64
 
 	allProfiles := make([]interface{}, 0)
 	for threadID, prof := range threadIDToProfile {
@@ -447,25 +440,25 @@ func pythonSpeedscopeTraceFromProfile(profile *aggregate.PythonProfile) (output,
 		ActiveProfileIndex: mainThreadProfileIndex,
 		Profiles:           allProfiles,
 		Shared:             sharedData{Frames: frames},
-	}, nil
+	}
 }
 
-func rustSpeedscopeTraceFromProfile(profile *aggregate.RustProfile) (output, error) {
+func rustSpeedscopeTraceFromProfile(p *profile.Rust) output {
 	threadIDToProfile := make(map[uint64]*sampledProfile)
 	addressToFrameIndex := make(map[string]int)
 	threadIDToPreviousTimestampNS := make(map[uint64]uint64)
 	frames := make([]frame, 0)
 	// we need to find the frame index of the main function so we can remove the frames before it
 	mainFunctionFrameIndex := -1
-	mainThreadID := profile.MainThread()
+	mainThreadID := p.MainThread()
 	// sorting here is necessary because the timing info for each sample is given by
 	// a Rust SystemTime type, which is measurement of the system clock and is not monotonic
 	//
 	// see: https://doc.rust-lang.org/std/time/struct.SystemTime.html
-	sort.Slice(profile.Samples, func(i, j int) bool {
-		return profile.Samples[i].RelativeTimestampNS <= profile.Samples[j].RelativeTimestampNS
+	sort.Slice(p.Samples, func(i, j int) bool {
+		return p.Samples[i].RelativeTimestampNS <= p.Samples[j].RelativeTimestampNS
 	})
-	for _, sample := range profile.Samples {
+	for _, sample := range p.Samples {
 		sampProfile, ok := threadIDToProfile[sample.ThreadID]
 		if !ok {
 			isMainThread := sample.ThreadID == mainThreadID
@@ -520,7 +513,7 @@ func rustSpeedscopeTraceFromProfile(profile *aggregate.RustProfile) (output, err
 					File:          fr.Filename,
 					Image:         calltree.ImageBaseName(fr.Package),
 					Inline:        fr.Status == "symbolicated" && fr.SymAddr == "",
-					IsApplication: aggregate.IsRustApplicationImage(fr.Package),
+					IsApplication: profile.IsRustApplicationImage(fr.Package),
 					Line:          fr.LineNo,
 					Name:          symbolName,
 				})
@@ -555,5 +548,5 @@ func rustSpeedscopeTraceFromProfile(profile *aggregate.RustProfile) (output, err
 		ActiveProfileIndex: mainThreadProfileIndex,
 		Profiles:           allProfiles,
 		Shared:             sharedData{Frames: frames},
-	}, nil
+	}
 }

@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/getsentry/sentry-go"
-	"github.com/getsentry/vroom/internal/aggregate"
 	"github.com/getsentry/vroom/internal/httputil"
 	"github.com/getsentry/vroom/internal/snubautil"
 	"github.com/google/uuid"
@@ -18,12 +17,20 @@ import (
 )
 
 type (
+	Quantiles struct {
+		P50 float64 `json:"p50"`
+		P75 float64 `json:"p75"`
+		P90 float64 `json:"p90"`
+		P95 float64 `json:"p95"`
+		P99 float64 `json:"p99"`
+	}
+
 	Transaction struct {
-		DurationMS    aggregate.Quantiles `json:"duration_ms"`
-		LastProfileAt time.Time           `json:"last_profile_at"`
-		Name          string              `json:"name"`
-		ProfilesCount int                 `json:"profiles_count"`
-		ProjectID     string              `json:"project_id"`
+		DurationMS    Quantiles `json:"duration_ms"`
+		LastProfileAt time.Time `json:"last_profile_at"`
+		Name          string    `json:"name"`
+		ProfilesCount int       `json:"profiles_count"`
+		ProjectID     string    `json:"project_id"`
 	}
 
 	GetTransactionsResponse struct {
@@ -131,7 +138,7 @@ func (env *environment) getTransactions(w http.ResponseWriter, r *http.Request) 
 
 func snubaTransactionToTransaction(t snubautil.Transaction) Transaction {
 	return Transaction{
-		DurationMS: aggregate.Quantiles{
+		DurationMS: Quantiles{
 			P50: t.DurationNS[0] / 1_000_000,
 			P75: t.DurationNS[1] / 1_000_000,
 			P90: t.DurationNS[2] / 1_000_000,

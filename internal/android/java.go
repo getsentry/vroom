@@ -10,11 +10,11 @@ import (
 type bytecodeSignatureDecodingState int
 
 const (
-	parametersStart              bytecodeSignatureDecodingState = 0
-	parameterTypeOrParametersEnd                                = 1
-	parameterType                                               = 2
-	returnType                                                  = 4
-	End                                                         = 5
+	parametersStart bytecodeSignatureDecodingState = iota
+	parameterTypeOrParametersEnd
+	parameterType
+	returnType
+	end
 )
 
 // Parses a bytecode signature into its parameters and return type.
@@ -65,7 +65,7 @@ func ParseBytecodeSignature(signature string) (parameters []string, returnTypeSt
 				bytecodeType = arrayPrefix + bytecodeType
 				if state == returnType {
 					returnTypeString = bytecodeType
-					state = End
+					state = end
 				} else {
 					parameters = append(parameters, bytecodeType)
 					state = parameterTypeOrParametersEnd
@@ -74,12 +74,12 @@ func ParseBytecodeSignature(signature string) (parameters []string, returnTypeSt
 			}
 			i++
 
-		case End:
+		case end:
 			return nil, "", fmt.Errorf("java: %w: invalid descriptor, did not end as expected: %q", errorutil.ErrDataIntegrity, signature)
 		}
 	}
 
-	if state != End {
+	if state != end {
 		var expectation string
 		switch state {
 		case parametersStart:

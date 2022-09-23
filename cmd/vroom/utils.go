@@ -7,6 +7,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 
+	"github.com/getsentry/vroom/internal/profile"
 	"github.com/getsentry/vroom/internal/snubautil"
 )
 
@@ -134,23 +135,23 @@ func (e *environment) functionsQueryBuilderFromRequest(ctx context.Context, p ur
 	return sqb, nil
 }
 
-func snubaProfileToProfileResult(profile snubautil.Profile) ProfileResult {
+func snubaProfileToProfileResult(p profile.LegacyProfile) ProfileResult {
 	return ProfileResult{
-		AndroidAPILevel:      profile.AndroidAPILevel,
-		DeviceClassification: profile.DeviceClassification,
-		DeviceLocale:         profile.DeviceLocale,
-		DeviceManufacturer:   profile.DeviceManufacturer,
-		DeviceModel:          profile.DeviceModel,
-		DeviceOsBuildNumber:  profile.DeviceOsBuildNumber,
-		DeviceOsName:         profile.DeviceOsName,
-		DeviceOsVersion:      profile.DeviceOsVersion,
-		ID:                   profile.ProfileID,
-		ProjectID:            strconv.FormatUint(profile.ProjectID, 10),
-		Timestamp:            profile.Received.Unix(),
-		TraceDurationMs:      float64(profile.DurationNs) / 1_000_000,
-		TransactionID:        profile.TransactionID,
-		TransactionName:      profile.TransactionName,
-		VersionCode:          profile.VersionCode,
-		VersionName:          profile.VersionName,
+		AndroidAPILevel:      p.AndroidAPILevel,
+		DeviceClassification: p.DeviceClassification,
+		DeviceLocale:         p.DeviceLocale,
+		DeviceManufacturer:   p.DeviceManufacturer,
+		DeviceModel:          p.DeviceModel,
+		DeviceOsBuildNumber:  p.DeviceOSBuildNumber,
+		DeviceOsName:         p.DeviceOSName,
+		DeviceOsVersion:      p.DeviceOSVersion,
+		ID:                   p.ProfileID,
+		ProjectID:            strconv.FormatUint(p.ProjectID, 10),
+		Timestamp:            p.Received.Unix(),
+		TraceDurationMs:      float64(p.DurationNS) / 1_000_000,
+		TransactionID:        p.TransactionID,
+		TransactionName:      p.TransactionName,
+		VersionCode:          p.VersionCode,
+		VersionName:          p.VersionName,
 	}
 }

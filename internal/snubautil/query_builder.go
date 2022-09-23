@@ -21,7 +21,6 @@ type (
 		debug      bool
 		dryRun     bool
 		http       *httpclient.Client
-		hub        *sentry.Hub
 		turbo      bool
 		url        string
 	}
