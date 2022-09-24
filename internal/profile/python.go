@@ -1,5 +1,7 @@
 package profile
 
+import "github.com/getsentry/vroom/internal/nodetree"
+
 type PythonSample struct {
 	Frames              []int  `json:"frames"`
 	RelativeTimestampNS uint64 `json:"relative_timestamp_ns"`
@@ -15,4 +17,8 @@ type PythonFrame struct {
 type Python struct {
 	Samples []PythonSample `json:"samples"`
 	Frames  []PythonFrame  `json:"frames"`
+}
+
+func (p Python) CallTrees() map[uint64][]*nodetree.Node {
+	return make(map[uint64][]*nodetree.Node)
 }

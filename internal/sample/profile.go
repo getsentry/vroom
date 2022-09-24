@@ -1,6 +1,7 @@
 package sample
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -96,4 +97,8 @@ func (p Profile) GetPlatform() string {
 
 func (p Profile) CallTrees() (map[uint64][]*nodetree.Node, error) {
 	return make(map[uint64][]*nodetree.Node), nil
+}
+
+func (p *Profile) UnmarshalJSON(b []byte) error {
+	return json.Unmarshal(b, &p)
 }

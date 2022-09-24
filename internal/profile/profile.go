@@ -10,5 +10,7 @@ type (
 
 		CallTrees() (map[uint64][]*nodetree.Node, error)
 		StoragePath() string
+
+		UnmarshalJSON(b []byte) error
 	}
 )

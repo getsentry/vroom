@@ -2,6 +2,8 @@ package profile
 
 import (
 	"strings"
+
+	"github.com/getsentry/vroom/internal/nodetree"
 )
 
 type RustFrame struct {
@@ -53,4 +55,8 @@ func (p Rust) MainThread() uint64 {
 		}
 	}
 	return 0
+}
+
+func (p Rust) CallTrees() map[uint64][]*nodetree.Node {
+	return make(map[uint64][]*nodetree.Node)
 }

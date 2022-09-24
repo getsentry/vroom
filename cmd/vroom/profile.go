@@ -51,7 +51,7 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 	err = json.Unmarshal(body, &minimalProfile)
 	s.Finish()
 	if err != nil {
-		log.Err(err).Str("profile", string(body)).Msg("minimal profile can't be unmarshaled")
+		log.Err(err).Msg("minimal profile can't be unmarshaled")
 		hub.CaptureException(err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -70,18 +70,18 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
-		p = sampleProfile
+		p = &sampleProfile
 	} else {
 		var legacyProfile profile.LegacyProfile
 		err = json.Unmarshal(body, &legacyProfile)
 		s.Finish()
 		if err != nil {
-			log.Err(err).Str("profile", string(body)).Msg("profile can't be unmarshaled")
+			log.Err(err).Msg("profile can't be unmarshaled")
 			hub.CaptureException(err)
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
-		p = legacyProfile
+		p = &legacyProfile
 	}
 
 	hub.Scope().SetTags(map[string]string{
@@ -92,7 +92,7 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 
 	s = sentry.StartSpan(ctx, "gcs.write")
 	s.Description = "Write profile to GCS"
-	_, err = storageutil.CompressedWrite(ctx, env.profilesBucket, p.StoragePath(), body)
+	_, err = storageutil.CompressedWrite(ctx, env.profilesBucket, p.StoragePath(), p)
 	s.Finish()
 	if err != nil {
 		hub.CaptureException(err)
@@ -127,15 +127,8 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 	_, _ = w.Write(b)
 }
 
-func getRawProfile(ctx context.Context,
-	organizationID uint64,
-	projectID uint64,
-	profileID string,
-	profilesBucket *storage.BucketHandle,
-	snuba snubautil.Client) (profile.LegacyProfile, error) {
-
+func getRawProfile(ctx context.Context, organizationID, projectID uint64, profileID string, profilesBucket *storage.BucketHandle, snuba snubautil.Client) (profile.LegacyProfile, error) {
 	var p profile.LegacyProfile
-
 	err := storageutil.UnmarshalCompressed(ctx, profilesBucket, profile.StoragePath(organizationID, projectID, profileID), &p)
 	if err != nil {
 		if !errors.Is(err, storage.ErrObjectNotExist) {
@@ -149,15 +142,10 @@ func getRawProfile(ctx context.Context,
 		if err != nil {
 			return profile.LegacyProfile{}, err
 		}
-		p = profile.LegacyProfile(sp)
+		p = sp
 	}
 
 	return p, nil
-}
-
-type RawProfile struct {
-	profile.LegacyProfile
-	ParsedProfile interface{} `json:"profile,omitempty"`
 }
 
 func (env *environment) getRawProfile(w http.ResponseWriter, r *http.Request) {
@@ -207,23 +195,9 @@ func (env *environment) getRawProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var parsedProfile interface{}
-	err = json.Unmarshal([]byte(p.Profile), &parsedProfile)
-	if err != nil {
-		hub.CaptureException(err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	// set the original profile raw string to empty
-	// so that this field is not serialized
-	p.Profile = ""
-
-	rawProfile := RawProfile{p, parsedProfile}
-
 	s = sentry.StartSpan(ctx, "json.marshal")
 	defer s.Finish()
-	b, err := json.Marshal(rawProfile)
+	b, err := json.Marshal(p)
 	if err != nil {
 		hub.CaptureException(err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -291,7 +265,7 @@ func (env *environment) getProfile(w http.ResponseWriter, r *http.Request) {
 	var b []byte
 	switch p.Platform {
 	case "typescript", "javascript":
-		b = []byte(p.Profile)
+		b = p.Profile
 	default:
 		b, err = chrometrace.SpeedscopeFromSnuba(p)
 	}

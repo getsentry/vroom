@@ -34,30 +34,29 @@ type (
 	}
 
 	profileView struct {
-		AndroidAPILevel      uint32        `json:"androidAPILevel,omitempty"`
-		Architecture         string        `json:"architecture,omitempty"`
-		DebugMeta            interface{}   `json:"-"`
-		DeviceClassification string        `json:"deviceClassification"`
-		DeviceLocale         string        `json:"deviceLocale"`
-		DeviceManufacturer   string        `json:"deviceManufacturer"`
-		DeviceModel          string        `json:"deviceModel"`
-		DeviceOSBuildNumber  string        `json:"deviceOSBuildNumber,omitempty"`
-		DeviceOSName         string        `json:"deviceOSName"`
-		DeviceOSVersion      string        `json:"deviceOSVersion"`
-		DurationNS           uint64        `json:"durationNS"`
-		Environment          string        `json:"environment,omitempty"`
-		OrganizationID       uint64        `json:"organizationID"`
-		Platform             string        `json:"platform"`
-		Profile              string        `json:"-"`
-		ProfileID            string        `json:"profileID"`
-		ProjectID            uint64        `json:"projectID"`
-		Received             time.Time     `json:"received"`
-		Trace                profile.Trace `json:"-"`
-		TraceID              string        `json:"traceID"`
-		TransactionID        string        `json:"transactionID"`
-		TransactionName      string        `json:"transactionName"`
-		VersionCode          string        `json:"-"`
-		VersionName          string        `json:"-"`
+		AndroidAPILevel      uint32          `json:"androidAPILevel,omitempty"`
+		Architecture         string          `json:"architecture,omitempty"`
+		DebugMeta            interface{}     `json:"-"`
+		DeviceClassification string          `json:"deviceClassification"`
+		DeviceLocale         string          `json:"deviceLocale"`
+		DeviceManufacturer   string          `json:"deviceManufacturer"`
+		DeviceModel          string          `json:"deviceModel"`
+		DeviceOSBuildNumber  string          `json:"deviceOSBuildNumber,omitempty"`
+		DeviceOSName         string          `json:"deviceOSName"`
+		DeviceOSVersion      string          `json:"deviceOSVersion"`
+		DurationNS           uint64          `json:"durationNS"`
+		Environment          string          `json:"environment,omitempty"`
+		OrganizationID       uint64          `json:"organizationID"`
+		Platform             string          `json:"platform"`
+		Profile              json.RawMessage `json:"-"`
+		ProfileID            string          `json:"profileID"`
+		ProjectID            uint64          `json:"projectID"`
+		Received             time.Time       `json:"received"`
+		TraceID              string          `json:"traceID"`
+		TransactionID        string          `json:"transactionID"`
+		TransactionName      string          `json:"transactionName"`
+		VersionCode          string          `json:"-"`
+		VersionName          string          `json:"-"`
 	}
 )
 
@@ -71,51 +70,30 @@ func SpeedscopeFromSnuba(p profile.LegacyProfile) ([]byte, error) {
 	var o output
 	switch p.Platform {
 	case "android":
-		var androidProfile profile.Android
-		err := json.Unmarshal([]byte(p.Profile), &androidProfile)
-		if err != nil {
-			return nil, err
-		}
-		o, err = androidSpeedscopeTraceFromProfile(&androidProfile)
-		if err != nil {
-			return nil, err
+		if androidProfile, ok := p.Trace.(profile.Android); ok {
+			var err error
+			o, err = androidSpeedscopeTraceFromProfile(&androidProfile)
+			if err != nil {
+				return nil, err
+			}
 		}
 	case "cocoa":
-		var iosProfile profile.IOS
-		err := json.Unmarshal([]byte(p.Profile), &iosProfile)
-		if err != nil {
-			return nil, err
-		}
-		iosProfile.ReplaceIdleStacks()
-		o = iosSpeedscopeTraceFromProfile(&iosProfile)
-		if err != nil {
-			return nil, err
+		if iosProfile, ok := p.Trace.(profile.IOS); ok {
+			o = iosSpeedscopeTraceFromProfile(&iosProfile)
 		}
 	case "rust":
-		var rustProfile profile.Rust
-		err := json.Unmarshal([]byte(p.Profile), &rustProfile)
-		if err != nil {
-			return nil, err
-		}
-		o = rustSpeedscopeTraceFromProfile(&rustProfile)
-		if err != nil {
-			return nil, err
+		if rustProfile, ok := p.Trace.(profile.Rust); ok {
+			o = rustSpeedscopeTraceFromProfile(&rustProfile)
 		}
 	case "python":
-		var pythonProfile profile.Python
-		err := json.Unmarshal([]byte(p.Profile), &pythonProfile)
-		if err != nil {
-			return nil, err
-		}
-		o = pythonSpeedscopeTraceFromProfile(&pythonProfile)
-		if err != nil {
-			return nil, err
+		if pythonProfile, ok := p.Trace.(profile.Python); ok {
+			o = pythonSpeedscopeTraceFromProfile(&pythonProfile)
 		}
 	default:
 		return nil, fmt.Errorf("chrometrace: %w: %s is not a supported platform", errorutil.ErrDataIntegrity, p.Platform)
 	}
 	o.DurationNS = p.DurationNS
-	o.Metadata = profileMetadata{profileView: profileView(p)}
+	o.Metadata = profileMetadata{profileView: profileView(p.RawProfile)}
 	o.Platform = p.Platform
 	o.ProfileID = p.ProfileID
 	o.ProjectID = p.ProjectID
