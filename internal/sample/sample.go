@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/getsentry/vroom/internal/nodetree"
+	"github.com/getsentry/vroom/internal/speedscope"
 )
 
 type (
@@ -101,4 +102,8 @@ func (p SampleProfile) CallTrees() (map[uint64][]*nodetree.Node, error) {
 
 func (p *SampleProfile) UnmarshalJSON(b []byte) error {
 	return json.Unmarshal(b, &p)
+}
+
+func (p *SampleProfile) Speedscope() (speedscope.Output, error) {
+	return speedscope.Output{}, nil
 }

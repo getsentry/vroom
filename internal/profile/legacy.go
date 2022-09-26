@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/getsentry/vroom/internal/nodetree"
+	"github.com/getsentry/vroom/internal/speedscope"
 )
 
 type (
@@ -111,4 +112,8 @@ func (p *LegacyProfile) UnmarshalJSON(b []byte) error {
 
 func (p LegacyProfile) CallTrees() (map[uint64][]*nodetree.Node, error) {
 	return p.Trace.CallTrees(), nil
+}
+
+func (p *LegacyProfile) Speedscope() (speedscope.Output, error) {
+	return p.Trace.Speedscope()
 }

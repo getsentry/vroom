@@ -1,12 +1,15 @@
 package profile
 
 import (
+	"fmt"
 	"hash/fnv"
 	"strings"
 	"time"
 
 	"github.com/getsentry/vroom/internal/android"
+	"github.com/getsentry/vroom/internal/errorutil"
 	"github.com/getsentry/vroom/internal/nodetree"
+	"github.com/getsentry/vroom/internal/speedscope"
 )
 
 type AndroidThread struct {
@@ -215,4 +218,153 @@ func IsSystemPackage(packageName string) bool {
 		}
 	}
 	return false
+}
+
+func (p Android) Speedscope() (speedscope.Output, error) {
+	frames := make([]speedscope.Frame, 0)
+	methodIDToFrameIndex := make(map[uint64][]int)
+	for _, method := range p.Methods {
+		if len(method.InlineFrames) > 0 {
+			for _, m := range method.InlineFrames {
+				methodIDToFrameIndex[method.ID] = append(methodIDToFrameIndex[method.ID], len(frames))
+				frames = append(frames, speedscope.Frame{
+					File:          m.SourceFile,
+					Image:         m.ClassName,
+					Inline:        true,
+					IsApplication: !IsAndroidSystemPackage(m.ClassName),
+					Line:          m.SourceLine,
+					Name:          m.Name,
+				})
+
+			}
+		} else {
+			packageName, _, err := method.ExtractPackageNameAndSimpleMethodNameFromAndroidMethod()
+			if err != nil {
+				return speedscope.Output{}, err
+			}
+			fullMethodName, err := method.FullMethodNameFromAndroidMethod()
+			if err != nil {
+				return speedscope.Output{}, err
+			}
+			methodIDToFrameIndex[method.ID] = append(methodIDToFrameIndex[method.ID], len(frames))
+			frames = append(frames, speedscope.Frame{
+				Name:          fullMethodName,
+				File:          method.SourceFile,
+				Line:          method.SourceLine,
+				IsApplication: !IsAndroidSystemPackage(fullMethodName),
+				Image:         packageName,
+			})
+		}
+	}
+
+	emitEvent := func(p *speedscope.EventedProfile, et speedscope.EventType, methodID, ts uint64) {
+		frameIndexes, ok := methodIDToFrameIndex[methodID]
+		if !ok {
+			// sometimes it might happen that a method is listed in events but an entry definition
+			// is not correctly defined in the methods entry. We don't wan't to fail the whole chrometrace
+			// for this so we create a method on the fly
+			frameIndexes = []int{len(frames)}
+			methodIDToFrameIndex[methodID] = append(methodIDToFrameIndex[methodID], frameIndexes[0])
+			frames = append(frames, speedscope.Frame{
+				Name:          fmt.Sprintf("unknown (id %d)", methodID),
+				File:          "unknown",
+				Line:          0,
+				IsApplication: false,
+				Image:         "unknown",
+			})
+		}
+		for _, fi := range frameIndexes {
+			p.Events = append(p.Events, speedscope.Event{
+				Type:  et,
+				Frame: fi,
+				At:    ts,
+			})
+		}
+	}
+
+	threadIDToProfile := make(map[uint64]*speedscope.EventedProfile)
+	methodStacks := make(map[uint64][]uint64) // map of thread ID -> stack of method IDs
+	buildTimestamp := p.TimestampGetter()
+
+	for _, event := range p.Events {
+		ts := buildTimestamp(event.Time)
+		prof, ok := threadIDToProfile[event.ThreadID]
+		if !ok {
+			threadID := event.ThreadID
+			prof = &speedscope.EventedProfile{
+				StartValue: ts,
+				ThreadID:   threadID,
+				Type:       speedscope.ProfileTypeEvented,
+				Unit:       speedscope.ValueUnitNanoseconds,
+			}
+			threadIDToProfile[threadID] = prof
+		}
+		prof.EndValue = ts
+
+		switch event.Action {
+		case "Enter":
+			methodStacks[event.ThreadID] = append(methodStacks[event.ThreadID], event.MethodID)
+			emitEvent(prof, speedscope.EventTypeOpenFrame, event.MethodID, ts)
+		case "Exit", "Unwind":
+			stack := methodStacks[event.ThreadID]
+			if len(stack) == 0 {
+				// This case happens when we filter events for a given transaction.
+				// The enter event might be started before the transaction but finishes during.
+				// In this case, we choose to ignore it.
+				continue
+			}
+			i := len(stack) - 1
+			// Iterate from top -> bottom of stack, looking for the method we're attempting to end.
+			// Typically, this method should be on the top of the stack, but we may also be trying to
+			// end a method before explicitly ending the child methods that are on top of that method
+			// in the stack. In this scenario, we will synthesize end events for all methods that have
+			// not been explicitly ended, matching the behavior of the Chrome trace viewer. Speedscope
+			// handles this scenario a different way by doing nothing and leaving these methods with
+			// indefinite durations.
+			for ; i >= 0; i-- {
+				methodID := stack[i]
+				emitEvent(prof, speedscope.EventTypeCloseFrame, methodID, ts)
+
+				if methodID == event.MethodID {
+					break
+				}
+			}
+			if stack[i] != event.MethodID {
+				return speedscope.Output{}, fmt.Errorf("chrometrace: %w: ending event %v but stack for thread %v does not contain that record", errorutil.ErrDataIntegrity, event, event.ThreadID)
+			}
+			// Pop the elements that we emitted end events for off the stack
+			methodStacks[event.ThreadID] = methodStacks[event.ThreadID][:i]
+
+		default:
+			return speedscope.Output{}, fmt.Errorf("chrometrace: %w: invalid method action: %v", errorutil.ErrDataIntegrity, event.Action)
+		} // end switch
+	} // end loop events
+
+	// Close any remaining open frames.
+	for threadID, stack := range methodStacks {
+		prof := threadIDToProfile[threadID]
+		for i := len(stack) - 1; i >= 0; i-- {
+			emitEvent(prof, speedscope.EventTypeCloseFrame, stack[i], prof.EndValue)
+		}
+	}
+
+	allProfiles := make([]interface{}, 0)
+	var mainThreadProfileIndex int
+	for _, thread := range p.Threads {
+		prof, ok := threadIDToProfile[thread.ID]
+		if !ok {
+			continue
+		}
+		if thread.Name == "main" {
+			mainThreadProfileIndex = len(allProfiles)
+		}
+		prof.Name = thread.Name
+		allProfiles = append(allProfiles, prof)
+	}
+	return speedscope.Output{
+		ActiveProfileIndex: mainThreadProfileIndex,
+		AndroidClock:       string(p.Clock),
+		Profiles:           allProfiles,
+		Shared:             speedscope.SharedData{Frames: frames},
+	}, nil
 }

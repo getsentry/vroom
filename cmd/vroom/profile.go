@@ -10,7 +10,6 @@ import (
 
 	"cloud.google.com/go/storage"
 	"github.com/getsentry/sentry-go"
-	"github.com/getsentry/vroom/internal/chrometrace"
 	"github.com/getsentry/vroom/internal/nodetree"
 	"github.com/getsentry/vroom/internal/profile"
 	"github.com/getsentry/vroom/internal/snubautil"
@@ -234,12 +233,18 @@ func (env *environment) getProfile(w http.ResponseWriter, r *http.Request) {
 	case "typescript", "javascript":
 		b = p.Profile
 	default:
-		b, err = chrometrace.SpeedscopeFromSnuba(p)
-	}
-	if err != nil {
-		hub.CaptureException(err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
+		o, err := p.Speedscope()
+		if err != nil {
+			hub.CaptureException(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		b, err = json.Marshal(o)
+		if err != nil {
+			hub.CaptureException(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 	}
 
 	w.Header().Set("Content-Type", "application/json")

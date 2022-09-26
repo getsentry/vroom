@@ -1,6 +1,7 @@
 package profile
 
 import (
+	"fmt"
 	"hash"
 	"hash/fnv"
 	"sort"
@@ -8,6 +9,7 @@ import (
 
 	"github.com/getsentry/vroom/internal/calltree"
 	"github.com/getsentry/vroom/internal/nodetree"
+	"github.com/getsentry/vroom/internal/speedscope"
 )
 
 type IosFrame struct {
@@ -273,4 +275,109 @@ type QueueMetadata struct {
 
 func (q QueueMetadata) LabeledAsMainThread() bool {
 	return q.Label == "com.apple.main-thread"
+}
+
+func (p IOS) Speedscope() (speedscope.Output, error) {
+	threadIDToProfile := make(map[uint64]*speedscope.SampledProfile)
+	addressToFrameIndex := make(map[string]int)
+	threadIDToPreviousTimestampNS := make(map[uint64]uint64)
+	frames := make([]speedscope.Frame, 0)
+	// we need to find the frame index of the main function so we can remove the frames before it
+	mainFunctionFrameIndex := -1
+	mainThreadID := p.MainThread()
+	for _, sample := range p.Samples {
+		threadID := strconv.FormatUint(sample.ThreadID, 10)
+		sampProfile, ok := threadIDToProfile[sample.ThreadID]
+		queueMetadata, qmExists := p.QueueMetadata[sample.QueueAddress]
+		if !ok {
+			threadMetadata, tmExists := p.ThreadMetadata[threadID]
+			threadName := threadMetadata.Name
+			if threadName == "" && qmExists && (!queueMetadata.LabeledAsMainThread() || sample.ThreadID != mainThreadID) {
+				threadName = queueMetadata.Label
+			}
+			sampProfile = &speedscope.SampledProfile{
+				Name:         threadName,
+				Queues:       make(map[string]speedscope.Queue),
+				StartValue:   sample.RelativeTimestampNS,
+				ThreadID:     sample.ThreadID,
+				IsMainThread: sample.ThreadID == mainThreadID,
+				Type:         speedscope.ProfileTypeSampled,
+				Unit:         speedscope.ValueUnitNanoseconds,
+			}
+			if qmExists {
+				sampProfile.Queues[queueMetadata.Label] = speedscope.Queue{Label: queueMetadata.Label, StartNS: sample.RelativeTimestampNS, EndNS: sample.RelativeTimestampNS}
+			}
+			if tmExists {
+				sampProfile.Priority = threadMetadata.Priority
+			}
+			threadIDToProfile[sample.ThreadID] = sampProfile
+		} else {
+			if qmExists {
+				q, qExists := sampProfile.Queues[queueMetadata.Label]
+				if !qExists {
+					sampProfile.Queues[queueMetadata.Label] = speedscope.Queue{Label: queueMetadata.Label, StartNS: sample.RelativeTimestampNS, EndNS: sample.RelativeTimestampNS}
+				} else {
+					q.EndNS = sample.RelativeTimestampNS
+					sampProfile.Queues[queueMetadata.Label] = q
+				}
+			}
+			sampProfile.Weights = append(sampProfile.Weights, sample.RelativeTimestampNS-threadIDToPreviousTimestampNS[sample.ThreadID])
+		}
+
+		sampProfile.EndValue = sample.RelativeTimestampNS
+		threadIDToPreviousTimestampNS[sample.ThreadID] = sample.RelativeTimestampNS
+
+		samp := make([]int, 0, len(sample.Frames))
+		for i := len(sample.Frames) - 1; i >= 0; i-- {
+			fr := sample.Frames[i]
+			address := fr.Address()
+			frameIndex, ok := addressToFrameIndex[address]
+			if !ok {
+				frameIndex = len(frames)
+				symbolName := fr.Function
+				if symbolName == "" {
+					symbolName = fmt.Sprintf("unknown (%s)", address)
+				} else if mainFunctionFrameIndex == -1 {
+					if isMainFrame, i := fr.IsMain(); isMainFrame {
+						mainFunctionFrameIndex = frameIndex + i
+					}
+				}
+				addressToFrameIndex[address] = frameIndex
+				frames = append(frames, speedscope.Frame{
+					File:          fr.Filename,
+					Image:         calltree.ImageBaseName(fr.Package),
+					IsApplication: IsIOSApplicationImage(fr.Package),
+					Line:          fr.LineNo,
+					Name:          symbolName,
+				})
+			}
+			samp = append(samp, frameIndex)
+		}
+		sampProfile.Samples = append(sampProfile.Samples, samp)
+	} // end loop speedscope.SampledProfiles
+	var mainThreadProfileIndex int
+	allProfiles := make([]interface{}, 0)
+	for _, prof := range threadIDToProfile {
+		if prof.IsMainThread {
+			mainThreadProfileIndex = len(allProfiles)
+			// Remove all frames before main is called on the main thread
+			if mainFunctionFrameIndex != -1 {
+				for i, sample := range prof.Samples {
+					for j, frameIndex := range sample {
+						if frameIndex == mainFunctionFrameIndex {
+							prof.Samples[i] = prof.Samples[i][j:]
+							break
+						}
+					}
+				}
+			}
+		}
+		prof.Weights = append(prof.Weights, 0)
+		allProfiles = append(allProfiles, prof)
+	}
+	return speedscope.Output{
+		ActiveProfileIndex: mainThreadProfileIndex,
+		Profiles:           allProfiles,
+		Shared:             speedscope.SharedData{Frames: frames},
+	}, nil
 }
