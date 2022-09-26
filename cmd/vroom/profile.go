@@ -13,7 +13,6 @@ import (
 	"github.com/getsentry/vroom/internal/chrometrace"
 	"github.com/getsentry/vroom/internal/nodetree"
 	"github.com/getsentry/vroom/internal/profile"
-	"github.com/getsentry/vroom/internal/sample"
 	"github.com/getsentry/vroom/internal/snubautil"
 	"github.com/getsentry/vroom/internal/storageutil"
 	"github.com/google/uuid"
@@ -24,11 +23,6 @@ import (
 
 type PostProfileResponse struct {
 	CallTrees map[uint64][]*nodetree.Node `json:"call_trees"`
-}
-
-type MinimalProfile struct {
-	Platform string `json:"platform"`
-	Version  string `json:"version"`
 }
 
 func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
@@ -47,41 +41,14 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 
 	s = sentry.StartSpan(ctx, "json.unmarshal")
 	s.Description = "Unmarshal Snuba profile"
-	var minimalProfile MinimalProfile
-	err = json.Unmarshal(body, &minimalProfile)
+	var p profile.Profile
+	err = json.Unmarshal(body, &p)
 	s.Finish()
 	if err != nil {
-		log.Err(err).Msg("minimal profile can't be unmarshaled")
+		log.Err(err).Str("profile", string(body)).Msg("profile can't be unmarshaled")
 		hub.CaptureException(err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
-	}
-
-	var p profile.Profile
-
-	// if it's a sample format
-	if len(minimalProfile.Version) > 0 {
-		var sampleProfile sample.Profile
-		err = json.Unmarshal(body, &sampleProfile)
-		s.Finish()
-		if err != nil {
-			log.Err(err).Str("profile", string(body)).Msg("profile can't be unmarshaled")
-			hub.CaptureException(err)
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
-		p = &sampleProfile
-	} else {
-		var legacyProfile profile.LegacyProfile
-		err = json.Unmarshal(body, &legacyProfile)
-		s.Finish()
-		if err != nil {
-			log.Err(err).Msg("profile can't be unmarshaled")
-			hub.CaptureException(err)
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
-		p = &legacyProfile
 	}
 
 	hub.Scope().SetTags(map[string]string{

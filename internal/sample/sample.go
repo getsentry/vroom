@@ -54,7 +54,7 @@ type (
 		Stacks  [][]int  `json:"stacks"`
 	}
 
-	Profile struct {
+	SampleProfile struct {
 		DebugMeta      interface{} `json:"debug_meta,omitempty"`
 		Device         Device      `json:"device"`
 		Environment    string      `json:"environment,omitempty"`
@@ -71,15 +71,15 @@ type (
 	}
 )
 
-func (p Profile) GetOrganizationID() uint64 {
+func (p SampleProfile) GetOrganizationID() uint64 {
 	return p.OrganizationID
 }
 
-func (p Profile) GetProjectID() uint64 {
+func (p SampleProfile) GetProjectID() uint64 {
 	return p.ProjectID
 }
 
-func (p Profile) GetID() string {
+func (p SampleProfile) GetID() string {
 	return p.EventID
 }
 
@@ -87,18 +87,18 @@ func StoragePath(organizationID, projectID uint64, profileID string) string {
 	return fmt.Sprintf("%d/%d/%s", organizationID, projectID, strings.Replace(profileID, "-", "", -1))
 }
 
-func (p Profile) StoragePath() string {
+func (p SampleProfile) StoragePath() string {
 	return StoragePath(p.OrganizationID, p.ProjectID, p.EventID)
 }
 
-func (p Profile) GetPlatform() string {
+func (p SampleProfile) GetPlatform() string {
 	return p.Platform
 }
 
-func (p Profile) CallTrees() (map[uint64][]*nodetree.Node, error) {
+func (p SampleProfile) CallTrees() (map[uint64][]*nodetree.Node, error) {
 	return make(map[uint64][]*nodetree.Node), nil
 }
 
-func (p *Profile) UnmarshalJSON(b []byte) error {
+func (p *SampleProfile) UnmarshalJSON(b []byte) error {
 	return json.Unmarshal(b, &p)
 }

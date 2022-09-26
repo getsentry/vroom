@@ -73,9 +73,9 @@ func (s Sample) ContainsMain() bool {
 }
 
 type IOS struct {
-	QueueMetadata  map[string]QueueMetadata `json:"queue_metadata"`
-	Samples        []Sample                 `json:"samples"`
-	ThreadMetadata map[string]ThreadMedata  `json:"thread_metadata"`
+	QueueMetadata  map[string]QueueMetadata  `json:"queue_metadata"`
+	Samples        []Sample                  `json:"samples"`
+	ThreadMetadata map[string]ThreadMetadata `json:"thread_metadata"`
 }
 
 type candidate struct {
@@ -261,10 +261,10 @@ func (p *IOS) ReplaceIdleStacks() {
 	}
 }
 
-type ThreadMedata struct {
-	IsMain   bool   `json:"is_main_thread"`
-	Name     string `json:"name"`
-	Priority int    `json:"priority"`
+type ThreadMetadata struct {
+	IsMain   bool   `json:"is_main_thread,omitempty"`
+	Name     string `json:"name,omitempty"`
+	Priority int    `json:"priority,omitempty"`
 }
 
 type QueueMetadata struct {
