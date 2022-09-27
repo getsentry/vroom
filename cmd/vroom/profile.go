@@ -58,7 +58,7 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 
 	s = sentry.StartSpan(ctx, "gcs.write")
 	s.Description = "Write profile to GCS"
-	_, err = storageutil.CompressedWrite(ctx, env.profilesBucket, p.StoragePath(), p)
+	err = storageutil.CompressedWrite(ctx, env.profilesBucket, p.StoragePath(), p)
 	s.Finish()
 	if err != nil {
 		hub.CaptureException(err)

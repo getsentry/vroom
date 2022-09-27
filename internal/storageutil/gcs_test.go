@@ -63,7 +63,7 @@ func TestUploadProfile(t *testing.T) {
 		Samples: []uint64{1, 2, 3, 4},
 		Frames:  []uint64{1, 2, 3, 4},
 	}
-	_, err = CompressedWrite(ctx, bucket, objectName, originalData)
+	err = CompressedWrite(ctx, bucket, objectName, originalData)
 	if err != nil {
 		t.Fatalf("we should be able to write: %v", err)
 	}

@@ -9,24 +9,24 @@ import (
 )
 
 // CompressedWrite compresses and writes data to Google Cloud Storage
-func CompressedWrite(ctx context.Context, b *storage.BucketHandle, objectName string, d interface{}) (int, error) {
+func CompressedWrite(ctx context.Context, b *storage.BucketHandle, objectName string, d interface{}) error {
 	ow := b.Object(objectName).NewWriter(ctx)
 	zw := lz4.NewWriter(ow)
 	_ = zw.Apply(lz4.CompressionLevelOption(lz4.Level9))
 	jw := json.NewEncoder(zw)
 	err := jw.Encode(d)
 	if err != nil {
-		return 0, err
+		return err
 	}
 	err = zw.Close()
 	if err != nil {
-		return 0, err
+		return err
 	}
 	err = ow.Close()
 	if err != nil {
-		return 0, err
+		return err
 	}
-	return 1, nil
+	return nil
 }
 
 // UnmarshalCompressed reads compressed JSON data from GCS and unmarshals it
