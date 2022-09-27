@@ -54,6 +54,7 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 		"organization_id": strconv.FormatUint(p.GetOrganizationID(), 10),
 		"project_id":      strconv.FormatUint(p.GetProjectID(), 10),
 		"profile_id":      p.GetID(),
+		"platform":        p.Platform,
 	})
 
 	s = sentry.StartSpan(ctx, "gcs.write")
