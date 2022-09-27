@@ -74,19 +74,19 @@ func (p *LegacyProfile) UnmarshalJSON(b []byte) error {
 	if err != nil {
 		return err
 	}
+	var raw []byte
+	if p.Profile[0] == '"' {
+		var s string
+		err := json.Unmarshal(p.Profile, &s)
+		if err != nil {
+			return err
+		}
+		raw = []byte(s)
+	} else {
+		raw = p.Profile
+	}
 	switch p.Platform {
 	case "cocoa":
-		var raw []byte
-		if p.Profile[0] == '"' {
-			var s string
-			err := json.Unmarshal(p.Profile, &s)
-			if err != nil {
-				return err
-			}
-			raw = []byte(s)
-		} else {
-			raw = p.Profile
-		}
 		var t IOS
 		err := json.Unmarshal(raw, &t)
 		if err != nil {
@@ -96,21 +96,21 @@ func (p *LegacyProfile) UnmarshalJSON(b []byte) error {
 		(*p).Trace = t
 	case "android":
 		var t Android
-		err := json.Unmarshal(p.Profile, &t)
+		err := json.Unmarshal(raw, &t)
 		if err != nil {
 			return err
 		}
 		(*p).Trace = t
 	case "python":
 		var t Python
-		err := json.Unmarshal(p.Profile, &t)
+		err := json.Unmarshal(raw, &t)
 		if err != nil {
 			return err
 		}
 		(*p).Trace = t
 	case "rust":
 		var t Rust
-		err := json.Unmarshal(p.Profile, &t)
+		err := json.Unmarshal(raw, &t)
 		if err != nil {
 			return err
 		}
