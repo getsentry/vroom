@@ -1,4 +1,4 @@
-package aggregate
+package profile
 
 import (
 	"encoding/json"
@@ -6,19 +6,18 @@ import (
 	"testing"
 
 	"github.com/getsentry/vroom/internal/nodetree"
-	"github.com/getsentry/vroom/internal/snubautil"
 	"github.com/getsentry/vroom/internal/testutil"
 )
 
 func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 	tests := []struct {
 		name    string
-		profile IosProfile
+		profile IOS
 		want    map[uint64][]*nodetree.Node
 	}{
 		{
 			name: "single root call tree",
-			profile: IosProfile{
+			profile: IOS{
 				Samples: []Sample{
 					{
 						ThreadID:            1,
@@ -60,7 +59,7 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 		},
 		{
 			name: "multiple root call trees",
-			profile: IosProfile{
+			profile: IOS{
 				Samples: []Sample{
 					{
 						ThreadID:            1,
@@ -136,7 +135,7 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 		},
 		{
 			name: "single root call tree with disappearing leaf",
-			profile: IosProfile{
+			profile: IOS{
 				Samples: []Sample{
 					{
 						ThreadID:            1,
@@ -186,7 +185,7 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 		},
 		{
 			name: "single root call tree with appearing leaf",
-			profile: IosProfile{
+			profile: IOS{
 				Samples: []Sample{
 					{
 						ThreadID:            1,
@@ -237,7 +236,7 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 		},
 		{
 			name: "single root call tree with repeated disappearing leaf",
-			profile: IosProfile{
+			profile: IOS{
 				Samples: []Sample{
 					{
 						ThreadID:            1,
@@ -311,7 +310,7 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 		},
 		{
 			name: "single root call tree with repeated appearing leaf",
-			profile: IosProfile{
+			profile: IOS{
 				Samples: []Sample{
 					{
 						ThreadID:            1,
@@ -386,7 +385,7 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 		},
 		{
 			name: "single root call tree with disappearing leaves",
-			profile: IosProfile{
+			profile: IOS{
 				Samples: []Sample{
 					{
 						ThreadID:            1,
@@ -461,7 +460,7 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 		},
 		{
 			name: "single root call tree with appearing leaves",
-			profile: IosProfile{
+			profile: IOS{
 				Samples: []Sample{
 					{
 						ThreadID:            1,
@@ -539,7 +538,7 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 		},
 		{
 			name: "single root call tree with multiple unique leaves",
-			profile: IosProfile{
+			profile: IOS{
 				Samples: []Sample{
 					{
 						ThreadID:            1,
@@ -622,7 +621,7 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 		},
 		{
 			name: "single root call tree with multiple unique leaves at different levels",
-			profile: IosProfile{
+			profile: IOS{
 				Samples: []Sample{
 					{
 						ThreadID:            1,
@@ -794,12 +793,12 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 	tests := []struct {
 		name    string
-		profile IosProfile
+		profile IOS
 		want    map[uint64][]*nodetree.Node
 	}{
 		{
 			name: "multiple threads with the same call tree",
-			profile: IosProfile{
+			profile: IOS{
 				Samples: []Sample{
 					{
 						ThreadID:            1,
@@ -874,7 +873,7 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 		},
 		{
 			name: "multiple threads with different call trees",
-			profile: IosProfile{
+			profile: IOS{
 				Samples: []Sample{
 					{
 						ThreadID:            1,
@@ -949,7 +948,7 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 		},
 		{
 			name: "multiple threads with sequential samples",
-			profile: IosProfile{
+			profile: IOS{
 				Samples: []Sample{
 					{
 						ThreadID:            1,
@@ -1092,7 +1091,7 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 		},
 		{
 			name: "multiple threads with non-sequential samples",
-			profile: IosProfile{
+			profile: IOS{
 				Samples: []Sample{
 					{
 						ThreadID:            1,
@@ -1235,7 +1234,7 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 		},
 		{
 			name: "multiple threads with interleaved sequential samples",
-			profile: IosProfile{
+			profile: IOS{
 				Samples: []Sample{
 					{
 						ThreadID:            1,
@@ -1379,7 +1378,7 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 		},
 		{
 			name: "multiple threads with interleaved non-sequential samples",
-			profile: IosProfile{
+			profile: IOS{
 				Samples: []Sample{
 					{
 						ThreadID:            1,
@@ -1533,7 +1532,7 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 }
 
 func TestCallTreeGenerationFromMultipleProfiles(t *testing.T) {
-	p1 := IosProfile{
+	p1 := IOS{
 		Samples: []Sample{
 			{
 				ThreadID:            1,
@@ -1555,7 +1554,7 @@ func TestCallTreeGenerationFromMultipleProfiles(t *testing.T) {
 			},
 		},
 	}
-	p2 := IosProfile{
+	p2 := IOS{
 		Samples: []Sample{
 			{
 				ThreadID:            1,
@@ -1584,7 +1583,7 @@ func TestCallTreeGenerationFromMultipleProfiles(t *testing.T) {
 }
 
 func BenchmarkCallTrees(b *testing.B) {
-	var p snubautil.Profile
+	var p LegacyProfile
 	f, err := os.Open("../../test/data/cocoa.json")
 	if err != nil {
 		b.Fatal(err)
@@ -1593,8 +1592,8 @@ func BenchmarkCallTrees(b *testing.B) {
 	if err != nil {
 		b.Fatal(err)
 	}
-	var profile IosProfile
-	err = json.Unmarshal([]byte(p.Profile), &profile)
+	var iosProfile IOS
+	err = json.Unmarshal([]byte(p.Profile), &iosProfile)
 	if err != nil {
 		b.Fatal(err)
 	}
@@ -1603,7 +1602,7 @@ func BenchmarkCallTrees(b *testing.B) {
 
 	var total int
 	for n := 0; n < b.N; n++ {
-		c := profile.CallTrees()
+		c := iosProfile.CallTrees()
 		total += len(c)
 	}
 	b.Logf("Total call trees generated: %d", total)

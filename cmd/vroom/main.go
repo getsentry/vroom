@@ -19,7 +19,6 @@ import (
 	"github.com/kelseyhightower/envconfig"
 	"github.com/rs/zerolog/log"
 
-	"github.com/getsentry/vroom/internal/aggregate"
 	"github.com/getsentry/vroom/internal/httputil"
 	"github.com/getsentry/vroom/internal/logutil"
 	"github.com/getsentry/vroom/internal/snubautil"
@@ -55,13 +54,12 @@ func newEnvironment() (*environment, error) {
 	return &e, nil
 }
 
-func (env *environment) shutdown() error {
+func (env *environment) shutdown() {
 	err := env.storage.Close()
 	if err != nil {
 		sentry.CaptureException(err)
 	}
 	sentry.Flush(5 * time.Second)
-	return nil
 }
 
 func (env *environment) newRouter() (*httprouter.Router, error) {
@@ -78,11 +76,8 @@ func (env *environment) newRouter() (*httprouter.Router, error) {
 		{http.MethodGet, "/organizations/:organization_id/filters", env.getFilters},
 		{http.MethodGet, "/organizations/:organization_id/profiles", env.getProfiles},
 		{http.MethodGet, "/organizations/:organization_id/projects/:project_id/functions", env.getFunctions},
-		{http.MethodGet, "/organizations/:organization_id/projects/:project_id/functions_call_trees", env.getFunctionsCallTrees},
-		{http.MethodGet, "/organizations/:organization_id/projects/:project_id/functions_versions", env.getFunctionsVersions},
 		{http.MethodGet, "/organizations/:organization_id/projects/:project_id/profiles/:profile_id", env.getProfile},
 		{http.MethodGet, "/organizations/:organization_id/projects/:project_id/raw_profiles/:profile_id", env.getRawProfile},
-		{http.MethodGet, "/organizations/:organization_id/projects/:project_id/profiles/:profile_id/call_tree", env.getProfileCallTree},
 		{http.MethodGet, "/organizations/:organization_id/projects/:project_id/transactions/:transaction_id", env.getProfileIDByTransactionID},
 		{http.MethodGet, "/organizations/:organization_id/stats", env.getProfilesStats},
 		{http.MethodGet, "/organizations/:organization_id/transactions", env.getTransactions},
@@ -153,9 +148,7 @@ func main() {
 	<-waitForShutdown
 
 	// Shutdown the rest of the environment after the HTTP connections are closed
-	if err := env.shutdown(); err != nil {
-		log.Err(err).Msg("error tearing down environment")
-	}
+	env.shutdown()
 }
 
 type GetOrganizationProfilesResponse struct {
@@ -283,205 +276,6 @@ func (env *environment) getFilters(w http.ResponseWriter, r *http.Request) {
 	}
 
 	b, err := json.Marshal(response)
-	if err != nil {
-		hub.CaptureException(err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	_, _ = w.Write(b)
-}
-
-type GetFunctionsCallTreesResponse struct {
-	FunctionCall aggregate.FunctionCall `json:"function_call"`
-	CallTrees    []aggregate.CallTree   `json:"call_trees"`
-}
-
-func (env *environment) getFunctionsCallTrees(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	hub := sentry.GetHubFromContext(ctx)
-	p, ok := httputil.GetRequiredQueryParameters(w, r, "version", "transaction_name", "key")
-	if !ok {
-		return
-	}
-
-	hub.Scope().SetTags(p)
-
-	ps := httprouter.ParamsFromContext(ctx)
-	rawOrganizationID := ps.ByName("organization_id")
-	organizationID, err := strconv.ParseUint(rawOrganizationID, 10, 64)
-	if err != nil {
-		hub.CaptureException(err)
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-
-	hub.Scope().SetTag("organization_id", rawOrganizationID)
-
-	rawProjectID := ps.ByName("project_id")
-	projectID, err := strconv.ParseUint(rawProjectID, 10, 64)
-	if err != nil {
-		hub.CaptureException(err)
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-
-	hub.Scope().SetTag("project_id", rawProjectID)
-
-	sqb, err := env.profilesQueryBuilderFromRequest(ctx, r.URL.Query())
-	if err != nil {
-		hub.CaptureException(err)
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-
-	sqb.Limit = 10
-	sqb.WhereConditions = append(sqb.WhereConditions,
-		fmt.Sprintf("organization_id=%d", organizationID),
-		fmt.Sprintf("project_id=%d", projectID),
-	)
-
-	profiles, err := snubautil.GetProfiles(sqb, true)
-	if err != nil {
-		hub.CaptureException(err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	var topNFunctions int
-	if rawTopNFunctions := r.URL.Query().Get("top_n_functions"); rawTopNFunctions != "" {
-		i, err := strconv.Atoi(rawTopNFunctions)
-		if err != nil {
-			sentry.CaptureException(err)
-			w.WriteHeader(http.StatusBadRequest)
-		} else {
-			topNFunctions = i
-		}
-	}
-
-	s := sentry.StartSpan(ctx, "aggregation")
-	aggRes, err := aggregate.AggregateProfiles(profiles, topNFunctions)
-	s.Finish()
-	if err != nil {
-		hub.CaptureException(err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	s = sentry.StartSpan(ctx, "json.marshal")
-	defer s.Finish()
-
-	var response GetFunctionsCallTreesResponse
-	// Linear search the list of functions for the one matching the key
-	// because N is small (less than 100 elements).
-	for _, f := range aggRes.Aggregation.FunctionCalls {
-		if f.Key == p["key"] {
-			response.FunctionCall = f
-			break
-		}
-	}
-
-	if trees, ok := aggRes.Aggregation.FunctionToCallTrees[p["key"]]; ok {
-		response.CallTrees = trees
-	}
-
-	if len(response.CallTrees) == 0 {
-		hub.CaptureMessage("no call tree")
-	}
-
-	b, err := json.Marshal(response)
-	if err != nil {
-		hub.CaptureException(err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	_, _ = w.Write(b)
-}
-
-type (
-	GetFunctionsVersionsResponse struct {
-		Functions []aggregate.FunctionCall `json:"functions"`
-	}
-)
-
-func (env *environment) getFunctionsVersions(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	hub := sentry.GetHubFromContext(ctx)
-	p, ok := httputil.GetRequiredQueryParameters(w, r, "transaction_name")
-	if !ok {
-		return
-	}
-
-	hub.Scope().SetTags(p)
-
-	ps := httprouter.ParamsFromContext(ctx)
-	rawOrganizationID := ps.ByName("organization_id")
-	organizationID, err := strconv.ParseUint(rawOrganizationID, 10, 64)
-	if err != nil {
-		hub.CaptureException(err)
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-
-	hub.Scope().SetTag("organization_id", rawOrganizationID)
-
-	rawProjectID := ps.ByName("project_id")
-	projectID, err := strconv.ParseUint(rawProjectID, 10, 64)
-	if err != nil {
-		hub.CaptureException(err)
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-
-	hub.Scope().SetTag("project_id", rawProjectID)
-
-	var topNFunctions int
-	if rawTopNFunctions := r.URL.Query().Get("top_n_functions"); rawTopNFunctions != "" {
-		i, err := strconv.Atoi(rawTopNFunctions)
-		if err != nil {
-			hub.CaptureException(err)
-			w.WriteHeader(http.StatusBadRequest)
-		} else {
-			topNFunctions = i
-		}
-	}
-
-	sqb, err := env.profilesQueryBuilderFromRequest(ctx, r.URL.Query())
-	if err != nil {
-		hub.CaptureException(err)
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	sqb.WhereConditions = append(sqb.WhereConditions,
-		fmt.Sprintf("organization_id=%d", organizationID),
-		fmt.Sprintf("project_id=%d", projectID),
-	)
-	sqb.Limit = 10
-
-	profiles, err := snubautil.GetProfiles(sqb, true)
-	if err != nil {
-		hub.CaptureException(err)
-		return
-	}
-
-	s := sentry.StartSpan(ctx, "aggregation")
-	aggResult, err := aggregate.AggregateProfiles(profiles, topNFunctions)
-	s.Finish()
-	if err != nil {
-		hub.CaptureException(err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	s = sentry.StartSpan(ctx, "json.marshal")
-	defer s.Finish()
-
-	b, err := json.Marshal(GetFunctionsVersionsResponse{
-		Functions: aggResult.Aggregation.FunctionCalls,
-	})
 	if err != nil {
 		hub.CaptureException(err)
 		w.WriteHeader(http.StatusInternalServerError)

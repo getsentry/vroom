@@ -5,7 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"os"
 	"testing"
@@ -56,8 +56,14 @@ func TestUploadProfile(t *testing.T) {
 	}
 	bucket := storageClient.Bucket(bucketName)
 	objectName := uuid.New().String()
-	originalData := []byte(`{"samples": [1, 2, 3, 4], "frames": [1, 2, 3, 4]}`)
-	_, err = CompressedWrite(ctx, bucket, objectName, originalData)
+	originalData := struct {
+		Samples []uint64 `json:"samples"`
+		Frames  []uint64 `json:"frames"`
+	}{
+		Samples: []uint64{1, 2, 3, 4},
+		Frames:  []uint64{1, 2, 3, 4},
+	}
+	err = CompressedWrite(ctx, bucket, objectName, originalData)
 	if err != nil {
 		t.Fatalf("we should be able to write: %v", err)
 	}
@@ -66,11 +72,15 @@ func TestUploadProfile(t *testing.T) {
 		t.Fatalf("we should be able to read the object: %v", err)
 	}
 	r := lz4.NewReader(bytes.NewBuffer(object.Content))
-	uncompressedData, err := ioutil.ReadAll(r)
+	uncompressedData, err := io.ReadAll(r)
 	if err != nil {
 		t.Fatalf("we should be able to uncompress the data: %v", err)
 	}
-	if bytes.Compare(originalData, uncompressedData) != 0 {
+	b, err := json.Marshal(originalData)
+	if err != nil {
+		t.Fatalf("we should be able to marshal this: %v", err)
+	}
+	if !bytes.Equal(b, bytes.TrimSpace(uncompressedData)) {
 		t.Fatal("data should be identical")
 	}
 }
@@ -110,7 +120,7 @@ func TestDownloadProfile(t *testing.T) {
 	if err != nil {
 		t.Fatalf("we should be able to marshal back to JSON: %v", err)
 	}
-	if bytes.Compare(originalData, uncompressedData) != 0 {
+	if !bytes.Equal(originalData, uncompressedData) {
 		t.Fatalf("data should be identical: %v %v", string(originalData), string(uncompressedData))
 	}
 }

@@ -109,7 +109,7 @@ func GetVersionBuildFromAppVersion(appVersion string) (VersionBuild, error) {
 }
 
 func MakeFieldsFilter(fields map[string]string, params url.Values) ([]string, error) {
-	filter := make([]string, 0, 0)
+	filter := make([]string, 0)
 	for field, column := range fields {
 		values, exists := params[field]
 		if !exists {
