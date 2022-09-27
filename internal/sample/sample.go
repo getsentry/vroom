@@ -33,7 +33,7 @@ type (
 	Transaction struct {
 		ID              string `json:"id"`
 		Name            string `json:"name"`
-		RelativeEndNS   uint64 `json:"relative_stop_ns"`
+		RelativeEndNS   uint64 `json:"relative_end_ns"`
 		RelativeStartNS uint64 `json:"relative_start_ns"`
 		TraceID         string `json:"trace_id"`
 	}
@@ -56,6 +56,10 @@ type (
 	}
 
 	SampleProfile struct {
+		sampleProfile
+	}
+
+	sampleProfile struct {
 		DebugMeta      interface{} `json:"debug_meta,omitempty"`
 		Device         Device      `json:"device"`
 		Environment    string      `json:"environment,omitempty"`
@@ -101,7 +105,7 @@ func (p SampleProfile) CallTrees() (map[uint64][]*nodetree.Node, error) {
 }
 
 func (p *SampleProfile) UnmarshalJSON(b []byte) error {
-	return json.Unmarshal(b, &p)
+	return json.Unmarshal(b, &p.sampleProfile)
 }
 
 func (p *SampleProfile) Speedscope() (speedscope.Output, error) {
