@@ -73,8 +73,13 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 
 	s = sentry.StartSpan(ctx, "calltree")
 	s.Description = "Generate call trees"
-	callTrees, _ := p.CallTrees()
+	callTrees, err := p.CallTrees()
 	s.Finish()
+	if err != nil {
+		hub.CaptureException(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 
 	s = sentry.StartSpan(ctx, "json.marshal")
 	s.Description = "Marshal call trees"
