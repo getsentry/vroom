@@ -17,8 +17,6 @@ type (
 		Speedscope() (speedscope.Output, error)
 		CallTrees() (map[uint64][]*nodetree.Node, error)
 		StoragePath() string
-
-		UnmarshalJSON(b []byte) error
 	}
 
 	Profile struct {

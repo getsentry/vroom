@@ -1,7 +1,6 @@
 package sample
 
 import (
-	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -33,7 +32,7 @@ type (
 	Transaction struct {
 		ID              string `json:"id"`
 		Name            string `json:"name"`
-		RelativeEndNS   uint64 `json:"relative_stop_ns"`
+		RelativeEndNS   uint64 `json:"relative_end_ns"`
 		RelativeStartNS uint64 `json:"relative_start_ns"`
 		TraceID         string `json:"trace_id"`
 	}
@@ -98,10 +97,6 @@ func (p SampleProfile) GetPlatform() string {
 
 func (p SampleProfile) CallTrees() (map[uint64][]*nodetree.Node, error) {
 	return make(map[uint64][]*nodetree.Node), nil
-}
-
-func (p *SampleProfile) UnmarshalJSON(b []byte) error {
-	return json.Unmarshal(b, &p)
 }
 
 func (p *SampleProfile) Speedscope() (speedscope.Output, error) {
