@@ -76,7 +76,6 @@ func (p *LegacyProfile) UnmarshalJSON(b []byte) error {
 	}
 	switch p.Platform {
 	case "cocoa":
-		var cp IOS
 		var raw []byte
 		if p.Profile[0] == '"' {
 			var s string
@@ -88,20 +87,35 @@ func (p *LegacyProfile) UnmarshalJSON(b []byte) error {
 		} else {
 			raw = p.Profile
 		}
-		err := json.Unmarshal(raw, &cp)
+		var t IOS
+		err := json.Unmarshal(raw, &t)
 		if err != nil {
 			return err
 		}
-		cp.ReplaceIdleStacks()
-		(*p).Trace = cp
+		t.ReplaceIdleStacks()
+		(*p).Trace = t
 	case "android":
-		var ap Android
-		err := json.Unmarshal(p.Profile, &ap)
+		var t Android
+		err := json.Unmarshal(p.Profile, &t)
 		if err != nil {
 			return err
 		}
-		(*p).Trace = ap
-	case "python", "rust", "node", "typescript":
+		(*p).Trace = t
+	case "python":
+		var t Python
+		err := json.Unmarshal(p.Profile, &t)
+		if err != nil {
+			return err
+		}
+		(*p).Trace = t
+	case "rust":
+		var t Rust
+		err := json.Unmarshal(p.Profile, &t)
+		if err != nil {
+			return err
+		}
+		(*p).Trace = t
+	case "node", "typescript":
 		return nil
 	default:
 		return errors.New("unknown platform")

@@ -28,7 +28,7 @@ func (p Python) CallTrees() map[uint64][]*nodetree.Node {
 	return make(map[uint64][]*nodetree.Node)
 }
 
-func (p *Python) Speedscope() (speedscope.Output, error) {
+func (p Python) Speedscope() (speedscope.Output, error) {
 	threadIDToProfile := make(map[uint64]*speedscope.SampledProfile)
 	threadIDToPreviousTimestampNS := make(map[uint64]uint64)
 
