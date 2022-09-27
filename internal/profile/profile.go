@@ -3,6 +3,7 @@ package profile
 import (
 	"encoding/json"
 
+	"github.com/getsentry/vroom/internal/metadata"
 	"github.com/getsentry/vroom/internal/nodetree"
 	"github.com/getsentry/vroom/internal/sample"
 	"github.com/getsentry/vroom/internal/speedscope"
@@ -13,6 +14,10 @@ type (
 		GetID() string
 		GetOrganizationID() uint64
 		GetProjectID() uint64
+		GetPlatform() string
+
+		Metadata() metadata.Metadata
+		Raw() []byte
 
 		Speedscope() (speedscope.Output, error)
 		CallTrees() (map[uint64][]*nodetree.Node, error)
@@ -65,15 +70,15 @@ func (p *Profile) CallTrees() (map[uint64][]*nodetree.Node, error) {
 	return p.profile.CallTrees()
 }
 
-func (p *Profile) GetID() string {
+func (p *Profile) ID() string {
 	return p.profile.GetID()
 }
 
-func (p *Profile) GetOrganizationID() uint64 {
+func (p *Profile) OrganizationID() uint64 {
 	return p.profile.GetOrganizationID()
 }
 
-func (p *Profile) GetProjectID() uint64 {
+func (p *Profile) ProjectID() uint64 {
 	return p.profile.GetProjectID()
 }
 
@@ -87,4 +92,16 @@ func (p *Profile) Speedscope() (speedscope.Output, error) {
 		return speedscope.Output{}, err
 	}
 	return o, nil
+}
+
+func (p *Profile) Metadata() metadata.Metadata {
+	return p.profile.Metadata()
+}
+
+func (p *Profile) Platform() string {
+	return p.profile.GetPlatform()
+}
+
+func (p *Profile) Raw() []byte {
+	return p.profile.Raw()
 }
