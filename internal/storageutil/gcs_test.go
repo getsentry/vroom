@@ -56,7 +56,13 @@ func TestUploadProfile(t *testing.T) {
 	}
 	bucket := storageClient.Bucket(bucketName)
 	objectName := uuid.New().String()
-	originalData := []byte(`{"samples": [1, 2, 3, 4], "frames": [1, 2, 3, 4]}`)
+	originalData := struct {
+		Samples []uint64 `json:"samples"`
+		Frames  []uint64 `json:"frames"`
+	}{
+		Samples: []uint64{1, 2, 3, 4},
+		Frames:  []uint64{1, 2, 3, 4},
+	}
 	_, err = CompressedWrite(ctx, bucket, objectName, originalData)
 	if err != nil {
 		t.Fatalf("we should be able to write: %v", err)
@@ -70,7 +76,11 @@ func TestUploadProfile(t *testing.T) {
 	if err != nil {
 		t.Fatalf("we should be able to uncompress the data: %v", err)
 	}
-	if !bytes.Equal(originalData, uncompressedData) {
+	b, err := json.Marshal(originalData)
+	if err != nil {
+		t.Fatalf("we should be able to marshal this: %v", err)
+	}
+	if !bytes.Equal(b, bytes.TrimSpace(uncompressedData)) {
 		t.Fatal("data should be identical")
 	}
 }
