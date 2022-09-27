@@ -1,7 +1,6 @@
 package sample
 
 import (
-	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -56,10 +55,6 @@ type (
 	}
 
 	SampleProfile struct {
-		sampleProfile
-	}
-
-	sampleProfile struct {
 		DebugMeta      interface{} `json:"debug_meta,omitempty"`
 		Device         Device      `json:"device"`
 		Environment    string      `json:"environment,omitempty"`
@@ -102,10 +97,6 @@ func (p SampleProfile) GetPlatform() string {
 
 func (p SampleProfile) CallTrees() (map[uint64][]*nodetree.Node, error) {
 	return make(map[uint64][]*nodetree.Node), nil
-}
-
-func (p *SampleProfile) UnmarshalJSON(b []byte) error {
-	return json.Unmarshal(b, &p.sampleProfile)
 }
 
 func (p *SampleProfile) Speedscope() (speedscope.Output, error) {
