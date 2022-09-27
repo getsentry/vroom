@@ -88,18 +88,5 @@ func (p *Profile) Speedscope() (speedscope.Output, error) {
 	if err != nil {
 		return speedscope.Output{}, err
 	}
-
-	/*
-		o.DurationNS = p.profile.DurationNS()
-		o.Metadata = speedscope.ProfileMetadata{speedscope.ProfileView: speedscope.ProfileView(p.RawProfile)}
-		o.Platform = p.Platform
-		o.ProfileID = p.ProfileID
-		o.ProjectID = p.ProjectID
-		o.TransactionName = p.TransactionName
-
-		version := FormatVersion(o.Metadata.VersionName, o.Metadata.VersionCode)
-		o.Version, o.Metadata.Version = version, version
-	*/
-
 	return o, nil
 }

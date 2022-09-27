@@ -115,5 +115,20 @@ func (p LegacyProfile) CallTrees() (map[uint64][]*nodetree.Node, error) {
 }
 
 func (p *LegacyProfile) Speedscope() (speedscope.Output, error) {
-	return p.Trace.Speedscope()
+	o, err := p.Trace.Speedscope()
+	if err != nil {
+		return speedscope.Output{}, err
+	}
+
+	version := FormatVersion(p.VersionName, p.VersionCode)
+
+	o.DurationNS = p.DurationNS
+	o.Metadata = speedscope.ProfileMetadata{ProfileView: speedscope.ProfileView(p.RawProfile), Version: version}
+	o.Platform = p.Platform
+	o.ProfileID = p.ProfileID
+	o.ProjectID = p.ProjectID
+	o.TransactionName = p.TransactionName
+	o.Version = version
+
+	return o, nil
 }
