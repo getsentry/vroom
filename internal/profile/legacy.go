@@ -74,6 +74,10 @@ func (p *LegacyProfile) UnmarshalJSON(b []byte) error {
 	if err != nil {
 		return err
 	}
+	// when reading a profile from Snuba, there's no profile attached
+	if len(p.Profile) == 0 {
+		return nil
+	}
 	var raw []byte
 	if p.Profile[0] == '"' {
 		var s string
