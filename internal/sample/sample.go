@@ -71,6 +71,7 @@ type (
 		Timestamp      time.Time     `json:"timestamp"`
 		Trace          Trace         `json:"profile"`
 		Transactions   []Transaction `json:"transactions"`
+		Version        string        `json:"version"`
 	}
 )
 
