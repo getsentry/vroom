@@ -129,6 +129,8 @@ func (p *LegacyProfile) UnmarshalJSON(b []byte) error {
 }
 
 func (p LegacyProfile) CallTrees() (map[uint64][]*nodetree.Node, error) {
+	// Profiles longer than 5s contain a lot of call trees and it produces a lot of noise for the aggregation.
+	// The majority of them might also be timing out and we want to ignore them for the aggregation.
 	if time.Duration(p.DurationNS) > 5*time.Second {
 		return make(map[uint64][]*nodetree.Node), nil
 	}
