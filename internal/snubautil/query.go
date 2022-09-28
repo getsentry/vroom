@@ -16,10 +16,10 @@ var ErrProfileNotFound = errors.New("profile not found")
 const MaxRetentionInDays = 90
 
 type SnubaProfilesResponse struct {
-	Profiles []profile.LegacyProfile `json:"data"`
+	Profiles []profile.Profile `json:"data"`
 }
 
-func GetProfile(organizationID, projectID uint64, profileID string, sqb QueryBuilder) (profile.LegacyProfile, error) {
+func GetProfile(organizationID, projectID uint64, profileID string, sqb QueryBuilder) (profile.Profile, error) {
 	t := sentry.TransactionFromContext(sqb.ctx)
 	rs := t.StartChild("snuba")
 	rs.Description = "Get a profile"
@@ -61,7 +61,7 @@ func GetProfile(organizationID, projectID uint64, profileID string, sqb QueryBui
 
 	rb, err := sqb.Do(rs)
 	if err != nil {
-		return profile.LegacyProfile{}, err
+		return profile.Profile{}, err
 	}
 	defer rb.Close()
 
@@ -72,17 +72,17 @@ func GetProfile(organizationID, projectID uint64, profileID string, sqb QueryBui
 	var sr SnubaProfilesResponse
 	err = json.NewDecoder(rb).Decode(&sr)
 	if err != nil {
-		return profile.LegacyProfile{}, err
+		return profile.Profile{}, err
 	}
 
 	if len(sr.Profiles) == 0 {
-		return profile.LegacyProfile{}, ErrProfileNotFound
+		return profile.Profile{}, ErrProfileNotFound
 	}
 
 	return sr.Profiles[0], nil
 }
 
-func GetProfiles(sqb QueryBuilder, fetchPayload bool) ([]profile.LegacyProfile, error) {
+func GetProfiles(sqb QueryBuilder, fetchPayload bool) ([]profile.Profile, error) {
 	t := sentry.TransactionFromContext(sqb.ctx)
 	rs := t.StartChild("snuba")
 	rs.Description = "Get profiles"
@@ -136,7 +136,7 @@ func GetProfiles(sqb QueryBuilder, fetchPayload bool) ([]profile.LegacyProfile, 
 	}
 
 	if len(sr.Profiles) == 0 {
-		return []profile.LegacyProfile{}, nil
+		return []profile.Profile{}, nil
 	}
 
 	return sr.Profiles, err
@@ -236,5 +236,5 @@ func GetProfileIDByTransactionID(organizationID, projectID uint64, transactionID
 		return "", ErrProfileNotFound
 	}
 
-	return sr.Profiles[0].ProfileID, nil
+	return sr.Profiles[0].ID(), nil
 }
