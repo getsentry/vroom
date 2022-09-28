@@ -129,6 +129,9 @@ func (p *LegacyProfile) UnmarshalJSON(b []byte) error {
 }
 
 func (p LegacyProfile) CallTrees() (map[uint64][]*nodetree.Node, error) {
+	if time.Duration(p.DurationNS) > 5*time.Second {
+		return make(map[uint64][]*nodetree.Node), nil
+	}
 	return p.Trace.CallTrees(), nil
 }
 
