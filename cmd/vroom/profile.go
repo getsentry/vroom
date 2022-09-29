@@ -4,13 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"io"
 	"net/http"
 	"strconv"
-	"strings"
 
 	"cloud.google.com/go/storage"
-	"github.com/andybalholm/brotli"
 	"github.com/getsentry/sentry-go"
 	"github.com/getsentry/vroom/internal/nodetree"
 	"github.com/getsentry/vroom/internal/profile"
@@ -34,11 +31,7 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 
 	s := sentry.StartSpan(ctx, "json.unmarshal")
 	s.Description = "Unmarshal Snuba profile"
-	body := io.Reader(r.Body)
-	if strings.Contains(r.Header.Get("Content-Encoding"), "br") {
-		body = brotli.NewReader(body)
-	}
-	err := json.NewDecoder(body).Decode(&p)
+	err := json.NewDecoder(r.Body).Decode(&p)
 	s.Finish()
 	if err != nil {
 		log.Err(err).Msg("profile can't be unmarshaled")

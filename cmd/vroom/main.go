@@ -89,7 +89,11 @@ func (env *environment) newRouter() (*httprouter.Router, error) {
 	router := httprouter.New()
 
 	for _, route := range routes {
-		router.Handler(route.method, route.path, compress(httputil.AnonymizeTransactionName(http.HandlerFunc(route.handler))))
+		handlerFunc := httputil.AnonymizeTransactionName(route.handler)
+		handlerFunc = httputil.DecompressPayload(handlerFunc)
+		handler := compress(handlerFunc)
+
+		router.Handler(route.method, route.path, handler)
 	}
 
 	return router, nil
