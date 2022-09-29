@@ -7,8 +7,10 @@ import (
 	"io"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"cloud.google.com/go/storage"
+	"github.com/andybalholm/brotli"
 	"github.com/getsentry/sentry-go"
 	"github.com/getsentry/vroom/internal/nodetree"
 	"github.com/getsentry/vroom/internal/profile"
@@ -28,27 +30,23 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	hub := sentry.GetHubFromContext(ctx)
 
-	s := sentry.StartSpan(ctx, "request.body")
-	s.Description = "Read request body"
-	body, err := io.ReadAll(r.Body)
-	s.Finish()
-	if err != nil {
-		hub.CaptureException(err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	s = sentry.StartSpan(ctx, "json.unmarshal")
-	s.Description = "Unmarshal Snuba profile"
 	var p profile.Profile
-	err = json.Unmarshal(body, &p)
+
+	s := sentry.StartSpan(ctx, "json.unmarshal")
+	s.Description = "Unmarshal Snuba profile"
+	body := io.Reader(r.Body)
+	if strings.Contains(r.Header.Get("Content-Encoding"), "br") {
+		body = brotli.NewReader(body)
+	}
+	err := json.NewDecoder(body).Decode(&p)
 	s.Finish()
 	if err != nil {
-		log.Err(err).Str("profile", string(body)).Msg("profile can't be unmarshaled")
+		log.Err(err).Msg("profile can't be unmarshaled")
 		hub.CaptureException(err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+	defer r.Body.Close()
 
 	hub.Scope().SetTags(map[string]string{
 		"organization_id": strconv.FormatUint(p.GetOrganizationID(), 10),
