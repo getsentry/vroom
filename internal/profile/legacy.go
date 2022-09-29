@@ -4,9 +4,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
+	"github.com/getsentry/vroom/internal/metadata"
 	"github.com/getsentry/vroom/internal/nodetree"
 	"github.com/getsentry/vroom/internal/speedscope"
 )
@@ -98,6 +100,7 @@ func (p *LegacyProfile) UnmarshalJSON(b []byte) error {
 		}
 		t.ReplaceIdleStacks()
 		(*p).Trace = t
+		p.Profile = nil
 	case "android":
 		var t Android
 		err := json.Unmarshal(raw, &t)
@@ -105,6 +108,7 @@ func (p *LegacyProfile) UnmarshalJSON(b []byte) error {
 			return err
 		}
 		(*p).Trace = t
+		p.Profile = nil
 	case "python":
 		var t Python
 		err := json.Unmarshal(raw, &t)
@@ -112,6 +116,7 @@ func (p *LegacyProfile) UnmarshalJSON(b []byte) error {
 			return err
 		}
 		(*p).Trace = t
+		p.Profile = nil
 	case "rust":
 		var t Rust
 		err := json.Unmarshal(raw, &t)
@@ -119,12 +124,12 @@ func (p *LegacyProfile) UnmarshalJSON(b []byte) error {
 			return err
 		}
 		(*p).Trace = t
-	case "node", "typescript":
-		return nil
+		p.Profile = nil
+	case "typescript":
+		(*p).Trace = new(Typescript)
 	default:
 		return errors.New("unknown platform")
 	}
-	p.Profile = nil
 	return nil
 }
 
@@ -154,4 +159,33 @@ func (p *LegacyProfile) Speedscope() (speedscope.Output, error) {
 	o.Version = version
 
 	return o, nil
+}
+
+func (p *LegacyProfile) Metadata() metadata.Metadata {
+	return metadata.Metadata{
+		AndroidAPILevel:      p.AndroidAPILevel,
+		DeviceClassification: p.DeviceClassification,
+		DeviceLocale:         p.DeviceLocale,
+		DeviceManufacturer:   p.DeviceManufacturer,
+		DeviceModel:          p.DeviceModel,
+		DeviceOsBuildNumber:  p.DeviceOSBuildNumber,
+		DeviceOsName:         p.DeviceOSName,
+		DeviceOsVersion:      p.DeviceOSVersion,
+		ID:                   p.ProfileID,
+		ProjectID:            strconv.FormatUint(p.GetProjectID(), 10),
+		Timestamp:            p.Received.Unix(),
+		TraceDurationMs:      float64(p.DurationNS) / 1_000_000,
+		TransactionID:        p.TransactionID,
+		TransactionName:      p.TransactionName,
+		VersionCode:          p.VersionCode,
+		VersionName:          p.VersionName,
+	}
+}
+
+func (p *LegacyProfile) GetPlatform() string {
+	return p.Platform
+}
+
+func (p *LegacyProfile) Raw() []byte {
+	return p.Profile
 }

@@ -2,9 +2,11 @@ package sample
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
+	"github.com/getsentry/vroom/internal/metadata"
 	"github.com/getsentry/vroom/internal/nodetree"
 	"github.com/getsentry/vroom/internal/speedscope"
 )
@@ -38,7 +40,7 @@ type (
 	}
 
 	Sample struct {
-		RelativeTimestampNS int `json:"relative_timestamp_ns"`
+		ElapsedSinceStartNS int `json:"elapsed_since_start_ns"`
 		StackID             int `json:"stack_id"`
 	}
 
@@ -55,21 +57,27 @@ type (
 	}
 
 	SampleProfile struct {
-		DebugMeta      interface{} `json:"debug_meta,omitempty"`
-		Device         Device      `json:"device"`
-		Environment    string      `json:"environment,omitempty"`
-		EventID        string      `json:"event_id"`
-		OS             OS          `json:"os"`
-		OrganizationID uint64      `json:"organization_id"`
-		Platform       string      `json:"platform"`
-		ProjectID      uint64      `json:"project_id"`
-		Received       time.Time   `json:"received"`
-		Release        string      `json:"release"`
-		Runtime        Runtime     `json:"runtime"`
-		Timestamp      time.Time   `json:"timestamp"`
-		Trace          Trace       `json:"profile"`
+		DebugMeta      interface{}   `json:"debug_meta,omitempty"`
+		Device         Device        `json:"device"`
+		Environment    string        `json:"environment,omitempty"`
+		EventID        string        `json:"event_id"`
+		OS             OS            `json:"os"`
+		OrganizationID uint64        `json:"organization_id"`
+		Platform       string        `json:"platform"`
+		ProjectID      uint64        `json:"project_id"`
+		Received       time.Time     `json:"received"`
+		Release        string        `json:"release"`
+		Runtime        Runtime       `json:"runtime"`
+		Timestamp      time.Time     `json:"timestamp"`
+		Trace          Trace         `json:"profile"`
+		Transactions   []Transaction `json:"transactions"`
+		Version        string        `json:"version"`
 	}
 )
+
+func (t Transaction) DurationNS() uint64 {
+	return t.RelativeEndNS - t.RelativeStartNS
+}
 
 func (p SampleProfile) GetOrganizationID() uint64 {
 	return p.OrganizationID
@@ -101,4 +109,27 @@ func (p SampleProfile) CallTrees() (map[uint64][]*nodetree.Node, error) {
 
 func (p *SampleProfile) Speedscope() (speedscope.Output, error) {
 	return speedscope.Output{}, nil
+}
+
+func (p *SampleProfile) Metadata() metadata.Metadata {
+	return metadata.Metadata{
+		DeviceClassification: p.Device.Classification,
+		DeviceLocale:         p.Device.Locale,
+		DeviceManufacturer:   p.Device.Manufacturer,
+		DeviceModel:          p.Device.Model,
+		DeviceOsBuildNumber:  p.OS.BuildNumber,
+		DeviceOsName:         p.OS.Name,
+		DeviceOsVersion:      p.OS.Version,
+		ID:                   p.EventID,
+		ProjectID:            strconv.FormatUint(p.ProjectID, 10),
+		Timestamp:            p.Received.Unix(),
+		TraceDurationMs:      float64(p.Transactions[0].DurationNS()) / 1_000_000,
+		TransactionID:        p.Transactions[0].ID,
+		TransactionName:      p.Transactions[0].Name,
+		VersionName:          p.Release,
+	}
+}
+
+func (p *SampleProfile) Raw() []byte {
+	return []byte{}
 }
