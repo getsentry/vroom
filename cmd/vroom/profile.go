@@ -51,9 +51,9 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	hub.Scope().SetTags(map[string]string{
-		"organization_id": strconv.FormatUint(p.GetOrganizationID(), 10),
-		"project_id":      strconv.FormatUint(p.GetProjectID(), 10),
-		"profile_id":      p.GetID(),
+		"organization_id": strconv.FormatUint(p.OrganizationID(), 10),
+		"project_id":      strconv.FormatUint(p.ProjectID(), 10),
+		"profile_id":      p.ID(),
 	})
 
 	s = sentry.StartSpan(ctx, "gcs.write")
@@ -98,20 +98,20 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 	_, _ = w.Write(b)
 }
 
-func getRawProfile(ctx context.Context, organizationID, projectID uint64, profileID string, profilesBucket *storage.BucketHandle, snuba snubautil.Client) (profile.LegacyProfile, error) {
-	var p profile.LegacyProfile
+func getRawProfile(ctx context.Context, organizationID, projectID uint64, profileID string, profilesBucket *storage.BucketHandle, snuba snubautil.Client) (profile.Profile, error) {
+	var p profile.Profile
 	err := storageutil.UnmarshalCompressed(ctx, profilesBucket, profile.StoragePath(organizationID, projectID, profileID), &p)
 	if err != nil {
 		if !errors.Is(err, storage.ErrObjectNotExist) {
-			return profile.LegacyProfile{}, err
+			return profile.Profile{}, err
 		}
 		sqb, err := snuba.NewQuery(ctx, "profiles")
 		if err != nil {
-			return profile.LegacyProfile{}, err
+			return profile.Profile{}, err
 		}
 		sp, err := snubautil.GetProfile(organizationID, projectID, profileID, sqb)
 		if err != nil {
-			return profile.LegacyProfile{}, err
+			return profile.Profile{}, err
 		}
 		p = sp
 	}
@@ -228,15 +228,15 @@ func (env *environment) getProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	hub.Scope().SetTag("platform", p.Platform)
+	hub.Scope().SetTag("platform", p.Platform())
 
 	s = sentry.StartSpan(ctx, "json.marshal")
 	defer s.Finish()
 
 	var b []byte
-	switch p.Platform {
-	case "typescript", "javascript":
-		b = p.Profile
+	switch p.Platform() {
+	case "typescript":
+		b = p.Raw()
 	default:
 		o, err := p.Speedscope()
 		if err != nil {
