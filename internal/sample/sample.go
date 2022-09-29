@@ -38,7 +38,7 @@ type (
 	}
 
 	Sample struct {
-		RelativeTimestampNS int `json:"relative_timestamp_ns"`
+		ElapsedSinceStartNS int `json:"elapsed_since_start_ns"`
 		StackID             int `json:"stack_id"`
 	}
 
