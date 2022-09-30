@@ -37,19 +37,19 @@ type (
 	}
 
 	Transaction struct {
-		ActiveThreadID  uint64 `json:"active_thread_id,string"`
+		ActiveThreadID  uint64 `json:"active_thread_id"`
 		ID              string `json:"id"`
 		Name            string `json:"name"`
-		RelativeEndNS   uint64 `json:"relative_end_ns,string"`
-		RelativeStartNS uint64 `json:"relative_start_ns,string"`
+		RelativeEndNS   uint64 `json:"relative_end_ns"`
+		RelativeStartNS uint64 `json:"relative_start_ns"`
 		TraceID         string `json:"trace_id"`
 	}
 
 	Sample struct {
-		ElapsedSinceStartNS uint64 `json:"elapsed_since_start_ns,string"`
+		ElapsedSinceStartNS uint64 `json:"elapsed_since_start_ns"`
 		QueueAddress        string `json:"queue_address,omitempty"`
 		StackID             int    `json:"stack_id"`
-		ThreadID            uint64 `json:"thread_id,string"`
+		ThreadID            uint64 `json:"thread_id"`
 	}
 
 	Frame struct {
