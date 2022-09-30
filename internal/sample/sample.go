@@ -37,6 +37,7 @@ type (
 	}
 
 	Transaction struct {
+		ActiveThreadID  uint64 `json:"active_thread_id,string"`
 		ID              string `json:"id"`
 		Name            string `json:"name"`
 		RelativeEndNS   uint64 `json:"relative_end_ns,string"`
@@ -46,6 +47,7 @@ type (
 
 	Sample struct {
 		ElapsedSinceStartNS uint64 `json:"elapsed_since_start_ns,string"`
+		QueueAddress        string `json:"queue_address,omitempty"`
 		StackID             int    `json:"stack_id"`
 		ThreadID            uint64 `json:"thread_id,string"`
 	}
@@ -63,10 +65,21 @@ type (
 		Symbol          string `json:"symbol,omitempty"`
 	}
 
+	ThreadMetadata struct {
+		Name     string `json:"name,omitempty"`
+		Priority int    `json:"priority,omitempty"`
+	}
+
+	QueueMetadata struct {
+		Label string `json:"label"`
+	}
+
 	Trace struct {
-		Frames  []Frame  `json:"frames"`
-		Samples []Sample `json:"samples"`
-		Stacks  [][]int  `json:"stacks"`
+		Frames         []Frame                   `json:"frames"`
+		QueueMetadata  map[string]QueueMetadata  `json:"queue_metadata"`
+		Samples        []Sample                  `json:"samples"`
+		Stacks         [][]int                   `json:"stacks"`
+		ThreadMetadata map[string]ThreadMetadata `json:"thread_metadata"`
 	}
 
 	SampleProfile struct {
@@ -87,6 +100,33 @@ type (
 		Version        string        `json:"version"`
 	}
 )
+
+func (q QueueMetadata) LabeledAsMainThread() bool {
+	return q.Label == "com.apple.main-thread"
+}
+
+// IsMain returns true if the function is considered the main function.
+// It also returns an offset indicate if we need to keep the previous frame or not.
+func (f Frame) IsMain() (bool, int) {
+	if f.Status != "symbolicated" {
+		return false, 0
+	} else if f.Function == "main" {
+		return true, 0
+	} else if f.Function == "UIApplicationMain" {
+		return true, -1
+	}
+	return false, 0
+}
+
+func (f Frame) ID() string {
+	if f.SymAddr != "" {
+		return f.SymAddr
+	}
+	if f.InstructionAddr != "" {
+		return f.InstructionAddr
+	}
+	return f.Function
+}
 
 func (f Frame) PackageBaseName() string {
 	if f.Package == "" {
@@ -178,12 +218,130 @@ func (p SampleProfile) CallTrees() (map[uint64][]*nodetree.Node, error) {
 		previousTimestamp[s.ThreadID] = s.ElapsedSinceStartNS
 		current = nil
 	}
-	fmt.Println(trees)
 	return trees, nil
 }
 
 func (p *SampleProfile) Speedscope() (speedscope.Output, error) {
-	return speedscope.Output{}, nil
+	threadIDToProfile := make(map[uint64]*speedscope.SampledProfile)
+	addressToFrameIndex := make(map[string]int)
+	threadIDToPreviousTimestampNS := make(map[uint64]uint64)
+	frames := make([]speedscope.Frame, 0)
+	// we need to find the frame index of the main function so we can remove the frames before it
+	mainFunctionFrameIndex := -1
+	mainThreadID := p.Transactions[0].ActiveThreadID
+	for _, sample := range p.Trace.Samples {
+		threadID := strconv.FormatUint(sample.ThreadID, 10)
+		stack := p.Trace.Stacks[sample.StackID]
+		speedscopeProfile, exists := threadIDToProfile[sample.ThreadID]
+		queueMetadata, qmExists := p.Trace.QueueMetadata[sample.QueueAddress]
+		if !exists {
+			threadMetadata, tmExists := p.Trace.ThreadMetadata[threadID]
+			threadName := threadMetadata.Name
+			if threadName == "" && qmExists && (!queueMetadata.LabeledAsMainThread() || sample.ThreadID != mainThreadID) {
+				threadName = queueMetadata.Label
+			}
+			speedscopeProfile = &speedscope.SampledProfile{
+				Name:         threadName,
+				Queues:       make(map[string]speedscope.Queue),
+				StartValue:   sample.ElapsedSinceStartNS,
+				ThreadID:     sample.ThreadID,
+				IsMainThread: sample.ThreadID == mainThreadID,
+				Type:         speedscope.ProfileTypeSampled,
+				Unit:         speedscope.ValueUnitNanoseconds,
+			}
+			if qmExists {
+				speedscopeProfile.Queues[queueMetadata.Label] = speedscope.Queue{Label: queueMetadata.Label, StartNS: sample.ElapsedSinceStartNS, EndNS: sample.ElapsedSinceStartNS}
+			}
+			if tmExists {
+				speedscopeProfile.Priority = threadMetadata.Priority
+			}
+			threadIDToProfile[sample.ThreadID] = speedscopeProfile
+		} else {
+			if qmExists {
+				q, qExists := speedscopeProfile.Queues[queueMetadata.Label]
+				if !qExists {
+					speedscopeProfile.Queues[queueMetadata.Label] = speedscope.Queue{Label: queueMetadata.Label, StartNS: sample.ElapsedSinceStartNS, EndNS: sample.ElapsedSinceStartNS}
+				} else {
+					q.EndNS = sample.ElapsedSinceStartNS
+					speedscopeProfile.Queues[queueMetadata.Label] = q
+				}
+			}
+			speedscopeProfile.Weights = append(speedscopeProfile.Weights, sample.ElapsedSinceStartNS-threadIDToPreviousTimestampNS[sample.ThreadID])
+		}
+
+		speedscopeProfile.EndValue = sample.ElapsedSinceStartNS
+		threadIDToPreviousTimestampNS[sample.ThreadID] = sample.ElapsedSinceStartNS
+
+		samp := make([]int, 0, len(stack))
+		for i := len(stack) - 1; i >= 0; i-- {
+			fr := p.Trace.Frames[stack[i]]
+			address := fr.ID()
+			frameIndex, ok := addressToFrameIndex[address]
+			if !ok {
+				frameIndex = len(frames)
+				symbolName := fr.Function
+				if symbolName == "" {
+					symbolName = fmt.Sprintf("unknown (%s)", address)
+				} else if mainFunctionFrameIndex == -1 {
+					if isMainFrame, i := fr.IsMain(); isMainFrame {
+						mainFunctionFrameIndex = frameIndex + i
+					}
+				}
+				addressToFrameIndex[address] = frameIndex
+				frames = append(frames, speedscope.Frame{
+					File:          fr.File,
+					Image:         fr.PackageBaseName(),
+					IsApplication: p.IsApplicationPackage(fr.PackageBaseName()),
+					Line:          fr.Line,
+					Name:          symbolName,
+				})
+			}
+			samp = append(samp, frameIndex)
+		}
+		speedscopeProfile.Samples = append(speedscopeProfile.Samples, samp)
+	} // end loop speedscope.SampledProfiles
+	var mainThreadProfileIndex int
+	allProfiles := make([]interface{}, 0)
+	for _, prof := range threadIDToProfile {
+		if prof.IsMainThread {
+			mainThreadProfileIndex = len(allProfiles)
+		}
+		prof.Weights = append(prof.Weights, 0)
+		allProfiles = append(allProfiles, prof)
+	}
+
+	return speedscope.Output{
+		ActiveProfileIndex: mainThreadProfileIndex,
+		DurationNS:         p.Transactions[0].DurationNS(),
+		Metadata: speedscope.ProfileMetadata{
+			ProfileView: speedscope.ProfileView{
+				Architecture:         p.Device.Architecture,
+				DeviceClassification: p.Device.Classification,
+				DeviceLocale:         p.Device.Locale,
+				DeviceManufacturer:   p.Device.Manufacturer,
+				DeviceModel:          p.Device.Model,
+				DeviceOSName:         p.OS.Name,
+				DeviceOSVersion:      p.OS.Version,
+				DurationNS:           p.Transactions[0].DurationNS(),
+				OrganizationID:       p.OrganizationID,
+				Platform:             p.Platform,
+				ProfileID:            p.EventID,
+				ProjectID:            p.ProjectID,
+				Received:             p.Timestamp,
+				TraceID:              p.Transactions[0].TraceID,
+				TransactionID:        p.Transactions[0].ID,
+				TransactionName:      p.Transactions[0].Name,
+			},
+			Version: p.Release,
+		},
+		Platform:        p.Platform,
+		ProfileID:       p.EventID,
+		Profiles:        allProfiles,
+		ProjectID:       p.ProjectID,
+		Shared:          speedscope.SharedData{Frames: frames},
+		TransactionName: p.Transactions[0].Name,
+		Version:         p.Release,
+	}, nil
 }
 
 func (p *SampleProfile) Metadata() metadata.Metadata {

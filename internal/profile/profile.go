@@ -87,11 +87,7 @@ func (p *Profile) StoragePath() string {
 }
 
 func (p *Profile) Speedscope() (speedscope.Output, error) {
-	o, err := p.profile.Speedscope()
-	if err != nil {
-		return speedscope.Output{}, err
-	}
-	return o, nil
+	return p.profile.Speedscope()
 }
 
 func (p *Profile) Metadata() metadata.Metadata {

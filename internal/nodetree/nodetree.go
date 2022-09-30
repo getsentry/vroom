@@ -11,7 +11,7 @@ type Node struct {
 	IsApplication bool    `json:"is_application"`
 	Line          uint32  `json:"line,omitempty"`
 	Name          string  `json:"name"`
-	Package       string  `json:"package"`
+	Package       string  `json:"package,omitempty"`
 	Path          string  `json:"path,omitempty"`
 	StartNS       uint64  `json:"-"`
 	Children      []*Node `json:"children,omitempty"`
