@@ -2,8 +2,6 @@ package nodetree
 
 import (
 	"hash"
-
-	"github.com/getsentry/vroom/internal/calltree"
 )
 
 type Node struct {
@@ -26,7 +24,7 @@ func NodeFromFrame(pkg, name, path string, line uint32, start, end, fingerprint 
 		IsApplication: isApplication,
 		Line:          line,
 		Name:          name,
-		Package:       calltree.ImageBaseName(pkg),
+		Package:       pkg,
 		Path:          path,
 		StartNS:       start,
 	}

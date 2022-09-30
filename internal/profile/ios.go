@@ -9,6 +9,7 @@ import (
 
 	"github.com/getsentry/vroom/internal/calltree"
 	"github.com/getsentry/vroom/internal/nodetree"
+	"github.com/getsentry/vroom/internal/packageutil"
 	"github.com/getsentry/vroom/internal/speedscope"
 )
 
@@ -174,7 +175,7 @@ func (p IOS) CallTrees() map[uint64][]*nodetree.Node {
 					current = trees[s.ThreadID][i]
 					current.SetDuration(s.RelativeTimestampNS)
 				} else {
-					n := nodetree.NodeFromFrame(f.Package, f.Function, f.AbsPath, f.LineNo, previousTimestamp[s.ThreadID], s.RelativeTimestampNS, fingerprint, IsIOSApplicationImage(f.Package))
+					n := nodetree.NodeFromFrame(f.Package, f.Function, f.AbsPath, f.LineNo, previousTimestamp[s.ThreadID], s.RelativeTimestampNS, fingerprint, packageutil.IsIOSApplicationPackage(f.Package))
 					trees[s.ThreadID] = append(trees[s.ThreadID], n)
 					current = n
 				}
@@ -184,7 +185,7 @@ func (p IOS) CallTrees() map[uint64][]*nodetree.Node {
 					current = current.Children[i]
 					current.SetDuration(s.RelativeTimestampNS)
 				} else {
-					n := nodetree.NodeFromFrame(f.Package, f.Function, f.AbsPath, f.LineNo, previousTimestamp[s.ThreadID], s.RelativeTimestampNS, fingerprint, IsIOSApplicationImage(f.Package))
+					n := nodetree.NodeFromFrame(f.Package, f.Function, f.AbsPath, f.LineNo, previousTimestamp[s.ThreadID], s.RelativeTimestampNS, fingerprint, packageutil.IsIOSApplicationPackage(f.Package))
 					current.Children = append(current.Children, n)
 					current = n
 				}
@@ -346,7 +347,7 @@ func (p IOS) Speedscope() (speedscope.Output, error) {
 				frames = append(frames, speedscope.Frame{
 					File:          fr.Filename,
 					Image:         calltree.ImageBaseName(fr.Package),
-					IsApplication: IsIOSApplicationImage(fr.Package),
+					IsApplication: packageutil.IsIOSApplicationPackage(fr.Package),
 					Line:          fr.LineNo,
 					Name:          symbolName,
 				})

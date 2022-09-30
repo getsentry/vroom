@@ -8,6 +8,7 @@ import (
 
 	"github.com/getsentry/vroom/internal/calltree"
 	"github.com/getsentry/vroom/internal/nodetree"
+	"github.com/getsentry/vroom/internal/packageutil"
 	"github.com/getsentry/vroom/internal/speedscope"
 )
 
@@ -136,7 +137,7 @@ func (p Rust) Speedscope() (speedscope.Output, error) {
 					File:          fr.Filename,
 					Image:         calltree.ImageBaseName(fr.Package),
 					Inline:        fr.Status == "symbolicated" && fr.SymAddr == "",
-					IsApplication: IsRustApplicationImage(fr.Package),
+					IsApplication: packageutil.IsRustApplicationPackage(fr.Package),
 					Line:          fr.LineNo,
 					Name:          symbolName,
 				})

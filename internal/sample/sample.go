@@ -2,12 +2,17 @@ package sample
 
 import (
 	"fmt"
+	"hash"
+	"hash/fnv"
+	"path"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/getsentry/vroom/internal/metadata"
 	"github.com/getsentry/vroom/internal/nodetree"
+	"github.com/getsentry/vroom/internal/packageutil"
 	"github.com/getsentry/vroom/internal/speedscope"
 )
 
@@ -34,20 +39,28 @@ type (
 	Transaction struct {
 		ID              string `json:"id"`
 		Name            string `json:"name"`
-		RelativeEndNS   uint64 `json:"relative_end_ns"`
-		RelativeStartNS uint64 `json:"relative_start_ns"`
+		RelativeEndNS   uint64 `json:"relative_end_ns,string"`
+		RelativeStartNS uint64 `json:"relative_start_ns,string"`
 		TraceID         string `json:"trace_id"`
 	}
 
 	Sample struct {
-		ElapsedSinceStartNS int `json:"elapsed_since_start_ns"`
-		StackID             int `json:"stack_id"`
+		ElapsedSinceStartNS uint64 `json:"elapsed_since_start_ns,string"`
+		StackID             int    `json:"stack_id"`
+		ThreadID            uint64 `json:"thread_id,string"`
 	}
 
 	Frame struct {
-		Function        string `json:"function"`
-		InstructionAddr string `json:"instruction_addr"`
-		Line            int    `json:"line"`
+		File            string `json:"filename,omitempty"`
+		Function        string `json:"function,omitempty"`
+		InstructionAddr string `json:"instruction_addr,omitempty"`
+		Lang            string `json:"lang,omitempty"`
+		Line            uint32 `json:"lineno,omitempty"`
+		Package         string `json:"package,omitempty"`
+		Path            string `json:"abs_path,omitempty"`
+		Status          string `json:"status,omitempty"`
+		SymAddr         string `json:"sym_addr,omitempty"`
+		Symbol          string `json:"symbol,omitempty"`
 	}
 
 	Trace struct {
@@ -74,6 +87,26 @@ type (
 		Version        string        `json:"version"`
 	}
 )
+
+func (f Frame) PackageBaseName() string {
+	if f.Package == "" {
+		return ""
+	}
+	return path.Base(f.Package)
+}
+
+func (f Frame) WriteToHash(h hash.Hash) {
+	if f.Package == "" {
+		h.Write([]byte("-"))
+	} else {
+		h.Write([]byte(f.PackageBaseName()))
+	}
+	if f.Function == "" {
+		h.Write([]byte("-"))
+	} else {
+		h.Write([]byte(f.Function))
+	}
+}
 
 func (t Transaction) DurationNS() uint64 {
 	return t.RelativeEndNS - t.RelativeStartNS
@@ -104,7 +137,49 @@ func (p SampleProfile) GetPlatform() string {
 }
 
 func (p SampleProfile) CallTrees() (map[uint64][]*nodetree.Node, error) {
-	return make(map[uint64][]*nodetree.Node), nil
+	sort.Slice(p.Trace.Samples, func(i, j int) bool {
+		return p.Trace.Samples[i].ElapsedSinceStartNS < p.Trace.Samples[j].ElapsedSinceStartNS
+	})
+
+	trees := make(map[uint64][]*nodetree.Node)
+	previousTimestamp := make(map[uint64]uint64)
+
+	var current *nodetree.Node
+	h := fnv.New64()
+	for _, s := range p.Trace.Samples {
+		stack := p.Trace.Stacks[s.StackID]
+		for i := len(stack) - 1; i >= 0; i-- {
+			f := p.Trace.Frames[stack[i]]
+			f.WriteToHash(h)
+			fingerprint := h.Sum64()
+			if current == nil {
+				i := len(trees[s.ThreadID]) - 1
+				if i >= 0 && trees[s.ThreadID][i].Fingerprint == fingerprint && trees[s.ThreadID][i].EndNS == previousTimestamp[s.ThreadID] {
+					current = trees[s.ThreadID][i]
+					current.SetDuration(s.ElapsedSinceStartNS)
+				} else {
+					n := nodetree.NodeFromFrame(f.PackageBaseName(), f.Function, f.Path, f.Line, previousTimestamp[s.ThreadID], s.ElapsedSinceStartNS, fingerprint, p.IsApplicationPackage(f.Package))
+					trees[s.ThreadID] = append(trees[s.ThreadID], n)
+					current = n
+				}
+			} else {
+				i := len(current.Children) - 1
+				if i >= 0 && current.Children[i].Fingerprint == fingerprint && current.Children[i].EndNS == previousTimestamp[s.ThreadID] {
+					current = current.Children[i]
+					current.SetDuration(s.ElapsedSinceStartNS)
+				} else {
+					n := nodetree.NodeFromFrame(f.PackageBaseName(), f.Function, f.Path, f.Line, previousTimestamp[s.ThreadID], s.ElapsedSinceStartNS, fingerprint, p.IsApplicationPackage(f.Package))
+					current.Children = append(current.Children, n)
+					current = n
+				}
+			}
+		}
+		h.Reset()
+		previousTimestamp[s.ThreadID] = s.ElapsedSinceStartNS
+		current = nil
+	}
+	fmt.Println(trees)
+	return trees, nil
 }
 
 func (p *SampleProfile) Speedscope() (speedscope.Output, error) {
@@ -132,4 +207,14 @@ func (p *SampleProfile) Metadata() metadata.Metadata {
 
 func (p *SampleProfile) Raw() []byte {
 	return []byte{}
+}
+
+func (p *SampleProfile) IsApplicationPackage(pkg string) bool {
+	switch p.Platform {
+	case "cocoa":
+		return packageutil.IsIOSApplicationPackage(pkg)
+	case "rust":
+		return packageutil.IsRustApplicationPackage(pkg)
+	}
+	return true
 }

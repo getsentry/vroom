@@ -9,6 +9,7 @@ import (
 	"github.com/getsentry/vroom/internal/android"
 	"github.com/getsentry/vroom/internal/errorutil"
 	"github.com/getsentry/vroom/internal/nodetree"
+	"github.com/getsentry/vroom/internal/packageutil"
 	"github.com/getsentry/vroom/internal/speedscope"
 )
 
@@ -163,7 +164,7 @@ func (p Android) CallTrees() map[uint64][]*nodetree.Node {
 				methodName = m.Name
 			}
 
-			n := nodetree.NodeFromFrame(className, methodName, m.SourceFile, m.SourceLine, buildTimestamp(e.Time), 0, 0, !IsSystemPackage(m.ClassName))
+			n := nodetree.NodeFromFrame(className, methodName, m.SourceFile, m.SourceLine, buildTimestamp(e.Time), 0, 0, packageutil.IsAndroidApplicationPackage(m.ClassName))
 			if len(stacks[e.ThreadID]) == 0 {
 				trees[e.ThreadID] = append(trees[e.ThreadID], n)
 			} else {
@@ -194,32 +195,6 @@ func generateFingerprint(stack []*nodetree.Node) uint64 {
 	return h.Sum64()
 }
 
-var (
-	androidPackagePrefixes = []string{
-		"android.",
-		"androidx.",
-		"com.android.",
-		"com.google.android.",
-		"com.motorola.",
-		"java.",
-		"javax.",
-		"kotlin.",
-		"kotlinx.",
-		"retrofit2.",
-		"sun.",
-	}
-)
-
-// Checking if synmbol belongs to an Android system package
-func IsSystemPackage(packageName string) bool {
-	for _, p := range androidPackagePrefixes {
-		if strings.HasPrefix(packageName, p) {
-			return true
-		}
-	}
-	return false
-}
-
 func (p Android) Speedscope() (speedscope.Output, error) {
 	frames := make([]speedscope.Frame, 0)
 	methodIDToFrameIndex := make(map[uint64][]int)
@@ -231,7 +206,7 @@ func (p Android) Speedscope() (speedscope.Output, error) {
 					File:          m.SourceFile,
 					Image:         m.ClassName,
 					Inline:        true,
-					IsApplication: !IsAndroidSystemPackage(m.ClassName),
+					IsApplication: packageutil.IsAndroidApplicationPackage(m.ClassName),
 					Line:          m.SourceLine,
 					Name:          m.Name,
 				})
@@ -251,7 +226,7 @@ func (p Android) Speedscope() (speedscope.Output, error) {
 				Name:          fullMethodName,
 				File:          method.SourceFile,
 				Line:          method.SourceLine,
-				IsApplication: !IsAndroidSystemPackage(fullMethodName),
+				IsApplication: packageutil.IsAndroidApplicationPackage(packageName),
 				Image:         packageName,
 			})
 		}
