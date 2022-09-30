@@ -6,7 +6,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/getsentry/vroom/internal/calltree"
 	"github.com/getsentry/vroom/internal/nodetree"
 	"github.com/getsentry/vroom/internal/packageutil"
 	"github.com/getsentry/vroom/internal/speedscope"
@@ -135,7 +134,7 @@ func (p Rust) Speedscope() (speedscope.Output, error) {
 				addressToFrameIndex[address] = frameIndex
 				frames = append(frames, speedscope.Frame{
 					File:          fr.Filename,
-					Image:         calltree.ImageBaseName(fr.Package),
+					Image:         nodetree.PackageBaseName(fr.Package),
 					Inline:        fr.Status == "symbolicated" && fr.SymAddr == "",
 					IsApplication: packageutil.IsRustApplicationPackage(fr.Package),
 					Line:          fr.LineNo,

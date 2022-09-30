@@ -2,6 +2,7 @@ package nodetree
 
 import (
 	"hash"
+	"path"
 )
 
 type Node struct {
@@ -24,7 +25,7 @@ func NodeFromFrame(pkg, name, path string, line uint32, start, end, fingerprint 
 		IsApplication: isApplication,
 		Line:          line,
 		Name:          name,
-		Package:       pkg,
+		Package:       PackageBaseName(pkg),
 		Path:          path,
 		StartNS:       start,
 	}
@@ -46,4 +47,12 @@ func (n *Node) WriteToHash(h hash.Hash) {
 		h.Write([]byte(n.Package))
 		h.Write([]byte(n.Name))
 	}
+}
+
+// PackageBaseName returns the basename of the package if package is a path.
+func PackageBaseName(p string) string {
+	if p == "" {
+		return ""
+	}
+	return path.Base(p)
 }

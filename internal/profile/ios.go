@@ -7,7 +7,6 @@ import (
 	"sort"
 	"strconv"
 
-	"github.com/getsentry/vroom/internal/calltree"
 	"github.com/getsentry/vroom/internal/nodetree"
 	"github.com/getsentry/vroom/internal/packageutil"
 	"github.com/getsentry/vroom/internal/speedscope"
@@ -44,7 +43,7 @@ func (f IosFrame) WriteToHash(h hash.Hash) {
 	if f.Package == "" && f.Function == "" {
 		h.Write([]byte("-"))
 	} else {
-		h.Write([]byte(calltree.ImageBaseName(f.Package)))
+		h.Write([]byte(nodetree.PackageBaseName(f.Package)))
 		h.Write([]byte(f.Function))
 	}
 }
@@ -346,7 +345,7 @@ func (p IOS) Speedscope() (speedscope.Output, error) {
 				addressToFrameIndex[address] = frameIndex
 				frames = append(frames, speedscope.Frame{
 					File:          fr.Filename,
-					Image:         calltree.ImageBaseName(fr.Package),
+					Image:         nodetree.PackageBaseName(fr.Package),
 					IsApplication: packageutil.IsIOSApplicationPackage(fr.Package),
 					Line:          fr.LineNo,
 					Name:          symbolName,
