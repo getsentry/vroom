@@ -180,7 +180,7 @@ func (p SampleProfile) GetPlatform() string {
 }
 
 func (p SampleProfile) CallTrees() (map[uint64][]*nodetree.Node, error) {
-	sort.Slice(p.Trace.Samples, func(i, j int) bool {
+	sort.SliceStable(p.Trace.Samples, func(i, j int) bool {
 		return p.Trace.Samples[i].ElapsedSinceStartNS < p.Trace.Samples[j].ElapsedSinceStartNS
 	})
 
@@ -225,7 +225,7 @@ func (p SampleProfile) CallTrees() (map[uint64][]*nodetree.Node, error) {
 }
 
 func (p *SampleProfile) Speedscope() (speedscope.Output, error) {
-	sort.Slice(p.Trace.Samples, func(i, j int) bool {
+	sort.SliceStable(p.Trace.Samples, func(i, j int) bool {
 		return p.Trace.Samples[i].ElapsedSinceStartNS < p.Trace.Samples[j].ElapsedSinceStartNS
 	})
 
