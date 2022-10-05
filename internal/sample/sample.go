@@ -127,7 +127,7 @@ func (f Frame) ID() string {
 	if f.InstructionAddr != "" {
 		return f.InstructionAddr
 	}
-	hash := md5.Sum([]byte(fmt.Sprintf("%s:%s", f.Package, f.Function)))
+	hash := md5.Sum([]byte(fmt.Sprintf("%s:%s", f.File, f.Function)))
 	return hex.EncodeToString(hash[:])
 }
 
