@@ -6,6 +6,7 @@ require (
 	cloud.google.com/go/compute v1.7.0
 	cloud.google.com/go/storage v1.24.0
 	github.com/CAFxX/httpcompression v0.0.8
+	github.com/andybalholm/brotli v1.0.4
 	github.com/fsouza/fake-gcs-server v1.38.3
 	github.com/getsentry/sentry-go v0.13.0
 	github.com/gojek/heimdall/v7 v7.0.2
@@ -24,7 +25,6 @@ require (
 	cloud.google.com/go v0.102.1 // indirect
 	cloud.google.com/go/iam v0.3.0 // indirect
 	cloud.google.com/go/pubsub v1.23.0 // indirect
-	github.com/andybalholm/brotli v1.0.4 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/felixge/httpsnoop v1.0.2 // indirect
 	github.com/gojek/valkyrie v0.0.0-20180215180059-6aee720afcdf // indirect
