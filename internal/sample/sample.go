@@ -1,6 +1,8 @@
 package sample
 
 import (
+	"crypto/md5"
+	"encoding/hex"
 	"fmt"
 	"hash"
 	"hash/fnv"
@@ -125,7 +127,8 @@ func (f Frame) ID() string {
 	if f.InstructionAddr != "" {
 		return f.InstructionAddr
 	}
-	return f.Function
+	hash := md5.Sum([]byte(fmt.Sprintf("%s:%s", f.Package, f.Function)))
+	return hex.EncodeToString(hash[:])
 }
 
 func (f Frame) PackageBaseName() string {
