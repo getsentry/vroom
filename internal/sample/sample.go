@@ -222,6 +222,10 @@ func (p SampleProfile) CallTrees() (map[uint64][]*nodetree.Node, error) {
 }
 
 func (p *SampleProfile) Speedscope() (speedscope.Output, error) {
+	sort.Slice(p.Trace.Samples, func(i, j int) bool {
+		return p.Trace.Samples[i].ElapsedSinceStartNS < p.Trace.Samples[j].ElapsedSinceStartNS
+	})
+
 	threadIDToProfile := make(map[uint64]*speedscope.SampledProfile)
 	addressToFrameIndex := make(map[string]int)
 	threadIDToPreviousTimestampNS := make(map[uint64]uint64)
