@@ -139,16 +139,21 @@ func (f Frame) PackageBaseName() string {
 }
 
 func (f Frame) WriteToHash(h hash.Hash) {
-	if f.Package == "" {
-		h.Write([]byte("-"))
+	var s string
+	if f.Package != "" {
+		s = f.PackageBaseName()
+	} else if f.File != "" {
+		s = f.File
 	} else {
-		h.Write([]byte(f.PackageBaseName()))
+		s = "-"
 	}
-	if f.Function == "" {
-		h.Write([]byte("-"))
+	h.Write([]byte(s))
+	if f.Function != "" {
+		s = f.Function
 	} else {
-		h.Write([]byte(f.Function))
+		s = "-"
 	}
+	h.Write([]byte(s))
 }
 
 func (t Transaction) DurationNS() uint64 {
