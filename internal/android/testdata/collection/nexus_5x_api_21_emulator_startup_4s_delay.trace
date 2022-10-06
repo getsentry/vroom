@@ -1,341 +1,0 @@
-*version
-3
-data-file-overflow=false
-clock=dual
-elapsed-time-usec=4348300
-num-method-calls=788
-clock-call-overhead-nsec=9169
-vm=art
-*threads
-4589	main
-4594	Heap thread pool worker thread 2
-4592	Heap thread pool worker thread 0
-4593	Heap thread pool worker thread 1
-4597	Signal Catcher
-4599	JDWP
-4600	ReferenceQueueDaemon
-4601	FinalizerDaemon
-4602	FinalizerWatchdogDaemon
-4603	HeapTrimmerDaemon
-4604	GCDaemon
-4605	Binder_1
-4606	Binder_2
-4607	dev.specto-pool-2-thread-1
-4608	pool-2-thread-2
-4609	pool-3-thread-1
-4615	pool-2-thread-3
-4616	pool-4-thread-1
-4617	Sampling Profiler
-4618	kotlinx.coroutines.DefaultExecutor
-4619	RenderThread
-4620	hwuiTask1
-4622	DefaultDispatcher-worker-1
-4623	DefaultDispatcher-worker-2
-4624	DefaultDispatcher-worker-3
-4625	OkHttp ConnectionPool
-*methods
-0x6ffdce50	java.lang.Object	wait	()V	Object.java
-0x6ffdce98	java.lang.Object	wait	(J)V	Object.java
-0x6ffdcee0	java.lang.Object	wait	(JI)V	Object.java
-0x7001dc98	java.lang.String	equals	(Ljava/lang/Object;)Z	String.java
-0x7003d700	dalvik.system.VMRuntime	concurrentGC	()V	VMRuntime.java
-0x7003dd78	dalvik.system.VMRuntime	trimHeap	()V	VMRuntime.java
-0x70062c40	java.lang.Daemons$FinalizerDaemon	run	()V	Daemons.java
-0x70063028	java.lang.Daemons$FinalizerWatchdogDaemon	sleepFor	(JJ)V	Daemons.java
-0x70063070	java.lang.Daemons$FinalizerWatchdogDaemon	waitForFinalization	()Z	Daemons.java
-0x70063128	java.lang.Daemons$FinalizerWatchdogDaemon	run	()V	Daemons.java
-0x70063520	java.lang.Daemons$GCDaemon	run	()V	Daemons.java
-0x70063918	java.lang.Daemons$HeapTrimmerDaemon	run	()V	Daemons.java
-0x70063d28	java.lang.Daemons$ReferenceQueueDaemon	run	()V	Daemons.java
-0x70079cc0	java.lang.System	currentTimeMillis	()J	System.java
-0x7007b958	java.lang.Thread	sleep	(J)V	Thread.java
-0x7007b9a0	java.lang.Thread	sleep	(JI)V	Thread.java
-0x7007b9e8	java.lang.Thread	sleep	(Ljava/lang/Object;JI)V	Thread.java
-0x7007bc88	java.lang.Thread	run	()V	Thread.java
-0x7007c378	java.lang.Thread	parkFor	(J)V	Thread.java
-0x70080c70	java.lang.ref.ReferenceQueue	remove	()Ljava/lang/ref/Reference;	ReferenceQueue.java
-0x70080cb8	java.lang.ref.ReferenceQueue	remove	(J)Ljava/lang/ref/Reference;	ReferenceQueue.java
-0x700860a0	java.lang.reflect.Method	invoke	(Ljava/lang/Object;[Ljava/lang/Object;Z)Ljava/lang/Object;	Method.java
-0x70086888	java.lang.reflect.Method	invoke	(Ljava/lang/Object;[Ljava/lang/Object;)Ljava/lang/Object;	Method.java
-0x700962c0	java.net.PlainSocketImpl	connect	(Ljava/net/InetAddress;II)V	PlainSocketImpl.java
-0x70097780	java.net.PlainSocketImpl	connect	(Ljava/net/SocketAddress;I)V	PlainSocketImpl.java
-0x70099978	java.net.Socket	connect	(Ljava/net/SocketAddress;I)V	Socket.java
-0x7012bc50	java.util.concurrent.LinkedBlockingQueue	poll	(JLjava/util/concurrent/TimeUnit;)Ljava/lang/Object;	LinkedBlockingQueue.java
-0x7012bd28	java.util.concurrent.LinkedBlockingQueue	take	()Ljava/lang/Object;	LinkedBlockingQueue.java
-0x7012f368	java.util.concurrent.ThreadPoolExecutor$Worker	run	()V	ThreadPoolExecutor.java
-0x7012fda8	java.util.concurrent.ThreadPoolExecutor	getTask	()Ljava/lang/Runnable;	ThreadPoolExecutor.java
-0x70130d68	java.util.concurrent.ThreadPoolExecutor	runWorker	(Ljava/util/concurrent/ThreadPoolExecutor$Worker;)V	ThreadPoolExecutor.java
-0x70136a20	java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject	await	()V	AbstractQueuedSynchronizer.java
-0x70136ab0	java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject	awaitNanos	(J)J	AbstractQueuedSynchronizer.java
-0x70137710	java.util.concurrent.locks.LockSupport	park	(Ljava/lang/Object;)V	LockSupport.java
-0x70137758	java.util.concurrent.locks.LockSupport	parkNanos	(J)V	LockSupport.java
-0x701377a0	java.util.concurrent.locks.LockSupport	parkNanos	(Ljava/lang/Object;J)V	LockSupport.java
-0x70161398	libcore.io.BlockGuardOs	poll	([Landroid/system/StructPollfd;I)I	BlockGuardOs.java
-0x701639f0	libcore.io.IoBridge	connect	(Ljava/io/FileDescriptor;Ljava/net/InetAddress;II)V	IoBridge.java
-0x70163a80	libcore.io.IoBridge	connectErrno	(Ljava/io/FileDescriptor;Ljava/net/InetAddress;II)V	IoBridge.java
-0x70163c30	libcore.io.IoBridge	isConnected	(Ljava/io/FileDescriptor;Ljava/net/InetAddress;III)Z	IoBridge.java
-0x70167e40	libcore.io.Posix	poll	([Landroid/system/StructPollfd;I)I	Posix.java
-0x701973c0	sun.misc.Unsafe	park	(ZJ)V	Unsafe.java
-0x701bdba0	com.android.org.conscrypt.NativeCrypto	SSL_do_handshake	(JLjava/io/FileDescriptor;Lcom/android/org/conscrypt/NativeCrypto$SSLHandshakeCallbacks;IZ[B[B)J	NativeCrypto.java
-0x701be020	com.android.org.conscrypt.NativeCrypto	SSL_read	(JLjava/io/FileDescriptor;Lcom/android/org/conscrypt/NativeCrypto$SSLHandshakeCallbacks;[BIII)I	NativeCrypto.java
-0x701c7300	com.android.org.conscrypt.OpenSSLSocketImpl$SSLInputStream	read	([BII)I	OpenSSLSocketImpl.java
-0x701c96e8	com.android.org.conscrypt.OpenSSLSocketImpl	startHandshake	()V	OpenSSLSocketImpl.java
-0x701e1088	com.android.okhttp.Connection	upgradeToTls	(Lcom/android/okhttp/TunnelRequest;)V	Connection.java
-0x701e13f8	com.android.okhttp.Connection	connect	(IILcom/android/okhttp/TunnelRequest;)V	Connection.java
-0x701eae20	com.android.okhttp.internal.Platform	connectSocket	(Ljava/net/Socket;Ljava/net/InetSocketAddress;I)V	Platform.java
-0x701ed610	com.android.okhttp.internal.http.DelegatingHttpsURLConnection	getInputStream	()Ljava/io/InputStream;	DelegatingHttpsURLConnection.java
-0x701ed778	com.android.okhttp.internal.http.DelegatingHttpsURLConnection	getOutputStream	()Ljava/io/OutputStream;	DelegatingHttpsURLConnection.java
-0x701f04a0	com.android.okhttp.internal.http.HttpConnection	readResponse	()Lcom/android/okhttp/Response$Builder;	HttpConnection.java
-0x701f0830	com.android.okhttp.internal.http.HttpEngine	connect	(Lcom/android/okhttp/Request;)V	HttpEngine.java
-0x701f1190	com.android.okhttp.internal.http.HttpEngine	readResponse	()V	HttpEngine.java
-0x701f12b0	com.android.okhttp.internal.http.HttpEngine	sendRequest	()V	HttpEngine.java
-0x701f1ea0	com.android.okhttp.internal.http.HttpTransport	readResponseHeaders	()Lcom/android/okhttp/Response$Builder;	HttpTransport.java
-0x701f27a0	com.android.okhttp.internal.http.HttpURLConnectionImpl	execute	(Z)Z	HttpURLConnectionImpl.java
-0x701f27e8	com.android.okhttp.internal.http.HttpURLConnectionImpl	getResponse	()Lcom/android/okhttp/internal/http/HttpEngine;	HttpURLConnectionImpl.java
-0x701f2bb0	com.android.okhttp.internal.http.HttpURLConnectionImpl	connect	()V	HttpURLConnectionImpl.java
-0x701f2df0	com.android.okhttp.internal.http.HttpURLConnectionImpl	getInputStream	()Ljava/io/InputStream;	HttpURLConnectionImpl.java
-0x701f2e38	com.android.okhttp.internal.http.HttpURLConnectionImpl	getOutputStream	()Ljava/io/OutputStream;	HttpURLConnectionImpl.java
-0x701f3e78	com.android.okhttp.internal.http.HttpsURLConnectionImpl	getInputStream	()Ljava/io/InputStream;	HttpsURLConnectionImpl.java
-0x701f3fe0	com.android.okhttp.internal.http.HttpsURLConnectionImpl	getOutputStream	()Ljava/io/OutputStream;	HttpsURLConnectionImpl.java
-0x701fa9c0	com.android.okio.Okio$2	read	(Lcom/android/okio/OkBuffer;J)J	Okio.java
-0x701fc608	com.android.okio.RealBufferedSource	indexOf	(B)J	RealBufferedSource.java
-0x701fc968	com.android.okio.RealBufferedSource	readUtf8LineStrict	()Ljava/lang/String;	RealBufferedSource.java
-0x705a8630	android.app.Activity	performCreate	(Landroid/os/Bundle;)V	Activity.java
-0x705ab680	android.app.ActivityManager	getProcessMemoryInfo	([I)[Landroid/os/Debug$MemoryInfo;	ActivityManager.java
-0x705b6be8	android.app.ActivityThread	access$800	(Landroid/app/ActivityThread;Landroid/app/ActivityThread$ActivityClientRecord;Landroid/content/Intent;)V	ActivityThread.java
-0x705b7458	android.app.ActivityThread	handleLaunchActivity	(Landroid/app/ActivityThread$ActivityClientRecord;Landroid/content/Intent;)V	ActivityThread.java
-0x705b7968	android.app.ActivityThread	main	([Ljava/lang/String;)V	ActivityThread.java
-0x705b7a88	android.app.ActivityThread	performLaunchActivity	(Landroid/app/ActivityThread$ActivityClientRecord;Landroid/content/Intent;)Landroid/app/Activity;	ActivityThread.java
-0x705b90c8	android.app.ActivityThread	handleResumeActivity	(Landroid/os/IBinder;ZZZ)V	ActivityThread.java
-0x705ddd70	android.view.View	measure	(II)V	View.java
-0x705e75a0	android.view.ViewGroup	getChildAt	(I)Landroid/view/View;	ViewGroup.java
-0x705e8128	android.view.ViewGroup	measureChildWithMargins	(Landroid/view/View;IIII)V	ViewGroup.java
-0x705ebef8	android.widget.FrameLayout	onMeasure	(II)V	FrameLayout.java
-0x7061a490	android.database.sqlite.SQLiteDatabase	endTransaction	()V	SQLiteDatabase.java
-0x7061aef8	android.database.sqlite.SQLiteDatabase	rawQueryWithFactory	(Landroid/database/sqlite/SQLiteDatabase$CursorFactory;Ljava/lang/String;[Ljava/lang/String;Ljava/lang/String;)Landroid/database/Cursor;	SQLiteDatabase.java
-0x7061af40	android.database.sqlite.SQLiteDatabase	rawQueryWithFactory	(Landroid/database/sqlite/SQLiteDatabase$CursorFactory;Ljava/lang/String;[Ljava/lang/String;Ljava/lang/String;Landroid/os/CancellationSignal;)Landroid/database/Cursor;	SQLiteDatabase.java
-0x70630e80	android.graphics.RectF	<init>	()V	RectF.java
-0x70665fc8	android.net.ConnectivityManager	isActiveNetworkMetered	()Z	ConnectivityManager.java
-0x7067faa0	android.os.Handler	handleCallback	(Landroid/os/Message;)V	Handler.java
-0x7067fca0	android.os.Handler	dispatchMessage	(Landroid/os/Message;)V	Handler.java
-0x706810b0	android.os.Looper	loop	()V	Looper.java
-0x70689308	android.os.PowerManager$WakeLock	acquireLocked	()V	PowerManager.java
-0x70689558	android.os.PowerManager$WakeLock	acquire	()V	PowerManager.java
-0x70689678	android.os.PowerManager$WakeLock	release	()V	PowerManager.java
-0x706896c0	android.os.PowerManager$WakeLock	release	(I)V	PowerManager.java
-0x706d3ee0	android.view.Choreographer	doCallbacks	(IJ)V	Choreographer.java
-0x706d3f28	android.view.Choreographer	doFrame	(JI)V	Choreographer.java
-0x706e7950	android.view.LayoutInflater	from	(Landroid/content/Context;)Landroid/view/LayoutInflater;	LayoutInflater.java
-0x706f2420	android.view.Surface	nativeAllocateBuffers	(J)V	Surface.java
-0x706f2a88	android.view.Surface	allocateBuffers	()V	Surface.java
-0x706f93f8	android.view.ViewRootImpl	<init>	(Landroid/content/Context;Landroid/view/Display;)V	ViewRootImpl.java
-0x706f9b48	android.view.ViewRootImpl	enableHardwareAcceleration	(Landroid/view/WindowManager$LayoutParams;)V	ViewRootImpl.java
-0x706fa178	android.view.ViewRootImpl	measureHierarchy	(Landroid/view/View;Landroid/view/WindowManager$LayoutParams;Landroid/content/res/Resources;II)Z	ViewRootImpl.java
-0x706fa208	android.view.ViewRootImpl	performDraw	()V	ViewRootImpl.java
-0x706fa298	android.view.ViewRootImpl	performMeasure	(II)V	ViewRootImpl.java
-0x706fa2e0	android.view.ViewRootImpl	performTraversals	()V	ViewRootImpl.java
-0x706fa400	android.view.ViewRootImpl	relayoutWindow	(Landroid/view/WindowManager$LayoutParams;IZ)I	ViewRootImpl.java
-0x706fd550	android.view.ViewRootImpl	doTraversal	()V	ViewRootImpl.java
-0x706fe090	android.view.ViewRootImpl	setView	(Landroid/view/View;Landroid/view/WindowManager$LayoutParams;Landroid/view/View;)V	ViewRootImpl.java
-0x70705bf0	android.view.WindowManagerGlobal	getWindowSession	()Landroid/view/IWindowSession;	WindowManagerGlobal.java
-0x70706130	android.view.WindowManagerGlobal	addView	(Landroid/view/View;Landroid/view/ViewGroup$LayoutParams;Landroid/view/Display;Landroid/view/Window;)V	WindowManagerGlobal.java
-0x707366e8	android.widget.LinearLayout	measureChildBeforeLayout	(Landroid/view/View;IIIII)V	LinearLayout.java
-0x707367c0	android.widget.LinearLayout	measureVertical	(II)V	LinearLayout.java
-0x70736928	android.widget.LinearLayout	onMeasure	(II)V	LinearLayout.java
-0x707bc5c8	com.android.internal.os.ZygoteInit$MethodAndArgsCaller	run	()V	ZygoteInit.java
-0x707bcbf0	com.android.internal.os.ZygoteInit	main	([Ljava/lang/String;)V	ZygoteInit.java
-0x7080bd68	android.app.ActivityManagerProxy	getProcessMemoryInfo	([I)[Landroid/os/Debug$MemoryInfo;	ActivityManagerNative.java
-0x708160f0	android.app.ActivityThread$H	handleMessage	(Landroid/os/Message;)V	ActivityThread.java
-0x7081c980	android.app.ApplicationPackageManager	setComponentEnabledSetting	(Landroid/content/ComponentName;II)V	ApplicationPackageManager.java
-0x708387b8	android.app.Instrumentation	callActivityOnCreate	(Landroid/app/Activity;Landroid/os/Bundle;)V	Instrumentation.java
-0x70869f00	android.content.pm.IPackageManager$Stub$Proxy	setComponentEnabledSetting	(Landroid/content/ComponentName;III)V	IPackageManager.java
-0x7087ddf8	android.database.sqlite.SQLiteConnection$OperationLog	beginOperation	(Ljava/lang/String;Ljava/lang/String;[Ljava/lang/Object;)I	SQLiteConnection.java
-0x708800d8	android.database.sqlite.SQLiteConnection	execute	(Ljava/lang/String;[Ljava/lang/Object;Landroid/os/CancellationSignal;)V	SQLiteConnection.java
-0x708803f0	android.database.sqlite.SQLiteConnection	prepare	(Ljava/lang/String;Landroid/database/sqlite/SQLiteStatementInfo;)V	SQLiteConnection.java
-0x70884a10	android.database.sqlite.SQLiteDirectCursorDriver	query	(Landroid/database/sqlite/SQLiteDatabase$CursorFactory;[Ljava/lang/String;)Landroid/database/Cursor;	SQLiteDirectCursorDriver.java
-0x70885900	android.database.sqlite.SQLiteProgram	<init>	(Landroid/database/sqlite/SQLiteDatabase;Ljava/lang/String;[Ljava/lang/Object;Landroid/os/CancellationSignal;)V	SQLiteProgram.java
-0x70886398	android.database.sqlite.SQLiteQuery	<init>	(Landroid/database/sqlite/SQLiteDatabase;Ljava/lang/String;Landroid/os/CancellationSignal;)V	SQLiteQuery.java
-0x70887688	android.database.sqlite.SQLiteSession	endTransactionUnchecked	(Landroid/os/CancellationSignal;Z)V	SQLiteSession.java
-0x70887b48	android.database.sqlite.SQLiteSession	endTransaction	(Landroid/os/CancellationSignal;)V	SQLiteSession.java
-0x70887e60	android.database.sqlite.SQLiteSession	prepare	(Ljava/lang/String;ILandroid/os/CancellationSignal;Landroid/database/sqlite/SQLiteStatementInfo;)V	SQLiteSession.java
-0x708f7f00	android.net.IConnectivityManager$Stub$Proxy	isActiveNetworkMetered	()Z	IConnectivityManager.java
-0x70939830	android.os.BinderProxy	transact	(ILandroid/os/Parcel;Landroid/os/Parcel;I)Z	Binder.java
-0x70939990	android.os.BinderProxy	transactNative	(ILandroid/os/Parcel;Landroid/os/Parcel;I)Z	Binder.java
-0x70943728	android.os.IPowerManager$Stub$Proxy	acquireWakeLock	(Landroid/os/IBinder;ILjava/lang/String;Ljava/lang/String;Landroid/os/WorkSource;Ljava/lang/String;)V	IPowerManager.java
-0x709439f8	android.os.IPowerManager$Stub$Proxy	releaseWakeLock	(Landroid/os/IBinder;I)V	IPowerManager.java
-0x70947d68	android.os.MessageQueue	nativePollOnce	(JI)V	MessageQueue.java
-0x70948258	android.os.MessageQueue	next	()Landroid/os/Message;	MessageQueue.java
-0x70979650	android.view.Choreographer$CallbackRecord	run	(J)V	Choreographer.java
-0x70979948	android.view.Choreographer$FrameDisplayEventReceiver	run	()V	Choreographer.java
-0x709821c8	android.view.HardwareRenderer	create	(Landroid/content/Context;Z)Landroid/view/HardwareRenderer;	HardwareRenderer.java
-0x70984f50	android.view.IWindowManager$Stub$Proxy	openSession	(Landroid/view/IWindowSessionCallback;Lcom/android/internal/view/IInputMethodClient;Lcom/android/internal/view/IInputContext;)Landroid/view/IWindowSession;	IWindowManager.java
-0x70986210	android.view.IWindowSession$Stub$Proxy	finishDrawing	(Landroid/view/IWindow;)V	IWindowSession.java
-0x709864e0	android.view.IWindowSession$Stub$Proxy	relayout	(Landroid/view/IWindow;ILandroid/view/WindowManager$LayoutParams;IIIILandroid/graphics/Rect;Landroid/graphics/Rect;Landroid/graphics/Rect;Landroid/graphics/Rect;Landroid/graphics/Rect;Landroid/content/res/Configuration;Landroid/view/Surface;)I	IWindowSession.java
-0x70992af0	android.view.ThreadedRenderer	<init>	(Landroid/content/Context;Z)V	ThreadedRenderer.java
-0x70992f70	android.view.ThreadedRenderer	nFence	(J)V	ThreadedRenderer.java
-0x70992fb8	android.view.ThreadedRenderer	nInitialize	(JLandroid/view/Surface;)Z	ThreadedRenderer.java
-0x70993048	android.view.ThreadedRenderer	nLoadSystemProperties	(J)Z	ThreadedRenderer.java
-0x70993b40	android.view.ThreadedRenderer	fence	()V	ThreadedRenderer.java
-0x70993c60	android.view.ThreadedRenderer	initialize	(Landroid/view/Surface;)Z	ThreadedRenderer.java
-0x70993d38	android.view.ThreadedRenderer	loadSystemProperties	()Z	ThreadedRenderer.java
-0x709a25d8	android.view.ViewRootImpl$TraversalRunnable	run	()V	ViewRootImpl.java
-0x709a7760	android.view.WindowManagerImpl	addView	(Landroid/view/View;Landroid/view/ViewGroup$LayoutParams;)V	WindowManagerImpl.java
-0x70a6a058	com.android.internal.policy.impl.PhoneWindow$DecorView	onMeasure	(II)V	PhoneWindow.java
-0x74000af0	androidx.room.RoomDatabase	endTransaction	()V	RoomDatabase.java
-0x74000f00	androidx.room.RoomDatabase	query	(Landroidx/sqlite/db/SupportSQLiteQuery;Landroid/os/CancellationSignal;)Landroid/database/Cursor;	RoomDatabase.java
-0x74006d70	androidx.work.impl.Schedulers	schedule	(Landroidx/work/Configuration;Landroidx/work/impl/WorkDatabase;Ljava/util/List;)V	Schedulers.java
-0x74007bc8	androidx.work.impl.utils.PackageManagerHelper	setComponentEnabled	(Landroid/content/Context;Ljava/lang/Class;Z)V	PackageManagerHelper.java
-0x740083d8	androidx.work.impl.constraints.WorkConstraintsTracker	replace	(Ljava/lang/Iterable;)V	WorkConstraintsTracker.java
-0x74008778	androidx.work.impl.constraints.controllers.ConstraintController	replace	(Ljava/lang/Iterable;)V	ConstraintController.java
-0x74009298	androidx.work.impl.constraints.trackers.ConstraintTracker	addListener	(Landroidx/work/impl/constraints/ConstraintListener;)V	ConstraintTracker.java
-0x74009a68	androidx.work.impl.constraints.trackers.NetworkStateTracker	getActiveNetworkState	()Landroidx/work/impl/constraints/NetworkState;	NetworkStateTracker.java
-0x74009ab8	androidx.work.impl.constraints.trackers.NetworkStateTracker	getInitialState	()Landroidx/work/impl/constraints/NetworkState;	NetworkStateTracker.java
-0x74009b08	androidx.work.impl.constraints.trackers.NetworkStateTracker	getInitialState	()Ljava/lang/Object;	NetworkStateTracker.java
-0x7400aa08	androidx.core.net.ConnectivityManagerCompat	isActiveNetworkMetered	(Landroid/net/ConnectivityManager;)Z	ConnectivityManagerCompat.java
-0x7400c7a8	androidx.work.impl.utils.SerialExecutor$Task	run	()V	SerialExecutor.java
-0x7400cc08	androidx.work.impl.model.WorkSpecDao_Impl	getEligibleWorkForScheduling	(I)Ljava/util/List;	WorkSpecDao_Impl.java
-0x74011898	androidx.sqlite.db.framework.FrameworkSQLiteDatabase	endTransaction	()V	FrameworkSQLiteDatabase.java
-0x74011de8	androidx.sqlite.db.framework.FrameworkSQLiteDatabase	query	(Landroidx/sqlite/db/SupportSQLiteQuery;)Landroid/database/Cursor;	FrameworkSQLiteDatabase.java
-0x74013e50	androidx.room.util.DBUtil	query	(Landroidx/room/RoomDatabase;Landroidx/sqlite/db/SupportSQLiteQuery;ZLandroid/os/CancellationSignal;)Landroid/database/Cursor;	DBUtil.java
-0x74016500	specto.core.internal.DefaultController	access$logSessionEntry	(Lspecto/core/internal/DefaultController;Lspecto/proto/EntryGenerated$Entry$Type;Lkotlin/jvm/functions/Function1;)V	DefaultController.kt
-0x74016870	specto.core.internal.DefaultController	logSessionEntry	(Lspecto/proto/EntryGenerated$Entry$Type;Lkotlin/jvm/functions/Function1;)V	DefaultController.kt
-0x740178b8	kotlinx.coroutines.ExecutorCoroutineDispatcherBase	dispatch	(Lkotlin/coroutines/CoroutineContext;Ljava/lang/Runnable;)V	Executors.kt
-0x74022348	kotlin.coroutines.jvm.internal.BaseContinuationImpl	resumeWith	(Ljava/lang/Object;)V	ContinuationImpl.kt
-0x740227f8	kotlinx.coroutines.BuildersKt	withContext	(Lkotlin/coroutines/CoroutineContext;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;	(null)
-0x74022a88	kotlinx.coroutines.BuildersKt__Builders_commonKt	withContext	(Lkotlin/coroutines/CoroutineContext;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;	Builders.common.kt
-0x74024c78	kotlinx.coroutines.scheduling.CoroutineScheduler	runSafely	(Lkotlinx/coroutines/scheduling/Task;)V	CoroutineScheduler.kt
-0x74025788	kotlinx.coroutines.DefaultExecutor	run	()V	DefaultExecutor.kt
-0x74025e68	kotlinx.coroutines.EventLoopImplBase	processNextEvent	()J	EventLoop.common.kt
-0x740299e8	java.util.concurrent.atomic.AtomicIntegerFieldUpdater	<init>	()V	AtomicIntegerFieldUpdater.java
-0x74029a38	java.util.concurrent.atomic.AtomicIntegerFieldUpdater	newUpdater	(Ljava/lang/Class;Ljava/lang/String;)Ljava/util/concurrent/atomic/AtomicIntegerFieldUpdater;	AtomicIntegerFieldUpdater.java
-0x7402aa58	kotlinx.coroutines.scheduling.CoroutineScheduler$Worker	executeTask	(Lkotlinx/coroutines/scheduling/Task;)V	CoroutineScheduler.kt
-0x7402ab98	kotlinx.coroutines.scheduling.CoroutineScheduler$Worker	park	()V	CoroutineScheduler.kt
-0x7402ac38	kotlinx.coroutines.scheduling.CoroutineScheduler$Worker	runWorker	()V	CoroutineScheduler.kt
-0x7402acd8	kotlinx.coroutines.scheduling.CoroutineScheduler$Worker	tryPark	()V	CoroutineScheduler.kt
-0x7402af58	kotlinx.coroutines.scheduling.CoroutineScheduler$Worker	run	()V	CoroutineScheduler.kt
-0x7402bbb8	kotlinx.coroutines.TimeSourceKt	getTimeSource	()Lkotlinx/coroutines/TimeSource;	TimeSource.kt
-0x7402c728	java.util.concurrent.atomic.AtomicIntegerFieldUpdater$AtomicIntegerFieldUpdaterImpl	<init>	(Ljava/lang/Class;Ljava/lang/String;)V	AtomicIntegerFieldUpdater.java
-0x7402f128	kotlinx.coroutines.DispatchedTask	run	()V	DispatchedTask.kt
-0x74031528	kotlinx.coroutines.DispatchedTaskKt	dispatch	(Lkotlinx/coroutines/DispatchedTask;I)V	DispatchedTask.kt
-0x740327f8	specto.core.internal.native.NativeControllerImpl	logSessionEntry	([B)V	NativeControllerImpl.kt
-0x74032898	specto.core.internal.native.NativeControllerImpl	startConsuming	()V	NativeControllerImpl.kt
-0x74032e08	specto.example.MainActivity	onCreate	(Landroid/os/Bundle;)V	MainActivity.kt
-0x74033a78	androidx.appcompat.app.AppCompatActivity	setContentView	(I)V	AppCompatActivity.java
-0x74035678	specto.core.internal.plugins.SimplePlugin	buildEntry	(Ljava/lang/String;Lkotlin/jvm/functions/Function2;)Lspecto/proto/EntryGenerated$Entry;	SimplePlugin.kt
-0x74035718	specto.core.internal.plugins.SimplePlugin	entryBuilder	(Lspecto/core/internal/plugins/TraceLogger;Ljava/lang/String;Lkotlin/jvm/functions/Function2;)Lspecto/proto/EntryGenerated$Entry$Builder;	SimplePlugin.kt
-0x740357b8	specto.core.internal.plugins.SimplePlugin	logEntry$default	(Lspecto/core/internal/plugins/SimplePlugin;Ljava/lang/String;Lkotlin/jvm/functions/Function2;ILjava/lang/Object;)V	SimplePlugin.kt
-0x74035948	specto.core.internal.plugins.SimplePlugin	logEntry	(Ljava/lang/String;Lkotlin/jvm/functions/Function2;)V	SimplePlugin.kt
-0x7404ca50	specto.core.internal.plugins.MemoryFootprintPlugin	buildEntry	(Lspecto/proto/EntryGenerated$Entry$Builder;Lspecto/core/internal/plugins/SimplePlugin$Cancellable;)V	MemoryFootprintPlugin.kt
-0x7404e510	androidx.appcompat.app.AppCompatDelegateImpl	ensureSubDecor	()V	AppCompatDelegateImpl.java
-0x7404e920	androidx.appcompat.app.AppCompatDelegateImpl	preparePanel	(Landroidx/appcompat/app/AppCompatDelegateImpl$PanelFeatureState;Landroid/view/KeyEvent;)Z	AppCompatDelegateImpl.java
-0x7404f220	androidx.appcompat.app.AppCompatDelegateImpl	doInvalidatePanelMenu	(I)V	AppCompatDelegateImpl.java
-0x7404fea0	androidx.appcompat.app.AppCompatDelegateImpl	setContentView	(I)V	AppCompatDelegateImpl.java
-0x74054120	androidx.appcompat.app.AppCompatDelegateImpl$2	run	()V	AppCompatDelegateImpl.java
-0x7405a250	androidx.appcompat.widget.ContentFrameLayout	onMeasure	(II)V	ContentFrameLayout.java
-0x74088650	androidx.appcompat.view.ContextThemeWrapper	getSystemService	(Ljava/lang/String;)Ljava/lang/Object;	ContextThemeWrapper.java
-0x740b4230	androidx.appcompat.widget.Toolbar	setTitle	(Ljava/lang/CharSequence;)V	Toolbar.java
-0x740be020	specto.core.internal.network.HttpFetcher	writeOutput	(Ljava/net/HttpURLConnection;Lspecto/core/internal/network/Request;)V	HttpFetcher.kt
-0x740be070	specto.core.internal.network.HttpFetcher	acquireToken	()Lspecto/core/internal/network/Response;	HttpFetcher.kt
-0x740be1b0	specto.core.internal.network.HttpFetcher	makeRequest	(Lspecto/core/internal/network/Request;)Lspecto/core/internal/network/Response;	HttpFetcher.kt
-0x740c3658	specto.core.internal.network.RefreshAuthWorker	access$refresh	(Lspecto/core/internal/network/RefreshAuthWorker;)Landroidx/work/ListenableWorker$Result;	RefreshAuthWorker.kt
-0x740c36f8	specto.core.internal.network.RefreshAuthWorker	refresh	()Landroidx/work/ListenableWorker$Result;	RefreshAuthWorker.kt
-0x740c3748	specto.core.internal.network.RefreshAuthWorker	doWork	(Lkotlin/coroutines/Continuation;)Ljava/lang/Object;	RefreshAuthWorker.kt
-0x740e0cf0	androidx.work.impl.background.systemalarm.CommandHandler	handleDelayMet	(Landroid/content/Intent;ILandroidx/work/impl/background/systemalarm/SystemAlarmDispatcher;)V	CommandHandler.java
-0x740e0f70	androidx.work.impl.background.systemalarm.CommandHandler	onHandleIntent	(Landroid/content/Intent;ILandroidx/work/impl/background/systemalarm/SystemAlarmDispatcher;)V	CommandHandler.java
-0x740ea310	androidx.appcompat.widget.ActionBarOverlayLayout	onMeasure	(II)V	ActionBarOverlayLayout.java
-0x740eab30	androidx.appcompat.widget.ActionBarOverlayLayout	setMenu	(Landroid/view/Menu;Landroidx/appcompat/view/menu/MenuPresenter$Callback;)V	ActionBarOverlayLayout.java
-0x740ead10	androidx.appcompat.widget.ActionBarOverlayLayout	setWindowTitle	(Ljava/lang/CharSequence;)V	ActionBarOverlayLayout.java
-0x740ec0a0	androidx.work.impl.background.systemalarm.SystemAlarmDispatcher$DequeueAndCheckForCompletion	run	()V	SystemAlarmDispatcher.java
-0x740edd28	androidx.work.impl.background.systemalarm.SystemAlarmDispatcher	dequeueAndCheckForCompletion	()V	SystemAlarmDispatcher.java
-0x740f0c70	androidx.work.impl.background.systemalarm.SystemAlarmDispatcher	processCommand	()V	SystemAlarmDispatcher.java
-0x741024b8	specto.core.internal.DefaultController$startSession$2	run	()V	DefaultController.kt
-0x741027c8	kotlinx.coroutines.CancellableContinuationImpl	dispatchResume	(I)V	CancellableContinuationImpl.kt
-0x741029a8	kotlinx.coroutines.CancellableContinuationImpl	resumeImpl	(Ljava/lang/Object;I)Lkotlinx/coroutines/CancelledContinuation;	CancellableContinuationImpl.kt
-0x741031c8	kotlinx.coroutines.CancellableContinuationImpl	resumeUndispatched	(Lkotlinx/coroutines/CoroutineDispatcher;Ljava/lang/Object;)V	CancellableContinuationImpl.kt
-0x74105e58	specto.core.internal.plugins.SimpleSamplingPlugin$onStart$1	invokeSuspend	(Ljava/lang/Object;)Ljava/lang/Object;	SimpleSamplingPlugin.kt
-0x74106f88	specto.core.internal.plugins.SimpleSamplingPlugin$onStart$1$2	invoke	(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;	SimpleSamplingPlugin.kt
-0x74106fd8	specto.core.internal.plugins.SimpleSamplingPlugin$onStart$1$2	invoke	(Lspecto/proto/EntryGenerated$Entry$Builder;Lspecto/core/internal/plugins/SimplePlugin$Cancellable;)V	SimpleSamplingPlugin.kt
-0x741096e8	androidx.appcompat.widget.ToolbarWidgetWrapper	setTitleInt	(Ljava/lang/CharSequence;)V	ToolbarWidgetWrapper.java
-0x7410a548	androidx.appcompat.widget.ToolbarWidgetWrapper	setMenu	(Landroid/view/Menu;Landroidx/appcompat/view/menu/MenuPresenter$Callback;)V	ToolbarWidgetWrapper.java
-0x7410a908	androidx.appcompat.widget.ToolbarWidgetWrapper	setWindowTitle	(Ljava/lang/CharSequence;)V	ToolbarWidgetWrapper.java
-0x7410d498	androidx.appcompat.widget.AppCompatTextView	<init>	(Landroid/content/Context;)V	AppCompatTextView.java
-0x7410d4e8	androidx.appcompat.widget.AppCompatTextView	<init>	(Landroid/content/Context;Landroid/util/AttributeSet;)V	AppCompatTextView.java
-0x7410d538	androidx.appcompat.widget.AppCompatTextView	<init>	(Landroid/content/Context;Landroid/util/AttributeSet;I)V	AppCompatTextView.java
-0x7410ea38	androidx.appcompat.widget.AppCompatTextHelper	<init>	(Landroid/widget/TextView;)V	AppCompatTextHelper.java
-0x74111228	androidx.appcompat.widget.AppCompatTextViewAutoSizeHelper	<clinit>	()V	AppCompatTextViewAutoSizeHelper.java
-0x74112688	kotlinx.coroutines.EventLoopImplBase$DelayedResumeTask	run	()V	EventLoop.common.kt
-0x74115120	androidx.constraintlayout.widget.ConstraintLayout	setChildrenConstraints	()V	ConstraintLayout.java
-0x741151c0	androidx.constraintlayout.widget.ConstraintLayout	updateHierarchy	()V	ConstraintLayout.java
-0x74115800	androidx.constraintlayout.widget.ConstraintLayout	onMeasure	(II)V	ConstraintLayout.java
-0x74116a50	java.util.concurrent.ScheduledThreadPoolExecutor$DelayedWorkQueue	take	()Ljava/lang/Object;	ScheduledThreadPoolExecutor.java
-0x74116aa0	java.util.concurrent.ScheduledThreadPoolExecutor$DelayedWorkQueue	take	()Ljava/util/concurrent/RunnableScheduledFuture;	ScheduledThreadPoolExecutor.java
-0x74116fd0	androidx.work.impl.background.systemalarm.SystemAlarmDispatcher$1	run	()V	SystemAlarmDispatcher.java
-0x741250e8	specto.core.internal.DefaultController$markAppStartupComplete$1	invokeSuspend	(Ljava/lang/Object;)Ljava/lang/Object;	DefaultController.kt
-0x7412a9a8	androidx.appcompat.widget.ActionMenuPresenter	<init>	(Landroid/content/Context;)V	ActionMenuPresenter.java
-0x7412b628	androidx.appcompat.view.menu.BaseMenuPresenter	<init>	(Landroid/content/Context;II)V	BaseMenuPresenter.java
-0x74132940	androidx.work.impl.background.systemalarm.ConstraintProxyUpdateReceiver$1	run	()V	ConstraintProxyUpdateReceiver.java
-0x741333b0	androidx.work.impl.background.systemalarm.DelayMetCommandHandler	handleProcessWork	()V	DelayMetCommandHandler.java
-0x74134020	androidx.work.impl.WorkerWrapper	onWorkFinished	()V	WorkerWrapper.java
-0x74136af8	androidx.work.impl.WorkerWrapper$2	run	()V	WorkerWrapper.java
-0x74136cb8	androidx.work.CoroutineWorker$startWork$1	invokeSuspend	(Ljava/lang/Object;)Ljava/lang/Object;	CoroutineWorker.kt
-0x74138738	specto.core.internal.network.RefreshAuthWorker$doWork$2	invokeSuspend	(Ljava/lang/Object;)Ljava/lang/Object;	RefreshAuthWorker.kt
-0x74138868	kotlinx.coroutines.DispatchedCoroutine	<clinit>	()V	Builders.common.kt
-0x7413d388	androidx.work.impl.utils.StopWorkRunnable	run	()V	StopWorkRunnable.java
-*end
-SLOW   ºo§                  íğË{p    D¶ íÈÅ{p    D¶ íˆhp    D¶ í `p    D¶ íhy[p    D¶ í°hp    D¶ í ügp    D¶ íğ`p    D¶ íèk[p    D¶ íXt[p    D¶ íˆz[p    D¶ í¸‡ƒp    D¶ í0†Zp    D¶ í.t    D¶ íx:t    D¶ í şt    D¶ íåt    D¶ í­t    D¶ í©t    D¶ íè–t    D¶ í0Bt    D¶ í˜Ôt    D¶ íèÔt    D¶ í8Õt    D¶ í8êt    D¶ í(t    D¶ í€cp    D¶ øˆ¼p    o¶ ø(=p    o¶ øPÎıo    o¶ ùˆ¼p    w¶ ù@,p    w¶ ùpp    w¶ ù¸p    w¶ ù˜Îıo    w¶ ùàÎıo    w¶ úˆ¼p    ¶ ú(1p    ¶ úp0p    ¶ ú(0p    ¶ úX¹p    ¶ ú ¹p    ¶ úè¹p    ¶ ûˆ¼p    ‡¶ û9p    ‡¶ ûxİp    ‡¶ üˆ¼p    ¶ ü 5p    ¶ üPÎıo    ¶ ÿˆ¼p    ¤¶ ÿhóp    ¤¶ ÿhp    ¤¶ ÿ¨ıp    ¤¶ ÿ(½p    ¤¶ ÿ jp    ¤¶ ÿwp    ¤¶ ÿÀsp    ¤¶ ÿxÃp    ¤¶ ÿàÎıo    ¤¶  ˆ¼p    ¬¶  hóp    ¬¶  hp    ¬¶  ¨ıp    ¬¶  (½p    ¬¶   jp    ¬¶  wp    ¬¶  Àsp    ¬¶  xÃp    ¬¶  àÎıo    ¬¶ ˆ¼p    ´¶ hóp    ´¶ hp    ´¶ ¨ıp    ´¶ (½p    ´¶  jp    ´¶ wp    ´¶ Àsp    ´¶ xÃp    ´¶ àÎıo    ´¶ ˆ¼p    »¶ hóp    »¶ hp    »¶ ¨ıp    »¶ (½p    »¶  jp    »¶ wp    »¶ Àsp    »¶ xÃp    »¶ àÎıo    »¶ ˆ¼p    Ã¶ hóp    Ã¶ hp    Ã¶ ¸$t    Ã¶ ˜(t    Ã¶ 
-ˆ¼p    Ñ¶ 
-ˆWt    Ñ¶ 
- wp    Ñ¶ 
-Àsp    Ñ¶ 
-xÃp    Ñ¶ 
-àÎıo    Ñ¶ ícp‡)  ¦ì í)t‡)  ¦ì í9êt‡)  ¦ì í9Õt‡)  ¦ì íéÔt‡)  ¦ì í™Ôt‡)  ¦ì í1Bt‡)  ¦ì íé–t‡)  ¦ì í	©t‡)  ¦ì í­t‡)  ¦ì íåt‡)  ¦ì í¡şt‡)  ¦ì íy:t‡)  ¦ì í	.t‡)  ¦ì í1†Zp‡)  ¦ì í¹‡ƒp‡)  ¦ì í‰z[p‡)  ¦ì íÈ[p‡)  ¦ì í`wšp‡)  ¦ì í0app‡)  ¦ì íø“op‡)  ¦ì íğ[pp‡)  ¦ì íPO˜p‡)  ¦ì í0˜“p‡)  ¦ì í™“p‡)  ¦ì üQÎıoÙ  Ií ü ×pÙ  Ií áÎıo  mí yÃp  mí Ásp  mí wp  mí !jp  mí )½p  mí ©ıp  mí (ñt  mí H#t  mí èPt  mí  et  mí pht  mí ø't  mí í‘™“pè?  n í1˜“pè?  n íQO˜pè?  n íñ[ppè?  n íù“opè?  n íàopè?  n íH›opè?  n íÈ!˜pè?  n íğ*™pè?  n í8=™pè?  n íH0™pè?  n ü×pğ!  ñ üPÎıoğ!  ñ ù'tÏ   qhtÏ   etÏ   éPtÏ   I#tÏ   )ñtÏ   ¨ıpÏ   (½pÏ    jpÏ   wpÏ   ÀspÏ   xÃpÏ   àÎıoÏ   íI0™pGO  î@ í9=™pGO  î@ íñ*™pGO  î@ íÉ!˜pGO  î@ íI›opGO  î@ í‘àopGO  î@ í1appGO  î@ íawšpGO  î@ íÉ[pGO  î@ íYt[pGO  î@ íék[pGO  î@ íñ`pGO  î@ í úgpGO  î@ íH™—pGO  î@ í(?mpGO  î@ íà>mpGO  î@ íP–—pGO  î@ íØ%špGO  î@ íPÕopGO  î@ íà¢opGO  î@ íx¡opGO  î@ í˜¢opGO  î@ ípİ]pGO  î@ íX ¦pGO  î@ íø¾^pGO  î@ í(^pGO  î@ ípİ]pGO  î@ í(ispGO  î@ íÀgspGO  î@ íèfspGO  î@ í(^pGO  î@ ípİ]pGO  î@ íø¾^pGO  î@ í(^pGO  î@ ípİ]pGO  î@ í£tGO  î@ í(^pGO  î@ ípİ]pGO  î@ íP¢tGO  î@ íø¾^pGO  î@ í(^pGO  î@ ípİ]pGO  î@ í XtGO  î@ íÀQtGO  î@ í QtGO  î@ í u^pGO  î@ í¡u^pÈR  q í!QtÈR  q íÁQtÈR  q íXtÈR  q íqİ]pÈR  q í)^pÈR  q íù¾^pÈR  q íQ¢tÈR  q íqİ]pÈR  q í)^pÈR  q í£tÈR  q íqİ]pÈR  q í)^pÈR  q íù¾^pÈR  q íqİ]pÈR  q í)^pÈR  q íéfspÈR  q íÁgspÈR  q í)ispÈR  q íqİ]pÈR  q í)^pÈR  q íù¾^pÈR  q íY ¦pÈR  q íqİ]pÈR  q í™¢opÈR  q íy¡opÈR  q í ¤opÈR  q íàd˜pÈR  q í0˜“pÈR  q í™“pÈR  q í‘™“pùU  gø í1˜“pùU  gø íád˜pùU  gø í¤opùU  gø í`<™pùU  gø í¸/™pùU  gø í¹/™pÃV  Ç' íˆ*opÃV  Ç' í $opÃV  Ç' í!$op­b  yT í‰*op­b  yT ía<™p­b  yT íá¢op­b  yT íQÕop­b  yT íÙ%šp­b  yT íQ–—p­b  yT íá>mp­b  yT í)?mp­b  yT íI™—p­b  yT í At­b  yT í òt­b  yT í ét­b  yT í0«t­b  yT íH¥t­b  yT í¨©t­b  yT í(¶t­b  yT íPynp­b  yT íP†t­b  yT í˜Üp­b  yT áÎıoa  8U yÃpa  8U Áspa  8U wpa  8U !jpa  8U )½pa  8U ©ıpa  8U ¨Ç ta  8U Ğota  8U X•hpa  8U “hpa  8U (7”pa  8U 0˜“pa  8U ™“pa  8U í™Üp.~  »€ íQ†t.~  »€ íQynp.~  »€ í)¶t.~  »€ í©©t.~  »€ íI¥t.~  »€ í1«t.~  »€ í!ét.~  »€ í!òt.~  »€ í!At.~  »€ íH™—p.~  »€ í(?mp.~  »€ íà>mp.~  »€ íP–—p.~  »€ íØ%šp.~  »€ íPÕop.~  »€ íà¢op.~  »€ í¢op.~  »€ í@;™p.~  »€ íp/™p.~  »€ ‘™“p  <‚ 1˜“p  <‚ )7”p  <‚ 	“hp  <‚ Y•hp  <‚ Ñot  <‚ ©Ç t  <‚ ¨ıp  <‚ (½p  <‚  jp  <‚ wp  <‚ Àsp  <‚ xÃp  <‚ àÎıo  <‚ íq/™pR~  ‘6 íA;™pR~  ‘6 íb˜pR~  ‘6 í0˜“pR~  ‘6 í™“pR~  ‘6 í‘™“pu„  Âe í1˜“pu„  Âe íb˜pu„  Âe í	¢opu„  Âe íá¢opu„  Âe íQÕopu„  Âe íÙ%špu„  Âe íQ–—pu„  Âe íá>mpu„  Âe í)?mpu„  Âe íI™—pu„  Âe í¡úgpu„  Âe í¡ügpu„  Âe íX‚”pu„  Âe íh}”pu„  Âe  áÎıo¼   g  yÃp¼   g  Ásp¼   g  wp¼   g  !jp¼   g  )½p¼   g  ©ıp¼   g  ¨Ç t¼   g  Ğot¼   g  pt¼   g  ğt¼   g  °3t¼   g  Øƒ t¼   g  x‡ t¼   g  ˜’ t¼   g  › t¼   g  ¸š t¼   g  hš t¼   g  ª t¼   g  È_fp¼   g   p¼   g  0˜“p¼   g  ™“p¼   g  ‘™“pı(   •  1˜“pı(   •  pı(   •  É_fpı(   •  	ª tı(   •  iš tı(   •  ¹š tı(   •  	› tı(   •  ™’ tı(   •  y‡ tı(   •  Ùƒ tı(   •  ±3tı(   •  ñtı(   •  qtı(   •  Ñotı(   •  ©Ç tı(   •  ¨ıpı(   •  (½pı(   •   jpı(   •  wpı(   •  Àspı(   •  xÃpı(   •  àÎıoı(   • ˆ¼p    =– hóp    =– hp    =– ¨ıp    =– Pjt    =–  jt    =– °jp    =–  wp    =– Àsp    =– xÃp    =– àÎıo    =– X¯t    H– 8¬t    H– Xªt    H– xLt    H– (ñt    H– H#t    H– ¸lt    H– H7t    H– ø't    H– ˆ*t    H– hˆt    H– 8št    H– (Çt    H– è™t    H– X¯t    P– 8¬t    P– Ø¬t    P– ˜«t    P– Xwp    P– Àsp    P– xÃp    P– àÎıo    P– é™tõ  ºÂ )Çtõ  ºÂ 9štõ  ºÂ iˆtõ  ºÂ ‰*tõ  ºÂ ù'tõ  ºÂ I7tõ  ºÂ ¹ltõ  ºÂ 8‡tõ  ºÂ X6tõ  ºÂ ø6tõ  ºÂ pàtõ  ºÂ °átõ  ºÂ  àtõ  ºÂ à?põ  ºÂ x×põ  ºÂ 8.põ  ºÂ °+põ  ºÂ  'põ  ºÂ °põ  ºÂ 0põ  ºÂ øpõ  ºÂ  ®põ  ºÂ x™	põ  ºÂ €w	põ  ºÂ Àb	põ  ºÂ ğ9põ  ºÂ €:põ  ºÂ 0<põ  ºÂ ˜põ  ºÂ @~põ  ºÂ X¯t    ÍÂ 8¬t    ÍÂ Ø¬t    ÍÂ ˜«t    ÍÂ Xwp    ÍÂ Àsp    ÍÂ xÃp    ÍÂ àÎıo    ÍÂ ˆ¼p    ØÂ hóp    ØÂ hp    ØÂ ¨ıp    ØÂ P¼p    ØÂ °jp    ØÂ  wp    ØÂ Àsp    ØÂ xÃp    ØÂ àÎıo    ØÂ A~pM   ™pM   1<pM   :pM   ñ9pM   Áb	pM   w	pM   y™	pM   !®pM   ˆpM   è–pM    ÛpM   ¡Ûp»<  ˜$	 é–p»<  ˜$	 ‰p»<  ˜$	 ùp»<  ˜$	 1p»<  ˜$	 ±p»<  ˜$	 ¡'p»<  ˜$	 ±+p»<  ˜$	 9.p»<  ˜$	 y×p»<  ˜$	 á?p»<  ˜$	 !àt»<  ˜$	 x>p»<  ˜$	 Öp»<  ˜$	 ğ-p»<  ˜$	 è'p»<  ˜$	  'p»<  ˜$	 p»<  ˜$	  p»<  ˜$	  p»<  ˜$	 hÉp»<  ˜$	 Æp»<  ˜$	 À©p»<  ˜$	  sp»<  ˜$	  àp»<  ˜$	 áÎıoÜ  ²ù yÃpÜ  ²ù ÁspÜ  ²ù wpÜ  ²ù !jpÜ  ²ù )½pÜ  ²ù ©ıpÜ  ²ù (ñtÜ  ²ù H#tÜ  ²ù X^tÜ  ²ù ¸WtÜ  ²ù HYtÜ  ²ù xVtÜ  ²ù WtÜ  ²ù ˆotÜ  ²ù ØotÜ  ²ù PÊtÜ  ²ù €¶ZpÜ  ²ù h½€pÜ  ²ù 0˜“pÜ  ²ù ™“pÜ  ²ù ‘™“pÚ  ÷Q 1˜“pÚ  ÷Q i½€pÚ  ÷Q ¶ZpÚ  ÷Q QÊtÚ  ÷Q ÙotÚ  ÷Q ‰otÚ  ÷Q WtÚ  ÷Q yVtÚ  ÷Q IYtÚ  ÷Q ¹WtÚ  ÷Q Y^tÚ  ÷Q I#tÚ  ÷Q )ñtÚ  ÷Q ¨ıpÚ  ÷Q (½pÚ  ÷Q  jpÚ  ÷Q wpÚ  ÷Q ÀspÚ  ÷Q xÃpÚ  ÷Q àÎıoÚ  ÷Q üQÎıoWE   ü ×pWE   ÿáÎıo(  ¼ ÿyÃp(  ¼ ÿÁsp(  ¼ ÿwp(  ¼ ÿ!jp(  ¼ ÿ)½p(  ¼ ÿ©ıp(  ¼ ÿ¨Ç t(  ¼ ÿøjt(  ¼ ÿ @t(  ¼ ÿpm t(  ¼ ÿÌ t(  ¼ ÿP>t(  ¼ ÿ  t(  ¼ ÿèt(  ¼ ÿø®ap(  ¼ ÿ@¯ap(  ¼ ÿJˆp(  ¼ ÿ˜cˆp(  ¼ ÿ Yˆp(  ¼ ÿ`~ˆp(  ¼ ÿğˆp(  ¼ ÿøİ‡p(  ¼ ÿÀœp(  ¼ !àpGL   spGL   Á©pGL   	ÆpGL   iÉpGL   ¡pGL   ¡pGL   ‘pGL   ¡'pGL   é'pGL   ñ-pGL   ÖpGL   y>pGL   ±átGL   qàtGL   ù6tGL   Y6tGL   9‡tGL   I#tGL   )ñtGL   yLtGL   YªtGL   Ø¬tGL   ˜«tGL   XwpGL   ÀspGL   xÃpGL   àÎıoGL   íi}”p£  ÅG íY‚”p£  ÅG í ügp£  ÅG í úgp£  ÅG í Àt£  ÅG í(İt£  ÅG ípt£  ÅG íX•hp£  ÅG í“hp£  ÅG í(7”p£  ÅG í0˜“p£  ÅG í™“p£  ÅG ü×pãM  H üPÎıoãM  H ÿÁœpæ&  1H ÿùİ‡pæ&  1H ÿñˆpæ&  1H ÿa~ˆpæ&  1H ÿYˆpæ&  1H ÿ™cˆpæ&  1H ÿJˆpæ&  1H ÿA¯apæ&  1H ÿù®apæ&  1H ÿétæ&  1H ÿ tæ&  1H ÿQ>tæ&  1H ÿ	Ì tæ&  1H ÿqm tæ&  1H ÿ!@tæ&  1H ÿùjtæ&  1H ÿ©Ç tæ&  1H ÿ¨ıpæ&  1H ÿ(½pæ&  1H ÿ jpæ&  1H ÿwpæ&  1H ÿÀspæ&  1H ÿxÃpæ&  1H ÿàÎıoæ&  1H áÎıoá  LH yÃpá  LH Áspá  LH wpá  LH !jpá  LH )½pá  LH ©ıpá  LH ¨Ç tá  LH ˆÓtá  LH ğ
- tá  LH ˜tá  LH ¤apá  LH H{ˆpá  LH ˆvˆpá  LH Ø ˆpá  LH øİ‡pá  LH Àœpá  LH í‘™“p8­  s í1˜“p8­  s í)7”p8­  s í	“hp8­  s íY•hp8­  s íx–hp8­  s íÀ–hp8­  s íø9”p8­  s í0˜“p8­  s í™“p8­  s ÿáÎıo”1  s ÿyÃp”1  s ÿÁsp”1  s ÿwp”1  s ÿ!jp”1  s ÿ)½p”1  s ÿ©ıp”1  s ÿ¨Ç t”1  s ÿ@)t”1  s ÿÈ{ t”1  s ÿ€Ép”1  s ÿ Ÿ†p”1  s ÿ0˜“p”1  s ÿ™“p”1  s ÁœpS'  ·s ùİ‡pS'  ·s Ù ˆpS'  ·s ‰vˆpS'  ·s I{ˆpS'  ·s ‘¤apS'  ·s ™tS'  ·s ñ
- tS'  ·s ‰ÓtS'  ·s ©Ç tS'  ·s ¨ıpS'  ·s (½pS'  ·s  jpS'  ·s wpS'  ·s ÀspS'  ·s xÃpS'  ·s àÎıoS'  ·s í‘™“po°  úŸ í1˜“po°  úŸ íù9”po°  úŸ íÁ–hpo°  úŸ íy–hpo°  úŸ íqto°  úŸ í)İto°  úŸ í¡Àto°  úŸ í¡úgpo°  úŸ í¡ügpo°  úŸ íX‚”po°  úŸ íh}”po°  úŸ ÿ‘™“p”4  ·  ÿ1˜“p”4  ·  ÿŸ†p”4  ·  ÿÉp”4  ·  ÿÉ{ t”4  ·  ÿA)t”4  ·  ÿ©Ç t”4  ·  ÿ¨ıp”4  ·  ÿ(½p”4  ·  ÿ jp”4  ·  ÿwp”4  ·  ÿÀsp”4  ·  ÿxÃp”4  ·  ÿàÎıo”4  ·  áÎıo4"  L# yÃp4"  L# Ásp4"  L# wp4"  L# !jp4"  L# )½p4"  L# ©ıp4"  L# (ñt4"  L# H#t4"  L# X^t4"  L# ¸Wt4"  L# HYt4"  L# xVt4"  L# Wt4"  L# ˆot4"  L# Øot4"  L# PÊt4"  L# €¶Zp4"  L# h½€p4"  L# 0˜“p4"  L# ™“p4"  L# ‘™“p§#  i¿# 1˜“p§#  i¿# i½€p§#  i¿# ¶Zp§#  i¿# QÊt§#  i¿# Ùot§#  i¿# ‰ot§#  i¿# Wt§#  i¿# yVt§#  i¿# IYt§#  i¿# ¹Wt§#  i¿# Y^t§#  i¿# I#t§#  i¿# )ñt§#  i¿# ¨ıp§#  i¿# (½p§#  i¿#  jp§#  i¿# wp§#  i¿# Àsp§#  i¿# xÃp§#  i¿# àÎıo§#  i¿# 
-áÎıo
-  
-ã2 
-yÃp
-  
-ã2 
-Ásp
-  
-ã2 
-¡wp
-  
-ã2 
-h^t
-  
-ã2 
-ˆ&t
-  
-ã2 
-È1t
-  
-ã2 
-¨)t
-  
-ã2 
-È't
-  
-ã2 
-(t
-  
-ã2 
-¸xt
-  
-ã2 
-¸»t
-  
-ã2 
-¹»tf  "3 
-¹xtf  "3 
-)tf  "3 
-É'tf  "3 
-©)tf  "3 
-É1tf  "3 
-‰&tf  "3 
-i^tf  "3 
- wpf  "3 
-Àspf  "3 
-xÃpf  "3 
-àÎıof  "3 

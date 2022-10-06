@@ -1,410 +1,0 @@
-*version
-3
-data-file-overflow=false
-clock=dual
-elapsed-time-usec=315093
-num-method-calls=839
-clock-call-overhead-nsec=310
-vm=art
-pid=9866
-*threads
-9921	SharedPreferencesImpl-load
-9924	SharedPreferencesImpl-load
-9866	main
-9873	Runtime worker thread 0
-9875	Runtime worker thread 2
-9872	Jit thread pool worker thread 0
-9874	Runtime worker thread 1
-9877	Runtime worker thread 3
-9878	Signal Catcher
-9879	ADB-JDWP Connection Control Thread
-9881	ReferenceQueueDaemon
-9882	FinalizerDaemon
-9883	FinalizerWatchdogDaemon
-9880	HeapTaskDaemon
-9884	Binder:9866_1
-9887	Binder:9866_2
-9890	Binder:9866_3
-9899	Profile Saver
-9901	pool-2-thread-1
-9902	pool-2-thread-2
-9903	LeakCanary-Heap-Dump
-9904	dev.specto-pool-3-thread-1
-9906	GleanAPIPool
-9907	DefaultDispatcher-worker-1
-9908	DefaultDispatcher-worker-2
-9909	DefaultDispatcher-worker-3
-9912	pool-2-thread-3
-9914	Gecko
-9916	GeckoBackgroundThread
-9917	pool-4-thread-1
-9918	glean.MetricsPingScheduler
-9920	pool-2-thread-4
-9922	ConnectivityThread
-9923	kotlinx.coroutines.DefaultExecutor
-9926	RenderThread
-9928	queued-work-looper
-*methods
-0x9c	java.util.concurrent.LinkedBlockingQueue	take	()Ljava/lang/Object;	LinkedBlockingQueue.java
-0x568	java.util.HashMap	get	(Ljava/lang/Object;)Ljava/lang/Object;	HashMap.java
-0x56c	java.util.HashMap	getNode	(ILjava/lang/Object;)Ljava/util/HashMap$Node;	HashMap.java
-0x4b0	java.util.HashMap	put	(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;	HashMap.java
-0x4b4	java.util.HashMap	putVal	(ILjava/lang/Object;Ljava/lang/Object;ZZ)Ljava/lang/Object;	HashMap.java
-0x4b8	java.util.HashMap	resize	()[Ljava/util/HashMap$Node;	HashMap.java
-0x200	java.io.BufferedInputStream	<init>	(Ljava/io/InputStream;I)V	BufferedInputStream.java
-0x2fc	java.util.WeakHashMap$Entry	<init>	(Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/ref/ReferenceQueue;ILjava/util/WeakHashMap$Entry;)V	WeakHashMap.java
-0x98	java.util.concurrent.ThreadPoolExecutor	getTask	()Ljava/lang/Runnable;	ThreadPoolExecutor.java
-0x94	java.util.concurrent.ThreadPoolExecutor	runWorker	(Ljava/util/concurrent/ThreadPoolExecutor$Worker;)V	ThreadPoolExecutor.java
-0x2f8	java.util.WeakHashMap	put	(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;	WeakHashMap.java
-0xa0	java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject	await	()V	AbstractQueuedSynchronizer.java
-0x508	java.lang.AbstractStringBuilder	<init>	(I)V	AbstractStringBuilder.java
-0x504	java.lang.StringBuilder	<init>	()V	StringBuilder.java
-0x78	java.lang.ref.ReferenceQueue	remove	()Ljava/lang/ref/Reference;	ReferenceQueue.java
-0x7c	java.lang.ref.ReferenceQueue	remove	(J)Ljava/lang/ref/Reference;	ReferenceQueue.java
-0x17c	java.util.TimerThread	mainLoop	()V	Timer.java
-0x178	java.util.TimerThread	run	()V	Timer.java
-0xa4	java.util.concurrent.locks.LockSupport	park	(Ljava/lang/Object;)V	LockSupport.java
-0x134	java.util.concurrent.locks.LockSupport	parkNanos	(J)V	LockSupport.java
-0x318	java.util.concurrent.locks.LockSupport	parkNanos	(Ljava/lang/Object;J)V	LockSupport.java
-0xf0	java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask	run	()V	ScheduledThreadPoolExecutor.java
-0x240	java.util.concurrent.ScheduledThreadPoolExecutor$DelayedWorkQueue	take	()Ljava/lang/Object;	ScheduledThreadPoolExecutor.java
-0x244	java.util.concurrent.ScheduledThreadPoolExecutor$DelayedWorkQueue	take	()Ljava/util/concurrent/RunnableScheduledFuture;	ScheduledThreadPoolExecutor.java
-0xf8	java.util.concurrent.Executors$RunnableAdapter	call	()Ljava/lang/Object;	Executors.java
-0xf4	java.util.concurrent.FutureTask	run	()V	FutureTask.java
-0x90	java.util.concurrent.ThreadPoolExecutor$Worker	run	()V	ThreadPoolExecutor.java
-0x68	java.lang.Object	wait	()V	Object.java
-0x6c	java.lang.Object	wait	(J)V	Object.java
-0x70	java.lang.Object	wait	(JI)V	Object.java
-0x110	java.lang.reflect.Proxy	invoke	(Ljava/lang/reflect/Proxy;Ljava/lang/reflect/Method;[Ljava/lang/Object;)Ljava/lang/Object;	Proxy.java
-0x5c	java.lang.Thread	run	()V	Thread.java
-0x500	java.lang.Throwable	printStackTrace	(Ljava/lang/Throwable$PrintStreamOrWriter;)V	Throwable.java
-0x4fc	java.lang.Throwable	printStackTrace	(Ljava/io/PrintWriter;)V	Throwable.java
-0x8	java.lang.reflect.Method	invoke	(Ljava/lang/Object;[Ljava/lang/Object;)Ljava/lang/Object;	Method.java
-0x374	java.io.File	exists	()Z	File.java
-0x378	java.io.UnixFileSystem	checkAccess	(Ljava/io/File;I)Z	UnixFileSystem.java
-0x1ac	java.lang.Class	classForName	(Ljava/lang/String;ZLjava/lang/ClassLoader;)Ljava/lang/Class;	Class.java
-0x1a8	java.lang.Class	forName	(Ljava/lang/String;ZLjava/lang/ClassLoader;)Ljava/lang/Class;	Class.java
-0x4dc	java.lang.Class	getDeclaredMethodInternal	(Ljava/lang/String;[Ljava/lang/Class;)Ljava/lang/reflect/Method;	Class.java
-0x4d8	java.lang.Class	getMethod	(Ljava/lang/String;[Ljava/lang/Class;Z)Ljava/lang/reflect/Method;	Class.java
-0x4d4	java.lang.Class	getDeclaredMethod	(Ljava/lang/String;[Ljava/lang/Class;)Ljava/lang/reflect/Method;	Class.java
-0x344	java.lang.Class	newInstance	()Ljava/lang/Object;	Class.java
-0xa8	sun.misc.Unsafe	park	(ZJ)V	Unsafe.java
-0x5a0	java.lang.reflect.Constructor	newInstance0	([Ljava/lang/Object;)Ljava/lang/Object;	Constructor.java
-0x59c	java.lang.reflect.Constructor	newInstance	([Ljava/lang/Object;)Ljava/lang/Object;	Constructor.java
-0x388	dalvik.system.BlockGuard	getVmPolicy	()Ldalvik/system/BlockGuard$VmPolicy;	BlockGuard.java
-0x380	libcore.io.ForwardingOs	access	(Ljava/lang/String;I)Z	ForwardingOs.java
-0x64	java.lang.Daemons$ReferenceQueueDaemon	runInternal	()V	Daemons.java
-0x384	libcore.io.BlockGuardOs	access	(Ljava/lang/String;I)Z	BlockGuardOs.java
-0x88	java.lang.Daemons$HeapTaskDaemon	runInternal	()V	Daemons.java
-0x74	java.lang.Daemons$FinalizerDaemon	runInternal	()V	Daemons.java
-0x84	java.lang.Daemons$FinalizerWatchdogDaemon	sleepUntilNeeded	()Z	Daemons.java
-0x80	java.lang.Daemons$FinalizerWatchdogDaemon	runInternal	()V	Daemons.java
-0x60	java.lang.Daemons$Daemon	run	()V	Daemons.java
-0x8c	dalvik.system.VMRuntime	runHeapTasks	()V	VMRuntime.java
-0x36c	android.app.ContextImpl	ensurePrivateDirExists	(Ljava/io/File;)Ljava/io/File;	ContextImpl.java
-0x370	android.app.ContextImpl	ensurePrivateDirExists	(Ljava/io/File;IILjava/lang/String;)Ljava/io/File;	ContextImpl.java
-0x368	android.app.ContextImpl	getPreferencesDir	()Ljava/io/File;	ContextImpl.java
-0x360	android.app.ContextImpl	getSharedPreferences	(Ljava/lang/String;I)Landroid/content/SharedPreferences;	ContextImpl.java
-0x364	android.app.ContextImpl	getSharedPreferencesPath	(Ljava/lang/String;)Ljava/io/File;	ContextImpl.java
-0xe4	android.app.IActivityManager$Stub$Proxy	getProcessMemoryInfo	([I)[Landroid/os/Debug$MemoryInfo;	IActivityManager.java
-0x154	android.app.IActivityManager$Stub$Proxy	getRunningAppProcesses	()Ljava/util/List;	IActivityManager.java
-0x18	android.app.ActivityThread$H	handleMessage	(Landroid/os/Message;)V	ActivityThread.java
-0x1f4	android.app.SharedPreferencesImpl$1	run	()V	SharedPreferencesImpl.java
-0x454	android.view.animation.AnimationUtils	loadInterpolator	(Landroid/content/Context;I)Landroid/view/animation/Interpolator;	AnimationUtils.java
-0x4f8	android.os.StrictMode$ViolationInfo	getStackTrace	()Ljava/lang/String;	StrictMode.java
-0x1bc	android.database.AbstractCursor	close	()V	AbstractCursor.java
-0x31c	android.app.servertransaction.TransactionExecutor	execute	(Landroid/app/servertransaction/ClientTransaction;)V	TransactionExecutor.java
-0x320	android.app.servertransaction.TransactionExecutor	executeCallbacks	(Landroid/app/servertransaction/ClientTransaction;)V	TransactionExecutor.java
-0x1b8	android.database.sqlite.SQLiteCursor	close	()V	SQLiteCursor.java
-0x3fc	android.util.Pools$SimplePool	acquire	()Ljava/lang/Object;	Pools.java
-0x3e4	android.graphics.drawable.DrawableInflater	inflateFromXmlForDensity	(Ljava/lang/String;Lorg/xmlpull/v1/XmlPullParser;Landroid/util/AttributeSet;ILandroid/content/res/Resources$Theme;)Landroid/graphics/drawable/Drawable;	DrawableInflater.java
-0x230	android.database.sqlite.SQLiteStatement	executeUpdateDelete	()I	SQLiteStatement.java
-0x340	android.app.AppComponentFactory	instantiateActivity	(Ljava/lang/ClassLoader;Ljava/lang/String;Landroid/content/Intent;)Landroid/app/Activity;	AppComponentFactory.java
-0x280	android.os.BaseBundle	initializeFromParcelLocked	(Landroid/os/Parcel;ZZ)V	BaseBundle.java
-0x27c	android.os.BaseBundle	unparcel	()V	BaseBundle.java
-0x1c4	android.database.AbstractWindowedCursor	closeWindow	()V	AbstractWindowedCursor.java
-0x1c0	android.database.AbstractWindowedCursor	onDeactivateOrClose	()V	AbstractWindowedCursor.java
-0x488	android.view.LayoutInflater	createViewFromTag	(Landroid/view/View;Ljava/lang/String;Landroid/content/Context;Landroid/util/AttributeSet;)Landroid/view/View;	LayoutInflater.java
-0x4ac	android.view.LayoutInflater	createView	(Landroid/content/Context;Ljava/lang/String;Ljava/lang/String;Landroid/util/AttributeSet;)Landroid/view/View;	LayoutInflater.java
-0x4a8	android.view.LayoutInflater	createView	(Ljava/lang/String;Ljava/lang/String;Landroid/util/AttributeSet;)Landroid/view/View;	LayoutInflater.java
-0x48c	android.view.LayoutInflater	createViewFromTag	(Landroid/view/View;Ljava/lang/String;Landroid/content/Context;Landroid/util/AttributeSet;Z)Landroid/view/View;	LayoutInflater.java
-0x47c	android.view.LayoutInflater	inflate	(ILandroid/view/ViewGroup;)Landroid/view/View;	LayoutInflater.java
-0x480	android.view.LayoutInflater	inflate	(ILandroid/view/ViewGroup;Z)Landroid/view/View;	LayoutInflater.java
-0x484	android.view.LayoutInflater	inflate	(Lorg/xmlpull/v1/XmlPullParser;Landroid/view/ViewGroup;Z)Landroid/view/View;	LayoutInflater.java
-0x49c	android.view.LayoutInflater	onCreateView	(Landroid/content/Context;Landroid/view/View;Ljava/lang/String;Landroid/util/AttributeSet;)Landroid/view/View;	LayoutInflater.java
-0x4a0	android.view.LayoutInflater	onCreateView	(Landroid/view/View;Ljava/lang/String;Landroid/util/AttributeSet;)Landroid/view/View;	LayoutInflater.java
-0x510	android.view.LayoutInflater	rInflate	(Lorg/xmlpull/v1/XmlPullParser;Landroid/view/View;Landroid/content/Context;Landroid/util/AttributeSet;Z)V	LayoutInflater.java
-0x50c	android.view.LayoutInflater	rInflateChildren	(Lorg/xmlpull/v1/XmlPullParser;Landroid/view/View;Landroid/util/AttributeSet;Z)V	LayoutInflater.java
-0x490	android.view.LayoutInflater	tryCreateView	(Landroid/view/View;Ljava/lang/String;Landroid/content/Context;Landroid/util/AttributeSet;)Landroid/view/View;	LayoutInflater.java
-0x458	android.content.res.Resources	getAnimation	(I)Landroid/content/res/XmlResourceParser;	Resources.java
-0x3c8	android.content.res.Resources	getDrawable	(ILandroid/content/res/Resources$Theme;)Landroid/graphics/drawable/Drawable;	Resources.java
-0x3cc	android.content.res.Resources	getDrawableForDensity	(IILandroid/content/res/Resources$Theme;)Landroid/graphics/drawable/Drawable;	Resources.java
-0x45c	android.content.res.Resources	loadXmlResourceParser	(ILjava/lang/String;)Landroid/content/res/XmlResourceParser;	Resources.java
-0x3f0	android.content.res.Resources	obtainAttributes	(Landroid/util/AttributeSet;[I)Landroid/content/res/TypedArray;	Resources.java
-0x38c	android.app.Instrumentation	callActivityOnCreate	(Landroid/app/Activity;Landroid/os/Bundle;)V	Instrumentation.java
-0x24	android.app.Instrumentation	callApplicationOnCreate	(Landroid/app/Application;)V	Instrumentation.java
-0x338	android.app.Instrumentation	newActivity	(Ljava/lang/ClassLoader;Ljava/lang/String;Landroid/content/Intent;)Landroid/app/Activity;	Instrumentation.java
-0x37c	android.app.ActivityThread$AndroidOs	access	(Ljava/lang/String;I)Z	ActivityThread.java
-0x2e4	android.database.sqlite.SQLiteSession	acquireConnection	(Ljava/lang/String;ILandroid/os/CancellationSignal;)V	SQLiteSession.java
-0x2e0	android.database.sqlite.SQLiteSession	beginTransactionUnchecked	(ILandroid/database/sqlite/SQLiteTransactionListener;ILandroid/os/CancellationSignal;)V	SQLiteSession.java
-0x2dc	android.database.sqlite.SQLiteSession	beginTransaction	(ILandroid/database/sqlite/SQLiteTransactionListener;ILandroid/os/CancellationSignal;)V	SQLiteSession.java
-0x234	android.database.sqlite.SQLiteSession	executeForChangedRowCount	(Ljava/lang/String;[Ljava/lang/Object;ILandroid/os/CancellationSignal;)I	SQLiteSession.java
-0x4e0	android.os.-$$Lambda$StrictMode$lu9ekkHJ2HMz0jd3F8K8MnhenxQ	accept	(Ljava/lang/Object;)V	lambda
-0x4a4	com.android.internal.policy.PhoneLayoutInflater	onCreateView	(Ljava/lang/String;Landroid/util/AttributeSet;)Landroid/view/View;	PhoneLayoutInflater.java
-0x14	android.os.Handler	dispatchMessage	(Landroid/os/Message;)V	Handler.java
-0x274	android.net.ConnectivityManager$CallbackHandler	getObject	(Landroid/os/Message;Ljava/lang/Class;)Ljava/lang/Object;	ConnectivityManager.java
-0x270	android.net.ConnectivityManager$CallbackHandler	handleMessage	(Landroid/os/Message;)V	ConnectivityManager.java
-0x3c4	android.content.Context	getDrawable	(I)Landroid/graphics/drawable/Drawable;	Context.java
-0x4	com.android.internal.os.RuntimeInit$MethodAndArgsCaller	run	()V	RuntimeInit.java
-0x1c8	android.database.sqlite.SQLiteClosable	close	()V	SQLiteClosable.java
-0x1cc	android.database.sqlite.SQLiteClosable	releaseReference	()V	SQLiteClosable.java
-0x428	android.os.Looper	<init>	(Z)V	Looper.java
-0x10	android.os.Looper	loop	()V	Looper.java
-0x420	android.os.Looper	prepare	()V	Looper.java
-0x424	android.os.Looper	prepare	(Z)V	Looper.java
-0x29c	android.net.NetworkCapabilities$1	createFromParcel	(Landroid/os/Parcel;)Landroid/net/NetworkCapabilities;	NetworkCapabilities.java
-0x298	android.net.NetworkCapabilities$1	createFromParcel	(Landroid/os/Parcel;)Ljava/lang/Object;	NetworkCapabilities.java
-0x25c	android.app.JobSchedulerImpl	schedule	(Landroid/app/job/JobInfo;)I	JobSchedulerImpl.java
-0x450	com.android.internal.policy.DecorView	<init>	(Landroid/content/Context;ILcom/android/internal/policy/PhoneWindow;Landroid/view/WindowManager$LayoutParams;)V	DecorView.java
-0x478	com.android.internal.policy.DecorView	onResourcesLoaded	(Landroid/view/LayoutInflater;I)V	DecorView.java
-0x418	android.app.QueuedWork	getHandler	()Landroid/os/Handler;	QueuedWork.java
-0x414	android.app.QueuedWork	queue	(Ljava/lang/Runnable;Z)V	QueuedWork.java
-0x4f0	android.os.-$$Lambda$StrictMode$1yH8AK0bTwVwZOb9x8HoiSBdzr0	log	(Landroid/os/StrictMode$ViolationInfo;)V	lambda
-0x260	android.app.job.IJobScheduler$Stub$Proxy	schedule	(Landroid/app/job/JobInfo;)I	IJobScheduler.java
-0x294	android.net.NetworkRequest$1	createFromParcel	(Landroid/os/Parcel;)Landroid/net/NetworkRequest;	NetworkRequest.java
-0x290	android.net.NetworkRequest$1	createFromParcel	(Landroid/os/Parcel;)Ljava/lang/Object;	NetworkRequest.java
-0x324	android.app.servertransaction.LaunchActivityItem	execute	(Landroid/app/ClientTransactionHandler;Landroid/os/IBinder;Landroid/app/servertransaction/PendingTransactionActions;)V	LaunchActivityItem.java
-0x1f8	android.app.SharedPreferencesImpl	access$000	(Landroid/app/SharedPreferencesImpl;)V	SharedPreferencesImpl.java
-0x40c	android.app.SharedPreferencesImpl	access$100	(Landroid/app/SharedPreferencesImpl;Landroid/app/SharedPreferencesImpl$MemoryCommitResult;Ljava/lang/Runnable;)V	SharedPreferencesImpl.java
-0x1e4	android.app.SharedPreferencesImpl	awaitLoadedLocked	()V	SharedPreferencesImpl.java
-0x410	android.app.SharedPreferencesImpl	enqueueDiskWrite	(Landroid/app/SharedPreferencesImpl$MemoryCommitResult;Ljava/lang/Runnable;)V	SharedPreferencesImpl.java
-0x1fc	android.app.SharedPreferencesImpl	loadFromDisk	()V	SharedPreferencesImpl.java
-0x1e0	android.app.SharedPreferencesImpl	getBoolean	(Ljava/lang/String;Z)Z	SharedPreferencesImpl.java
-0x278	android.os.Bundle	getParcelable	(Ljava/lang/String;)Landroid/os/Parcelable;	Bundle.java
-0x2f4	android.database.sqlite.SQLiteConnectionPool	finishAcquireConnectionLocked	(Landroid/database/sqlite/SQLiteConnection;I)V	SQLiteConnectionPool.java
-0x2f0	android.database.sqlite.SQLiteConnectionPool	tryAcquirePrimaryConnectionLocked	(I)Landroid/database/sqlite/SQLiteConnection;	SQLiteConnectionPool.java
-0x2ec	android.database.sqlite.SQLiteConnectionPool	waitForConnection	(Ljava/lang/String;ILandroid/os/CancellationSignal;)Landroid/database/sqlite/SQLiteConnection;	SQLiteConnectionPool.java
-0x2e8	android.database.sqlite.SQLiteConnectionPool	acquireConnection	(Ljava/lang/String;ILandroid/os/CancellationSignal;)Landroid/database/sqlite/SQLiteConnection;	SQLiteConnectionPool.java
-0x3f4	android.content.res.TypedArray	obtain	(Landroid/content/res/Resources;I)Landroid/content/res/TypedArray;	TypedArray.java
-0x41c	android.os.HandlerThread	getLooper	()Landroid/os/Looper;	HandlerThread.java
-0xac	android.os.HandlerThread	run	()V	HandlerThread.java
-0x2a8	android.os.Parcel$ReadWriteHelper	readString	(Landroid/os/Parcel;)Ljava/lang/String;	Parcel.java
-0x3dc	android.graphics.drawable.Drawable	createFromXmlForDensity	(Landroid/content/res/Resources;Lorg/xmlpull/v1/XmlPullParser;ILandroid/content/res/Resources$Theme;)Landroid/graphics/drawable/Drawable;	Drawable.java
-0x3e0	android.graphics.drawable.Drawable	createFromXmlInnerForDensity	(Landroid/content/res/Resources;Lorg/xmlpull/v1/XmlPullParser;Landroid/util/AttributeSet;ILandroid/content/res/Resources$Theme;)Landroid/graphics/drawable/Drawable;	Drawable.java
-0x3ec	android.graphics.drawable.Drawable	obtainAttributes	(Landroid/content/res/Resources;Landroid/content/res/Resources$Theme;Landroid/util/AttributeSet;[I)Landroid/content/res/TypedArray;	Drawable.java
-0x3f8	android.util.Pools$SynchronizedPool	acquire	()Ljava/lang/Object;	Pools.java
-0x408	android.app.SharedPreferencesImpl$EditorImpl	apply	()V	SharedPreferencesImpl.java
-0x4f4	android.os.StrictMode	lambda$static$0	(Landroid/os/StrictMode$ViolationInfo;)V	StrictMode.java
-0x4e4	android.os.StrictMode	lambda$static$1	(Ljava/lang/String;)V	StrictMode.java
-0x4e8	android.os.StrictMode	onVmPolicyViolation	(Landroid/os/strictmode/Violation;)V	StrictMode.java
-0x4ec	android.os.StrictMode	onVmPolicyViolation	(Landroid/os/strictmode/Violation;Z)V	StrictMode.java
-0x448	com.android.internal.policy.PhoneWindow	installDecor	()V	PhoneWindow.java
-0x44c	com.android.internal.policy.PhoneWindow	generateDecor	(I)Lcom/android/internal/policy/DecorView;	PhoneWindow.java
-0x474	com.android.internal.policy.PhoneWindow	generateLayout	(Lcom/android/internal/policy/DecorView;)Landroid/view/ViewGroup;	PhoneWindow.java
-0x444	com.android.internal.policy.PhoneWindow	getDecorView	()Landroid/view/View;	PhoneWindow.java
-0x32c	android.graphics.HardwareRenderer	preload	()V	HardwareRenderer.java
-0x1c	android.app.ActivityThread	access$1300	(Landroid/app/ActivityThread;Landroid/app/ActivityThread$AppBindData;)V	ActivityThread.java
-0x20	android.app.ActivityThread	handleBindApplication	(Landroid/app/ActivityThread$AppBindData;)V	ActivityThread.java
-0xc	android.app.ActivityThread	main	([Ljava/lang/String;)V	ActivityThread.java
-0x334	android.app.ActivityThread	performLaunchActivity	(Landroid/app/ActivityThread$ActivityClientRecord;Landroid/content/Intent;)Landroid/app/Activity;	ActivityThread.java
-0x328	android.app.ActivityThread	handleLaunchActivity	(Landroid/app/ActivityThread$ActivityClientRecord;Landroid/app/servertransaction/PendingTransactionActions;Landroid/content/Intent;)Landroid/app/Activity;	ActivityThread.java
-0x468	android.content.res.ApkAssets	getStringFromPool	(I)Ljava/lang/CharSequence;	ApkAssets.java
-0xe0	android.app.ActivityManager	getProcessMemoryInfo	([I)[Landroid/os/Debug$MemoryInfo;	ActivityManager.java
-0x150	android.app.ActivityManager	getRunningAppProcesses	()Ljava/util/List;	ActivityManager.java
-0xe8	android.os.BinderProxy	transact	(ILandroid/os/Parcel;Landroid/os/Parcel;I)Z	BinderProxy.java
-0xec	android.os.BinderProxy	transactNative	(ILandroid/os/Parcel;Landroid/os/Parcel;I)Z	BinderProxy.java
-0x2d8	android.database.sqlite.SQLiteDatabase	beginTransaction	(Landroid/database/sqlite/SQLiteTransactionListener;Z)V	SQLiteDatabase.java
-0x2d4	android.database.sqlite.SQLiteDatabase	beginTransaction	()V	SQLiteDatabase.java
-0	com.android.internal.os.ZygoteInit	main	([Ljava/lang/String;)V	ZygoteInit.java
-0x23c	android.database.sqlite.SQLiteConnection	nativeExecuteForChangedRowCount	(JJ)I	SQLiteConnection.java
-0x238	android.database.sqlite.SQLiteConnection	executeForChangedRowCount	(Ljava/lang/String;[Ljava/lang/Object;Landroid/os/CancellationSignal;)I	SQLiteConnection.java
-0x464	android.content.res.AssetManager	getResourceValue	(IILandroid/util/TypedValue;Z)Z	AssetManager.java
-0x42c	android.os.MessageQueue	<init>	(Z)V	MessageQueue.java
-0x430	android.os.MessageQueue	nativeInit	()J	MessageQueue.java
-0xb4	android.os.MessageQueue	nativePollOnce	(JI)V	MessageQueue.java
-0xb0	android.os.MessageQueue	next	()Landroid/os/Message;	MessageQueue.java
-0x348	android.app.Activity	attach	(Landroid/content/Context;Landroid/app/ActivityThread;Landroid/app/Instrumentation;Landroid/os/IBinder;ILandroid/app/Application;Landroid/content/Intent;Landroid/content/pm/ActivityInfo;Ljava/lang/CharSequence;Landroid/app/Activity;Ljava/lang/String;Landroid/app/Activity$NonConfigurationInstances;Landroid/content/res/Configuration;Ljava/lang/String;Lcom/android/internal/app/IVoiceInteractor;Landroid/view/Window;Landroid/view/ViewRootImpl$ActivityConfigCallback;Landroid/os/IBinder;)V	Activity.java
-0x390	android.app.Activity	performCreate	(Landroid/os/Bundle;)V	Activity.java
-0x394	android.app.Activity	performCreate	(Landroid/os/Bundle;Landroid/os/PersistableBundle;)V	Activity.java
-0x2ac	android.os.Parcel	nativeReadString	(J)Ljava/lang/String;	Parcel.java
-0x284	android.os.Parcel	readArrayMapInternal	(Landroid/util/ArrayMap;ILjava/lang/ClassLoader;)V	Parcel.java
-0x28c	android.os.Parcel	readParcelable	(Ljava/lang/ClassLoader;)Landroid/os/Parcelable;	Parcel.java
-0x2a0	android.os.Parcel	readParcelableCreator	(Ljava/lang/ClassLoader;)Landroid/os/Parcelable$Creator;	Parcel.java
-0x2a4	android.os.Parcel	readString	()Ljava/lang/String;	Parcel.java
-0x288	android.os.Parcel	readValue	(Ljava/lang/ClassLoader;)Ljava/lang/Object;	Parcel.java
-0x470	android.content.res.StringBlock	nativeGetString	(JI)Ljava/lang/String;	StringBlock.java
-0x46c	android.content.res.StringBlock	get	(I)Ljava/lang/CharSequence;	StringBlock.java
-0x1d4	android.database.CursorWindow	dispose	()V	CursorWindow.java
-0x1d8	android.database.CursorWindow	nativeDispose	(J)V	CursorWindow.java
-0x1d0	android.database.CursorWindow	onAllReferencesReleased	()V	CursorWindow.java
-0x3e8	android.graphics.drawable.VectorDrawable	inflate	(Landroid/content/res/Resources;Lorg/xmlpull/v1/XmlPullParser;Landroid/util/AttributeSet;Landroid/content/res/Resources$Theme;)V	VectorDrawable.java
-0x3d4	android.content.res.ResourcesImpl	loadDrawableForCookie	(Landroid/content/res/Resources;Landroid/util/TypedValue;II)Landroid/graphics/drawable/Drawable;	ResourcesImpl.java
-0x3d8	android.content.res.ResourcesImpl	loadXmlDrawable	(Landroid/content/res/Resources;Landroid/util/TypedValue;IILjava/lang/String;)Landroid/graphics/drawable/Drawable;	ResourcesImpl.java
-0x460	android.content.res.ResourcesImpl	getValue	(ILandroid/util/TypedValue;Z)V	ResourcesImpl.java
-0x3d0	android.content.res.ResourcesImpl	loadDrawable	(Landroid/content/res/Resources;Landroid/util/TypedValue;IILandroid/content/res/Resources$Theme;)Landroid/graphics/drawable/Drawable;	ResourcesImpl.java
-0x43c	org.mozilla.fenix.theme.ThemeManager$Companion	access$updateLightSystemBars	(Lorg/mozilla/fenix/theme/ThemeManager$Companion;Landroid/view/Window;Landroid/content/Context;)V	ThemeManager.kt
-0x440	org.mozilla.fenix.theme.ThemeManager$Companion	updateLightSystemBars	(Landroid/view/Window;Landroid/content/Context;)V	ThemeManager.kt
-0x554	androidx.navigation.fragment.FragmentNavigator	createDestination	()Landroidx/navigation/NavDestination;	FragmentNavigator.java
-0x558	androidx.navigation.fragment.FragmentNavigator	createDestination	()Landroidx/navigation/fragment/FragmentNavigator$Destination;	FragmentNavigator.java
-0x58c	androidx.navigation.fragment.FragmentNavigator	instantiateFragment	(Landroid/content/Context;Landroidx/fragment/app/FragmentManager;Ljava/lang/String;Landroid/os/Bundle;)Landroidx/fragment/app/Fragment;	FragmentNavigator.java
-0x584	androidx.navigation.fragment.FragmentNavigator	navigate	(Landroidx/navigation/NavDestination;Landroid/os/Bundle;Landroidx/navigation/NavOptions;Landroidx/navigation/Navigator$Extras;)Landroidx/navigation/NavDestination;	FragmentNavigator.java
-0x588	androidx.navigation.fragment.FragmentNavigator	navigate	(Landroidx/navigation/fragment/FragmentNavigator$Destination;Landroid/os/Bundle;Landroidx/navigation/NavOptions;Landroidx/navigation/Navigator$Extras;)Landroidx/navigation/NavDestination;	FragmentNavigator.java
-0x564	androidx.navigation.NavigatorProvider	getNameForNavigator	(Ljava/lang/Class;)Ljava/lang/String;	NavigatorProvider.java
-0x57c	androidx.navigation.NavGraphNavigator	navigate	(Landroidx/navigation/NavDestination;Landroid/os/Bundle;Landroidx/navigation/NavOptions;Landroidx/navigation/Navigator$Extras;)Landroidx/navigation/NavDestination;	NavGraphNavigator.java
-0x580	androidx.navigation.NavGraphNavigator	navigate	(Landroidx/navigation/NavGraph;Landroid/os/Bundle;Landroidx/navigation/NavOptions;Landroidx/navigation/Navigator$Extras;)Landroidx/navigation/NavDestination;	NavGraphNavigator.java
-0x550	androidx.navigation.NavInflater	inflate	(Landroid/content/res/Resources;Landroid/content/res/XmlResourceParser;Landroid/util/AttributeSet;I)Landroidx/navigation/NavDestination;	NavInflater.java
-0x54c	androidx.navigation.NavInflater	inflate	(I)Landroidx/navigation/NavGraph;	NavInflater.java
-0x55c	androidx.navigation.fragment.FragmentNavigator$Destination	<init>	(Landroidx/navigation/Navigator;)V	FragmentNavigator.java
-0xd4	specto.core.internal.plugins.SimpleSamplingPlugin$onStart$1$2	invoke	(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;	SimpleSamplingPlugin.kt
-0xd8	specto.core.internal.plugins.SimpleSamplingPlugin$onStart$1$2	invoke	(Lspecto/proto/EntryGenerated$Entry$Builder;Lspecto/core/internal/plugins/SimplePlugin$Cancellable;)V	SimpleSamplingPlugin.kt
-0x578	androidx.navigation.NavController	navigate	(Landroidx/navigation/NavDestination;Landroid/os/Bundle;Landroidx/navigation/NavOptions;Landroidx/navigation/Navigator$Extras;)V	NavController.java
-0x574	androidx.navigation.NavController	onGraphCreated	(Landroid/os/Bundle;)V	NavController.java
-0x544	androidx.navigation.NavController	setGraph	(I)V	NavController.java
-0x548	androidx.navigation.NavController	setGraph	(ILandroid/os/Bundle;)V	NavController.java
-0x570	androidx.navigation.NavController	setGraph	(Landroidx/navigation/NavGraph;Landroid/os/Bundle;)V	NavController.java
-0x434	org.mozilla.fenix.theme.ThemeManager	applyStatusBarTheme	(Landroid/app/Activity;)V	ThemeManager.kt
-0x438	org.mozilla.fenix.theme.ThemeManager	applyStatusBarTheme	(Landroid/view/Window;Landroid/content/Context;)V	ThemeManager.kt
-0x560	androidx.navigation.NavDestination	<init>	(Landroidx/navigation/Navigator;)V	NavDestination.java
-0x524	androidx.fragment.app.FragmentLayoutInflaterFactory	onCreateView	(Landroid/view/View;Ljava/lang/String;Landroid/content/Context;Landroid/util/AttributeSet;)Landroid/view/View;	FragmentLayoutInflaterFactory.java
-0x590	androidx.fragment.app.FragmentManager$3	instantiate	(Ljava/lang/ClassLoader;Ljava/lang/String;)Landroidx/fragment/app/Fragment;	FragmentManager.java
-0x538	androidx.fragment.app.FragmentStateManager	create	()V	FragmentStateManager.java
-0x3b0	androidx.appcompat.widget.AppCompatDrawableManager	getDrawable	(Landroid/content/Context;IZ)Landroid/graphics/drawable/Drawable;	AppCompatDrawableManager.java
-0x3ac	androidx.appcompat.widget.TintTypedArray	getDrawableIfKnown	(I)Landroid/graphics/drawable/Drawable;	TintTypedArray.java
-0x4d0	androidx.appcompat.widget.ViewUtils	<clinit>	()V	ViewUtils.java
-0x4cc	androidx.appcompat.widget.ViewUtils	makeOptionalFitsSystemWindows	(Landroid/view/View;)V	ViewUtils.java
-0x3b8	androidx.appcompat.widget.ResourceManagerInternal	checkVectorDrawableSetup	(Landroid/content/Context;)V	ResourceManagerInternal.java
-0x3bc	androidx.appcompat.widget.ResourceManagerInternal	getDrawable	(Landroid/content/Context;I)Landroid/graphics/drawable/Drawable;	ResourceManagerInternal.java
-0x3b4	androidx.appcompat.widget.ResourceManagerInternal	getDrawable	(Landroid/content/Context;IZ)Landroid/graphics/drawable/Drawable;	ResourceManagerInternal.java
-0x300	org.mozilla.gecko.GeckoThread	getMainProcessArgs	()[Ljava/lang/String;	GeckoThread.java
-0x15c	org.mozilla.gecko.GeckoThread	initGeckoEnvironment	()V	GeckoThread.java
-0x160	org.mozilla.gecko.GeckoThread	loadGeckoLibs	(Landroid/content/Context;)V	GeckoThread.java
-0x304	org.mozilla.gecko.GeckoThread	getProfile	()Lorg/mozilla/gecko/GeckoProfile;	GeckoThread.java
-0x158	org.mozilla.gecko.GeckoThread	run	()V	GeckoThread.java
-0x308	org.mozilla.gecko.GeckoProfile	initFromArgs	(Landroid/content/Context;Ljava/lang/String;)Lorg/mozilla/gecko/GeckoProfile;	GeckoProfile.java
-0x30c	org.mozilla.gecko.GeckoProfile	shouldUseGuestMode	(Landroid/content/Context;)Z	GeckoProfile.java
-0x248	org.mozilla.gecko.mozglue.GeckoLoader	loadGeckoLibs	(Landroid/content/Context;)V	GeckoLoader.java
-0x24c	org.mozilla.gecko.mozglue.GeckoLoader	loadGeckoLibsNative	()V	GeckoLoader.java
-0x164	org.mozilla.gecko.mozglue.GeckoLoader	loadSQLiteLibs	(Landroid/content/Context;)V	GeckoLoader.java
-0x168	org.mozilla.gecko.mozglue.GeckoLoader	loadSQLiteLibsNative	()V	GeckoLoader.java
-0x330	org.mozilla.gecko.mozglue.GeckoLoader	nativeRun	([Ljava/lang/String;IIIII)V	GeckoLoader.java
-0x16c	org.mozilla.gecko.util.GeckoBackgroundThread	run	()V	GeckoBackgroundThread.java
-0x220	androidx.work.impl.utils.EnqueueRunnable	enqueueContinuation	(Landroidx/work/impl/WorkContinuationImpl;)Z	EnqueueRunnable.java
-0x224	androidx.work.impl.utils.EnqueueRunnable	enqueueWorkWithPrerequisites	(Landroidx/work/impl/WorkManagerImpl;Ljava/util/List;[Ljava/lang/String;Ljava/lang/String;Landroidx/work/ExistingWorkPolicy;)Z	EnqueueRunnable.java
-0x21c	androidx.work.impl.utils.EnqueueRunnable	processContinuation	(Landroidx/work/impl/WorkContinuationImpl;)Z	EnqueueRunnable.java
-0x218	androidx.work.impl.utils.EnqueueRunnable	addToDatabase	()Z	EnqueueRunnable.java
-0x13c	androidx.work.impl.utils.EnqueueRunnable	run	()V	EnqueueRunnable.java
-0x140	androidx.work.impl.utils.EnqueueRunnable	scheduleWorkInBackground	()V	EnqueueRunnable.java
-0x5a4	mozilla.telemetry.glean.rust.LibGleanFFI	glean_string_set	(JLjava/lang/String;)V	LibGleanFFI.kt
-0x5a8	mozilla.telemetry.glean.rust.LibGleanFFI	glean_submit_ping_by_name	(Ljava/lang/String;Ljava/lang/String;)B	LibGleanFFI.kt
-0x310	org.mozilla.gecko.GeckoSharedPrefs	forApp	(Landroid/content/Context;)Landroid/content/SharedPreferences;	GeckoSharedPrefs.java
-0x520	androidx.fragment.app.FragmentController	onCreateView	(Landroid/view/View;Ljava/lang/String;Landroid/content/Context;Landroid/util/AttributeSet;)Landroid/view/View;	FragmentController.java
-0x540	androidx.navigation.fragment.NavHostFragment	onCreate	(Landroid/os/Bundle;)V	NavHostFragment.java
-0x190	mozilla.components.lib.state.ext.StoreExtensionsKt	flowScoped	(Lmozilla/components/lib/state/Store;Landroidx/lifecycle/LifecycleOwner;Lkotlin/jvm/functions/Function2;)Lkotlinx/coroutines/CoroutineScope;	StoreExtensions.kt
-0x18c	mozilla.components.lib.state.ext.StoreExtensionsKt	flowScoped$default	(Lmozilla/components/lib/state/Store;Landroidx/lifecycle/LifecycleOwner;Lkotlin/jvm/functions/Function2;ILjava/lang/Object;)Lkotlinx/coroutines/CoroutineScope;	StoreExtensions.kt
-0x1a4	kotlinx.coroutines.internal.FastServiceLoader	loadMainDispatcherFactory$kotlinx_coroutines_core	()Ljava/util/List;	FastServiceLoader.kt
-0x214	shark.AndroidReferenceMatchers	<clinit>	()V	AndroidReferenceMatchers.kt
-0x250	shark.AndroidObjectInspectors	<clinit>	()V	AndroidObjectInspectors.kt
-0x3a8	androidx.appcompat.app.AppCompatDelegateImpl	attachToWindow	(Landroid/view/Window;)V	AppCompatDelegateImpl.java
-0x4c8	androidx.appcompat.app.AppCompatDelegateImpl	createSubDecor	()Landroid/view/ViewGroup;	AppCompatDelegateImpl.java
-0x4c4	androidx.appcompat.app.AppCompatDelegateImpl	ensureSubDecor	()V	AppCompatDelegateImpl.java
-0x3a4	androidx.appcompat.app.AppCompatDelegateImpl	ensureWindow	()V	AppCompatDelegateImpl.java
-0x498	androidx.appcompat.app.AppCompatDelegateImpl	createView	(Landroid/view/View;Ljava/lang/String;Landroid/content/Context;Landroid/util/AttributeSet;)Landroid/view/View;	AppCompatDelegateImpl.java
-0x3a0	androidx.appcompat.app.AppCompatDelegateImpl	onCreate	(Landroid/os/Bundle;)V	AppCompatDelegateImpl.java
-0x494	androidx.appcompat.app.AppCompatDelegateImpl	onCreateView	(Landroid/view/View;Ljava/lang/String;Landroid/content/Context;Landroid/util/AttributeSet;)Landroid/view/View;	AppCompatDelegateImpl.java
-0x4c0	androidx.appcompat.app.AppCompatDelegateImpl	setContentView	(I)V	AppCompatDelegateImpl.java
-0x48	org.mozilla.fenix.components.Core$store$2	invoke	()Ljava/lang/Object;	Core.kt
-0x4c	org.mozilla.fenix.components.Core$store$2	invoke	()Lmozilla/components/browser/state/store/BrowserStore;	Core.kt
-0x268	org.mozilla.fenix.components.Core$sessionManager$2	invoke	()Ljava/lang/Object;	Core.kt
-0x26c	org.mozilla.fenix.components.Core$sessionManager$2	invoke	()Lmozilla/components/browser/session/SessionManager;	Core.kt
-0x2b4	org.mozilla.fenix.components.Core$icons$2	invoke	()Ljava/lang/Object;	Core.kt
-0x2b8	org.mozilla.fenix.components.Core$icons$2	invoke	()Lmozilla/components/browser/icons/BrowserIcons;	Core.kt
-0x114	com.sun.jna.Library$Handler	invoke	(Ljava/lang/Object;Ljava/lang/reflect/Method;[Ljava/lang/Object;)Ljava/lang/Object;	Library.java
-0x54	mozilla.components.browser.state.state.BrowserState	<init>	(Ljava/util/List;Ljava/lang/String;Ljava/util/List;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V	BrowserState.kt
-0x19c	kotlinx.coroutines.internal.MainDispatcherLoader	<clinit>	()V	MainDispatchers.kt
-0x1a0	kotlinx.coroutines.internal.MainDispatcherLoader	loadMainDispatcher	()Lkotlinx/coroutines/MainCoroutineDispatcher;	MainDispatchers.kt
-0x130	kotlinx.coroutines.scheduling.CoroutineScheduler$Worker	park	()V	CoroutineScheduler.kt
-0x128	kotlinx.coroutines.scheduling.CoroutineScheduler$Worker	runWorker	()V	CoroutineScheduler.kt
-0x12c	kotlinx.coroutines.scheduling.CoroutineScheduler$Worker	tryPark	()V	CoroutineScheduler.kt
-0x124	kotlinx.coroutines.scheduling.CoroutineScheduler$Worker	run	()V	CoroutineScheduler.kt
-0x3c	org.mozilla.fenix.components.Components$addonManager$2	invoke	()Ljava/lang/Object;	Components.kt
-0x40	org.mozilla.fenix.components.Components$addonManager$2	invoke	()Lmozilla/components/feature/addons/AddonManager;	Components.kt
-0x400	org.mozilla.fenix.HomeActivity	setupThemeAndBrowsingMode	(Lorg/mozilla/fenix/browser/browsingmode/BrowsingMode;)V	HomeActivity.kt
-0x398	org.mozilla.fenix.HomeActivity	onCreate	(Landroid/os/Bundle;)V	HomeActivity.kt
-0x514	org.mozilla.fenix.HomeActivity	onCreateView	(Landroid/view/View;Ljava/lang/String;Landroid/content/Context;Landroid/util/AttributeSet;)Landroid/view/View;	HomeActivity.kt
-0x34c	mozilla.components.support.locale.LocaleAwareAppCompatActivity	attachBaseContext	(Landroid/content/Context;)V	LocaleAwareAppCompatActivity.kt
-0x39c	androidx.appcompat.app.AppCompatActivity	onCreate	(Landroid/os/Bundle;)V	AppCompatActivity.java
-0x4bc	androidx.appcompat.app.AppCompatActivity	setContentView	(I)V	AppCompatActivity.java
-0xc0	specto.core.internal.plugins.SimpleSamplingPlugin$onStart$1	invokeSuspend	(Ljava/lang/Object;)Ljava/lang/Object;	SimpleSamplingPlugin.kt
-0x174	specto.core.internal.native.NativeControllerImpl	startConsuming	()V	NativeControllerImpl.kt
-0xcc	specto.core.internal.plugins.SimplePlugin	buildEntry	(Ljava/lang/String;Lkotlin/jvm/functions/Function2;)Lspecto/proto/EntryGenerated$Entry;	SimplePlugin.kt
-0xd0	specto.core.internal.plugins.SimplePlugin	entryBuilder	(Lspecto/core/internal/plugins/TraceLogger;Ljava/lang/String;Lkotlin/jvm/functions/Function2;)Lspecto/proto/EntryGenerated$Entry$Builder;	SimplePlugin.kt
-0xc4	specto.core.internal.plugins.SimplePlugin	logEntry$default	(Lspecto/core/internal/plugins/SimplePlugin;Ljava/lang/String;Lkotlin/jvm/functions/Function2;ILjava/lang/Object;)V	SimplePlugin.kt
-0xc8	specto.core.internal.plugins.SimplePlugin	logEntry	(Ljava/lang/String;Lkotlin/jvm/functions/Function2;)V	SimplePlugin.kt
-0xdc	specto.core.internal.plugins.MemoryFootprintPlugin	buildEntry	(Lspecto/proto/EntryGenerated$Entry$Builder;Lspecto/core/internal/plugins/SimplePlugin$Cancellable;)V	MemoryFootprintPlugin.kt
-0x194	kotlinx.coroutines.CoroutineScopeKt	MainScope	()Lkotlinx/coroutines/CoroutineScope;	CoroutineScope.kt
-0x170	specto.core.internal.DefaultController$startSession$2	run	()V	DefaultController.kt
-0xb8	kotlinx.coroutines.DispatchedTask	run	()V	DispatchedTask.kt
-0x314	kotlinx.coroutines.DefaultExecutor	run	()V	DefaultExecutor.kt
-0x100	mozilla.telemetry.glean.GleanInternalAPI	access$initializeCoreMetrics	(Lmozilla/telemetry/glean/GleanInternalAPI;Landroid/content/Context;)V	Glean.kt
-0x104	mozilla.telemetry.glean.GleanInternalAPI	initializeCoreMetrics	(Landroid/content/Context;)V	Glean.kt
-0x1e8	mozilla.telemetry.glean.GleanInternalAPI	submitPingByNameSync$glean_release	(Ljava/lang/String;Ljava/lang/String;)V	Glean.kt
-0x108	mozilla.telemetry.glean.private.StringMetricType	setSync$glean_release	(Ljava/lang/String;)V	StringMetricType.kt
-0xfc	mozilla.telemetry.glean.GleanInternalAPI$initialize$1	invokeSuspend	(Ljava/lang/Object;)Ljava/lang/Object;	Glean.kt
-0x1f0	com.sun.jna.Native	invokeInt	(Lcom/sun/jna/Function;JI[Ljava/lang/Object;)I	Native.java
-0x120	com.sun.jna.Native	invokeVoid	(Lcom/sun/jna/Function;JI[Ljava/lang/Object;)V	Native.java
-0x118	com.sun.jna.Function	invoke	(Ljava/lang/reflect/Method;[Ljava/lang/Class;Ljava/lang/Class;[Ljava/lang/Object;Ljava/util/Map;)Ljava/lang/Object;	Function.java
-0x11c	com.sun.jna.Function	invoke	([Ljava/lang/Object;Ljava/lang/Class;ZI)Ljava/lang/Object;	Function.java
-0x58	kotlin.collections.MapsKt__MapsKt	emptyMap	()Ljava/util/Map;	Maps.kt
-0x22c	androidx.sqlite.db.framework.FrameworkSQLiteStatement	executeUpdateDelete	()I	FrameworkSQLiteStatement.java
-0x598	androidx.fragment.app.Fragment	instantiate	(Landroid/content/Context;Ljava/lang/String;Landroid/os/Bundle;)Landroidx/fragment/app/Fragment;	Fragment.java
-0x53c	androidx.fragment.app.Fragment	performCreate	(Landroid/os/Bundle;)V	Fragment.java
-0x528	androidx.fragment.app.FragmentManager	addFragment	(Landroidx/fragment/app/Fragment;)V	FragmentManager.java
-0x52c	androidx.fragment.app.FragmentManager	makeActive	(Landroidx/fragment/app/Fragment;)V	FragmentManager.java
-0x530	androidx.fragment.app.FragmentManager	moveToState	(Landroidx/fragment/app/Fragment;)V	FragmentManager.java
-0x534	androidx.fragment.app.FragmentManager	moveToState	(Landroidx/fragment/app/Fragment;I)V	FragmentManager.java
-0x594	androidx.fragment.app.FragmentContainer	instantiate	(Landroid/content/Context;Ljava/lang/String;Landroid/os/Bundle;)Landroidx/fragment/app/Fragment;	FragmentContainer.java
-0x51c	androidx.fragment.app.FragmentActivity	dispatchFragmentsOnCreateView	(Landroid/view/View;Ljava/lang/String;Landroid/content/Context;Landroid/util/AttributeSet;)Landroid/view/View;	FragmentActivity.java
-0x518	androidx.fragment.app.FragmentActivity	onCreateView	(Landroid/view/View;Ljava/lang/String;Landroid/content/Context;Landroid/util/AttributeSet;)Landroid/view/View;	FragmentActivity.java
-0x254	androidx.work.impl.background.systemjob.SystemJobScheduler	schedule	([Landroidx/work/impl/model/WorkSpec;)V	SystemJobScheduler.java
-0x258	androidx.work.impl.background.systemjob.SystemJobScheduler	scheduleInternal	(Landroidx/work/impl/model/WorkSpec;I)V	SystemJobScheduler.java
-0x138	androidx.work.impl.utils.SerialExecutor$Task	run	()V	SerialExecutor.java
-0x228	androidx.work.impl.model.WorkSpecDao_Impl	delete	(Ljava/lang/String;)V	WorkSpecDao_Impl.java
-0x1b4	androidx.room.InvalidationTracker$1	checkUpdatedTable	()Ljava/util/Set;	InvalidationTracker.java
-0x1b0	androidx.room.InvalidationTracker$1	run	()V	InvalidationTracker.java
-0x2d0	androidx.sqlite.db.framework.FrameworkSQLiteDatabase	beginTransaction	()V	FrameworkSQLiteDatabase.java
-0x2c4	androidx.work.impl.WorkerWrapper	runWorker	()V	WorkerWrapper.java
-0x2c8	androidx.work.impl.WorkerWrapper	trySetRunning	()Z	WorkerWrapper.java
-0x2c0	androidx.work.impl.WorkerWrapper	run	()V	WorkerWrapper.java
-0x180	mozilla.components.support.webextensions.WebExtensionSupport	initialize$default	(Lmozilla/components/support/webextensions/WebExtensionSupport;Lmozilla/components/concept/engine/webextension/WebExtensionRuntime;Lmozilla/components/browser/state/store/BrowserStore;ZLkotlin/jvm/functions/Function3;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function4;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)V	WebExtensionSupport.kt
-0x188	mozilla.components.support.webextensions.WebExtensionSupport	registerHandlersForNewSessions	(Lmozilla/components/browser/state/store/BrowserStore;)V	WebExtensionSupport.kt
-0x184	mozilla.components.support.webextensions.WebExtensionSupport	initialize	(Lmozilla/components/concept/engine/webextension/WebExtensionRuntime;Lmozilla/components/browser/state/store/BrowserStore;ZLkotlin/jvm/functions/Function3;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function4;Lkotlin/jvm/functions/Function1;)V	WebExtensionSupport.kt
-0x2b0	org.mozilla.fenix.components.Core	getIcons	()Lmozilla/components/browser/icons/BrowserIcons;	Core.kt
-0x264	org.mozilla.fenix.components.Core	getSessionManager	()Lmozilla/components/browser/session/SessionManager;	Core.kt
-0x44	org.mozilla.fenix.components.Core	getStore	()Lmozilla/components/browser/state/store/BrowserStore;	Core.kt
-0x50	mozilla.components.browser.state.store.BrowserStore	<init>	(Lmozilla/components/browser/state/state/BrowserState;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V	BrowserStore.kt
-0x198	kotlinx.coroutines.Dispatchers	getMain	()Lkotlinx/coroutines/MainCoroutineDispatcher;	Dispatchers.kt
-0xbc	kotlin.coroutines.jvm.internal.BaseContinuationImpl	resumeWith	(Ljava/lang/Object;)V	ContinuationImpl.kt
-0x404	org.mozilla.fenix.utils.Settings	setLastKnownMode	(Lorg/mozilla/fenix/browser/browsingmode/BrowsingMode;)V	Settings.kt
-0x2bc	mozilla.components.browser.icons.BrowserIcons	<init>	(Landroid/content/Context;Lmozilla/components/concept/fetch/Client;Lmozilla/components/browser/icons/generator/IconGenerator;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Lkotlinx/coroutines/CoroutineDispatcher;ILkotlin/jvm/internal/DefaultConstructorMarker;)V	BrowserIcons.kt
-0x3c0	androidx.core.content.ContextCompat	getDrawable	(Landroid/content/Context;I)Landroid/graphics/drawable/Drawable;	ContextCompat.java
-0x20c	leakcanary.LeakCanary	<clinit>	()V	LeakCanary.kt
-0x208	leakcanary.LeakCanary	getConfig	()Lleakcanary/LeakCanary$Config;	LeakCanary.kt
-0x210	leakcanary.LeakCanary$Config	<init>	(ZZILjava/util/List;Ljava/util/List;Lleakcanary/OnHeapAnalyzedListener;Lshark/MetadataExtractor;ZIZLshark/LeakingObjectFinder;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V	LeakCanary.kt
-0x38	kotlin.SynchronizedLazyImpl	getValue	()Ljava/lang/Object;	LazyJVM.kt
-0x35c	mozilla.components.support.locale.LocaleManager$Storage	getSharedPreferences	(Landroid/content/Context;)Landroid/content/SharedPreferences;	LocaleManager.kt
-0x358	mozilla.components.support.locale.LocaleManager$Storage	getLocale	(Landroid/content/Context;)Ljava/lang/String;	LocaleManager.kt
-0x2cc	androidx.room.RoomDatabase	beginTransaction	()V	RoomDatabase.java
-0x144	androidx.work.impl.Schedulers	schedule	(Landroidx/work/Configuration;Landroidx/work/impl/WorkDatabase;Ljava/util/List;)V	Schedulers.java
-0x14c	androidx.work.impl.background.greedy.GreedyScheduler	getProcessName	()Ljava/lang/String;	GreedyScheduler.java
-0x148	androidx.work.impl.background.greedy.GreedyScheduler	schedule	([Landroidx/work/impl/model/WorkSpec;)V	GreedyScheduler.java
-0x33c	androidx.core.app.CoreComponentFactory	instantiateActivity	(Ljava/lang/ClassLoader;Ljava/lang/String;Landroid/content/Intent;)Landroid/app/Activity;	CoreComponentFactory.java
-0x1dc	org.mozilla.fenix.DebugFenixApplication	setupLeakCanary	()V	DebugFenixApplication.kt
-0x204	org.mozilla.fenix.DebugFenixApplication	updateLeakCanaryState	(Z)V	DebugFenixApplication.kt
-0x30	org.mozilla.fenix.FenixApplication	initializeWebExtensionSupport	()V	FenixApplication.kt
-0x28	org.mozilla.fenix.FenixApplication	onCreate	()V	FenixApplication.kt
-0x2c	org.mozilla.fenix.FenixApplication	setupInMainProcessOnly	()V	FenixApplication.kt
-0x354	mozilla.components.support.locale.LocaleManager	getCurrentLocale	(Landroid/content/Context;)Ljava/util/Locale;	LocaleManager.kt
-0x350	mozilla.components.support.locale.LocaleManager	updateResources$support_locale_release	(Landroid/content/Context;)Landroid/content/Context;	LocaleManager.kt
-0x34	org.mozilla.fenix.components.Components	getAddonManager	()Lmozilla/components/feature/addons/AddonManager;	Components.kt
-*end
-SLOW   ˚Ö                  ä&        Ï\  ä&       Ï\  ä&       Ï\  ä&       Ï\  ä&       Ï\  ä&       Ï\  ä&       Ï\  ä&       Ï\  ä&        Ï\  ä&$       Ï\  ä&(       Ï\  ä&,       Ï\  ä&0       Ï\  ä&4       Ï\  ä&8       Ï\  ä&<       Ï\  ä&@       Ï\  ä&D       Ï\  ä&8       Ï\  ä&H       Ï\  ä&L       Ï\  ä&P       Ï\  ä&T       Ï\  ä&X       Ï\  ô&\       ˙\  ô&`       ˙\  ô&d       ˙\  ô&h       ˙\  ô&l       ˙\  ô&p       ˙\  ö&\       ˛\  ö&`       ˛\  ö&t       ˛\  ö&x       ˛\  ö&|       ˛\  ö&l       ˛\  ö&p       ˛\  õ&\       ]  õ&`       ]  õ&Ä       ]  õ&Ñ       ]  õ&h       ]  õ&l       ]  õ&p       ]  ò&\       ]  ò&`       ]  ò&à       ]  ò&å       ]  ≠&\       ]  ≠&ê       ]  ≠&î       ]  ≠&ò       ]  ≠&ú       ]  ≠&†       ]  ≠&§       ]  ≠&®       ]  Æ&\       ]  Æ&ê       ]  Æ&î       ]  Æ&ò       ]  Æ&ú       ]  Æ&†       ]  Æ&§       ]  Æ&®       ]  Ø&¨       ]  Ø&       ]  Ø&∞       ]  Ø&¥       ]  ∞&\       ]  ∞&ê       ]  ∞&î       ]  ∞&∏       ]  ∞&º       ]  ∞&¿       ]  ∞&ƒ       ]  ∞&»       ]  ∞&Ã       ]  ∞&–       ]  ∞&‘       ]  ∞&ÿ       ]  ∞&‹       ]  ∞&‡       ]  ∞&‰       ]  ∞&Ë       ]  ∞&Ï       ]  ≤&\       !]  ≤&ê       !]  ≤&î       !]  ≤&       !]  ≤&Ù       !]  ≤&¯       !]  ≤&∏       !]  ≤&º       !]  ≤&¸       !]  ≤&       !]  ≤&      !]  ≤&      !]  ≤&      !]  ≤&      !]  ≤&      !]  ≤&      !]  ≤&      !]  ≤&       !]  ≥&$      ;^  ≥&(      ;^  ≥&,      ;^  ≥&0      ;^  ≥&4      ;^  ≥&®       ;^  ¥&$      >^  ¥&(      >^  ¥&,      >^  ¥&0      >^  ¥&4      >^  ¥&®       >^  µ&$      @^  µ&(      @^  µ&,      @^  µ&0      @^  µ&4      @^  µ&®       @^  ∏&\       C^  ∏&ê       C^  ∏&î       C^  ∏&8      C^  ∏&<      C^  ∏&@      C^  ∏&D      C^  ∏&H      C^  ∏&L      C^  ∏&P      C^  ∏&T      C^  ∏&Ë       C^  ∏&Ï       C^  ∫&X      F^  ∫&\      F^  ∫&`      F^  ∫&d      F^  ∫&h      F^  º&l      I^  º&       I^  º&∞       I^  º&¥       I^  Ω&\       L^  Ω&ê       L^  Ω&î       L^  Ω&p      L^  Ω&t      L^  æ&x      N^  æ&|      N^  æ&l       N^  æ&p       N^  ä&Y   $  “ë  ä&U   $  “ë  ä&Q   $  “ë  ä&M   $  “ë  ä&I   $  “ë  ä&9   $  “ë  ä&E   $  “ë  ä&A   $  “ë  ä&=   $  “ë  ä&9   $  “ë  ä&5   $  “ë  ä&Ä  $  “ë  ä&Ñ  $  “ë  ä&à  $  “ë  ä&å  $  “ë  ä&ê  $  “ë  ä&î  $  “ë  ä&ò  $  “ë  ä&ú  $  “ë  ä&†  $  “ë  ä&§  $  “ë  ä&®  $  “ë  ä&¨  $  “ë  ∏&Ì   U  í  ∏&È   U  í  ∏&U  U  í  ∏&Q  U  í  ∏&M  U  í  ∏&I  U  í  ∏&E  U  í  ∏&A  U  í  ∏&=  U  í  ∏&9  U  í  ∏&ò   U  í  ∏&ú   U  í  ∏&†   U  í  ∏&§   U  í  ∏&®   U  í  ¿&\       í  ¿&ê       í  ¿&î       í  ¿&8      í  ¿&∞      í  ¿&¥      í  ¿&∏      í  ¿&º      í  ¿&¿      í  ¿&ƒ      í  ¿&»      í  ¿&Ã      í  ¿&–      í  ¿&‘      í  ¿&ÿ      í  ä&≠  :  n¿  ä&©  :  n¿  ä&•  :  n¿  ä&°  :  n¿  ä&ù  :  n¿  ä&ô  :  n¿  ä&ï  :  n¿  ä&ë  :  n¿  ä&ç  :  n¿  ä&â  :  n¿  ä&Ö  :  n¿  ä&Å  :  n¿  ä&1   :  n¿  ä&‹  :  n¿  ä&‡  :  n¿  ä&‰  :  n¿  ä&h   :  n¿  ä&l   :  n¿  ä&p   :  n¿  ≤&!  ¿'  é¿  ≤&  ¿'  é¿  ≤&  ¿'  é¿  ≤&  ¿'  é¿  ≤&  ¿'  é¿  ≤&  ¿'  é¿  ≤&	  ¿'  é¿  ≤&  ¿'  é¿  ≤&  ¿'  é¿  ≤&Ë  ¿'  é¿  ≤&Ï  ¿'  é¿  ≤&  ¿'  é¿  ≤&  ¿'  é¿  ≤&  ¿'  é¿  ≤&  ¿'  é¿  ≤&  ¿'  é¿  ¿&Ÿ  Ú  †¿  ¿&’  Ú  †¿  ¿&—  Ú  †¿  ¿&Õ  Ú  †¿  ¿&…  Ú  †¿  ¿&≈  Ú  †¿  ¿&¡  Ú  †¿  ¿&Ω  Ú  †¿  ¿&π  Ú  †¿  ¿&µ  Ú  †¿  ¿&±  Ú  †¿  ¿&9  Ú  †¿  ¿&ò   Ú  †¿  ¿&ú   Ú  †¿  ¿&†   Ú  †¿  ¿&§   Ú  †¿  ¿&®   Ú  †¿  ¡&Ù      £¿  ¡&¯      £¿  ¡&¸      £¿  ¡&       £¿  ä&q   ΩQ  (Ì  ä&m   ΩQ  (Ì  ä&i   ΩQ  (Ì  ä&Â  ΩQ  (Ì  ä&·  ΩQ  (Ì  ä&  ΩQ  (Ì  ä&  ΩQ  (Ì  ä&  ΩQ  (Ì  ä&  ΩQ  (Ì  ä&  ΩQ  (Ì  ≠&©   É  ?Ì  ≠&•   É  ?Ì  ≠&°   É  ?Ì  ≠&ù   É  ?Ì  ≠&ô   É  ?Ì  ≠&8  É  ?Ì  ≠&<  É  ?Ì  ≠&  É  ?Ì  ≠&  É  ?Ì  ≠&   É  ?Ì  ≠&$  É  ?Ì  ≠&(  É  ?Ì  ≠&,  É  ?Ì  ≠&0  É  ?Ì  ≠&4  É  ?Ì  ≠&8  É  ?Ì  ≠&<  É  ?Ì  ≤&Ò  n/  IÌ  ≤&  n/  IÌ  ≤&  n/  IÌ  ≤&  n/  IÌ  ≤&  n/  IÌ  ≤&Ì  n/  IÌ  ≤&È  n/  IÌ  ≤&˝   n/  IÌ  ≤&Ω   n/  IÌ  ≤&π   n/  IÌ  ≤&˘   n/  IÌ  ≤&ı   n/  IÌ  ≤&Ò   n/  IÌ  ≤&ò   n/  IÌ  ≤&@  n/  IÌ  ≤&D  n/  IÌ  ≤&†   n/  IÌ  ≤&§   n/  IÌ  ≤&®   n/  IÌ  ∫&i  7d  TÌ  ∫&e  7d  TÌ  ∫&H  7d  TÌ  ∫&L  7d  TÌ  ä&  Ky  ‹ ä&P  Ky  ‹ ≠&=  ‘5  Ò ≠&9  ‘5  Ò ≠&5  ‘5  Ò ≠&1  ‘5  Ò ≠&-  ‘5  Ò ≠&)  ‘5  Ò ≠&%  ‘5  Ò ≠&!  ‘5  Ò ≠&  ‘5  Ò ≠&  ‘5  Ò ≠&@  ‘5  Ò ≠&D  ‘5  Ò ≠&T  ‘5  Ò ≠&X  ‘5  Ò ≠&\  ‘5  Ò ≠&`  ‘5  Ò ≠&Ë   ‘5  Ò ≠&Ï   ‘5  Ò ä&Q  †  L ä&  †  L ä&  †  L ä&	  †  L ä&  †  L ä&›  †  L ä&d  †  L ä&8   †  L ä&h  †  L ä&l  †  L ≠&Ì   úN  L ≠&È   úN  L ≠&a  úN  L ≠&]  úN  L ≠&Y  úN  L ≠&U  úN  L ≠&E  úN  L ≠&A  úN  L ≠&=  úN  L ≠&∞  úN  L ≠&¥  úN  L ≠&∏  úN  L ≠&º  úN  L ≠&¿  úN  L ≠&ƒ  úN  L ≠&»  úN  L ≠&Ã  úN  L ≠&–  úN  L ≠&‘  úN  L ≠&ÿ  úN  L ¬&¨       @L ¬&       @L ¬&       @L ¬&p      @L ¬&t      @L ¬&x      @L ¬&|      @L ¬&Ä      @L ¬&Ñ      @L ¬&à      @L ¬&å      @L ¬&ê      @L ¬&î      @L ¬&ò      @L ¬&ú      @L ¬&å      @L ¬&†      @L ¬&§      @L ¬&®      @L ¬&¨      @L ä&∞  ÷≈  ÷x ä&8   ÷≈  ÷x ä&¥  ÷≈  ÷x ä&∏  ÷≈  ÷x ä&º  ÷≈  ÷x ≠&Ÿ  Q  Îx ≠&’  Q  Îx ≠&—  Q  Îx ≠&Õ  Q  Îx ≠&…  Q  Îx ≠&≈  Q  Îx ≠&¡  Q  Îx ≠&Ω  Q  Îx ≠&π  Q  Îx ≠&µ  Q  Îx ≠&±  Q  Îx ≠&9  Q  Îx ≠&ò   Q  Îx ≠&ú   Q  Îx ≠&†   Q  Îx ≠&§   Q  Îx ≠&®   Q  Îx ∞&Ì   …  x ∞&È   …  x ∞&Â   …  x ∞&·   …  x ∞&›   …  x ∞&Ÿ   …  x ∞&’   …  x ∞&—   …  x ∞&Õ   …  x ∞&…   …  x ∞&≈   …  x ∞&¡   …  x ∞&Ω   …  x ∞&π   …  x ∞&ò   …  x ∞&ú   …  x ∞&†   …  x ∞&§   …  x ∞&®   …  x ∏&©   V)  ˙x ∏&•   V)  ˙x ∏&°   V)  ˙x ∏&ù   V)  ˙x ∏&ô   V)  ˙x ∏&8  V)  ˙x ∏&¿  V)  ˙x ∏&ƒ  V)  ˙x ∏&»  V)  ˙x ∏&Ã  V)  ˙x ∏&–  V)  ˙x ∏&‘  V)  ˙x ∏&ÿ  V)  ˙x ∏&‹  V)  ˙x ∏&‡  V)  ˙x ∏&‰  V)  ˙x ∏&Ë  V)  ˙x ∏&Ï  V)  ˙x ∏&  V)  ˙x ∏&Ù  V)  ˙x ∏&¯  V)  ˙x ∏&¸  V)  ˙x ¬&≠  Ú  y ¬&©  Ú  y ¬&•  Ú  y ¬&°  Ú  y ¬&ç  Ú  y ¬&ù  Ú  y ¬&ô  Ú  y ¬&ï  Ú  y ¬&ë  Ú  y ¬&ç  Ú  y ¬&â  Ú  y ¬&Ö  Ú  y ¬&Å  Ú  y ¬&}  Ú  y ¬&y  Ú  y ¬&u  Ú  y ¬&q  Ú  y ¬&   Ú  y ¬&∞   Ú  y ¬&¥   Ú  y ä&Ω  ”  ¶ ä&π  ”  ¶ ä&µ  ”  ¶ ä&9   ”  ¶ ä&±  ”  ¶ ä&m  ”  ¶ ä&i  ”  ¶ ä&9   ”  ¶ ä&e  ”  ¶ ∏&˝  Á>  *¶ ∏&˘  Á>  *¶ ∏&ı  Á>  *¶ ∏&Ò  Á>  *¶ ∏&Ì  Á>  *¶ ∏&È  Á>  *¶ ∏&Â  Á>  *¶ ∏&·  Á>  *¶ ∏&›  Á>  *¶ ∏&Ÿ  Á>  *¶ ∏&’  Á>  *¶ ∏&—  Á>  *¶ ∏&Õ  Á>  *¶ ∏&…  Á>  *¶ ∏&≈  Á>  *¶ ∏&¡  Á>  *¶ ∏&9  Á>  *¶ ∏&ò   Á>  *¶ ∏&ú   Á>  *¶ ∏&†   Á>  *¶ ∏&§   Á>  *¶ ∏&®   Á>  *¶ ∫&M  ™ -¶ ∫&I  ™ -¶ ∫&a  ™ -¶ ∫&]  ™ -¶ ∫&   ™ -¶ ∫&  ™ -¶ ∫&  ™ -¶ ∫&  ™ -¶ ∫&  ™ -¶ √&\       ;¶ √&      ;¶ √&      ;¶ √&®       ;¶ ä&-    Z– ä&)    Z– ä&%    Z– ä&!    Z– ä&    Z– ä&   Z– ä&    Z– ä&$   Z– ä&(   Z– ä&,   Z– ∫&  ¬ – ∫&  ¬ – ∫&	  ¬ – ∫&  ¬ – ∫&  ¬ – ∫&0  ¬ – ä&-  Ç* r ä&4  Ç* r ä&8  Ç* r ä&<  Ç* r ä&@  Ç* r ä&D  Ç* r ä&E  sU ≥1 ä&A  sU ≥1 ä&=  sU ≥1 ä&9  sU ≥1 ä&H  sU ≥1 ä&L  sU ≥1 ä&P  sU ≥1 ä&T  sU ≥1 ä&X  sU ≥1 ä&\  sU ≥1 ä&`  sU ≥1 ä&d  sU ≥1 ä&h  sU ≥1 ä&l  sU ≥1 ä&p  sU ≥1 ä&t  sU ≥1 ä&x  sU ≥1 ä&|  sU ≥1 ä&Ä  sU ≥1 ä&Ñ  sU ≥1 ä&à  sU ≥1 ä&â  à| 7\ ä&Ö  à| 7\ ä&Å  à| 7\ ä&}  à| 7\ ä&y  à| 7\ ä&u  à| 7\ ä&q  à| 7\ ä&m  à| 7\ ä&i  à| 7\ ä&e  à| 7\ ä&a  à| 7\ ä&]  à| 7\ ä&Y  à| 7\ ä&U  à| 7\ ä&Q  à| 7\ ä&M  à| 7\ ä&I  à| 7\ ä&å  à| 7\ ä&ê  à| 7\ ä&î  à| 7\ ä&ò  à| 7\ ä&ú  à| 7\ ä&†  à| 7\ ä&§  à| 7\ ä&®  à| 7\ ä&¨  à| 7\ ä&∞  à| 7\ ä&¥  à| 7\ ä&∏  à| 7\ ä&º  à| 7\ ä&¥  à| 7\ ä&¿  à| 7\ ä&ƒ  à| 7\ ä&»  à| 7\ ä&Ã  à| 7\ ä&–  à| 7\ ä&‘  à| 7\ ä&ÿ  à| 7\ ä&‹  à| 7\ ä&‡  à| 7\ ä&‰  à| 7\ ä&Ë  à| 7\ ä&Ï  à| 7\ ä&  à| 7\ ä&Ù  à| 7\ ä&¯  à| 7\ ä&¸  à| 7\ ä&˝  ¯ë Ïà ä&˘  ¯ë Ïà ä&ı  ¯ë Ïà ä&Ò  ¯ë Ïà ä&Ì  ¯ë Ïà ä&È  ¯ë Ïà ä&Â  ¯ë Ïà ä&·  ¯ë Ïà ä&›  ¯ë Ïà ä&Ÿ  ¯ë Ïà ä&’  ¯ë Ïà ä&—  ¯ë Ïà ä&Õ  ¯ë Ïà ä&…  ¯ë Ïà ä&≈  ¯ë Ïà ä&¡  ¯ë Ïà ä&µ  ¯ë Ïà ä&Ω  ¯ë Ïà ä&π  ¯ë Ïà ä&µ  ¯ë Ïà ä&±  ¯ë Ïà ä&≠  ¯ë Ïà ä&©  ¯ë Ïà ä&•  ¯ë Ïà ä&°  ¯ë Ïà ä&ù  ¯ë Ïà ä&   ¯ë Ïà ä&  ¯ë Ïà ä&  ¯ë Ïà ä&  ¯ë Ïà ä&  ¯ë Ïà ä&  ¯ë Ïà ä&  ¯ë Ïà ä&  ¯ë Ïà ä&h   ¯ë Ïà ä&l   ¯ë Ïà ä&p   ¯ë Ïà »&¨       /â »&       /â »&$      /â »&(      /â »&,      /â »&0      /â ä&q   ® ø_ ä&m   ® ø_ ä&i   ® ø_ ä&  ® ø_ ä&  ® ø_ ä&  ® ø_ ä&  ® ø_ ä&  ® ø_ ä&	  ® ø_ ä&  ® ø_ ä&4  ® ø_ ä&8  ® ø_ ä&<  ® ø_ ä&@  ® ø_ ä&D  ® ø_ ä&H  ® ø_ ä&L  ® ø_ ä&P  ® ø_ ä&T  ® ø_ ä&X  ® ø_ ä&\  ® ø_ ä&`  ® ø_ ä&d  ® ø_ ä&h  ® ø_ ä&l  ® ø_ ä&p  ® ø_ »&1  6  _ »&-  6  _ »&)  6  _ »&%  6  _ »&!  6  _ »&   6  _ »&∞   6  _ »&¥   6  _ ä&q  ◊≈ ‡ã ä&m  ◊≈ ‡ã ä&i  ◊≈ ‡ã ä&e  ◊≈ ‡ã ä&a  ◊≈ ‡ã ä&]  ◊≈ ‡ã ä&Y  ◊≈ ‡ã ä&U  ◊≈ ‡ã ä&Q  ◊≈ ‡ã ä&M  ◊≈ ‡ã ä&t  ◊≈ ‡ã ä&x  ◊≈ ‡ã ä&|  ◊≈ ‡ã ä&Ä  ◊≈ ‡ã ä&Ñ  ◊≈ ‡ã ä&à  ◊≈ ‡ã ä&å  ◊≈ ‡ã ä&ê  ◊≈ ‡ã ä&î  ◊≈ ‡ã ä&ò  ◊≈ ‡ã ä&ô  ≈‚ ü∏ ä&ï  ≈‚ ü∏ ä&ë  ≈‚ ü∏ ä&ú  ≈‚ ü∏ ä&†  ≈‚ ü∏ ä&§  ≈‚ ü∏ ä&®  ≈‚ ü∏ ä&¨  ≈‚ ü∏ ä&∞  ≈‚ ü∏ ä&¥  ≈‚ ü∏ ä&∏  ≈‚ ü∏ ä&π  } ‰ ä&µ  } ‰ ä&±  } ‰ ä&≠  } ‰ ä&©  } ‰ ä&•  } ‰ ä&°  } ‰ ä&ù  } ‰ ä&ç  } ‰ ä&â  } ‰ ä&Ö  } ‰ ä&Å  } ‰ ä&}  } ‰ ä&y  } ‰ ä&u  } ‰ ä&I  } ‰ ä&E  } ‰ ä&A  } ‰ ä&=  } ‰ ä&9  } ‰ ä&5  } ‰ ä&  } ‰ ä&º  } ‰ ä&¿  } ‰ ä&ƒ  } ‰ ä&»  } ‰ ä&|  } ‰ ä&Ä  } ‰ ä&Ñ  } ‰ ä&à  } ‰ ä&å  } ‰ ä&¨  } ‰ ä&®  } ‰ ä&¨  } ‰ ä&≠  „'   ä&©  „'   ä&≠  „'   ä&ç  „'   ä&â  „'   ä&Ö  „'   ä&Å  „'   ä&}  „'   ä&Ã  „'   ä&–  „'   ä&‘  „'   ä&ÿ  „'   ä&‹  „'   ä&‡  „'   ä&‰  „'   ä&Ë  „'   ä&Ï  „'   ä&  „'   ä&Ù  „'   ä&¯  „'   ä&¸  „'   ä&   „'   ä&  „'   ä&  „'   ä&	  DH û< ä&  DH û< ä&  DH û< ä&˝  DH û< ä&˘  DH û< ä&ı  DH û< ä&Ò  DH û< ä&Ì  DH û< ä&È  DH û< ä&Â  DH û< ä&·  DH û< ä&›  DH û< ä&Ÿ  DH û< ä&’  DH û< ä&—  DH û< ä&Õ  DH û< ä&…  DH û< ä&≈  DH û< ä&|  DH û< ä&Ä  DH û< ä&Ñ  DH û< ä&  DH û< ä&  DH û< ä&à  DH û< ä&å  DH û< ä&ê  DH û< ä&  DH û< ä&  DH û< ä&  DH û< ä&   DH û< ä&$  DH û< ä&(  DH û< ä&,  DH û< ä&-  §u ¸k ä&)  §u ¸k ä&0  §u ¸k ä&4  §u ¸k ä&8  §u ¸k ä&<  §u ¸k ä&@  §u ¸k ä&D  §u ¸k ä&H  §u ¸k ä&L  §u ¸k ä&P  §u ¸k ä&P  §u ¸k ä&T  §u ¸k ä&X  §u ¸k ä&\  §u ¸k ä&`  §u ¸k ä&d  §u ¸k ä&h  §u ¸k ä&l  §u ¸k ä&m  ‹ö Õó ä&i  ‹ö Õó ä&e  ‹ö Õó ä&a  ‹ö Õó ä&]  ‹ö Õó ä&Y  ‹ö Õó ä&U  ‹ö Õó ä&Q  ‹ö Õó ä&Q  ‹ö Õó ä&M  ‹ö Õó ä&p  ‹ö Õó ä&t  ‹ö Õó ä&x  ‹ö Õó ä&|  ‹ö Õó ä&Ä  ‹ö Õó ä&Ñ  ‹ö Õó ä&à  ‹ö Õó ä&å  ‹ö Õó ä&ê  ‹ö Õó ä&î  ‹ö Õó ä&ò  ‹ö Õó ä&ú  ‹ö Õó ä&†  ‹ö Õó 
