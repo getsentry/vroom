@@ -21,6 +21,6 @@ type (
 	}
 
 	DebugMeta struct {
-		Images []Image `json:"images"`
+		Images []Image `json:"images,omitempty"`
 	}
 )
