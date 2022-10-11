@@ -1,178 +1,0 @@
-*version
-3
-data-file-overflow=false
-clock=dual
-elapsed-time-usec=4462790
-num-method-calls=334
-clock-call-overhead-nsec=10143
-vm=art
-pid=29376
-*threads
-29376	main
-29396	Runtime worker thread 1
-29398	Runtime worker thread 3
-29399	Signal Catcher
-29395	Runtime worker thread 0
-29397	Runtime worker thread 2
-29400	ADB-JDWP Connection Control Thread
-29402	ReferenceQueueDaemon
-29394	Jit thread pool worker thread 0
-29401	HeapTaskDaemon
-29404	FinalizerWatchdogDaemon
-29403	FinalizerDaemon
-29405	Binder:29376_1
-29408	Binder:29376_2
-29417	Binder:29376_3
-29418	Binder:29376_4
-29426	Profile Saver
-29428	dev.specto-pool-1-thread-1
-29429	RenderThread
-29435	pool-2-thread-1
-29439	pool-3-thread-1
-29441	kotlinx.coroutines.DefaultExecutor
-*methods
-0x224	java.util.concurrent.LinkedBlockingQueue	offer	(Ljava/lang/Object;)Z	LinkedBlockingQueue.java
-0xd0	java.util.concurrent.LinkedBlockingQueue	take	()Ljava/lang/Object;	LinkedBlockingQueue.java
-0x234	java.util.concurrent.locks.AbstractQueuedSynchronizer	acquireQueued	(Ljava/util/concurrent/locks/AbstractQueuedSynchronizer$Node;I)Z	AbstractQueuedSynchronizer.java
-0xcc	java.util.concurrent.ThreadPoolExecutor	getTask	()Ljava/lang/Runnable;	ThreadPoolExecutor.java
-0x220	java.util.concurrent.ThreadPoolExecutor	execute	(Ljava/lang/Runnable;)V	ThreadPoolExecutor.java
-0xc8	java.util.concurrent.ThreadPoolExecutor	runWorker	(Ljava/util/concurrent/ThreadPoolExecutor$Worker;)V	ThreadPoolExecutor.java
-0x228	java.util.concurrent.atomic.AtomicInteger	get	()I	AtomicInteger.java
-0xd4	java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject	await	()V	AbstractQueuedSynchronizer.java
-0x21c	java.util.concurrent.Executors$DelegatedExecutorService	execute	(Ljava/lang/Runnable;)V	Executors.java
-0xbc	java.lang.ref.ReferenceQueue	remove	()Ljava/lang/ref/Reference;	ReferenceQueue.java
-0xc0	java.lang.ref.ReferenceQueue	remove	(J)Ljava/lang/ref/Reference;	ReferenceQueue.java
-0xd8	java.util.concurrent.locks.LockSupport	park	(Ljava/lang/Object;)V	LockSupport.java
-0x12c	java.util.concurrent.locks.LockSupport	parkNanos	(Ljava/lang/Object;J)V	LockSupport.java
-0x138	java.util.ArrayList	toArray	([Ljava/lang/Object;)[Ljava/lang/Object;	ArrayList.java
-0x238	java.util.concurrent.locks.AbstractQueuedSynchronizer$Node	predecessor	()Ljava/util/concurrent/locks/AbstractQueuedSynchronizer$Node;	AbstractQueuedSynchronizer.java
-0xc4	java.util.concurrent.ThreadPoolExecutor$Worker	run	()V	ThreadPoolExecutor.java
-0x8c	java.lang.Object	wait	()V	Object.java
-0x90	java.lang.Object	wait	(J)V	Object.java
-0x94	java.lang.Object	wait	(JI)V	Object.java
-0x13c	java.lang.System	arraycopy	(Ljava/lang/Object;ILjava/lang/Object;II)V	System.java
-0xac	java.lang.Thread	sleep	(J)V	Thread.java
-0xb0	java.lang.Thread	sleep	(JI)V	Thread.java
-0xb4	java.lang.Thread	sleep	(Ljava/lang/Object;JI)V	Thread.java
-0x80	java.lang.Thread	run	()V	Thread.java
-0x8	java.lang.reflect.Method	invoke	(Ljava/lang/Object;[Ljava/lang/Object;)Ljava/lang/Object;	Method.java
-0xdc	sun.misc.Unsafe	park	(ZJ)V	Unsafe.java
-0x74	java.lang.reflect.Constructor	newInstance0	([Ljava/lang/Object;)Ljava/lang/Object;	Constructor.java
-0x70	java.lang.reflect.Constructor	newInstance	([Ljava/lang/Object;)Ljava/lang/Object;	Constructor.java
-0x88	java.lang.Daemons$ReferenceQueueDaemon	runInternal	()V	Daemons.java
-0x98	java.lang.Daemons$HeapTaskDaemon	runInternal	()V	Daemons.java
-0x130	java.lang.Daemons$FinalizerDaemon	doFinalize	(Ljava/lang/ref/FinalizerReference;)V	Daemons.java
-0xb8	java.lang.Daemons$FinalizerDaemon	runInternal	()V	Daemons.java
-0xa8	java.lang.Daemons$FinalizerWatchdogDaemon	sleepForMillis	(J)Z	Daemons.java
-0xa4	java.lang.Daemons$FinalizerWatchdogDaemon	waitForFinalization	()Ljava/lang/Object;	Daemons.java
-0xa0	java.lang.Daemons$FinalizerWatchdogDaemon	runInternal	()V	Daemons.java
-0x84	java.lang.Daemons$Daemon	run	()V	Daemons.java
-0x9c	dalvik.system.VMRuntime	runHeapTasks	()V	VMRuntime.java
-0x188	android.app.ContextImpl	getApplicationInfo	()Landroid/content/pm/ApplicationInfo;	ContextImpl.java
-0x11c	android.app.IActivityManager$Stub$Proxy	getProcessMemoryInfo	([I)[Landroid/os/Debug$MemoryInfo;	IActivityManager.java
-0x134	com.android.internal.os.BinderInternal$GcWatcher	finalize	()V	BinderInternal.java
-0x18	android.app.ActivityThread$H	handleMessage	(Landroid/os/Message;)V	ActivityThread.java
-0x174	android.view.WindowManagerGlobal	addView	(Landroid/view/View;Landroid/view/ViewGroup$LayoutParams;Landroid/view/Display;Landroid/view/Window;)V	WindowManagerGlobal.java
-0x1a8	android.view.Choreographer$CallbackRecord	run	(J)V	Choreographer.java
-0x19c	android.view.Choreographer$FrameDisplayEventReceiver	run	()V	Choreographer.java
-0x170	android.view.WindowManagerImpl	addView	(Landroid/view/View;Landroid/view/ViewGroup$LayoutParams;)V	WindowManagerImpl.java
-0x164	android.app.servertransaction.TransactionExecutor	executeLifecycleState	(Landroid/app/servertransaction/ClientTransaction;)V	TransactionExecutor.java
-0x1c	android.app.servertransaction.TransactionExecutor	execute	(Landroid/app/servertransaction/ClientTransaction;)V	TransactionExecutor.java
-0x20	android.app.servertransaction.TransactionExecutor	executeCallbacks	(Landroid/app/servertransaction/ClientTransaction;)V	TransactionExecutor.java
-0x64	android.view.LayoutInflater	createViewFromTag	(Landroid/view/View;Ljava/lang/String;Landroid/content/Context;Landroid/util/AttributeSet;)Landroid/view/View;	LayoutInflater.java
-0x6c	android.view.LayoutInflater	createView	(Landroid/content/Context;Ljava/lang/String;Ljava/lang/String;Landroid/util/AttributeSet;)Landroid/view/View;	LayoutInflater.java
-0x68	android.view.LayoutInflater	createViewFromTag	(Landroid/view/View;Ljava/lang/String;Landroid/content/Context;Landroid/util/AttributeSet;Z)Landroid/view/View;	LayoutInflater.java
-0x50	android.view.LayoutInflater	inflate	(ILandroid/view/ViewGroup;)Landroid/view/View;	LayoutInflater.java
-0x54	android.view.LayoutInflater	inflate	(ILandroid/view/ViewGroup;Z)Landroid/view/View;	LayoutInflater.java
-0x58	android.view.LayoutInflater	inflate	(Lorg/xmlpull/v1/XmlPullParser;Landroid/view/ViewGroup;Z)Landroid/view/View;	LayoutInflater.java
-0x60	android.view.LayoutInflater	rInflate	(Lorg/xmlpull/v1/XmlPullParser;Landroid/view/View;Landroid/content/Context;Landroid/util/AttributeSet;Z)V	LayoutInflater.java
-0x5c	android.view.LayoutInflater	rInflateChildren	(Lorg/xmlpull/v1/XmlPullParser;Landroid/view/View;Landroid/util/AttributeSet;Z)V	LayoutInflater.java
-0x30	android.app.Instrumentation	callActivityOnCreate	(Landroid/app/Activity;Landroid/os/Bundle;)V	Instrumentation.java
-0x180	android.view.ViewTreeObserver	<init>	(Landroid/content/Context;)V	ViewTreeObserver.java
-0x184	android.content.ContextWrapper	getApplicationInfo	()Landroid/content/pm/ApplicationInfo;	ContextWrapper.java
-0x168	android.app.servertransaction.ResumeActivityItem	execute	(Landroid/app/ClientTransactionHandler;Landroid/os/IBinder;Landroid/app/servertransaction/PendingTransactionActions;)V	ResumeActivityItem.java
-0x1ac	android.view.ViewRootImpl$TraversalRunnable	run	()V	ViewRootImpl.java
-0x198	android.os.Handler	handleCallback	(Landroid/os/Message;)V	Handler.java
-0x14	android.os.Handler	dispatchMessage	(Landroid/os/Message;)V	Handler.java
-0x4	com.android.internal.os.RuntimeInit$MethodAndArgsCaller	run	()V	RuntimeInit.java
-0x10	android.os.Looper	loop	()V	Looper.java
-0x17c	android.view.View$AttachInfo	<init>	(Landroid/view/IWindowSession;Landroid/view/IWindow;Landroid/view/Display;Landroid/view/ViewRootImpl;Landroid/os/Handler;Landroid/view/View$AttachInfo$Callbacks;Landroid/content/Context;)V	View.java
-0x24	android.app.servertransaction.LaunchActivityItem	execute	(Landroid/app/ClientTransactionHandler;Landroid/os/IBinder;Landroid/app/servertransaction/PendingTransactionActions;)V	LaunchActivityItem.java
-0x1e0	android.view.IWindowSession$Stub$Proxy	finishDrawing	(Landroid/view/IWindow;)V	IWindowSession.java
-0x1bc	android.view.IWindowSession$Stub$Proxy	relayout	(Landroid/view/IWindow;ILandroid/view/WindowManager$LayoutParams;IIIIJLandroid/graphics/Rect;Landroid/graphics/Rect;Landroid/graphics/Rect;Landroid/graphics/Rect;Landroid/graphics/Rect;Landroid/graphics/Rect;Landroid/graphics/Rect;Landroid/view/DisplayCutout$ParcelableWrapper;Landroid/util/MergedConfiguration;Landroid/view/SurfaceControl;Landroid/view/InsetsState;)I	IWindowSession.java
-0x18c	android.app.LoadedApk	getApplicationInfo	()Landroid/content/pm/ApplicationInfo;	LoadedApk.java
-0x1cc	android.graphics.HardwareRenderer	nSetStopped	(JZ)V	HardwareRenderer.java
-0x1c8	android.graphics.HardwareRenderer	setStopped	(Z)V	HardwareRenderer.java
-0x160	android.util.EventLog	writeEvent	(I[Ljava/lang/Object;)I	EventLog.java
-0x1a4	android.view.Choreographer	doCallbacks	(IJ)V	Choreographer.java
-0x1a0	android.view.Choreographer	doFrame	(JI)V	Choreographer.java
-0x178	android.view.ViewRootImpl	<init>	(Landroid/content/Context;Landroid/view/Display;)V	ViewRootImpl.java
-0x1c4	android.view.ViewRootImpl	draw	(Z)Z	ViewRootImpl.java
-0x1c0	android.view.ViewRootImpl	performDraw	()V	ViewRootImpl.java
-0x1b4	android.view.ViewRootImpl	performTraversals	()V	ViewRootImpl.java
-0x1b8	android.view.ViewRootImpl	relayoutWindow	(Landroid/view/WindowManager$LayoutParams;IZ)I	ViewRootImpl.java
-0x1dc	android.view.ViewRootImpl	reportDrawFinished	()V	ViewRootImpl.java
-0x1b0	android.view.ViewRootImpl	doTraversal	()V	ViewRootImpl.java
-0x1d4	android.view.ViewRootImpl	lambda$performDraw$1$ViewRootImpl	(Ljava/util/ArrayList;)V	ViewRootImpl.java
-0x1d8	android.view.ViewRootImpl	pendingDrawFinished	()V	ViewRootImpl.java
-0xc	android.app.ActivityThread	main	([Ljava/lang/String;)V	ActivityThread.java
-0x2c	android.app.ActivityThread	performLaunchActivity	(Landroid/app/ActivityThread$ActivityClientRecord;Landroid/content/Intent;)Landroid/app/Activity;	ActivityThread.java
-0x28	android.app.ActivityThread	handleLaunchActivity	(Landroid/app/ActivityThread$ActivityClientRecord;Landroid/app/servertransaction/PendingTransactionActions;Landroid/content/Intent;)Landroid/app/Activity;	ActivityThread.java
-0x16c	android.app.ActivityThread	handleResumeActivity	(Landroid/os/IBinder;ZZLjava/lang/String;)V	ActivityThread.java
-0x118	android.app.ActivityManager	getProcessMemoryInfo	([I)[Landroid/os/Debug$MemoryInfo;	ActivityManager.java
-0x120	android.os.BinderProxy	transact	(ILandroid/os/Parcel;Landroid/os/Parcel;I)Z	BinderProxy.java
-0x124	android.os.BinderProxy	transactNative	(ILandroid/os/Parcel;Landroid/os/Parcel;I)Z	BinderProxy.java
-0	com.android.internal.os.ZygoteInit	main	([Ljava/lang/String;)V	ZygoteInit.java
-0x194	android.os.MessageQueue	nativePollOnce	(JI)V	MessageQueue.java
-0x190	android.os.MessageQueue	next	()Landroid/os/Message;	MessageQueue.java
-0x15c	android.app.Activity	writeEventLog	(ILjava/lang/String;)V	Activity.java
-0x34	android.app.Activity	performCreate	(Landroid/os/Bundle;)V	Activity.java
-0x38	android.app.Activity	performCreate	(Landroid/os/Bundle;Landroid/os/PersistableBundle;)V	Activity.java
-0x1f4	androidx.appcompat.widget.ToolbarWidgetWrapper	setMenu	(Landroid/view/Menu;Landroidx/appcompat/view/menu/MenuPresenter$Callback;)V	ToolbarWidgetWrapper.java
-0x140	androidx.constraintlayout.widget.ConstraintLayout	<init>	(Landroid/content/Context;Landroid/util/AttributeSet;)V	ConstraintLayout.java
-0x214	kotlinx.coroutines.DispatchedTaskKt	dispatch	(Lkotlinx/coroutines/DispatchedTask;I)V	DispatchedTask.kt
-0x1f0	androidx.appcompat.widget.ActionBarOverlayLayout	setMenu	(Landroid/view/Menu;Landroidx/appcompat/view/menu/MenuPresenter$Callback;)V	ActionBarOverlayLayout.java
-0x78	androidx.appcompat.widget.ActionBarContainer	<init>	(Landroid/content/Context;Landroid/util/AttributeSet;)V	ActionBarContainer.java
-0x204	kotlinx.coroutines.EventLoopImplBase$DelayedResumeTask	run	()V	EventLoop.common.kt
-0x100	specto.core.internal.SimplePlugin$log$entryBuilder$1	invoke	(Ljava/lang/Object;)Ljava/lang/Object;	SimplePlugin.kt
-0x104	specto.core.internal.SimplePlugin$log$entryBuilder$1	invokeSuspend	(Ljava/lang/Object;)Ljava/lang/Object;	SimplePlugin.kt
-0xf4	specto.core.internal.SimplePlugin$start$5	invokeSuspend	(Ljava/lang/Object;)Ljava/lang/Object;	SimplePlugin.kt
-0x1fc	androidx.appcompat.widget.Toolbar	ensureMenuView	()V	Toolbar.java
-0x1f8	androidx.appcompat.widget.Toolbar	setMenu	(Landroidx/appcompat/view/menu/MenuBuilder;Landroidx/appcompat/widget/ActionMenuPresenter;)V	Toolbar.java
-0x22c	specto.example.MainActivity$onCreate$1	run	()V	MainActivity.kt
-0x158	com.google.protobuf.WireFormat	makeTag	(II)I	WireFormat.java
-0x218	kotlinx.coroutines.ExecutorCoroutineDispatcherBase	dispatch	(Lkotlin/coroutines/CoroutineContext;Ljava/lang/Runnable;)V	Executors.kt
-0xec	kotlinx.coroutines.DispatchedTask	run	()V	DispatchedTask.kt
-0x210	kotlinx.coroutines.CancellableContinuationImpl	dispatchResume	(I)V	CancellableContinuationImpl.kt
-0x20c	kotlinx.coroutines.CancellableContinuationImpl	resumeImpl	(Ljava/lang/Object;I)Lkotlinx/coroutines/CancelledContinuation;	CancellableContinuationImpl.kt
-0x208	kotlinx.coroutines.CancellableContinuationImpl	resumeUndispatched	(Lkotlinx/coroutines/CoroutineDispatcher;Ljava/lang/Object;)V	CancellableContinuationImpl.kt
-0x128	kotlinx.coroutines.DefaultExecutor	run	()V	DefaultExecutor.kt
-0x200	kotlinx.coroutines.EventLoopImplBase	processNextEvent	()J	EventLoop.common.kt
-0xf0	kotlin.coroutines.jvm.internal.BaseContinuationImpl	resumeWith	(Ljava/lang/Object;)V	ContinuationImpl.kt
-0xf8	specto.core.internal.SimplePlugin	log	(Lspecto/proto/ConfigurationGenerated$TraceConfiguration;Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;	SimplePlugin.kt
-0xfc	specto.core.internal.SimplePlugin	measureCost	(Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;	SimplePlugin.kt
-0x114	specto.core.internal.MemoryFootprintPlugin	buildEntry	(Lspecto/proto/EntryGenerated$Entry$Builder;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;	MemoryFootprintPlugin.kt
-0x110	specto.core.internal.SimpleSamplingPlugin	buildEntry$suspendImpl	(Lspecto/core/internal/SimpleSamplingPlugin;Lspecto/proto/EntryGenerated$Entry$Builder;Lkotlin/Unit;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;	SimpleSamplingPlugin.kt
-0x108	specto.core.internal.SimpleSamplingPlugin	buildEntry	(Lspecto/proto/EntryGenerated$Entry$Builder;Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;	SimpleSamplingPlugin.kt
-0x10c	specto.core.internal.SimpleSamplingPlugin	buildEntry	(Lspecto/proto/EntryGenerated$Entry$Builder;Lkotlin/Unit;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;	SimpleSamplingPlugin.kt
-0xe0	specto.core.Specto$startSession$1$1	run	()V	Specto.kt
-0x14c	specto.proto.EntryGenerated$Entry	getSerializedSize	()I	EntryGenerated.java
-0x3c	specto.example.MainActivity	onCreate	(Landroid/os/Bundle;)V	MainActivity.kt
-0x40	androidx.appcompat.app.AppCompatActivity	setContentView	(I)V	AppCompatActivity.java
-0x144	specto.core.internal.NativePlugin$logger$1	log	(Lspecto/proto/EntryGenerated$Entry;)V	NativePlugin.kt
-0x4c	androidx.appcompat.app.AppCompatDelegateImpl	createSubDecor	()Landroid/view/ViewGroup;	AppCompatDelegateImpl.java
-0x48	androidx.appcompat.app.AppCompatDelegateImpl	ensureSubDecor	()V	AppCompatDelegateImpl.java
-0x1ec	androidx.appcompat.app.AppCompatDelegateImpl	preparePanel	(Landroidx/appcompat/app/AppCompatDelegateImpl$PanelFeatureState;Landroid/view/KeyEvent;)Z	AppCompatDelegateImpl.java
-0x1e8	androidx.appcompat.app.AppCompatDelegateImpl	doInvalidatePanelMenu	(I)V	AppCompatDelegateImpl.java
-0x44	androidx.appcompat.app.AppCompatDelegateImpl	setContentView	(I)V	AppCompatDelegateImpl.java
-0x1e4	androidx.appcompat.app.AppCompatDelegateImpl$2	run	()V	AppCompatDelegateImpl.java
-0x7c	androidx.core.view.ViewCompat	setBackground	(Landroid/view/View;Landroid/graphics/drawable/Drawable;)V	ViewCompat.java
-0xe4	specto.core.Specto	access$startConsuming	(Lspecto/core/Specto;)V	Specto.kt
-0xe8	specto.core.Specto	startConsuming	()V	Specto.kt
-0x230	specto.core.Specto	endSession	()V	Specto.kt
-0x148	com.google.protobuf.AbstractMessageLite	toByteArray	()[B	AbstractMessageLite.java
-0x154	com.google.protobuf.CodedOutputStream	computeTagSize	(I)I	CodedOutputStream.java
-0x150	com.google.protobuf.CodedOutputStream	computeUInt64Size	(IJ)I	CodedOutputStream.java
-0x1d0	android.view.-$$Lambda$ViewRootImpl$7A_3tkr_Kw4TZAeIUGVlOoTcZhg	run	()V	lambda
-*end
-SLOW   ÖGpÅ                  ¿r        î[ ¿r       î[ ¿r       î[ ¿r       î[ ¿r       î[ ¿r       î[ ¿r       î[ ¿r       î[ ¿r        î[ ¿r$       î[ ¿r(       î[ ¿r,       î[ ¿r0       î[ ¿r4       î[ ¿r8       î[ ¿r<       î[ ¿r@       î[ ¿rD       î[ ¿rH       î[ ¿rL       î[ ¿rP       î[ ¿rT       î[ ¿rX       î[ ¿r\       î[ ¿r`       î[ ¿rd       î[ ¿rh       î[ ¿rl       î[ ¿rp       î[ ¿rt       î[ ¿rx       î[ ¿r|       î[ ⁄rÄ       ·[ ⁄rÑ       ·[ ⁄rà       ·[ ⁄rå       ·[ ⁄rê       ·[ ⁄rî       ·[ ŸrÄ       Ù[ ŸrÑ       Ù[ Ÿrò       Ù[ Ÿrú       Ù[ ‹rÄ       ˛[ ‹rÑ       ˛[ ‹r†       ˛[ ‹r§       ˛[ ‹r®       ˛[ ‹r¨       ˛[ ‹r∞       ˛[ ‹r¥       ˛[ €rÄ       \ €rÑ       \ €r∏       \ €rº       \ €r¿       \ €rê       \ €rî       \ ÙrÄ       ?\ Ùrƒ       ?\ Ùr»       ?\ ÙrÃ       ?\ Ùr–       ?\ Ùr‘       ?\ Ùrÿ       ?\ Ùr‹       ?\ ˚rÄ       R\ ˚rƒ       R\ ˚r»       R\ ˚r‡       R\ ˚r‰       R\ ˚rË       R\ ˇrÄ       [\ ˇrƒ       [\ ˇr»       [\ ˇrÏ       [\ ˇr       [\ ˇrÙ       [\ ˇr¯       [\ ¿r}   a,  vã ¿ry   a,  vã ¿ru   a,  vã ¿rq   a,  vã ¿rm   a,  vã ¿ri   a,  vã ¿re   a,  vã ¿r\   a,  vã ¿r`   a,  vã ¿rd   a,  vã ¿rh   a,  vã ¿rl   a,  vã ¿rp   a,  vã ¿rt   a,  vã ˇr¸   8*  .å ˇr   8*  .å ˇr  8*  .å ˇr  8*  .å ˇr  8*  .å ˇr  8*  .å ˇr  8*  .å ˇr  8*  .å ˇr  8*  .å ˇr   8*  .å ˇr$  8*  .å sÄ       Cå s(      Cå s,      Cå s‹       Cå ¿ru   8ç  ;˜ ¿rq   8ç  ;˜ ¿rm   8ç  ;˜ ¿ri   8ç  ;˜ ¿re   8ç  ;˜ ¿ra   8ç  ;˜ ¿r]   8ç  ;˜ ¿ra   8ç  ;˜ ¿r]   8ç  ;˜ ¿rY   8ç  ;˜ ¿rU   8ç  ;˜ ¿rQ   8ç  ;˜ ¿rM   8ç  ;˜ ¿rI   8ç  ;˜ ¿rP   8ç  ;˜ ¿rT   8ç  ;˜ ¿rX   8ç  ;˜ ¿rd   8ç  ;˜ ¿rh   8ç  ;˜ ¿rl   8ç  ;˜ ¿rp   8ç  ;˜ ¿rt   8ç  ;˜ €rï   ÷   ò¯ €rë   ÷   ò¯ €r¡   ÷   ò¯ €rΩ   ÷   ò¯ €r0  ÷   ò¯ €r4  ÷   ò¯ €r8  ÷   ò¯ €r<  ÷   ò¯ ¿r@  ,∫  ∑& €r=  J  ' €r9  J  ' €r5  J  ' €r1  J  ' €rº   J  ' €r¿   J  ' €rê   J  ' €rî   J  ' ˇr%  ùU  `' ˇr!  ùU  `' ˇr  ùU  `' ˇr  ùU  `' ˇr  ùU  `' ˇr  ùU  `' ˇr  ùU  `' ˇr	  ùU  `' ˇr  ùU  `' ˇr  ùU  `' ˇr˝   ùU  `' ˇrD  ùU  `' ˇrH  ùU  `' ˇrL  ùU  `' ˇrP  ùU  `' ˇrT  ùU  `' ˇrX  ùU  `' ¿rA  ñË  X ¿ru   ñË  X ¿rq   ñË  X ¿rm   ñË  X ¿ri   ñË  X ¿re   ñË  X ¿rY   ñË  X ¿rU   ñË  X ¿rQ   ñË  X ¿rE   ñË  X ¿rA   ñË  X ¿r=   ñË  X ¿r\  ñË  X ¿r`  ñË  X ˇrY  Üh  Y ˇrU  Üh  Y ˇrQ  Üh  Y ˇrM  Üh  Y ˇrI  Üh  Y ˇrE  Üh  Y ˇr˘   Üh  Y ˇrı   Üh  Y ˇrÒ   Üh  Y ˇrÌ   Üh  Y ˇrÃ   Üh  Y ˇr–   Üh  Y ˇr‘   Üh  Y ˇrÿ   Üh  Y ˇr‹   Üh  Y ¿ra  B Ûä ¿r]  B Ûä ¿r9   B Ûä ¿r5   B Ûä ¿r1   B Ûä ¿r-   B Ûä ¿r)   B Ûä ¿r%   B Ûä ¿r!   B Ûä ¿rd  B Ûä ¿rh  B Ûä ¿rl  B Ûä ¿rp  B Ûä ¿rt  B Ûä ¿rx  B Ûä ¿r|  B Ûä ¿rÄ  B Ûä ¿rÑ  B Ûä ¿rà  B Ûä ¿rå  B Ûä ¿rç  ‘ æ∑ ¿râ  ‘ æ∑ ¿rÖ  ‘ æ∑ ¿rÅ  ‘ æ∑ ¿r}  ‘ æ∑ ¿ry  ‘ æ∑ ¿ru  ‘ æ∑ ¿rq  ‘ æ∑ ¿rm  ‘ æ∑ ¿ri  ‘ æ∑ ¿re  ‘ æ∑ ¿r   ‘ æ∑ ¿r   ‘ æ∑ ¿r   ‘ æ∑ ¿rê  ‘ æ∑ ¿rî  ‘ æ∑ ¿rï  E> &Ï ¿rë  E> &Ï ¿r   E> &Ï ¿rò  E> &Ï ¿rú  E> &Ï ¿r†  E> &Ï ¿r§  E> &Ï ¿r®  E> &Ï ¿r¨  E> &Ï ¿r∞  E> &Ï ¿r¥  E> &Ï ¿r∏  E> &Ï ¿rº  E> &Ï ¿r   E> &Ï ¿r$  E> &Ï ¿r%  —I è ¿r!  —I è ¿rΩ  —I è ¿rπ  —I è ¿r¿  —I è ¿rƒ  —I è ¿r»  —I è ¿rÃ  —I è ¿rÕ  üS Ωœ ¿r…  üS Ωœ ¿r≈  üS Ωœ ¿r»  üS Ωœ ¿rÃ  üS Ωœ ¿rÕ  lT Mˇ ¿r…  lT Mˇ ¿r¡  lT Mˇ ¿rµ  lT Mˇ ¿r±  lT Mˇ ¿r≠  lT Mˇ ¿r©  lT Mˇ ¿r•  lT Mˇ ¿r°  lT Mˇ ¿rù  lT Mˇ ¿r–  lT Mˇ ¿r‘  lT Mˇ ¿rÿ  lT Mˇ ¿r‹  lT Mˇ ¿r‡  lT Mˇ ¿r   lT Mˇ ¿r$  lT Mˇ ¿r%  ÄÅ Ω. ¿r!  ÄÅ Ω. ¿r·  ÄÅ Ω. ¿r›  ÄÅ Ω. ¿rŸ  ÄÅ Ω. ¿r’  ÄÅ Ω. ¿r—  ÄÅ Ω. ¿r‰  ÄÅ Ω. ¿rË  ÄÅ Ω. ¿rÏ  ÄÅ Ω. ¿r  ÄÅ Ω. ¿rÙ  ÄÅ Ω. ¿r¯  ÄÅ Ω. ¿r¸  ÄÅ Ω. ¿r˝  ◊ö ˝[ ¿r˘  ◊ö ˝[ ¿rı  ◊ö ˝[ ¿rÒ  ◊ö ˝[ ¿rÌ  ◊ö ˝[ ¿rÈ  ◊ö ˝[ ¿rÂ  ◊ö ˝[ ¿rô  ◊ö ˝[ ¿r   ◊ö ˝[ ¿rê  ◊ö ˝[ ¿rî  ◊ö ˝[ s›   ^  ùü s-  ^  ùü s   ^  ùü s  ^  ùü s  ^  ùü s  ^  ùü s  ^  ùü s  ^  ùü s  ^  ùü s  ^  ùü s   ^  ùü s$  ^  ùü s(  ^  ùü s)  «  ÍŒ s%  «  ÍŒ s!  «  ÍŒ s  «  ÍŒ s  «  ÍŒ s  «  ÍŒ s  «  ÍŒ s  «  ÍŒ s	  «  ÍŒ s  «  ÍŒ s  «  ÍŒ s,  «  ÍŒ s‹   «  ÍŒ ¿rï  Î© ;ÈC ¿rë  Î© ;ÈC ¿r   Î© ;ÈC ¿rò  Î© ;ÈC ¿r,  Î© ;ÈC ¿r0  Î© ;ÈC Ùr›   &  fÍC ÙrŸ   &  fÍC Ùr4  &  fÍC Ùr8  &  fÍC 
