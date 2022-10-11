@@ -254,14 +254,14 @@ func (p *SampleProfile) Speedscope() (speedscope.Output, error) {
 				threadName = queueMetadata.Label
 			}
 			speedscopeProfile = &speedscope.SampledProfile{
-				IsMainThread:  sample.ThreadID == mainThreadID,
-				MissingImages: p.DebugMeta.MissingImages(),
-				Name:          threadName,
-				Queues:        make(map[string]speedscope.Queue),
-				StartValue:    sample.ElapsedSinceStartNS,
-				ThreadID:      sample.ThreadID,
-				Type:          speedscope.ProfileTypeSampled,
-				Unit:          speedscope.ValueUnitNanoseconds,
+				IsMainThread: sample.ThreadID == mainThreadID,
+				Images:       p.DebugMeta.Images,
+				Name:         threadName,
+				Queues:       make(map[string]speedscope.Queue),
+				StartValue:   sample.ElapsedSinceStartNS,
+				ThreadID:     sample.ThreadID,
+				Type:         speedscope.ProfileTypeSampled,
+				Unit:         speedscope.ValueUnitNanoseconds,
 			}
 			if qmExists {
 				speedscopeProfile.Queues[queueMetadata.Label] = speedscope.Queue{Label: queueMetadata.Label, StartNS: sample.ElapsedSinceStartNS, EndNS: sample.ElapsedSinceStartNS}

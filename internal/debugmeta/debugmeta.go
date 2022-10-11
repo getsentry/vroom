@@ -24,13 +24,3 @@ type (
 		Images []Image `json:"images"`
 	}
 )
-
-func (dm DebugMeta) MissingImages() []Image {
-	missing := make([]Image, 0)
-	for _, i := range dm.Images {
-		if i.DebugStatus != "found" {
-			missing = append(missing, i)
-		}
-	}
-	return missing
-}
