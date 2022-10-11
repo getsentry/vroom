@@ -53,7 +53,7 @@ type (
 	SampledProfile struct {
 		EndValue     uint64            `json:"endValue"`
 		IsMainThread bool              `json:"isMainThread"`
-		Images       []debugmeta.Image `json:"images"`
+		Images       []debugmeta.Image `json:"images,omitempty"`
 		Name         string            `json:"name"`
 		Priority     int               `json:"priority"`
 		Queues       map[string]Queue  `json:"queues,omitempty"`
