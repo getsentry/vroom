@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/getsentry/vroom/internal/debugmeta"
 	"github.com/getsentry/vroom/internal/metadata"
 	"github.com/getsentry/vroom/internal/nodetree"
 	"github.com/getsentry/vroom/internal/packageutil"
@@ -85,21 +86,21 @@ type (
 	}
 
 	SampleProfile struct {
-		DebugMeta      interface{}   `json:"debug_meta,omitempty"`
-		Device         Device        `json:"device"`
-		Environment    string        `json:"environment,omitempty"`
-		EventID        string        `json:"event_id"`
-		OS             OS            `json:"os"`
-		OrganizationID uint64        `json:"organization_id"`
-		Platform       string        `json:"platform"`
-		ProjectID      uint64        `json:"project_id"`
-		Received       time.Time     `json:"received"`
-		Release        string        `json:"release"`
-		Runtime        Runtime       `json:"runtime"`
-		Timestamp      time.Time     `json:"timestamp"`
-		Trace          Trace         `json:"profile"`
-		Transactions   []Transaction `json:"transactions"`
-		Version        string        `json:"version"`
+		DebugMeta      debugmeta.DebugMeta `json:"debug_meta"`
+		Device         Device              `json:"device"`
+		Environment    string              `json:"environment,omitempty"`
+		EventID        string              `json:"event_id"`
+		OS             OS                  `json:"os"`
+		OrganizationID uint64              `json:"organization_id"`
+		Platform       string              `json:"platform"`
+		ProjectID      uint64              `json:"project_id"`
+		Received       time.Time           `json:"received"`
+		Release        string              `json:"release"`
+		Runtime        Runtime             `json:"runtime"`
+		Timestamp      time.Time           `json:"timestamp"`
+		Trace          Trace               `json:"profile"`
+		Transactions   []Transaction       `json:"transactions"`
+		Version        string              `json:"version"`
 	}
 )
 
@@ -253,11 +254,12 @@ func (p *SampleProfile) Speedscope() (speedscope.Output, error) {
 				threadName = queueMetadata.Label
 			}
 			speedscopeProfile = &speedscope.SampledProfile{
+				IsMainThread: sample.ThreadID == mainThreadID,
+				Images:       p.DebugMeta.Images,
 				Name:         threadName,
 				Queues:       make(map[string]speedscope.Queue),
 				StartValue:   sample.ElapsedSinceStartNS,
 				ThreadID:     sample.ThreadID,
-				IsMainThread: sample.ThreadID == mainThreadID,
 				Type:         speedscope.ProfileTypeSampled,
 				Unit:         speedscope.ValueUnitNanoseconds,
 			}
