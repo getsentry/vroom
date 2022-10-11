@@ -26,7 +26,7 @@ type (
 )
 
 func (dm DebugMeta) MissingImages() []Image {
-	var missing []Image
+	missing := make([]Image, 0)
 	for _, i := range dm.Images {
 		if i.DebugStatus != "found" {
 			missing = append(missing, i)
