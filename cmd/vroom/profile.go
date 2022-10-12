@@ -56,6 +56,8 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 		var e *googleapi.Error
 		if ok := errors.As(err, &e); ok {
 			w.WriteHeader(http.StatusBadGateway)
+		} else if errors.Is(err, context.DeadlineExceeded) {
+			w.WriteHeader(http.StatusTooManyRequests)
 		} else {
 			w.WriteHeader(http.StatusInternalServerError)
 		}

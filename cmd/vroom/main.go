@@ -15,6 +15,7 @@ import (
 	"github.com/CAFxX/httpcompression"
 	"github.com/getsentry/sentry-go"
 	sentryhttp "github.com/getsentry/sentry-go/http"
+	"github.com/googleapis/gax-go/v2"
 	"github.com/julienschmidt/httprouter"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/rs/zerolog/log"
@@ -51,6 +52,14 @@ func newEnvironment() (*environment, error) {
 	if err != nil {
 		return nil, err
 	}
+	e.storage.SetRetry(
+		storage.WithBackoff(gax.Backoff{
+			Initial:    200 * time.Millisecond,
+			Max:        time.Second,
+			Multiplier: 2,
+		}),
+		storage.WithPolicy(storage.RetryIdempotent),
+	)
 	e.profilesBucket = e.storage.Bucket(e.ProfilesBucket)
 	return &e, nil
 }
