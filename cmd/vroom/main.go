@@ -54,8 +54,8 @@ func newEnvironment() (*environment, error) {
 	}
 	e.storage.SetRetry(
 		storage.WithBackoff(gax.Backoff{
-			Initial:    500 * time.Millisecond,
-			Max:        5 * time.Second,
+			Initial:    200 * time.Millisecond,
+			Max:        time.Second,
 			Multiplier: 2,
 		}),
 		storage.WithPolicy(storage.RetryIdempotent),
