@@ -43,8 +43,9 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 
 	hub.Scope().SetTags(map[string]string{
 		"organization_id": strconv.FormatUint(p.OrganizationID(), 10),
-		"project_id":      strconv.FormatUint(p.ProjectID(), 10),
+		"platform":        p.Platform(),
 		"profile_id":      p.ID(),
+		"project_id":      strconv.FormatUint(p.ProjectID(), 10),
 	})
 
 	s = sentry.StartSpan(ctx, "calltree")
