@@ -47,6 +47,16 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 		"profile_id":      p.ID(),
 	})
 
+	s = sentry.StartSpan(ctx, "calltree")
+	s.Description = "Generate call trees"
+	callTrees, err := p.CallTrees()
+	s.Finish()
+	if err != nil {
+		hub.CaptureException(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
 	s = sentry.StartSpan(ctx, "gcs.write")
 	s.Description = "Write profile to GCS"
 	err = storageutil.CompressedWrite(ctx, env.profilesBucket, p.StoragePath(), p)
@@ -61,16 +71,6 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 			hub.CaptureException(err)
 			w.WriteHeader(http.StatusInternalServerError)
 		}
-		return
-	}
-
-	s = sentry.StartSpan(ctx, "calltree")
-	s.Description = "Generate call trees"
-	callTrees, err := p.CallTrees()
-	s.Finish()
-	if err != nil {
-		hub.CaptureException(err)
-		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
