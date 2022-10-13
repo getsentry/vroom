@@ -13,6 +13,10 @@ import (
 	"github.com/getsentry/vroom/internal/speedscope"
 )
 
+var (
+	ErrProfileHasNoTrace = errors.New("profile has no trace")
+)
+
 type (
 	LegacyProfile struct {
 		RawProfile
@@ -138,6 +142,9 @@ func (p LegacyProfile) CallTrees() (map[uint64][]*nodetree.Node, error) {
 	// The majority of them might also be timing out and we want to ignore them for the aggregation.
 	if time.Duration(p.DurationNS) > 5*time.Second {
 		return make(map[uint64][]*nodetree.Node), nil
+	}
+	if p.Trace == nil {
+		return nil, ErrProfileHasNoTrace
 	}
 	return p.Trace.CallTrees(), nil
 }

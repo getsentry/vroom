@@ -43,26 +43,10 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 
 	hub.Scope().SetTags(map[string]string{
 		"organization_id": strconv.FormatUint(p.OrganizationID(), 10),
-		"project_id":      strconv.FormatUint(p.ProjectID(), 10),
+		"platform":        p.Platform(),
 		"profile_id":      p.ID(),
+		"project_id":      strconv.FormatUint(p.ProjectID(), 10),
 	})
-
-	s = sentry.StartSpan(ctx, "gcs.write")
-	s.Description = "Write profile to GCS"
-	err = storageutil.CompressedWrite(ctx, env.profilesBucket, p.StoragePath(), p)
-	s.Finish()
-	if err != nil {
-		hub.CaptureException(err)
-		var e *googleapi.Error
-		if ok := errors.As(err, &e); ok {
-			w.WriteHeader(http.StatusBadGateway)
-		} else if errors.Is(err, context.DeadlineExceeded) {
-			w.WriteHeader(http.StatusTooManyRequests)
-		} else {
-			w.WriteHeader(http.StatusInternalServerError)
-		}
-		return
-	}
 
 	s = sentry.StartSpan(ctx, "calltree")
 	s.Description = "Generate call trees"
@@ -71,6 +55,23 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		hub.CaptureException(err)
 		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	s = sentry.StartSpan(ctx, "gcs.write")
+	s.Description = "Write profile to GCS"
+	err = storageutil.CompressedWrite(ctx, env.profilesBucket, p.StoragePath(), p)
+	s.Finish()
+	if err != nil {
+		var e *googleapi.Error
+		if ok := errors.As(err, &e); ok {
+			w.WriteHeader(http.StatusBadGateway)
+		} else if errors.Is(err, context.DeadlineExceeded) {
+			w.WriteHeader(http.StatusTooManyRequests)
+		} else {
+			hub.CaptureException(err)
+			w.WriteHeader(http.StatusInternalServerError)
+		}
 		return
 	}
 
