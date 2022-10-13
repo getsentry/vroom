@@ -52,13 +52,13 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 	err = storageutil.CompressedWrite(ctx, env.profilesBucket, p.StoragePath(), p)
 	s.Finish()
 	if err != nil {
-		hub.CaptureException(err)
 		var e *googleapi.Error
 		if ok := errors.As(err, &e); ok {
 			w.WriteHeader(http.StatusBadGateway)
 		} else if errors.Is(err, context.DeadlineExceeded) {
 			w.WriteHeader(http.StatusTooManyRequests)
 		} else {
+			hub.CaptureException(err)
 			w.WriteHeader(http.StatusInternalServerError)
 		}
 		return
