@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"strconv"
 
-	"cloud.google.com/go/storage"
 	"github.com/getsentry/sentry-go"
 	"github.com/getsentry/vroom/internal/nodetree"
 	"github.com/getsentry/vroom/internal/profile"
@@ -92,27 +91,6 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 	_, _ = w.Write(b)
 }
 
-func getRawProfile(ctx context.Context, organizationID, projectID uint64, profileID string, profilesBucket *storage.BucketHandle, snuba snubautil.Client) (profile.Profile, error) {
-	var p profile.Profile
-	err := storageutil.UnmarshalCompressed(ctx, profilesBucket, profile.StoragePath(organizationID, projectID, profileID), &p)
-	if err != nil {
-		if !errors.Is(err, storage.ErrObjectNotExist) {
-			return profile.Profile{}, err
-		}
-		sqb, err := snuba.NewQuery(ctx, "profiles")
-		if err != nil {
-			return profile.Profile{}, err
-		}
-		sp, err := snubautil.GetProfile(organizationID, projectID, profileID, sqb)
-		if err != nil {
-			return profile.Profile{}, err
-		}
-		p = sp
-	}
-
-	return p, nil
-}
-
 func (env *environment) getRawProfile(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	hub := sentry.GetHubFromContext(ctx)
@@ -149,7 +127,8 @@ func (env *environment) getRawProfile(w http.ResponseWriter, r *http.Request) {
 	s := sentry.StartSpan(ctx, "profile.read")
 	s.Description = "Read profile from GCS or Snuba"
 
-	p, err := getRawProfile(ctx, organizationID, projectID, profileID, env.profilesBucket, env.snuba)
+	var p profile.Profile
+	err = storageutil.UnmarshalCompressed(ctx, env.profilesBucket, profile.StoragePath(organizationID, projectID, profileID), &p)
 	s.Finish()
 	if err != nil {
 		if errors.Is(err, snubautil.ErrProfileNotFound) {
@@ -211,7 +190,8 @@ func (env *environment) getProfile(w http.ResponseWriter, r *http.Request) {
 	s := sentry.StartSpan(ctx, "profile.read")
 	s.Description = "Read profile from GCS or Snuba"
 
-	p, err := getRawProfile(ctx, organizationID, projectID, profileID, env.profilesBucket, env.snuba)
+	var p profile.Profile
+	err = storageutil.UnmarshalCompressed(ctx, env.profilesBucket, profile.StoragePath(organizationID, projectID, profileID), &p)
 	s.Finish()
 	if err != nil {
 		if errors.Is(err, snubautil.ErrProfileNotFound) {

@@ -19,70 +19,7 @@ type SnubaProfilesResponse struct {
 	Profiles []profile.Profile `json:"data"`
 }
 
-func GetProfile(organizationID, projectID uint64, profileID string, sqb QueryBuilder) (profile.Profile, error) {
-	t := sentry.TransactionFromContext(sqb.ctx)
-	rs := t.StartChild("snuba")
-	rs.Description = "Get a profile"
-	defer rs.Finish()
-
-	sqb.SelectCols = []string{
-		"android_api_level",
-		"architecture",
-		"device_classification",
-		"device_locale",
-		"device_manufacturer",
-		"device_model",
-		"device_os_build_number",
-		"device_os_name",
-		"device_os_version",
-		"duration_ns",
-		"environment",
-		"organization_id",
-		"platform",
-		"profile",
-		"profile_id",
-		"project_id",
-		"received",
-		"trace_id",
-		"transaction_id",
-		"transaction_name",
-		"version_code",
-		"version_name",
-	}
-	now := time.Now().UTC()
-	sqb.WhereConditions = append(sqb.WhereConditions,
-		fmt.Sprintf("organization_id=%d", organizationID),
-		fmt.Sprintf("project_id=%d", projectID),
-		fmt.Sprintf("profile_id='%s'", Escape(profileID)),
-		fmt.Sprintf("received >= toDateTime('%s')", now.AddDate(0, 0, -MaxRetentionInDays).Format(time.RFC3339)),
-		fmt.Sprintf("received < toDateTime('%s')", now.Format(time.RFC3339)),
-	)
-	sqb.Limit = 1
-
-	rb, err := sqb.Do(rs)
-	if err != nil {
-		return profile.Profile{}, err
-	}
-	defer rb.Close()
-
-	s := rs.StartChild("json.unmarshal")
-	s.Description = "Decode response from Snuba"
-	defer s.Finish()
-
-	var sr SnubaProfilesResponse
-	err = json.NewDecoder(rb).Decode(&sr)
-	if err != nil {
-		return profile.Profile{}, err
-	}
-
-	if len(sr.Profiles) == 0 {
-		return profile.Profile{}, ErrProfileNotFound
-	}
-
-	return sr.Profiles[0], nil
-}
-
-func GetProfiles(sqb QueryBuilder, fetchPayload bool) ([]profile.Profile, error) {
+func GetProfiles(sqb QueryBuilder) ([]profile.Profile, error) {
 	t := sentry.TransactionFromContext(sqb.ctx)
 	rs := t.StartChild("snuba")
 	rs.Description = "Get profiles"
@@ -109,12 +46,6 @@ func GetProfiles(sqb QueryBuilder, fetchPayload bool) ([]profile.Profile, error)
 		"transaction_name",
 		"version_code",
 		"version_name",
-	}
-
-	// Since the profile column containing the payload can be a few MB
-	// this column is never retrieved unless necessary
-	if fetchPayload {
-		sqb.SelectCols = append(sqb.SelectCols, "profile")
 	}
 
 	sqb.OrderBy = "received DESC"
