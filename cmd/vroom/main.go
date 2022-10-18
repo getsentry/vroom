@@ -188,7 +188,7 @@ func (env *environment) getProfiles(w http.ResponseWriter, r *http.Request) {
 
 	sqb.WhereConditions = append(sqb.WhereConditions, fmt.Sprintf("organization_id=%d", organizationID))
 
-	profiles, err := snubautil.GetProfiles(sqb, false)
+	profiles, err := snubautil.GetProfiles(sqb)
 	if err != nil {
 		hub.CaptureException(err)
 		w.WriteHeader(http.StatusInternalServerError)
