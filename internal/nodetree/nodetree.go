@@ -56,3 +56,25 @@ func PackageBaseName(p string) string {
 	}
 	return path.Base(p)
 }
+
+func (n *Node) Collapse() {
+	for _, child := range n.Children {
+		child.Collapse()
+	}
+
+	// If the only child runs for the entirety of the parent,
+	// we want to collapse them by taking the inner most application frame.
+	// If neither are application frames, we take the inner most frame
+	if len(n.Children) == 1 {
+		child := n.Children[0]
+		if n.StartNS == child.StartNS && n.DurationNS == child.DurationNS {
+			if child.IsApplication {
+				*n = *child
+			} else if n.IsApplication {
+				n.Children = child.Children
+			} else {
+				*n = *child
+			}
+		}
+	}
+}

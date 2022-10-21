@@ -67,7 +67,18 @@ func (p Profile) MarshalJSON() ([]byte, error) {
 }
 
 func (p *Profile) CallTrees() (map[uint64][]*nodetree.Node, error) {
-	return p.profile.CallTrees()
+	callTrees, err := p.profile.CallTrees()
+	if err != nil {
+		return callTrees, err
+	}
+
+	for _, callTreesForThread := range callTrees {
+		for _, callTree := range callTreesForThread {
+			callTree.Collapse()
+		}
+	}
+
+	return callTrees, nil
 }
 
 func (p *Profile) ID() string {
