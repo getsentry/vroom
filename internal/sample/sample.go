@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/getsentry/vroom/internal/debugmeta"
+	"github.com/getsentry/vroom/internal/measurements"
 	"github.com/getsentry/vroom/internal/metadata"
 	"github.com/getsentry/vroom/internal/nodetree"
 	"github.com/getsentry/vroom/internal/packageutil"
@@ -86,21 +87,22 @@ type (
 	}
 
 	SampleProfile struct {
-		DebugMeta      debugmeta.DebugMeta `json:"debug_meta"`
-		Device         Device              `json:"device"`
-		Environment    string              `json:"environment,omitempty"`
-		EventID        string              `json:"event_id"`
-		OS             OS                  `json:"os"`
-		OrganizationID uint64              `json:"organization_id"`
-		Platform       string              `json:"platform"`
-		ProjectID      uint64              `json:"project_id"`
-		Received       time.Time           `json:"received"`
-		Release        string              `json:"release"`
-		Runtime        Runtime             `json:"runtime"`
-		Timestamp      time.Time           `json:"timestamp"`
-		Trace          Trace               `json:"profile"`
-		Transactions   []Transaction       `json:"transactions"`
-		Version        string              `json:"version"`
+		DebugMeta      debugmeta.DebugMeta                 `json:"debug_meta"`
+		Device         Device                              `json:"device"`
+		Environment    string                              `json:"environment,omitempty"`
+		EventID        string                              `json:"event_id"`
+		OS             OS                                  `json:"os"`
+		OrganizationID uint64                              `json:"organization_id"`
+		Platform       string                              `json:"platform"`
+		ProjectID      uint64                              `json:"project_id"`
+		Received       time.Time                           `json:"received"`
+		Release        string                              `json:"release"`
+		Runtime        Runtime                             `json:"runtime"`
+		Timestamp      time.Time                           `json:"timestamp"`
+		Trace          Trace                               `json:"profile"`
+		Transactions   []Transaction                       `json:"transactions"`
+		Version        string                              `json:"version"`
+		Measurements   map[string]measurements.Measurement `json:"measurements,omitempty"`
 	}
 )
 

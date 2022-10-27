@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/getsentry/vroom/internal/debugmeta"
+	"github.com/getsentry/vroom/internal/measurements"
 )
 
 const (
@@ -95,28 +96,29 @@ type (
 	}
 
 	ProfileView struct {
-		AndroidAPILevel      uint32          `json:"androidAPILevel,omitempty"`
-		Architecture         string          `json:"architecture,omitempty"`
-		DebugMeta            interface{}     `json:"-"`
-		DeviceClassification string          `json:"deviceClassification"`
-		DeviceLocale         string          `json:"deviceLocale"`
-		DeviceManufacturer   string          `json:"deviceManufacturer"`
-		DeviceModel          string          `json:"deviceModel"`
-		DeviceOSBuildNumber  string          `json:"deviceOSBuildNumber,omitempty"`
-		DeviceOSName         string          `json:"deviceOSName"`
-		DeviceOSVersion      string          `json:"deviceOSVersion"`
-		DurationNS           uint64          `json:"durationNS"`
-		Environment          string          `json:"environment,omitempty"`
-		OrganizationID       uint64          `json:"organizationID"`
-		Platform             string          `json:"platform"`
-		Profile              json.RawMessage `json:"-"`
-		ProfileID            string          `json:"profileID"`
-		ProjectID            uint64          `json:"projectID"`
-		Received             time.Time       `json:"received"`
-		TraceID              string          `json:"traceID"`
-		TransactionID        string          `json:"transactionID"`
-		TransactionName      string          `json:"transactionName"`
-		VersionCode          string          `json:"-"`
-		VersionName          string          `json:"-"`
+		AndroidAPILevel      uint32                              `json:"androidAPILevel,omitempty"`
+		Architecture         string                              `json:"architecture,omitempty"`
+		DebugMeta            interface{}                         `json:"-"`
+		DeviceClassification string                              `json:"deviceClassification"`
+		DeviceLocale         string                              `json:"deviceLocale"`
+		DeviceManufacturer   string                              `json:"deviceManufacturer"`
+		DeviceModel          string                              `json:"deviceModel"`
+		DeviceOSBuildNumber  string                              `json:"deviceOSBuildNumber,omitempty"`
+		DeviceOSName         string                              `json:"deviceOSName"`
+		DeviceOSVersion      string                              `json:"deviceOSVersion"`
+		DurationNS           uint64                              `json:"durationNS"`
+		Environment          string                              `json:"environment,omitempty"`
+		OrganizationID       uint64                              `json:"organizationID"`
+		Platform             string                              `json:"platform"`
+		Profile              json.RawMessage                     `json:"-"`
+		ProfileID            string                              `json:"profileID"`
+		ProjectID            uint64                              `json:"projectID"`
+		Received             time.Time                           `json:"received"`
+		TraceID              string                              `json:"traceID"`
+		TransactionID        string                              `json:"transactionID"`
+		TransactionName      string                              `json:"transactionName"`
+		VersionCode          string                              `json:"-"`
+		VersionName          string                              `json:"-"`
+		Measurements         map[string]measurements.Measurement `json:"-"`
 	}
 )
