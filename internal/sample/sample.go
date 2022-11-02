@@ -57,8 +57,10 @@ type (
 	}
 
 	Frame struct {
+		Column          uint32 `json:"colno,omitempty"`
 		File            string `json:"filename,omitempty"`
 		Function        string `json:"function,omitempty"`
+		InApp           bool   `json:"in_app"`
 		InstructionAddr string `json:"instruction_addr,omitempty"`
 		Lang            string `json:"lang,omitempty"`
 		Line            uint32 `json:"lineno,omitempty"`
@@ -305,11 +307,13 @@ func (p *SampleProfile) Speedscope() (speedscope.Output, error) {
 				}
 				addressToFrameIndex[address] = frameIndex
 				frames = append(frames, speedscope.Frame{
+					Col:           fr.Column,
 					File:          fr.File,
 					Image:         fr.PackageBaseName(),
-					IsApplication: p.IsApplicationPackage(fr.PackageBaseName()),
+					IsApplication: fr.InApp || p.IsApplicationPackage(fr.PackageBaseName()),
 					Line:          fr.Line,
 					Name:          symbolName,
+					Path:          fr.Path,
 				})
 			}
 			samp = append(samp, frameIndex)

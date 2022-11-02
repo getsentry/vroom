@@ -20,13 +20,14 @@ const (
 
 type (
 	Frame struct {
-		Col           int    `json:"col,omitempty"`
+		Col           uint32 `json:"col,omitempty"`
 		File          string `json:"file,omitempty"`
 		Image         string `json:"image,omitempty"`
 		Inline        bool   `json:"inline,omitempty"`
 		IsApplication bool   `json:"is_application"`
 		Line          uint32 `json:"line,omitempty"`
 		Name          string `json:"name"`
+		Path          string `json:"path,omitempty"`
 	}
 
 	Event struct {
