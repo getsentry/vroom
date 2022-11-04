@@ -64,6 +64,7 @@ type (
 		InstructionAddr string `json:"instruction_addr,omitempty"`
 		Lang            string `json:"lang,omitempty"`
 		Line            uint32 `json:"lineno,omitempty"`
+		Module          string `json:"module,omitempty"`
 		Package         string `json:"package,omitempty"`
 		Path            string `json:"abs_path,omitempty"`
 		Status          string `json:"status,omitempty"`
@@ -137,10 +138,11 @@ func (f Frame) ID() string {
 }
 
 func (f Frame) PackageBaseName() string {
-	if f.Package == "" {
-		return ""
+	if f.Module != "" {
+	} else if f.Package != "" {
+		return path.Base(f.Package)
 	}
-	return path.Base(f.Package)
+	return ""
 }
 
 func (f Frame) WriteToHash(h hash.Hash) {
