@@ -307,7 +307,7 @@ func (p *SampleProfile) Speedscope() (speedscope.Output, error) {
 				frames = append(frames, speedscope.Frame{
 					File:          fr.File,
 					Image:         fr.PackageBaseName(),
-					IsApplication: p.IsApplicationPackage(fr.PackageBaseName()),
+					IsApplication: p.IsApplicationPackage(fr.Path),
 					Line:          fr.Line,
 					Name:          symbolName,
 				})
@@ -383,12 +383,12 @@ func (p *SampleProfile) Raw() []byte {
 	return []byte{}
 }
 
-func (p *SampleProfile) IsApplicationPackage(pkg string) bool {
+func (p *SampleProfile) IsApplicationPackage(path string) bool {
 	switch p.Platform {
 	case "cocoa":
-		return packageutil.IsIOSApplicationPackage(pkg)
+		return packageutil.IsIOSApplicationPackage(path)
 	case "rust":
-		return packageutil.IsRustApplicationPackage(pkg)
+		return packageutil.IsRustApplicationPackage(path)
 	}
 	return true
 }
