@@ -124,13 +124,10 @@ func (f Frame) IsMain() (bool, int) {
 }
 
 func (f Frame) ID() string {
-	if f.SymAddr != "" {
-		return f.SymAddr
-	}
-	if f.InstructionAddr != "" {
+	if f.Status != "symbolicated" {
 		return f.InstructionAddr
 	}
-	hash := md5.Sum([]byte(fmt.Sprintf("%s:%s", f.File, f.Function)))
+	hash := md5.Sum([]byte(fmt.Sprintf("%s:%s:%d", f.File, f.Function, f.Line)))
 	return hex.EncodeToString(hash[:])
 }
 
