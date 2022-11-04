@@ -133,7 +133,7 @@ func (f Frame) ID() string {
 	// and gets the wrong line number
 	//
 	// Also, when a frame is symbolicated but is missing the symbol_address
-	// we know we're dealing with inlines, but we can't relt on instruction_address
+	// we know we're dealing with inlines, but we can't rely on instruction_address
 	// neither as the inlines are all using the same one. If we were to return this
 	// address in speedscope we would only generate a new frame for the parent one
 	// and for the inlines we would show the same information of the parents instead
