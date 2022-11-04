@@ -13,7 +13,7 @@ func IsRustApplicationPackage(path string) bool {
 		// or third party libs
 		!strings.HasPrefix(path, "/rustc/") &&
 		!strings.HasPrefix(path, "/usr/local/rustup/") &&
-		!strings.HasPrefix(path, "/usr/local/cargo/git/") &&
+		!strings.HasPrefix(path, "/usr/local/cargo/") &&
 		!(path == "")
 }
 
