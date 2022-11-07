@@ -127,13 +127,24 @@ func (f Frame) IsMain() (bool, int) {
 }
 
 func (f Frame) ID() string {
-	if f.SymAddr != "" {
-		return f.SymAddr
-	}
-	if f.InstructionAddr != "" {
-		return f.InstructionAddr
-	}
-	hash := md5.Sum([]byte(fmt.Sprintf("%s:%s", f.File, f.Function)))
+	// When we have a symbolicated frame we can't rely on symbol_address
+	// to uniquely identify a frame since the following might happen:
+	//
+	// frame 1 has: sym_addr: 1, file: a.rs, line 2
+	// frame 2 has: sym_addr: 1, file: a.rs, line: 4
+	// because they have the same sym addr the second frame is reusing the first one,
+	// and gets the wrong line number
+	//
+	// Also, when a frame is symbolicated but is missing the symbol_address
+	// we know we're dealing with inlines, but we can't rely on instruction_address
+	// neither as the inlines are all using the same one. If we were to return this
+	// address in speedscope we would only generate a new frame for the parent one
+	// and for the inlines we would show the same information of the parents instead
+	// of their own
+	//
+	// As a solution here we use the following hash function that guarantees uniqueness
+	// when all the information required is available
+	hash := md5.Sum([]byte(fmt.Sprintf("%s:%s:%d:%s", f.File, f.Function, f.Line, f.InstructionAddr)))
 	return hex.EncodeToString(hash[:])
 }
 
@@ -313,7 +324,7 @@ func (p *SampleProfile) Speedscope() (speedscope.Output, error) {
 					Col:           fr.Column,
 					File:          fr.File,
 					Image:         fr.PackageBaseName(),
-					IsApplication: fr.InApp || p.IsApplicationPackage(fr.PackageBaseName()),
+					IsApplication: fr.InApp || p.IsApplicationPackage(fr.Path),
 					Line:          fr.Line,
 					Name:          symbolName,
 					Path:          fr.Path,
@@ -390,12 +401,12 @@ func (p *SampleProfile) Raw() []byte {
 	return []byte{}
 }
 
-func (p *SampleProfile) IsApplicationPackage(pkg string) bool {
+func (p *SampleProfile) IsApplicationPackage(path string) bool {
 	switch p.Platform {
 	case "cocoa":
-		return packageutil.IsIOSApplicationPackage(pkg)
+		return packageutil.IsIOSApplicationPackage(path)
 	case "rust":
-		return packageutil.IsRustApplicationPackage(pkg)
+		return packageutil.IsRustApplicationPackage(path)
 	}
 	return true
 }
