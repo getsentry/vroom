@@ -53,7 +53,9 @@ func (p *Profile) UnmarshalJSON(b []byte) error {
 	default:
 		p.sample = new(sample.SampleProfile)
 		p.profile = p.sample
-		return json.Unmarshal(b, &p.sample)
+		err := json.Unmarshal(b, &p.sample)
+		p.sample.Trace.ReplaceIdleStacks()
+		return err
 	}
 }
 

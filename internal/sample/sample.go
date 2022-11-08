@@ -53,6 +53,7 @@ type (
 		ElapsedSinceStartNS uint64 `json:"elapsed_since_start_ns"`
 		QueueAddress        string `json:"queue_address,omitempty"`
 		StackID             int    `json:"stack_id"`
+		State               string `json:"state"`
 		ThreadID            uint64 `json:"thread_id"`
 	}
 
@@ -402,4 +403,97 @@ func (p *SampleProfile) IsApplicationPackage(path string) bool {
 		return packageutil.IsRustApplicationPackage(path)
 	}
 	return true
+}
+
+func (p *Trace) ReplaceIdleStacks() {
+	previousActiveSamplePerThreadID := make(map[uint64]int)
+
+	for i, s := range p.Samples {
+		stack := p.Stacks[s.StackID]
+		if len(stack) != 0 {
+			// keep track of the previous active sample as we go
+			previousActiveSamplePerThreadID[s.ThreadID] = i
+			continue
+		}
+
+		// if there's no frame, the thread is considired idle
+		p.Samples[i].State = "idle"
+
+		previousSampleIndex, exists := previousActiveSamplePerThreadID[s.ThreadID]
+		if !exists {
+			continue
+		}
+
+		nextActiveSampleIndex, nextActiveSample := p.findNextActiveSample(s.ThreadID, i)
+		if nextActiveSampleIndex == -1 {
+			// no more active sample so no more common frames to find so we're done
+			break
+		}
+
+		previousFrames := p.framesList(p.Samples[previousSampleIndex].StackID)
+		nextFrames := p.framesList(nextActiveSample.StackID)
+		commonFrames := findCommonFrames(previousFrames, nextFrames)
+
+		// add the common stack to the list of stacks
+		commonStack := make([]int, 0, len(commonFrames))
+		for _, frame := range commonFrames {
+			commonStack = append(commonStack, frame.index)
+		}
+		commonStackID := len(p.Stacks)
+		p.Stacks = append(p.Stacks, commonStack)
+
+		// replace all idle stacks until next active sample
+		for j := i; j < nextActiveSampleIndex; j++ {
+			if p.Samples[j].ThreadID == s.ThreadID && len(p.Stacks[p.Samples[j].StackID]) == 0 {
+				p.Samples[j].StackID = commonStackID
+				continue
+			}
+			break
+		}
+	}
+}
+
+type frameTuple struct {
+	index int
+	frame Frame
+}
+
+func (t Trace) framesList(stackID int) []frameTuple {
+	stack := t.Stacks[stackID]
+	frames := make([]frameTuple, 0, len(stack))
+	for i, frameID := range stack {
+		frames = append(frames, frameTuple{i, t.Frames[frameID]})
+	}
+	return frames
+}
+
+func (p Trace) findNextActiveSample(threadID uint64, i int) (int, Sample) {
+	for ; i < len(p.Samples); i++ {
+		if p.Samples[i].ThreadID != threadID {
+			continue
+		}
+		if len(p.Stacks[p.Samples[i].StackID]) != 0 {
+			return i, p.Samples[i]
+		}
+	}
+	return -1, Sample{}
+}
+
+func findCommonFrames(a, b []frameTuple) []frameTuple {
+	var c []frameTuple
+	for i, j := len(a)-1, len(b)-1; i >= 0 && j >= 0; i, j = i-1, j-1 {
+		if a[i].frame.ID() == b[j].frame.ID() {
+			c = append(c, a[i])
+			continue
+		}
+		break
+	}
+	reverse(c)
+	return c
+}
+
+func reverse(a []frameTuple) {
+	for i, j := 0, len(a)-1; i < j; i, j = i+1, j-1 {
+		a[i], a[j] = a[j], a[i]
+	}
 }
