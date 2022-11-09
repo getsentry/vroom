@@ -19,8 +19,9 @@ type (
 		Metadata() metadata.Metadata
 		Raw() []byte
 
-		Speedscope() (speedscope.Output, error)
 		CallTrees() (map[uint64][]*nodetree.Node, error)
+		ReplaceIdleStacks()
+		Speedscope() (speedscope.Output, error)
 		StoragePath() string
 	}
 
@@ -53,9 +54,7 @@ func (p *Profile) UnmarshalJSON(b []byte) error {
 	default:
 		p.sample = new(sample.SampleProfile)
 		p.profile = p.sample
-		err := json.Unmarshal(b, &p.sample)
-		p.sample.Trace.ReplaceIdleStacks()
-		return err
+		return json.Unmarshal(b, &p.sample)
 	}
 }
 
@@ -113,4 +112,8 @@ func (p *Profile) Platform() string {
 
 func (p *Profile) Raw() []byte {
 	return p.profile.Raw()
+}
+
+func (p *Profile) ReplaceIdleStacks() {
+	p.profile.ReplaceIdleStacks()
 }

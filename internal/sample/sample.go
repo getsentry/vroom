@@ -407,6 +407,10 @@ func (p *SampleProfile) IsApplicationPackage(path string) bool {
 	return true
 }
 
+func (p *SampleProfile) ReplaceIdleStacks() {
+	p.Trace.ReplaceIdleStacks()
+}
+
 func (t Trace) SamplesByThreadD() map[uint64][]*Sample {
 	samples := make(map[uint64][]*Sample)
 	for i, s := range t.Samples {
