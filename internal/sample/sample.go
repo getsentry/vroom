@@ -461,7 +461,7 @@ type frameTuple struct {
 func (t Trace) framesList(stackID int) []frameTuple {
 	stack := t.Stacks[stackID]
 	frames := make([]frameTuple, 0, len(stack))
-	for i, frameID := range stack {
+	for _, frameID := range stack {
 		frames = append(frames, frameTuple{frameID, t.Frames[frameID]})
 	}
 	return frames
