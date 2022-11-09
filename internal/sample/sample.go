@@ -79,11 +79,13 @@ type (
 		Label string `json:"label"`
 	}
 
+	Stack []int
+
 	Trace struct {
 		Frames         []Frame                   `json:"frames"`
 		QueueMetadata  map[string]QueueMetadata  `json:"queue_metadata"`
 		Samples        []Sample                  `json:"samples"`
-		Stacks         [][]int                   `json:"stacks"`
+		Stacks         []Stack                   `json:"stacks"`
 		ThreadMetadata map[string]ThreadMetadata `json:"thread_metadata"`
 	}
 
@@ -405,50 +407,65 @@ func (p *SampleProfile) IsApplicationPackage(path string) bool {
 	return true
 }
 
+func (t Trace) SamplesByThreadD() map[uint64][]*Sample {
+	samples := make(map[uint64][]*Sample)
+	for i, s := range t.Samples {
+		samples[s.ThreadID] = append(samples[s.ThreadID], &t.Samples[i])
+	}
+	return samples
+}
+
 func (p *Trace) ReplaceIdleStacks() {
-	previousActiveStackPerThreadID := make(map[uint64]int)
+	samplesByThreadID := p.SamplesByThreadD()
 
-	for i, s := range p.Samples {
-		stack := p.Stacks[s.StackID]
-		if len(stack) != 0 {
+	for _, samples := range samplesByThreadID {
+		previousActiveStackID := -1
+		var nextActiveSampleIndex, nextActiveStackID int
+
+		for i := 0; i < len(samples); i++ {
+			s := samples[i]
+
 			// keep track of the previous active sample as we go
-			previousActiveStackPerThreadID[s.ThreadID] = s.StackID
-			continue
-		}
-
-		// if there's no frame, the thread is considired idle
-		p.Samples[i].State = "idle"
-
-		previousStackID, exists := previousActiveStackPerThreadID[s.ThreadID]
-		if !exists {
-			continue
-		}
-
-		nextActiveSampleIndex, nextActiveStackID := p.findNextActiveStackID(s.ThreadID, i)
-		if nextActiveSampleIndex == -1 {
-			// no more active sample on this thread
-			continue
-		}
-
-		previousFrames := p.framesList(previousStackID)
-		nextFrames := p.framesList(nextActiveStackID)
-		commonFrames := findCommonFrames(previousFrames, nextFrames)
-
-		// add the common stack to the list of stacks
-		commonStack := make([]int, 0, len(commonFrames))
-		for _, frame := range commonFrames {
-			commonStack = append(commonStack, frame.index)
-		}
-		commonStackID := len(p.Stacks)
-		p.Stacks = append(p.Stacks, commonStack)
-
-		// replace all idle stacks until next active sample
-		for j := i; j < nextActiveSampleIndex; j++ {
-			if p.Samples[j].ThreadID == s.ThreadID && len(p.Stacks[p.Samples[j].StackID]) == 0 {
-				p.Samples[j].StackID = commonStackID
+			if p.Stacks[s.StackID].IsActive() {
+				previousActiveStackID = s.StackID
 				continue
 			}
-			break
+
+			// if there's no frame, the thread is considired idle
+			p.Samples[i].State = "idle"
+
+			// if it's an idle stack but we don't have a previous active stack
+			// we keep looking
+			if previousActiveStackID == -1 {
+				continue
+			}
+
+			if i >= nextActiveSampleIndex {
+				nextActiveSampleIndex, nextActiveStackID = p.findNextActiveStackID(samples, i)
+				if nextActiveSampleIndex == -1 {
+					// no more active sample on this thread
+					break
+				}
+			}
+
+			previousFrames := p.framesList(previousActiveStackID)
+			nextFrames := p.framesList(nextActiveStackID)
+			commonFrames := findCommonFrames(previousFrames, nextFrames)
+
+			// add the common stack to the list of stacks
+			commonStack := make([]int, 0, len(commonFrames))
+			for _, frame := range commonFrames {
+				commonStack = append(commonStack, frame.index)
+			}
+			commonStackID := len(p.Stacks)
+			p.Stacks = append(p.Stacks, commonStack)
+
+			// replace all idle stacks until next active sample
+			for ; i < nextActiveSampleIndex; i++ {
+				if p.Stacks[samples[i].StackID].IsIdle() {
+					samples[i].StackID = commonStackID
+				}
+			}
 		}
 	}
 }
@@ -467,13 +484,11 @@ func (t Trace) framesList(stackID int) []frameTuple {
 	return frames
 }
 
-func (p Trace) findNextActiveStackID(threadID uint64, i int) (int, int) {
-	for ; i < len(p.Samples); i++ {
-		if p.Samples[i].ThreadID != threadID {
-			continue
-		}
-		if len(p.Stacks[p.Samples[i].StackID]) != 0 {
-			return i, p.Samples[i].StackID
+func (t Trace) findNextActiveStackID(samples []*Sample, i int) (int, int) {
+	for ; i < len(samples); i++ {
+		s := samples[i]
+		if t.Stacks[s.StackID].IsActive() {
+			return i, s.StackID
 		}
 	}
 	return -1, -1
@@ -496,4 +511,12 @@ func reverse(a []frameTuple) {
 	for i, j := 0, len(a)-1; i < j; i, j = i+1, j-1 {
 		a[i], a[j] = a[j], a[i]
 	}
+}
+
+func (s Stack) IsIdle() bool {
+	return !s.IsActive()
+}
+
+func (s Stack) IsActive() bool {
+	return len(s) != 0
 }
