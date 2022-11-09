@@ -426,8 +426,8 @@ func (p *Trace) ReplaceIdleStacks() {
 
 		nextActiveSampleIndex, nextActiveSample := p.findNextActiveSample(s.ThreadID, i)
 		if nextActiveSampleIndex == -1 {
-			// no more active sample so no more common frames to find so we're done
-			break
+			// no more active sample on this thread
+			continue
 		}
 
 		previousFrames := p.framesList(p.Samples[previousSampleIndex].StackID)
