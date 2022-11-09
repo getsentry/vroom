@@ -406,32 +406,32 @@ func (p *SampleProfile) IsApplicationPackage(path string) bool {
 }
 
 func (p *Trace) ReplaceIdleStacks() {
-	previousActiveSamplePerThreadID := make(map[uint64]int)
+	previousActiveStackPerThreadID := make(map[uint64]int)
 
 	for i, s := range p.Samples {
 		stack := p.Stacks[s.StackID]
 		if len(stack) != 0 {
 			// keep track of the previous active sample as we go
-			previousActiveSamplePerThreadID[s.ThreadID] = i
+			previousActiveStackPerThreadID[s.ThreadID] = s.StackID
 			continue
 		}
 
 		// if there's no frame, the thread is considired idle
 		p.Samples[i].State = "idle"
 
-		previousSampleIndex, exists := previousActiveSamplePerThreadID[s.ThreadID]
+		previousStackID, exists := previousActiveStackPerThreadID[s.ThreadID]
 		if !exists {
 			continue
 		}
 
-		nextActiveSampleIndex, nextActiveSample := p.findNextActiveSample(s.ThreadID, i)
+		nextActiveSampleIndex, nextActiveStackID := p.findNextActiveStackID(s.ThreadID, i)
 		if nextActiveSampleIndex == -1 {
 			// no more active sample on this thread
 			continue
 		}
 
-		previousFrames := p.framesList(p.Samples[previousSampleIndex].StackID)
-		nextFrames := p.framesList(nextActiveSample.StackID)
+		previousFrames := p.framesList(previousStackID)
+		nextFrames := p.framesList(nextActiveStackID)
 		commonFrames := findCommonFrames(previousFrames, nextFrames)
 
 		// add the common stack to the list of stacks
@@ -467,16 +467,16 @@ func (t Trace) framesList(stackID int) []frameTuple {
 	return frames
 }
 
-func (p Trace) findNextActiveSample(threadID uint64, i int) (int, Sample) {
+func (p Trace) findNextActiveStackID(threadID uint64, i int) (int, int) {
 	for ; i < len(p.Samples); i++ {
 		if p.Samples[i].ThreadID != threadID {
 			continue
 		}
 		if len(p.Stacks[p.Samples[i].StackID]) != 0 {
-			return i, p.Samples[i]
+			return i, p.Samples[i].StackID
 		}
 	}
-	return -1, Sample{}
+	return -1, -1
 }
 
 func findCommonFrames(a, b []frameTuple) []frameTuple {
