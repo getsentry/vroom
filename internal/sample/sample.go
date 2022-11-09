@@ -462,7 +462,7 @@ func (t Trace) framesList(stackID int) []frameTuple {
 	stack := t.Stacks[stackID]
 	frames := make([]frameTuple, 0, len(stack))
 	for i, frameID := range stack {
-		frames = append(frames, frameTuple{i, t.Frames[frameID]})
+		frames = append(frames, frameTuple{frameID, t.Frames[frameID]})
 	}
 	return frames
 }
