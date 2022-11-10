@@ -436,7 +436,7 @@ func (p *Trace) ReplaceIdleStacks() {
 			}
 
 			// if there's no frame, the thread is considired idle
-			p.Samples[i].State = "idle"
+			s.State = "idle"
 
 			// if it's an idle stack but we don't have a previous active stack
 			// we keep looking
@@ -448,6 +448,10 @@ func (p *Trace) ReplaceIdleStacks() {
 				nextActiveSampleIndex, nextActiveStackID = p.findNextActiveStackID(samples, i)
 				if nextActiveSampleIndex == -1 {
 					// no more active sample on this thread
+					for ; i < len(samples); i++ {
+						samples[i].State = "idle"
+					}
+
 					break
 				}
 			}
@@ -468,6 +472,7 @@ func (p *Trace) ReplaceIdleStacks() {
 			for ; i < nextActiveSampleIndex; i++ {
 				if p.Stacks[samples[i].StackID].IsIdle() {
 					samples[i].StackID = commonStackID
+					samples[i].State = "idle"
 				}
 			}
 		}
