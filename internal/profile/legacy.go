@@ -104,7 +104,6 @@ func (p *LegacyProfile) UnmarshalJSON(b []byte) error {
 		if err != nil {
 			return err
 		}
-		t.ReplaceIdleStacks()
 		(*p).Trace = t
 		p.Profile = nil
 	case "android":
@@ -197,4 +196,10 @@ func (p *LegacyProfile) GetPlatform() string {
 
 func (p *LegacyProfile) Raw() []byte {
 	return p.Profile
+}
+
+func (p *LegacyProfile) ReplaceIdleStacks() {
+	if p.Platform == "ios" {
+		p.Trace.(*IOS).ReplaceIdleStacks()
+	}
 }
