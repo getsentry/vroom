@@ -58,11 +58,14 @@ type (
 	}
 
 	Frame struct {
+		Column          uint32 `json:"colno,omitempty"`
 		File            string `json:"filename,omitempty"`
 		Function        string `json:"function,omitempty"`
+		InApp           bool   `json:"in_app"`
 		InstructionAddr string `json:"instruction_addr,omitempty"`
 		Lang            string `json:"lang,omitempty"`
 		Line            uint32 `json:"lineno,omitempty"`
+		Module          string `json:"module,omitempty"`
 		Package         string `json:"package,omitempty"`
 		Path            string `json:"abs_path,omitempty"`
 		Status          string `json:"status,omitempty"`
@@ -149,10 +152,12 @@ func (f Frame) ID() string {
 }
 
 func (f Frame) PackageBaseName() string {
-	if f.Package == "" {
-		return ""
+	if f.Module != "" {
+		return f.Module
+	} else if f.Package != "" {
+		return path.Base(f.Package)
 	}
-	return path.Base(f.Package)
+	return ""
 }
 
 func (f Frame) WriteToHash(h hash.Hash) {
@@ -319,11 +324,14 @@ func (p *SampleProfile) Speedscope() (speedscope.Output, error) {
 				}
 				addressToFrameIndex[address] = frameIndex
 				frames = append(frames, speedscope.Frame{
+					Col:           fr.Column,
 					File:          fr.File,
 					Image:         fr.PackageBaseName(),
-					IsApplication: p.IsApplicationPackage(fr.Path),
+					Inline:        fr.Status == "symbolicated" && fr.SymAddr == "",
+					IsApplication: fr.InApp || p.IsApplicationPackage(fr.Path),
 					Line:          fr.Line,
 					Name:          symbolName,
+					Path:          fr.Path,
 				})
 			}
 			samp = append(samp, frameIndex)
