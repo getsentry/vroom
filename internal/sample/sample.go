@@ -324,6 +324,7 @@ func (p *SampleProfile) Speedscope() (speedscope.Output, error) {
 					Col:           fr.Column,
 					File:          fr.File,
 					Image:         fr.PackageBaseName(),
+					Inline:        fr.Status == "symbolicated" && fr.SymAddr == "",
 					IsApplication: fr.InApp || p.IsApplicationPackage(fr.Path),
 					Line:          fr.Line,
 					Name:          symbolName,
