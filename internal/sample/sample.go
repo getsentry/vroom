@@ -470,10 +470,8 @@ func (p *Trace) ReplaceIdleStacks() {
 
 			// replace all idle stacks until next active sample
 			for ; i < nextActiveSampleIndex; i++ {
-				if p.Stacks[samples[i].StackID].IsIdle() {
-					samples[i].StackID = commonStackID
-					samples[i].State = "idle"
-				}
+				samples[i].StackID = commonStackID
+				samples[i].State = "idle"
 			}
 		}
 	}
@@ -520,10 +518,6 @@ func reverse(a []frameTuple) {
 	for i, j := 0, len(a)-1; i < j; i, j = i+1, j-1 {
 		a[i], a[j] = a[j], a[i]
 	}
-}
-
-func (s Stack) IsIdle() bool {
-	return !s.IsActive()
 }
 
 func (s Stack) IsActive() bool {
