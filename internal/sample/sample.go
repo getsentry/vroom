@@ -435,7 +435,7 @@ func (p *Trace) ReplaceIdleStacks() {
 				continue
 			}
 
-			// if there's no frame, the thread is considired idle
+			// if there's no frame, the thread is considered idle at this time
 			s.State = "idle"
 
 			// if it's an idle stack but we don't have a previous active stack
