@@ -27,4 +27,5 @@ jobs:
         fetch-depth: 0
     - name: Run golang tests
       uses: ./.github/actions/run-golang-tests
-
+    - name: TruffleHog OSS
+      uses: trufflesecurity/trufflehog@v3.16.4
