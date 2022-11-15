@@ -21,7 +21,6 @@ import (
 
 	"github.com/getsentry/vroom/internal/httputil"
 	"github.com/getsentry/vroom/internal/logutil"
-	"github.com/getsentry/vroom/internal/metadata"
 	"github.com/getsentry/vroom/internal/snubautil"
 )
 
@@ -75,14 +74,10 @@ func (env *environment) newRouter() (*httprouter.Router, error) {
 		handler http.HandlerFunc
 	}{
 		{http.MethodGet, "/organizations/:organization_id/filters", env.getFilters},
-		{http.MethodGet, "/organizations/:organization_id/profiles", env.getProfiles},
 		{http.MethodGet, "/organizations/:organization_id/projects/:project_id/functions", env.getFunctions},
 		{http.MethodGet, "/organizations/:organization_id/projects/:project_id/profiles/:profile_id", env.getProfile},
 		{http.MethodGet, "/organizations/:organization_id/projects/:project_id/raw_profiles/:profile_id", env.getRawProfile},
 		{http.MethodGet, "/organizations/:organization_id/projects/:project_id/transactions/:transaction_id", env.getProfileIDByTransactionID},
-		{http.MethodGet, "/organizations/:organization_id/stats", env.getProfilesStats},
-		{http.MethodGet, "/organizations/:organization_id/transactions", env.getTransactions},
-		{http.MethodPost, "/call_tree", env.postProfile},
 		{http.MethodPost, "/profile", env.postProfile},
 	}
 
@@ -154,67 +149,6 @@ func main() {
 
 	// Shutdown the rest of the environment after the HTTP connections are closed
 	env.shutdown()
-}
-
-type GetOrganizationProfilesResponse struct {
-	Profiles []metadata.Metadata `json:"profiles"`
-}
-
-func (env *environment) getProfiles(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	hub := sentry.GetHubFromContext(ctx)
-	_, ok := httputil.GetRequiredQueryParameters(w, r, "project_id", "limit", "offset")
-	if !ok {
-		return
-	}
-
-	ps := httprouter.ParamsFromContext(ctx)
-	rawOrganizationID := ps.ByName("organization_id")
-	organizationID, err := strconv.ParseUint(rawOrganizationID, 10, 64)
-	if err != nil {
-		hub.CaptureException(err)
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-
-	hub.Scope().SetTag("organization_id", rawOrganizationID)
-
-	sqb, err := env.profilesQueryBuilderFromRequest(ctx, r.URL.Query())
-	if err != nil {
-		hub.CaptureException(err)
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-
-	sqb.WhereConditions = append(sqb.WhereConditions, fmt.Sprintf("organization_id=%d", organizationID))
-
-	profiles, err := snubautil.GetProfiles(sqb)
-	if err != nil {
-		hub.CaptureException(err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	s := sentry.StartSpan(ctx, "json.marshal")
-	defer s.Finish()
-
-	resp := GetOrganizationProfilesResponse{
-		Profiles: make([]metadata.Metadata, 0, len(profiles)),
-	}
-
-	for _, p := range profiles {
-		resp.Profiles = append(resp.Profiles, p.Metadata())
-	}
-
-	b, err := json.Marshal(resp)
-	if err != nil {
-		hub.CaptureException(err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	_, _ = w.Write(b)
 }
 
 type Filter struct {
