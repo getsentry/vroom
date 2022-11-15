@@ -77,17 +77,18 @@ type (
 	ValueUnit   string
 
 	Output struct {
-		ActiveProfileIndex int             `json:"activeProfileIndex"`
-		AndroidClock       string          `json:"androidClock,omitempty"`
-		DurationNS         uint64          `json:"durationNS"`
-		Metadata           ProfileMetadata `json:"metadata"`
-		Platform           string          `json:"platform"`
-		ProfileID          string          `json:"profileID"`
-		Profiles           []interface{}   `json:"profiles"`
-		ProjectID          uint64          `json:"projectID"`
-		Shared             SharedData      `json:"shared"`
-		TransactionName    string          `json:"transactionName"`
-		Version            string          `json:"version"`
+		ActiveProfileIndex int                                 `json:"activeProfileIndex"`
+		AndroidClock       string                              `json:"androidClock,omitempty"`
+		DurationNS         uint64                              `json:"durationNS"`
+		Metadata           ProfileMetadata                     `json:"metadata"`
+		Platform           string                              `json:"platform"`
+		ProfileID          string                              `json:"profileID"`
+		Profiles           []interface{}                       `json:"profiles"`
+		ProjectID          uint64                              `json:"projectID"`
+		Shared             SharedData                          `json:"shared"`
+		TransactionName    string                              `json:"transactionName"`
+		Version            string                              `json:"version"`
+		Measurements       map[string]measurements.Measurement `json:"measurements,omitempty"`
 	}
 
 	ProfileMetadata struct {
