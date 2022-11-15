@@ -269,7 +269,7 @@ func TestReplaceIdleStacks(t *testing.T) {
 	}
 }
 
-func TestInlinesProduceDiferentIDs(t *testing.T) {
+func TestInlinesProduceDifferentIDs(t *testing.T) {
 	instruction_address := "0x55bd050e168d"
 	inline_1 := Frame{
 		File:            "futures.rs",
@@ -290,7 +290,7 @@ func TestInlinesProduceDiferentIDs(t *testing.T) {
 	}
 }
 
-func TestSameSymbolDifferentLinesProduceDiferentIDs(t *testing.T) {
+func TestSameSymbolDifferentLinesProduceDifferentIDs(t *testing.T) {
 	frame_1 := Frame{
 		File:            "mod.rs",
 		Function:        "test",
