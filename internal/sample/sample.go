@@ -383,6 +383,7 @@ func (p *SampleProfile) Speedscope() (speedscope.Output, error) {
 		Shared:          speedscope.SharedData{Frames: frames},
 		TransactionName: p.Transactions[0].Name,
 		Version:         p.Release,
+		Measurements:    p.Measurements,
 	}, nil
 }
 
