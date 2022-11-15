@@ -53,6 +53,7 @@ type (
 		ElapsedSinceStartNS uint64 `json:"elapsed_since_start_ns"`
 		QueueAddress        string `json:"queue_address,omitempty"`
 		StackID             int    `json:"stack_id"`
+		State               string `json:"state"`
 		ThreadID            uint64 `json:"thread_id"`
 	}
 
@@ -60,7 +61,7 @@ type (
 		Column          uint32 `json:"colno,omitempty"`
 		File            string `json:"filename,omitempty"`
 		Function        string `json:"function,omitempty"`
-		InApp           bool   `json:"in_app"`
+		InApp           *bool  `json:"in_app"`
 		InstructionAddr string `json:"instruction_addr,omitempty"`
 		Lang            string `json:"lang,omitempty"`
 		Line            uint32 `json:"lineno,omitempty"`
@@ -81,11 +82,13 @@ type (
 		Label string `json:"label"`
 	}
 
+	Stack []int
+
 	Trace struct {
 		Frames         []Frame                   `json:"frames"`
 		QueueMetadata  map[string]QueueMetadata  `json:"queue_metadata"`
 		Samples        []Sample                  `json:"samples"`
-		Stacks         [][]int                   `json:"stacks"`
+		Stacks         []Stack                   `json:"stacks"`
 		ThreadMetadata map[string]ThreadMetadata `json:"thread_metadata"`
 	}
 
@@ -173,6 +176,10 @@ func (f Frame) WriteToHash(h hash.Hash) {
 		s = "-"
 	}
 	h.Write([]byte(s))
+}
+
+func (f Frame) IsInline() bool {
+	return f.Status == "symbolicated" && f.SymAddr == ""
 }
 
 func (t Transaction) DurationNS() uint64 {
@@ -324,7 +331,8 @@ func (p *SampleProfile) Speedscope() (speedscope.Output, error) {
 					Col:           fr.Column,
 					File:          fr.File,
 					Image:         fr.PackageBaseName(),
-					IsApplication: fr.InApp || p.IsApplicationPackage(fr.Path),
+					Inline:        fr.IsInline(),
+					IsApplication: p.IsApplicationFrame(fr),
 					Line:          fr.Line,
 					Name:          symbolName,
 					Path:          fr.Path,
@@ -378,6 +386,13 @@ func (p *SampleProfile) Speedscope() (speedscope.Output, error) {
 	}, nil
 }
 
+func (p *SampleProfile) IsApplicationFrame(f Frame) bool {
+	if f.InApp != nil {
+		return *f.InApp
+	}
+	return p.IsApplicationPackage(f.Path)
+}
+
 func (p *SampleProfile) Metadata() metadata.Metadata {
 	return metadata.Metadata{
 		DeviceClassification: p.Device.Classification,
@@ -409,4 +424,121 @@ func (p *SampleProfile) IsApplicationPackage(path string) bool {
 		return packageutil.IsRustApplicationPackage(path)
 	}
 	return true
+}
+
+func (p *SampleProfile) ReplaceIdleStacks() {
+	p.Trace.ReplaceIdleStacks()
+}
+
+func (t Trace) SamplesByThreadD() map[uint64][]*Sample {
+	samples := make(map[uint64][]*Sample)
+	for i, s := range t.Samples {
+		samples[s.ThreadID] = append(samples[s.ThreadID], &t.Samples[i])
+	}
+	return samples
+}
+
+func (p *Trace) ReplaceIdleStacks() {
+	samplesByThreadID := p.SamplesByThreadD()
+
+	for _, samples := range samplesByThreadID {
+		previousActiveStackID := -1
+		var nextActiveSampleIndex, nextActiveStackID int
+
+		for i := 0; i < len(samples); i++ {
+			s := samples[i]
+
+			// keep track of the previous active sample as we go
+			if p.Stacks[s.StackID].IsActive() {
+				previousActiveStackID = s.StackID
+				continue
+			}
+
+			// if there's no frame, the thread is considered idle at this time
+			s.State = "idle"
+
+			// if it's an idle stack but we don't have a previous active stack
+			// we keep looking
+			if previousActiveStackID == -1 {
+				continue
+			}
+
+			if i >= nextActiveSampleIndex {
+				nextActiveSampleIndex, nextActiveStackID = p.findNextActiveStackID(samples, i)
+				if nextActiveSampleIndex == -1 {
+					// no more active sample on this thread
+					for ; i < len(samples); i++ {
+						samples[i].State = "idle"
+					}
+
+					break
+				}
+			}
+
+			previousFrames := p.framesList(previousActiveStackID)
+			nextFrames := p.framesList(nextActiveStackID)
+			commonFrames := findCommonFrames(previousFrames, nextFrames)
+
+			// add the common stack to the list of stacks
+			commonStack := make([]int, 0, len(commonFrames))
+			for _, frame := range commonFrames {
+				commonStack = append(commonStack, frame.index)
+			}
+			commonStackID := len(p.Stacks)
+			p.Stacks = append(p.Stacks, commonStack)
+
+			// replace all idle stacks until next active sample
+			for ; i < nextActiveSampleIndex; i++ {
+				samples[i].StackID = commonStackID
+				samples[i].State = "idle"
+			}
+		}
+	}
+}
+
+type frameTuple struct {
+	index int
+	frame Frame
+}
+
+func (t Trace) framesList(stackID int) []frameTuple {
+	stack := t.Stacks[stackID]
+	frames := make([]frameTuple, 0, len(stack))
+	for _, frameID := range stack {
+		frames = append(frames, frameTuple{frameID, t.Frames[frameID]})
+	}
+	return frames
+}
+
+func (t Trace) findNextActiveStackID(samples []*Sample, i int) (int, int) {
+	for ; i < len(samples); i++ {
+		s := samples[i]
+		if t.Stacks[s.StackID].IsActive() {
+			return i, s.StackID
+		}
+	}
+	return -1, -1
+}
+
+func findCommonFrames(a, b []frameTuple) []frameTuple {
+	var c []frameTuple
+	for i, j := len(a)-1, len(b)-1; i >= 0 && j >= 0; i, j = i-1, j-1 {
+		if a[i].frame.ID() == b[j].frame.ID() {
+			c = append(c, a[i])
+			continue
+		}
+		break
+	}
+	reverse(c)
+	return c
+}
+
+func reverse(a []frameTuple) {
+	for i, j := 0, len(a)-1; i < j; i, j = i+1, j-1 {
+		a[i], a[j] = a[j], a[i]
+	}
+}
+
+func (s Stack) IsActive() bool {
+	return len(s) != 0
 }

@@ -19,8 +19,9 @@ type (
 		Metadata() metadata.Metadata
 		Raw() []byte
 
-		Speedscope() (speedscope.Output, error)
 		CallTrees() (map[uint64][]*nodetree.Node, error)
+		ReplaceIdleStacks()
+		Speedscope() (speedscope.Output, error)
 		StoragePath() string
 	}
 
@@ -111,4 +112,8 @@ func (p *Profile) Platform() string {
 
 func (p *Profile) Raw() []byte {
 	return p.profile.Raw()
+}
+
+func (p *Profile) ReplaceIdleStacks() {
+	p.profile.ReplaceIdleStacks()
 }

@@ -47,7 +47,12 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 		"project_id":      strconv.FormatUint(p.ProjectID(), 10),
 	})
 
-	s = sentry.StartSpan(ctx, "calltree")
+	s = sentry.StartSpan(ctx, "processing")
+	s.Description = "Replace idle stacks"
+	p.ReplaceIdleStacks()
+	s.Finish()
+
+	s = sentry.StartSpan(ctx, "processing")
 	s.Description = "Generate call trees"
 	callTrees, err := p.CallTrees()
 	s.Finish()
