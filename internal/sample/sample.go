@@ -423,6 +423,8 @@ func (p *SampleProfile) IsApplicationPackage(path string) bool {
 		return packageutil.IsIOSApplicationPackage(path)
 	case "rust":
 		return packageutil.IsRustApplicationPackage(path)
+	case "python":
+		return false
 	}
 	return true
 }
