@@ -311,3 +311,32 @@ func TestSameSymbolDifferentLinesProduceDifferentIDs(t *testing.T) {
 		t.Fatal("Error: 2 different frames with the same sym_address have the same ID")
 	}
 }
+
+func TestIsInline(t *testing.T) {
+	// symbolicated but with a sym_addr
+	// so this is not an inline
+	normal_frame_1 := Frame{
+		Status:  "symbolicated",
+		SymAddr: "0x55bd0485d020",
+	}
+	if normal_frame_1.IsInline() {
+		t.Fatal("normal frame classified as inline")
+	}
+
+	// non-native (python, etc.)
+	normal_frame_2 := Frame{
+		Status:  "",
+		SymAddr: "",
+	}
+	if normal_frame_2.IsInline() {
+		t.Fatal("normal frame classified as inline")
+	}
+
+	inline_frame_1 := Frame{
+		Status:  "symbolicated",
+		SymAddr: "",
+	}
+	if !inline_frame_1.IsInline() {
+		t.Fatal("inline frame classified as normal")
+	}
+}
