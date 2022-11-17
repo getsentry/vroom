@@ -392,7 +392,7 @@ func (p *SampleProfile) IsApplicationFrame(f Frame) bool {
 		return *f.InApp
 	}
 	if p.Platform == "node" {
-		return strings.Contains("/node_modules/", f.Path) || strings.HasPrefix("native", f.Symbol)
+		return strings.Contains("node_modules", f.Path)
 	}
 	return p.IsApplicationPackage(f.Path)
 }
