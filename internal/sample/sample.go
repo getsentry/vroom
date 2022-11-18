@@ -391,6 +391,9 @@ func (p *SampleProfile) IsApplicationFrame(f Frame) bool {
 	if f.InApp != nil {
 		return *f.InApp
 	}
+	if p.Platform == "node" {
+		return strings.Contains("node_modules", f.Path)
+	}
 	return p.IsApplicationPackage(f.Path)
 }
 
@@ -423,6 +426,8 @@ func (p *SampleProfile) IsApplicationPackage(path string) bool {
 		return packageutil.IsIOSApplicationPackage(path)
 	case "rust":
 		return packageutil.IsRustApplicationPackage(path)
+	case "python":
+		return false
 	}
 	return true
 }
