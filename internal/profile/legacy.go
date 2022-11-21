@@ -165,6 +165,7 @@ func (p *LegacyProfile) Speedscope() (speedscope.Output, error) {
 	o.ProjectID = p.ProjectID
 	o.TransactionName = p.TransactionName
 	o.Version = version
+	o.Measurements = p.Measurements
 
 	return o, nil
 }

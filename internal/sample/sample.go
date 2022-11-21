@@ -61,7 +61,7 @@ type (
 		Column          uint32 `json:"colno,omitempty"`
 		File            string `json:"filename,omitempty"`
 		Function        string `json:"function,omitempty"`
-		InApp           bool   `json:"in_app"`
+		InApp           *bool  `json:"in_app"`
 		InstructionAddr string `json:"instruction_addr,omitempty"`
 		Lang            string `json:"lang,omitempty"`
 		Line            uint32 `json:"lineno,omitempty"`
@@ -176,6 +176,10 @@ func (f Frame) WriteToHash(h hash.Hash) {
 		s = "-"
 	}
 	h.Write([]byte(s))
+}
+
+func (f Frame) IsInline() bool {
+	return f.Status == "symbolicated" && f.SymAddr == ""
 }
 
 func (t Transaction) DurationNS() uint64 {
@@ -327,8 +331,8 @@ func (p *SampleProfile) Speedscope() (speedscope.Output, error) {
 					Col:           fr.Column,
 					File:          fr.File,
 					Image:         fr.PackageBaseName(),
-					Inline:        fr.Status == "symbolicated" && fr.SymAddr == "",
-					IsApplication: fr.InApp || p.IsApplicationPackage(fr.Path),
+					Inline:        fr.IsInline(),
+					IsApplication: p.IsApplicationFrame(fr),
 					Line:          fr.Line,
 					Name:          symbolName,
 					Path:          fr.Path,
@@ -380,7 +384,18 @@ func (p *SampleProfile) Speedscope() (speedscope.Output, error) {
 		Shared:          speedscope.SharedData{Frames: frames},
 		TransactionName: p.Transactions[0].Name,
 		Version:         p.Release,
+		Measurements:    p.Measurements,
 	}, nil
+}
+
+func (p *SampleProfile) IsApplicationFrame(f Frame) bool {
+	if f.InApp != nil {
+		return *f.InApp
+	}
+	if p.Platform == "node" {
+		return strings.Contains("node_modules", f.Path)
+	}
+	return p.IsApplicationPackage(f.Path)
 }
 
 func (p *SampleProfile) Metadata() metadata.Metadata {
@@ -412,6 +427,8 @@ func (p *SampleProfile) IsApplicationPackage(path string) bool {
 		return packageutil.IsIOSApplicationPackage(path)
 	case "rust":
 		return packageutil.IsRustApplicationPackage(path)
+	case "python":
+		return false
 	}
 	return true
 }

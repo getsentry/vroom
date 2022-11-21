@@ -268,3 +268,75 @@ func TestReplaceIdleStacks(t *testing.T) {
 		})
 	}
 }
+
+func TestInlinesProduceDifferentIDs(t *testing.T) {
+	instruction_address := "0x55bd050e168d"
+	inline_1 := Frame{
+		File:            "futures.rs",
+		Function:        "symbolicator::utils::futures::measure::{{closure}}",
+		Line:            167,
+		InstructionAddr: instruction_address,
+	}
+
+	inline_2 := Frame{
+		File:            "mod.rs",
+		Function:        "\u003ccore::future::from_generator::GenFuture\u003cT\u003e as core::future::future::Future\u003e::poll",
+		Line:            91,
+		InstructionAddr: instruction_address,
+	}
+
+	if inline_1.ID() == inline_2.ID() {
+		t.Fatal("Error: 2 different inline frames have the same ID")
+	}
+}
+
+func TestSameSymbolDifferentLinesProduceDifferentIDs(t *testing.T) {
+	frame_1 := Frame{
+		File:            "mod.rs",
+		Function:        "test",
+		Line:            95,
+		InstructionAddr: "0x55bd050e168d",
+		SymAddr:         "0x55bd0485d020",
+	}
+
+	frame_2 := Frame{
+		File:            "mod.rs",
+		Function:        "test",
+		Line:            91,
+		InstructionAddr: "0x75bf057e162f",
+		SymAddr:         "0x55bd0485d020",
+	}
+
+	if frame_1.ID() == frame_2.ID() {
+		t.Fatal("Error: 2 different frames with the same sym_address have the same ID")
+	}
+}
+
+func TestIsInline(t *testing.T) {
+	// symbolicated but with a sym_addr
+	// so this is not an inline
+	normal_frame_1 := Frame{
+		Status:  "symbolicated",
+		SymAddr: "0x55bd0485d020",
+	}
+	if normal_frame_1.IsInline() {
+		t.Fatal("normal frame classified as inline")
+	}
+
+	// non-native (python, etc.)
+	normal_frame_2 := Frame{
+		Status:  "",
+		SymAddr: "",
+	}
+	if normal_frame_2.IsInline() {
+		t.Fatal("normal frame classified as inline")
+	}
+
+	inline_frame_1 := Frame{
+		Status:  "symbolicated",
+		SymAddr: "",
+	}
+	if !inline_frame_1.IsInline() {
+		t.Fatal("inline frame classified as normal")
+	}
+}
