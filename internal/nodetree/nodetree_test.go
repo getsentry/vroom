@@ -290,7 +290,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 			}},
 		},
 		{
-			name: "nested nodes, all known name",
+			name: "nested nodes, all unknown name",
 			node: &Node{
 				DurationNS:    10,
 				EndNS:         10,
