@@ -10,7 +10,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 	tests := []struct {
 		name string
 		node *Node
-		want *Node
+		want []*Node
 	}{
 		{
 			name: "single node no collapse",
@@ -26,7 +26,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 				StartNS:       0,
 				Children:      []*Node{},
 			},
-			want: &Node{
+			want: []*Node{&Node{
 				DurationNS:    1,
 				EndNS:         1,
 				Fingerprint:   0,
@@ -37,7 +37,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 				Path:          "path",
 				StartNS:       0,
 				Children:      []*Node{},
-			},
+			}},
 		},
 		{
 			name: "multiple children no collapse",
@@ -78,7 +78,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 					},
 				},
 			},
-			want: &Node{
+			want: []*Node{&Node{
 				DurationNS:    2,
 				EndNS:         2,
 				Fingerprint:   0,
@@ -114,7 +114,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 						Children:      []*Node{},
 					},
 				},
-			},
+			}},
 		},
 		{
 			name: "single child no collapse - duration mismatch",
@@ -143,7 +143,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 					},
 				},
 			},
-			want: &Node{
+			want: []*Node{&Node{
 				DurationNS:    2,
 				EndNS:         2,
 				Fingerprint:   0,
@@ -167,7 +167,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 						Children:      []*Node{},
 					},
 				},
-			},
+			}},
 		},
 		{
 			name: "single child collapse parent because child is application",
@@ -196,7 +196,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 					},
 				},
 			},
-			want: &Node{
+			want: []*Node{&Node{
 				DurationNS:    1,
 				EndNS:         1,
 				Fingerprint:   0,
@@ -207,7 +207,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 				Path:          "path",
 				StartNS:       0,
 				Children:      []*Node{},
-			},
+			}},
 		},
 		{
 			name: "single child collapse parent because both system application",
@@ -236,7 +236,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 					},
 				},
 			},
-			want: &Node{
+			want: []*Node{&Node{
 				DurationNS:    1,
 				EndNS:         1,
 				Fingerprint:   0,
@@ -247,7 +247,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 				Path:          "path",
 				StartNS:       0,
 				Children:      []*Node{},
-			},
+			}},
 		},
 		{
 			name: "single child collapse child because parent is application",
@@ -276,7 +276,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 					},
 				},
 			},
-			want: &Node{
+			want: []*Node{&Node{
 				DurationNS:    1,
 				EndNS:         1,
 				Fingerprint:   0,
@@ -287,7 +287,74 @@ func TestNodeTreeCollapse(t *testing.T) {
 				Path:          "path",
 				StartNS:       0,
 				Children:      []*Node{},
+			}},
+		},
+		{
+			name: "nested nodes, all known name",
+			node: &Node{
+				DurationNS:    10,
+				EndNS:         10,
+				Fingerprint:   0,
+				IsApplication: true,
+				Line:          0,
+				Name:          "",
+				Package:       "",
+				Path:          "",
+				StartNS:       0,
+				Children: []*Node{
+					&Node{
+						DurationNS:    5,
+						EndNS:         5,
+						Fingerprint:   0,
+						IsApplication: true,
+						Line:          0,
+						Name:          "",
+						Package:       "",
+						Path:          "",
+						StartNS:       0,
+						Children: []*Node{
+							&Node{
+								DurationNS:    5,
+								EndNS:         5,
+								Fingerprint:   0,
+								IsApplication: true,
+								Line:          0,
+								Name:          "",
+								Package:       "",
+								Path:          "",
+								StartNS:       0,
+								Children: []*Node{
+									&Node{
+										DurationNS:    5,
+										EndNS:         5,
+										Fingerprint:   0,
+										IsApplication: false,
+										Line:          0,
+										Name:          "",
+										Package:       "",
+										Path:          "",
+										StartNS:       0,
+										Children:      []*Node{},
+									},
+								},
+							},
+						},
+					},
+					&Node{
+						DurationNS:    10,
+						EndNS:         10,
+						Fingerprint:   0,
+						IsApplication: false,
+						Line:          0,
+						Name:          "",
+						Package:       "",
+						Path:          "",
+						StartNS:       5,
+						Children:      []*Node{},
+					},
+				},
 			},
+			want: []*Node{},
 		},
 		{
 			name: "collapse deeply nested node",
@@ -341,7 +408,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 						},
 					},
 					&Node{
-						DurationNS:    10,
+						DurationNS:    5,
 						EndNS:         10,
 						Fingerprint:   0,
 						IsApplication: false,
@@ -350,11 +417,37 @@ func TestNodeTreeCollapse(t *testing.T) {
 						Package:       "package",
 						Path:          "path",
 						StartNS:       5,
-						Children:      []*Node{},
+						Children: []*Node{
+							&Node{
+								DurationNS:    5,
+								EndNS:         10,
+								Fingerprint:   0,
+								IsApplication: true,
+								Line:          0,
+								Name:          "",
+								Package:       "",
+								Path:          "",
+								StartNS:       5,
+								Children: []*Node{
+									&Node{
+										DurationNS:    5,
+										EndNS:         10,
+										Fingerprint:   0,
+										IsApplication: false,
+										Line:          0,
+										Name:          "child3-1",
+										Package:       "package",
+										Path:          "path",
+										StartNS:       5,
+										Children:      []*Node{},
+									},
+								},
+							},
+						},
 					},
 				},
 			},
-			want: &Node{
+			want: []*Node{&Node{
 				DurationNS:    10,
 				EndNS:         10,
 				Fingerprint:   0,
@@ -378,26 +471,26 @@ func TestNodeTreeCollapse(t *testing.T) {
 						Children:      []*Node{},
 					},
 					&Node{
-						DurationNS:    10,
+						DurationNS:    5,
 						EndNS:         10,
 						Fingerprint:   0,
 						IsApplication: false,
 						Line:          0,
-						Name:          "child1-2",
+						Name:          "child3-1",
 						Package:       "package",
 						Path:          "path",
 						StartNS:       5,
 						Children:      []*Node{},
 					},
 				},
-			},
+			}},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tt.node.Collapse()
-			if diff := testutil.Diff(tt.node, tt.want); diff != "" {
+			result := tt.node.Collapse()
+			if diff := testutil.Diff(result, tt.want); diff != "" {
 				t.Fatalf("Result mismatch: got - want +\n%s", diff)
 			}
 		})

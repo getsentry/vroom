@@ -118,6 +118,9 @@ func (e *environment) functionsQueryBuilderFromRequest(ctx context.Context, p ur
 	}
 	sqb.WhereConditions = make([]string, 0, 5)
 
+	// we do not want to show unknown functions, unknown package is okay
+	sqb.WhereConditions = append(sqb.WhereConditions, "name != ''")
+
 	for _, makeFilter := range functionsQueryFilterMakers {
 		conditions, err := makeFilter(p)
 		if err != nil {

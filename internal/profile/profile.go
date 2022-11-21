@@ -73,10 +73,14 @@ func (p *Profile) CallTrees() (map[uint64][]*nodetree.Node, error) {
 		return callTrees, err
 	}
 
-	for _, callTreesForThread := range callTrees {
+	for threadId, callTreesForThread := range callTrees {
+		collapsedCallTrees := make([]*nodetree.Node, 0, len(callTreesForThread))
 		for _, callTree := range callTreesForThread {
-			callTree.Collapse()
+			for _, ct := range callTree.Collapse() {
+				collapsedCallTrees = append(collapsedCallTrees, ct)
+			}
 		}
+		callTrees[threadId] = collapsedCallTrees
 	}
 
 	return callTrees, nil
