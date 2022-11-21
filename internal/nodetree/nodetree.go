@@ -68,8 +68,6 @@ func (n Node) Collapse() []*Node {
 	}
 	n.Children = children
 
-	numChildren := len(n.Children)
-
 	// If the current node is an unknown frame, we just return
 	// its children. The children are guaranteed not to be
 	// unknown nodes since they made it through a `.Collapse`
@@ -81,7 +79,7 @@ func (n Node) Collapse() []*Node {
 	// If the only child runs for the entirety of the parent,
 	// we want to collapse them by taking the inner most application frame.
 	// If neither are application frames, we take the inner most frame
-	if numChildren == 1 {
+	if len(n.Children) == 1 {
 		child := n.Children[0]
 		if n.StartNS == child.StartNS && n.DurationNS == child.DurationNS {
 			if n.IsApplication {
