@@ -436,18 +436,26 @@ func (p *SampleProfile) ReplaceIdleStacks() {
 	p.Trace.ReplaceIdleStacks()
 }
 
-func (t Trace) SamplesByThreadD() map[uint64][]*Sample {
+func (t Trace) SamplesByThreadD() ([]uint64, map[uint64][]*Sample) {
 	samples := make(map[uint64][]*Sample)
+	var threadIDs []uint64
 	for i, s := range t.Samples {
+		if _, exists := samples[s.ThreadID]; !exists {
+			threadIDs = append(threadIDs, s.ThreadID)
+		}
 		samples[s.ThreadID] = append(samples[s.ThreadID], &t.Samples[i])
 	}
-	return samples
+	sort.SliceStable(threadIDs, func(i, j int) bool {
+		return threadIDs[i] < threadIDs[j]
+	})
+	return threadIDs, samples
 }
 
 func (p *Trace) ReplaceIdleStacks() {
-	samplesByThreadID := p.SamplesByThreadD()
+	threadIDs, samplesByThreadID := p.SamplesByThreadD()
 
-	for _, samples := range samplesByThreadID {
+	for _, threadID := range threadIDs {
+		samples := samplesByThreadID[threadID]
 		previousActiveStackID := -1
 		var nextActiveSampleIndex, nextActiveStackID int
 
@@ -476,7 +484,6 @@ func (p *Trace) ReplaceIdleStacks() {
 					for ; i < len(samples); i++ {
 						samples[i].State = "idle"
 					}
-
 					break
 				}
 			}
