@@ -232,7 +232,7 @@ func (p SampleProfile) CallTrees() (map[uint64][]*nodetree.Node, error) {
 					current = trees[s.ThreadID][i]
 					current.SetDuration(s.ElapsedSinceStartNS)
 				} else {
-					n := nodetree.NodeFromFrame(f.PackageBaseName(), f.Function, f.Path, f.Line, previousTimestamp[s.ThreadID], s.ElapsedSinceStartNS, fingerprint, p.IsApplicationPackage(f.Package))
+					n := nodetree.NodeFromFrame(f.PackageBaseName(), f.Function, f.Path, f.Line, previousTimestamp[s.ThreadID], s.ElapsedSinceStartNS, fingerprint, p.IsApplicationFrame(f))
 					trees[s.ThreadID] = append(trees[s.ThreadID], n)
 					current = n
 				}
@@ -242,7 +242,7 @@ func (p SampleProfile) CallTrees() (map[uint64][]*nodetree.Node, error) {
 					current = current.Children[i]
 					current.SetDuration(s.ElapsedSinceStartNS)
 				} else {
-					n := nodetree.NodeFromFrame(f.PackageBaseName(), f.Function, f.Path, f.Line, previousTimestamp[s.ThreadID], s.ElapsedSinceStartNS, fingerprint, p.IsApplicationPackage(f.Package))
+					n := nodetree.NodeFromFrame(f.PackageBaseName(), f.Function, f.Path, f.Line, previousTimestamp[s.ThreadID], s.ElapsedSinceStartNS, fingerprint, p.IsApplicationFrame(f))
 					current.Children = append(current.Children, n)
 					current = n
 				}
@@ -365,6 +365,7 @@ func (p *SampleProfile) Speedscope() (speedscope.Output, error) {
 				DeviceOSName:         p.OS.Name,
 				DeviceOSVersion:      p.OS.Version,
 				DurationNS:           p.Transactions[0].DurationNS(),
+				Environment:          p.Environment,
 				OrganizationID:       p.OrganizationID,
 				Platform:             p.Platform,
 				ProfileID:            p.EventID,
@@ -436,18 +437,26 @@ func (p *SampleProfile) ReplaceIdleStacks() {
 	p.Trace.ReplaceIdleStacks()
 }
 
-func (t Trace) SamplesByThreadD() map[uint64][]*Sample {
+func (t Trace) SamplesByThreadD() ([]uint64, map[uint64][]*Sample) {
 	samples := make(map[uint64][]*Sample)
+	var threadIDs []uint64
 	for i, s := range t.Samples {
+		if _, exists := samples[s.ThreadID]; !exists {
+			threadIDs = append(threadIDs, s.ThreadID)
+		}
 		samples[s.ThreadID] = append(samples[s.ThreadID], &t.Samples[i])
 	}
-	return samples
+	sort.SliceStable(threadIDs, func(i, j int) bool {
+		return threadIDs[i] < threadIDs[j]
+	})
+	return threadIDs, samples
 }
 
 func (p *Trace) ReplaceIdleStacks() {
-	samplesByThreadID := p.SamplesByThreadD()
+	threadIDs, samplesByThreadID := p.SamplesByThreadD()
 
-	for _, samples := range samplesByThreadID {
+	for _, threadID := range threadIDs {
+		samples := samplesByThreadID[threadID]
 		previousActiveStackID := -1
 		var nextActiveSampleIndex, nextActiveStackID int
 
@@ -476,7 +485,6 @@ func (p *Trace) ReplaceIdleStacks() {
 					for ; i < len(samples); i++ {
 						samples[i].State = "idle"
 					}
-
 					break
 				}
 			}
