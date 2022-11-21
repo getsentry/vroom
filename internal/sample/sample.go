@@ -365,6 +365,7 @@ func (p *SampleProfile) Speedscope() (speedscope.Output, error) {
 				DeviceOSName:         p.OS.Name,
 				DeviceOSVersion:      p.OS.Version,
 				DurationNS:           p.Transactions[0].DurationNS(),
+				Environment:          p.Environment,
 				OrganizationID:       p.OrganizationID,
 				Platform:             p.Platform,
 				ProfileID:            p.EventID,
