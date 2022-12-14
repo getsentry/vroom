@@ -215,12 +215,18 @@ func (p SampleProfile) CallTrees() (map[uint64][]*nodetree.Node, error) {
 		return p.Trace.Samples[i].ElapsedSinceStartNS < p.Trace.Samples[j].ElapsedSinceStartNS
 	})
 
+	activeThreadID := p.Transactions[0].ActiveThreadID
+
 	trees := make(map[uint64][]*nodetree.Node)
 	previousTimestamp := make(map[uint64]uint64)
 
 	var current *nodetree.Node
 	h := fnv.New64()
 	for _, s := range p.Trace.Samples {
+		if s.ThreadID != activeThreadID {
+			continue
+		}
+
 		stack := p.Trace.Stacks[s.StackID]
 		for i := len(stack) - 1; i >= 0; i-- {
 			f := p.Trace.Frames[stack[i]]
