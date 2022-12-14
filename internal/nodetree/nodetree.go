@@ -57,9 +57,23 @@ func PackageBaseName(p string) string {
 	return path.Base(p)
 }
 
-func (n *Node) Collapse() {
+func (n Node) Collapse() []*Node {
+	// always collapse the children first, since pruning may reduce
+	// the number of children
+	children := make([]*Node, 0, len(n.Children))
 	for _, child := range n.Children {
-		child.Collapse()
+		for _, ct := range child.Collapse() {
+			children = append(children, ct)
+		}
+	}
+	n.Children = children
+
+	// If the current node is an unknown frame, we just return
+	// its children. The children are guaranteed not to be
+	// unknown nodes since they made it through a `.Collapse`
+	// call earlier already
+	if n.Name == "" {
+		return n.Children
 	}
 
 	// If the only child runs for the entirety of the parent,
@@ -68,13 +82,23 @@ func (n *Node) Collapse() {
 	if len(n.Children) == 1 {
 		child := n.Children[0]
 		if n.StartNS == child.StartNS && n.DurationNS == child.DurationNS {
-			if child.IsApplication {
-				*n = *child
-			} else if n.IsApplication {
-				n.Children = child.Children
+			if n.IsApplication {
+				if child.IsApplication {
+					// if the node and it's child are both application frames,
+					// we only want the inner one
+					n = *child
+				} else {
+					// if the node is an application frame but the child is not,
+					// we want to skip the child frame
+					n.Children = child.Children
+				}
 			} else {
-				*n = *child
+				// if the node is not an application frame,
+				// we want to skip it and favour it's child
+				n = *child
 			}
 		}
 	}
+
+	return []*Node{&n}
 }
