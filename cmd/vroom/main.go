@@ -98,6 +98,7 @@ func main() {
 	logutil.ConfigureLogger()
 
 	err := sentry.Init(sentry.ClientOptions{
+		EnableTracing:    true,
 		TracesSampleRate: 1.0,
 	})
 	if err != nil {
