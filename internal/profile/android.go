@@ -137,6 +137,13 @@ func (p Android) TimestampGetter() func(EventTime) uint64 {
 
 // CallTrees generates call trees for a given profile
 func (p Android) CallTrees() map[uint64][]*nodetree.Node {
+	var activeThreadID uint64 = 0
+	for _, thread := range p.Threads {
+		if thread.Name == "main" {
+			activeThreadID = thread.ID
+		}
+	}
+
 	buildTimestamp := p.TimestampGetter()
 	trees := make(map[uint64][]*nodetree.Node)
 	stacks := make(map[uint64][]*nodetree.Node)
@@ -145,6 +152,10 @@ func (p Android) CallTrees() map[uint64][]*nodetree.Node {
 		methods[m.ID] = m
 	}
 	for _, e := range p.Events {
+		if e.ThreadID != activeThreadID {
+			continue
+		}
+
 		switch e.Action {
 		case EnterAction:
 			m, exists := methods[e.MethodID]

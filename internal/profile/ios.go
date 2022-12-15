@@ -153,11 +153,17 @@ func (p IOS) CallTrees() map[uint64][]*nodetree.Node {
 		return p.Samples[i].RelativeTimestampNS < p.Samples[j].RelativeTimestampNS
 	})
 
+	activeThreadID := p.MainThread()
+
 	var current *nodetree.Node
 	trees := make(map[uint64][]*nodetree.Node)
 	h := fnv.New64()
 	previousTimestamp := make(map[uint64]uint64)
 	for _, s := range p.Samples {
+		if s.ThreadID != activeThreadID {
+			continue
+		}
+
 		frameCount := len(s.Frames)
 		// Filter out a bogus root address that appears in some iOS backtraces, this symbol
 		// can never be symbolicated and usually contains 1 child.

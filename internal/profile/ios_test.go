@@ -29,6 +29,9 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 						},
 					},
 				},
+				ThreadMetadata: map[string]ThreadMetadata{
+					"1": {IsMain: true},
+				},
 			},
 			want: map[uint64][]*nodetree.Node{
 				1: []*nodetree.Node{
@@ -79,6 +82,9 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 							{InstructionAddr: "3", Function: "symbol3"},
 						},
 					},
+				},
+				ThreadMetadata: map[string]ThreadMetadata{
+					"1": {IsMain: true},
 				},
 			},
 			want: map[uint64][]*nodetree.Node{
@@ -155,6 +161,9 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 						},
 					},
 				},
+				ThreadMetadata: map[string]ThreadMetadata{
+					"1": {IsMain: true},
+				},
 			},
 			want: map[uint64][]*nodetree.Node{
 				1: []*nodetree.Node{
@@ -204,6 +213,9 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 							{InstructionAddr: "0", Function: "symbol0"},
 						},
 					},
+				},
+				ThreadMetadata: map[string]ThreadMetadata{
+					"1": {IsMain: true},
 				},
 			},
 			want: map[uint64][]*nodetree.Node{
@@ -272,6 +284,9 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 							{InstructionAddr: "0", Function: "symbol0"},
 						},
 					},
+				},
+				ThreadMetadata: map[string]ThreadMetadata{
+					"1": {IsMain: true},
 				},
 			},
 			want: map[uint64][]*nodetree.Node{
@@ -346,6 +361,9 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 							{InstructionAddr: "0", Function: "symbol0"},
 						},
 					},
+				},
+				ThreadMetadata: map[string]ThreadMetadata{
+					"1": {IsMain: true},
 				},
 			},
 			want: map[uint64][]*nodetree.Node{
@@ -422,6 +440,9 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 						},
 					},
 				},
+				ThreadMetadata: map[string]ThreadMetadata{
+					"1": {IsMain: true},
+				},
 			},
 			want: map[uint64][]*nodetree.Node{
 				1: []*nodetree.Node{
@@ -496,6 +517,9 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 							{InstructionAddr: "0", Function: "symbol0"},
 						},
 					},
+				},
+				ThreadMetadata: map[string]ThreadMetadata{
+					"1": {IsMain: true},
 				},
 			},
 			want: map[uint64][]*nodetree.Node{
@@ -575,6 +599,9 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 							{InstructionAddr: "0", Function: "symbol0"},
 						},
 					},
+				},
+				ThreadMetadata: map[string]ThreadMetadata{
+					"1": {IsMain: true},
 				},
 			},
 			want: map[uint64][]*nodetree.Node{
@@ -693,6 +720,9 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 							{InstructionAddr: "8", Function: "symbol8"},
 						},
 					},
+				},
+				ThreadMetadata: map[string]ThreadMetadata{
+					"1": {IsMain: true},
 				},
 			},
 			want: map[uint64][]*nodetree.Node{
@@ -819,33 +849,12 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 						},
 					},
 				},
+				ThreadMetadata: map[string]ThreadMetadata{
+					"1": {IsMain: true},
+				},
 			},
 			want: map[uint64][]*nodetree.Node{
 				1: []*nodetree.Node{
-					{
-						DurationNS:  1,
-						EndNS:       1,
-						Fingerprint: 1124161485517443911,
-						Name:        "symbol0",
-						Children: []*nodetree.Node{
-							{
-								DurationNS:  1,
-								EndNS:       1,
-								Fingerprint: 17905447077897174944,
-								Name:        "symbol1",
-								Children: []*nodetree.Node{
-									{
-										DurationNS:  1,
-										EndNS:       1,
-										Fingerprint: 16084607411097338726,
-										Name:        "symbol2",
-									},
-								},
-							},
-						},
-					},
-				},
-				2: []*nodetree.Node{
 					{
 						DurationNS:  1,
 						EndNS:       1,
@@ -894,6 +903,9 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 						},
 					},
 				},
+				ThreadMetadata: map[string]ThreadMetadata{
+					"1": {IsMain: true},
+				},
 			},
 			want: map[uint64][]*nodetree.Node{
 				1: []*nodetree.Node{
@@ -914,30 +926,6 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 										EndNS:       1,
 										Fingerprint: 16084607411097338726,
 										Name:        "symbol2",
-									},
-								},
-							},
-						},
-					},
-				},
-				2: []*nodetree.Node{
-					{
-						DurationNS:  1,
-						EndNS:       1,
-						Fingerprint: 1124161485517443908,
-						Name:        "symbol3",
-						Children: []*nodetree.Node{
-							{
-								DurationNS:  1,
-								EndNS:       1,
-								Fingerprint: 7967440964543288636,
-								Name:        "symbol4",
-								Children: []*nodetree.Node{
-									{
-										DurationNS:  1,
-										EndNS:       1,
-										Fingerprint: 13274796176329250277,
-										Name:        "symbol5",
 									},
 								},
 							},
@@ -987,58 +975,12 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 						},
 					},
 				},
+				ThreadMetadata: map[string]ThreadMetadata{
+					"1": {IsMain: true},
+				},
 			},
 			want: map[uint64][]*nodetree.Node{
 				1: []*nodetree.Node{
-					{
-						DurationNS:  1,
-						EndNS:       1,
-						Fingerprint: 1124161485517443911,
-						Name:        "symbol0",
-						Children: []*nodetree.Node{
-							{
-								DurationNS:  1,
-								EndNS:       1,
-								Fingerprint: 17905447077897174944,
-								Name:        "symbol1",
-								Children: []*nodetree.Node{
-									{
-										DurationNS:  1,
-										EndNS:       1,
-										Fingerprint: 16084607411097338726,
-										Name:        "symbol2",
-									},
-								},
-							},
-						},
-					},
-					{
-						DurationNS:  1,
-						EndNS:       2,
-						Fingerprint: 1124161485517443908,
-						Name:        "symbol3",
-						StartNS:     1,
-						Children: []*nodetree.Node{
-							{
-								DurationNS:  1,
-								EndNS:       2,
-								Fingerprint: 7967440964543288636,
-								Name:        "symbol4",
-								StartNS:     1,
-								Children: []*nodetree.Node{
-									{
-										DurationNS:  1,
-										EndNS:       2,
-										Fingerprint: 13274796176329250277,
-										Name:        "symbol5",
-										StartNS:     1,
-									},
-								},
-							},
-						},
-					},
-				},
-				2: []*nodetree.Node{
 					{
 						DurationNS:  1,
 						EndNS:       1,
@@ -1130,6 +1072,9 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 						},
 					},
 				},
+				ThreadMetadata: map[string]ThreadMetadata{
+					"1": {IsMain: true},
+				},
 			},
 			want: map[uint64][]*nodetree.Node{
 				1: []*nodetree.Node{
@@ -1175,55 +1120,6 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 										Fingerprint: 13274796176329250277,
 										Name:        "symbol5",
 										StartNS:     1,
-									},
-								},
-							},
-						},
-					},
-				},
-				2: []*nodetree.Node{
-					{
-						DurationNS:  5,
-						EndNS:       5,
-						Fingerprint: 1124161485517443911,
-						Name:        "symbol0",
-						Children: []*nodetree.Node{
-							{
-								DurationNS:  5,
-								EndNS:       5,
-								Fingerprint: 17905447077897174944,
-								Name:        "symbol1",
-								Children: []*nodetree.Node{
-									{
-										DurationNS:  5,
-										EndNS:       5,
-										Fingerprint: 16084607411097338726,
-										Name:        "symbol2",
-									},
-								},
-							},
-						},
-					},
-					{
-						DurationNS:  1,
-						EndNS:       6,
-						Fingerprint: 1124161485517443908,
-						Name:        "symbol3",
-						StartNS:     5,
-						Children: []*nodetree.Node{
-							{
-								DurationNS:  1,
-								EndNS:       6,
-								Fingerprint: 7967440964543288636,
-								Name:        "symbol4",
-								StartNS:     5,
-								Children: []*nodetree.Node{
-									{
-										DurationNS:  1,
-										EndNS:       6,
-										Fingerprint: 13274796176329250277,
-										Name:        "symbol5",
-										StartNS:     5,
 									},
 								},
 							},
@@ -1274,58 +1170,12 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 						},
 					},
 				},
+				ThreadMetadata: map[string]ThreadMetadata{
+					"1": {IsMain: true},
+				},
 			},
 			want: map[uint64][]*nodetree.Node{
 				1: []*nodetree.Node{
-					{
-						DurationNS:  1,
-						EndNS:       1,
-						Fingerprint: 1124161485517443911,
-						Name:        "symbol0",
-						Children: []*nodetree.Node{
-							{
-								DurationNS:  1,
-								EndNS:       1,
-								Fingerprint: 17905447077897174944,
-								Name:        "symbol1",
-								Children: []*nodetree.Node{
-									{
-										DurationNS:  1,
-										EndNS:       1,
-										Fingerprint: 16084607411097338726,
-										Name:        "symbol2",
-									},
-								},
-							},
-						},
-					},
-					{
-						DurationNS:  1,
-						EndNS:       2,
-						Fingerprint: 1124161485517443908,
-						Name:        "symbol3",
-						StartNS:     1,
-						Children: []*nodetree.Node{
-							{
-								DurationNS:  1,
-								EndNS:       2,
-								Fingerprint: 7967440964543288636,
-								Name:        "symbol4",
-								StartNS:     1,
-								Children: []*nodetree.Node{
-									{
-										DurationNS:  1,
-										EndNS:       2,
-										Fingerprint: 13274796176329250277,
-										Name:        "symbol5",
-										StartNS:     1,
-									},
-								},
-							},
-						},
-					},
-				},
-				2: []*nodetree.Node{
 					{
 						DurationNS:  1,
 						EndNS:       1,
@@ -1417,6 +1267,9 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 						},
 					},
 				},
+				ThreadMetadata: map[string]ThreadMetadata{
+					"1": {IsMain: true},
+				},
 			},
 			want: map[uint64][]*nodetree.Node{
 				1: []*nodetree.Node{
@@ -1462,55 +1315,6 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 										Fingerprint: 13274796176329250277,
 										Name:        "symbol5",
 										StartNS:     1,
-									},
-								},
-							},
-						},
-					},
-				},
-				2: []*nodetree.Node{
-					{
-						DurationNS:  2,
-						EndNS:       2,
-						Fingerprint: 1124161485517443911,
-						Name:        "symbol0",
-						Children: []*nodetree.Node{
-							{
-								DurationNS:  2,
-								EndNS:       2,
-								Fingerprint: 17905447077897174944,
-								Name:        "symbol1",
-								Children: []*nodetree.Node{
-									{
-										DurationNS:  2,
-										EndNS:       2,
-										Fingerprint: 16084607411097338726,
-										Name:        "symbol2",
-									},
-								},
-							},
-						},
-					},
-					{
-						DurationNS:  2,
-						EndNS:       4,
-						Fingerprint: 1124161485517443908,
-						Name:        "symbol3",
-						StartNS:     2,
-						Children: []*nodetree.Node{
-							{
-								DurationNS:  2,
-								EndNS:       4,
-								Fingerprint: 7967440964543288636,
-								Name:        "symbol4",
-								StartNS:     2,
-								Children: []*nodetree.Node{
-									{
-										DurationNS:  2,
-										EndNS:       4,
-										Fingerprint: 13274796176329250277,
-										Name:        "symbol5",
-										StartNS:     2,
 									},
 								},
 							},
