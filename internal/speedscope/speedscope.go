@@ -127,16 +127,18 @@ type (
 )
 
 func (o *Output) SortSamplesForFlamegraph() {
+
 	frames := o.Shared.Frames
 	for _, sampledProfile := range o.Profiles {
-		profile := sampledProfile.(SampledProfile)
-		samples := profile.Samples
+		// only for Sampled Profiles
+		profile, ok := sampledProfile.(*SampledProfile)
+		if ok {
+			SortSamplesAlphabetically(profile.Samples, frames)
 
-		SortSamplesAlphabetically(samples, frames)
-
-		profile.Unit = "count"
-		for i := 0; i < len(profile.Weights); i++ {
-			profile.Weights[i] = 1
+			profile.Unit = "count"
+			for i := 0; i < len(profile.Weights); i++ {
+				profile.Weights[i] = 1
+			}
 		}
 	} // end looping o.Profiles
 }
