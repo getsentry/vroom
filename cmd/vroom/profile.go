@@ -223,6 +223,9 @@ func (env *environment) getProfile(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
+		if r.URL.Query().Get("sort_alphabetically") == "true" {
+			o.SortSamplesForFlamegraph()
+		}
 		b, err = json.Marshal(o)
 		if err != nil {
 			hub.CaptureException(err)

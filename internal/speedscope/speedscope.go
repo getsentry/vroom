@@ -2,6 +2,7 @@ package speedscope
 
 import (
 	"encoding/json"
+	"sort"
 	"time"
 
 	"github.com/getsentry/vroom/internal/debugmeta"
@@ -124,3 +125,39 @@ type (
 		Measurements         map[string]measurements.Measurement `json:"-"`
 	}
 )
+
+func (o *Output) SortSamplesForFlamegraph() {
+	frames := o.Shared.Frames
+	for _, sampledProfile := range o.Profiles {
+		profile := sampledProfile.(SampledProfile)
+		samples := profile.Samples
+
+		SortSamplesAlphabetically(samples, frames)
+
+		profile.Unit = "count"
+		for i := 0; i < len(profile.Weights); i++ {
+			profile.Weights[i] = 1
+		}
+	} // end looping o.Profiles
+}
+
+func SortSamplesAlphabetically(samples [][]int, frames []Frame) {
+	sort.Slice(samples, func(i, j int) bool {
+		c := 0
+		for {
+			if len(samples[i]) == c {
+				return true
+			} else if len(samples[j]) == c {
+				return false
+			} else {
+				if frames[samples[i][c]].Name < frames[samples[j][c]].Name {
+					return true
+				} else if frames[samples[i][c]].Name > frames[samples[j][c]].Name {
+					return false
+				} else {
+					c += 1
+				}
+			}
+		}
+	}) // end sort
+}
