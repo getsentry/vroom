@@ -11,6 +11,8 @@ import (
 	"github.com/getsentry/vroom/internal/measurements"
 	"github.com/getsentry/vroom/internal/metadata"
 	"github.com/getsentry/vroom/internal/nodetree"
+	"github.com/getsentry/vroom/internal/occurrence"
+	"github.com/getsentry/vroom/internal/platform"
 	"github.com/getsentry/vroom/internal/speedscope"
 )
 
@@ -39,7 +41,7 @@ type (
 		DurationNS           uint64                              `json:"duration_ns"`
 		Environment          string                              `json:"environment,omitempty"`
 		OrganizationID       uint64                              `json:"organization_id"`
-		Platform             string                              `json:"platform"`
+		Platform             platform.Platform                   `json:"platform"`
 		Profile              json.RawMessage                     `json:"profile,omitempty"`
 		ProfileID            string                              `json:"profile_id"`
 		ProjectID            uint64                              `json:"project_id"`
@@ -98,14 +100,6 @@ func (p *LegacyProfile) UnmarshalJSON(b []byte) error {
 		raw = p.Profile
 	}
 	switch p.Platform {
-	case "cocoa":
-		var t IOS
-		err := json.Unmarshal(raw, &t)
-		if err != nil {
-			return err
-		}
-		(*p).Trace = t
-		p.Profile = nil
 	case "android":
 		var t Android
 		err := json.Unmarshal(raw, &t)
@@ -114,24 +108,6 @@ func (p *LegacyProfile) UnmarshalJSON(b []byte) error {
 		}
 		(*p).Trace = t
 		p.Profile = nil
-	case "python":
-		var t Python
-		err := json.Unmarshal(raw, &t)
-		if err != nil {
-			return err
-		}
-		(*p).Trace = t
-		p.Profile = nil
-	case "rust":
-		var t Rust
-		err := json.Unmarshal(raw, &t)
-		if err != nil {
-			return err
-		}
-		(*p).Trace = t
-		p.Profile = nil
-	case "typescript":
-		(*p).Trace = new(Typescript)
 	default:
 		return errors.New("unknown platform")
 	}
@@ -192,15 +168,15 @@ func (p *LegacyProfile) Metadata() metadata.Metadata {
 }
 
 func (p *LegacyProfile) GetPlatform() string {
-	return p.Platform
+	return string(p.Platform)
 }
 
 func (p *LegacyProfile) Raw() []byte {
 	return p.Profile
 }
 
-func (p *LegacyProfile) ReplaceIdleStacks() {
-	if p.Platform == "ios" {
-		p.Trace.(*IOS).ReplaceIdleStacks()
-	}
+func (p *LegacyProfile) ReplaceIdleStacks() {}
+
+func (p *LegacyProfile) Occurrences() []occurrence.Occurrence {
+	return p.Trace.Occurrences()
 }

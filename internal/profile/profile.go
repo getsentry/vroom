@@ -5,6 +5,7 @@ import (
 
 	"github.com/getsentry/vroom/internal/metadata"
 	"github.com/getsentry/vroom/internal/nodetree"
+	"github.com/getsentry/vroom/internal/occurrence"
 	"github.com/getsentry/vroom/internal/sample"
 	"github.com/getsentry/vroom/internal/speedscope"
 )
@@ -20,6 +21,7 @@ type (
 		Raw() []byte
 
 		CallTrees() (map[uint64][]*nodetree.Node, error)
+		Occurrences() []occurrence.Occurrence
 		ReplaceIdleStacks()
 		Speedscope() (speedscope.Output, error)
 		StoragePath() string
@@ -76,9 +78,7 @@ func (p *Profile) CallTrees() (map[uint64][]*nodetree.Node, error) {
 	for threadId, callTreesForThread := range callTrees {
 		collapsedCallTrees := make([]*nodetree.Node, 0, len(callTreesForThread))
 		for _, callTree := range callTreesForThread {
-			for _, ct := range callTree.Collapse() {
-				collapsedCallTrees = append(collapsedCallTrees, ct)
-			}
+			collapsedCallTrees = append(collapsedCallTrees, callTree.Collapse()...)
 		}
 		callTrees[threadId] = collapsedCallTrees
 	}
@@ -120,4 +120,8 @@ func (p *Profile) Raw() []byte {
 
 func (p *Profile) ReplaceIdleStacks() {
 	p.profile.ReplaceIdleStacks()
+}
+
+func (p *Profile) Occurrences() []occurrence.Occurrence {
+	return p.profile.Occurrences()
 }

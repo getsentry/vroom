@@ -62,9 +62,7 @@ func (n Node) Collapse() []*Node {
 	// the number of children
 	children := make([]*Node, 0, len(n.Children))
 	for _, child := range n.Children {
-		for _, ct := range child.Collapse() {
-			children = append(children, ct)
-		}
+		children = append(children, child.Collapse()...)
 	}
 	n.Children = children
 

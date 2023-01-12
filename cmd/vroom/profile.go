@@ -9,6 +9,7 @@ import (
 
 	"github.com/getsentry/sentry-go"
 	"github.com/getsentry/vroom/internal/nodetree"
+	"github.com/getsentry/vroom/internal/occurrence"
 	"github.com/getsentry/vroom/internal/profile"
 	"github.com/getsentry/vroom/internal/snubautil"
 	"github.com/getsentry/vroom/internal/storageutil"
@@ -77,6 +78,28 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusInternalServerError)
 		}
 		return
+	}
+
+	s = sentry.StartSpan(ctx, "processing")
+	s.Description = "Find occurrences"
+	occurrences := p.Occurrences()
+	s.Finish()
+
+	s = sentry.StartSpan(ctx, "processing")
+	s.Description = "Build Kafka message batch"
+	messages, err := occurrence.GenerateKafkaMessageBatch(occurrences)
+	s.Finish()
+	if err != nil {
+		// Report the error but don't fail profile insertion
+		hub.CaptureException(err)
+	}
+
+	s = sentry.StartSpan(ctx, "processing")
+	err = env.occurrencesWriter.WriteMessages(context.Background(), messages...)
+	s.Finish()
+	if err != nil {
+		// Report the error but don't fail profile insertion
+		hub.CaptureException(err)
 	}
 
 	s = sentry.StartSpan(ctx, "json.marshal")

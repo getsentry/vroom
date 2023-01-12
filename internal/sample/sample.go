@@ -17,6 +17,7 @@ import (
 	"github.com/getsentry/vroom/internal/metadata"
 	"github.com/getsentry/vroom/internal/nodetree"
 	"github.com/getsentry/vroom/internal/packageutil"
+	"github.com/getsentry/vroom/internal/platform"
 	"github.com/getsentry/vroom/internal/speedscope"
 )
 
@@ -97,18 +98,19 @@ type (
 		Device         Device                              `json:"device"`
 		Environment    string                              `json:"environment,omitempty"`
 		EventID        string                              `json:"event_id"`
+		Measurements   map[string]measurements.Measurement `json:"measurements,omitempty"`
 		OS             OS                                  `json:"os"`
 		OrganizationID uint64                              `json:"organization_id"`
-		Platform       string                              `json:"platform"`
+		Platform       platform.Platform                   `json:"platform"`
 		ProjectID      uint64                              `json:"project_id"`
 		Received       time.Time                           `json:"received"`
 		Release        string                              `json:"release"`
 		Runtime        Runtime                             `json:"runtime"`
 		Timestamp      time.Time                           `json:"timestamp"`
 		Trace          Trace                               `json:"profile"`
+		Transaction    Transaction                         `json:"transaction"`
 		Transactions   []Transaction                       `json:"transactions"`
 		Version        string                              `json:"version"`
-		Measurements   map[string]measurements.Measurement `json:"measurements,omitempty"`
 	}
 )
 
@@ -207,7 +209,7 @@ func (p SampleProfile) StoragePath() string {
 }
 
 func (p SampleProfile) GetPlatform() string {
-	return p.Platform
+	return string(p.Platform)
 }
 
 func (p SampleProfile) CallTrees() (map[uint64][]*nodetree.Node, error) {

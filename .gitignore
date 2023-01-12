@@ -5,6 +5,8 @@
 *.so
 *.dylib
 /vroom
+/downloader
+/issuedetection
 
 # Test binary, built with `go test -c`
 *.test
