@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -41,8 +42,10 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
+	orgID := p.OrganizationID()
+
 	hub.Scope().SetTags(map[string]string{
-		"organization_id": strconv.FormatUint(p.OrganizationID(), 10),
+		"organization_id": strconv.FormatUint(orgID, 10),
 		"platform":        p.Platform(),
 		"profile_id":      p.ID(),
 		"project_id":      strconv.FormatUint(p.ProjectID(), 10),
@@ -80,26 +83,35 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s = sentry.StartSpan(ctx, "processing")
-	s.Description = "Find occurrences"
-	occurrences := p.Occurrences()
-	s.Finish()
+	if orgID == 1 || orgID == 447951 {
+		s = sentry.StartSpan(ctx, "processing")
+		s.Description = "Find occurrences"
+		occurrences := p.Occurrences()
+		s.Finish()
 
-	s = sentry.StartSpan(ctx, "processing")
-	s.Description = "Build Kafka message batch"
-	messages, err := occurrence.GenerateKafkaMessageBatch(occurrences)
-	s.Finish()
-	if err != nil {
-		// Report the error but don't fail profile insertion
-		hub.CaptureException(err)
-	}
+		// Log occurrences with a link to access to corresponding profiles
+		// It will be removed when the issue platform UI is functional
+		for _, o := range occurrences {
+			link := fmt.Sprintf(" https://sentry.io/api/0/profiling/projects/%d/profile/%s/?package=%s&name=%s", o.Event.ProjectID, o.Event.ID, o.EvidenceDisplay[0].Value, o.EvidenceDisplay[1].Value)
+			fmt.Println(o.Event.Platform, link)
+		}
 
-	s = sentry.StartSpan(ctx, "processing")
-	err = env.occurrencesWriter.WriteMessages(context.Background(), messages...)
-	s.Finish()
-	if err != nil {
-		// Report the error but don't fail profile insertion
-		hub.CaptureException(err)
+		s = sentry.StartSpan(ctx, "processing")
+		s.Description = "Build Kafka message batch"
+		messages, err := occurrence.GenerateKafkaMessageBatch(occurrences)
+		s.Finish()
+		if err != nil {
+			// Report the error but don't fail profile insertion
+			hub.CaptureException(err)
+		}
+
+		s = sentry.StartSpan(ctx, "processing")
+		err = env.occurrencesWriter.WriteMessages(context.Background(), messages...)
+		s.Finish()
+		if err != nil {
+			// Report the error but don't fail profile insertion
+			hub.CaptureException(err)
+		}
 	}
 
 	s = sentry.StartSpan(ctx, "json.marshal")
