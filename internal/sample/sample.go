@@ -1,18 +1,15 @@
 package sample
 
 import (
-	"crypto/md5"
-	"encoding/hex"
 	"fmt"
-	"hash"
 	"hash/fnv"
-	"path"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/getsentry/vroom/internal/debugmeta"
+	"github.com/getsentry/vroom/internal/frame"
 	"github.com/getsentry/vroom/internal/measurements"
 	"github.com/getsentry/vroom/internal/metadata"
 	"github.com/getsentry/vroom/internal/nodetree"
@@ -58,22 +55,6 @@ type (
 		ThreadID            uint64 `json:"thread_id"`
 	}
 
-	Frame struct {
-		Column          uint32 `json:"colno,omitempty"`
-		File            string `json:"filename,omitempty"`
-		Function        string `json:"function,omitempty"`
-		InApp           *bool  `json:"in_app"`
-		InstructionAddr string `json:"instruction_addr,omitempty"`
-		Lang            string `json:"lang,omitempty"`
-		Line            uint32 `json:"lineno,omitempty"`
-		Module          string `json:"module,omitempty"`
-		Package         string `json:"package,omitempty"`
-		Path            string `json:"abs_path,omitempty"`
-		Status          string `json:"status,omitempty"`
-		SymAddr         string `json:"sym_addr,omitempty"`
-		Symbol          string `json:"symbol,omitempty"`
-	}
-
 	ThreadMetadata struct {
 		Name     string `json:"name,omitempty"`
 		Priority int    `json:"priority,omitempty"`
@@ -86,7 +67,7 @@ type (
 	Stack []int
 
 	Trace struct {
-		Frames         []Frame                   `json:"frames"`
+		Frames         []frame.Frame             `json:"frames"`
 		QueueMetadata  map[string]QueueMetadata  `json:"queue_metadata"`
 		Samples        []Sample                  `json:"samples"`
 		Stacks         []Stack                   `json:"stacks"`
@@ -116,72 +97,6 @@ type (
 
 func (q QueueMetadata) LabeledAsMainThread() bool {
 	return q.Label == "com.apple.main-thread"
-}
-
-// IsMain returns true if the function is considered the main function.
-// It also returns an offset indicate if we need to keep the previous frame or not.
-func (f Frame) IsMain() (bool, int) {
-	if f.Status != "symbolicated" {
-		return false, 0
-	} else if f.Function == "main" {
-		return true, 0
-	} else if f.Function == "UIApplicationMain" {
-		return true, -1
-	}
-	return false, 0
-}
-
-func (f Frame) ID() string {
-	// When we have a symbolicated frame we can't rely on symbol_address
-	// to uniquely identify a frame since the following might happen:
-	//
-	// frame 1 has: sym_addr: 1, file: a.rs, line 2
-	// frame 2 has: sym_addr: 1, file: a.rs, line: 4
-	// because they have the same sym addr the second frame is reusing the first one,
-	// and gets the wrong line number
-	//
-	// Also, when a frame is symbolicated but is missing the symbol_address
-	// we know we're dealing with inlines, but we can't rely on instruction_address
-	// neither as the inlines are all using the same one. If we were to return this
-	// address in speedscope we would only generate a new frame for the parent one
-	// and for the inlines we would show the same information of the parents instead
-	// of their own
-	//
-	// As a solution here we use the following hash function that guarantees uniqueness
-	// when all the information required is available
-	hash := md5.Sum([]byte(fmt.Sprintf("%s:%s:%d:%s", f.File, f.Function, f.Line, f.InstructionAddr)))
-	return hex.EncodeToString(hash[:])
-}
-
-func (f Frame) PackageBaseName() string {
-	if f.Module != "" {
-		return f.Module
-	} else if f.Package != "" {
-		return path.Base(f.Package)
-	}
-	return ""
-}
-
-func (f Frame) WriteToHash(h hash.Hash) {
-	var s string
-	if f.Package != "" {
-		s = f.PackageBaseName()
-	} else if f.File != "" {
-		s = f.File
-	} else {
-		s = "-"
-	}
-	h.Write([]byte(s))
-	if f.Function != "" {
-		s = f.Function
-	} else {
-		s = "-"
-	}
-	h.Write([]byte(s))
-}
-
-func (f Frame) IsInline() bool {
-	return f.Status == "symbolicated" && f.SymAddr == ""
 }
 
 func (t Transaction) DurationNS() uint64 {
@@ -396,7 +311,7 @@ func (p *SampleProfile) Speedscope() (speedscope.Output, error) {
 	}, nil
 }
 
-func (p *SampleProfile) IsApplicationFrame(f Frame) bool {
+func (p *SampleProfile) IsApplicationFrame(f frame.Frame) bool {
 	if f.InApp != nil {
 		return *f.InApp
 	}
@@ -520,7 +435,7 @@ func (p *Trace) ReplaceIdleStacks() {
 
 type frameTuple struct {
 	index int
-	frame Frame
+	frame frame.Frame
 }
 
 func (t Trace) framesList(stackID int) []frameTuple {
@@ -563,4 +478,13 @@ func reverse(a []frameTuple) {
 
 func (s Stack) IsActive() bool {
 	return len(s) != 0
+}
+
+func (t Trace) CollectFrames(stackID int) []frame.Frame {
+	stack := t.Stacks[stackID]
+	frames := make([]frame.Frame, 0, len(stack))
+	for _, frameID := range stack {
+		frames = append(frames, t.Frames[frameID])
+	}
+	return frames
 }

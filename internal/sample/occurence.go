@@ -13,10 +13,6 @@ type (
 	}
 )
 
-const (
-	IssueTypeProfiling = "profiling"
-)
-
 var (
 	detectExactFrames = map[platform.Platform][]DetectExactFrameMetadata{
 		platform.Node: []DetectExactFrameMetadata{
@@ -171,19 +167,39 @@ func (p *SampleProfile) DetectExactFrames(metadata DetectExactFrameMetadata, occ
 		for _, frameID := range stack {
 			f := p.Trace.Frames[frameID]
 			_, exists := metadata.Frames[f.Function]
-			if exists {
-				occurrences = append(occurrences, occurrence.Occurrence{
-					Event: occurrence.Event{
-						ID:        p.EventID,
-						Platform:  p.Platform,
-						ProjectID: p.ProjectID,
-						Timestamp: p.Timestamp,
-					},
-					IssueTitle: metadata.IssueTitle,
-					Subtitle:   f.Function,
-					Type:       IssueTypeProfiling,
-				})
+			if !exists {
+				continue
 			}
+			occurrences = append(occurrences, occurrence.Occurrence{
+				Event: occurrence.Event{
+					ID:        p.EventID,
+					Platform:  p.Platform,
+					ProjectID: p.ProjectID,
+					Received:  p.Received,
+					Timestamp: p.Timestamp,
+					Tags:      make(map[string]string),
+				},
+				EvidenceData: map[string]interface{}{
+					"transaction_id": p.Transaction.ID,
+				},
+				EvidenceDisplay: []occurrence.Evidence{
+					occurrence.Evidence{
+						Name:      "Suspect function",
+						Value:     f.Function,
+						Important: true,
+					},
+					occurrence.Evidence{
+						Name:  "Package",
+						Value: f.PackageBaseName(),
+					},
+				},
+				Stacktrace: occurrence.Stacktrace{
+					Frames: p.Trace.CollectFrames(sample.StackID),
+				},
+				IssueTitle: metadata.IssueTitle,
+				Subtitle:   p.Transaction.Name,
+				Type:       occurrence.ProfileBlockedThreadType,
+			})
 		}
 	}
 }
