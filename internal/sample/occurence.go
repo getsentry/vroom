@@ -153,14 +153,14 @@ func (p *SampleProfile) Occurrences() []occurrence.Occurrence {
 	jobs, exists := detectExactFrames[p.Platform]
 	if exists {
 		for _, metadata := range jobs {
-			p.DetectExactFrames(metadata, occurrences)
+			p.DetectExactFrames(metadata, &occurrences)
 		}
 	}
 	return occurrences
 }
 
 // DetectFrames detects occurrence of an issue based by matching frames of the profile on a list of frames
-func (p *SampleProfile) DetectExactFrames(metadata DetectExactFrameMetadata, occurrences []occurrence.Occurrence) {
+func (p *SampleProfile) DetectExactFrames(metadata DetectExactFrameMetadata, occurrences *[]occurrence.Occurrence) {
 	activeThreadID := p.Transaction.ActiveThreadID
 	for _, sample := range p.Trace.Samples {
 		if metadata.ActiveThreadOnly && sample.ThreadID != activeThreadID {
@@ -173,7 +173,7 @@ func (p *SampleProfile) DetectExactFrames(metadata DetectExactFrameMetadata, occ
 			if !exists {
 				continue
 			}
-			occurrences = append(occurrences, occurrence.Occurrence{
+			*occurrences = append(*occurrences, occurrence.Occurrence{
 				DetectionTime: time.Now().UTC(),
 				Event: occurrence.Event{
 					Environment: p.Environment,

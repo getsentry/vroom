@@ -56,7 +56,7 @@ func newEnvironment() (*environment, error) {
 		return nil, err
 	}
 	e.occurrencesWriter = &kafka.Writer{
-		Addr:     kafka.TCP(),
+		Addr:     kafka.TCP(e.OccurrencesKafkaBrokers...),
 		Topic:    e.OccurrencesKafkaTopic,
 		Balancer: kafka.CRC32Balancer{},
 	}

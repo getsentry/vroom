@@ -133,7 +133,6 @@ func (p SampleProfile) CallTrees() (map[uint64][]*nodetree.Node, error) {
 	})
 
 	activeThreadID := p.Transactions[0].ActiveThreadID
-
 	trees := make(map[uint64][]*nodetree.Node)
 	previousTimestamp := make(map[uint64]uint64)
 

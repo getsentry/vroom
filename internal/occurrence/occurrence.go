@@ -27,7 +27,7 @@ type (
 		Platform    platform.Platform `json:"platform"`
 		ProjectID   uint64            `json:"project_id"`
 		Received    time.Time         `json:"received"`
-		Tags        map[string]string `json:"tags,omitempty"`
+		Tags        map[string]string `json:"tags"`
 		Timestamp   time.Time         `json:"timestamp"`
 		Transaction string            `json:"transaction,omitempty"`
 	}
