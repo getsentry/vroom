@@ -83,7 +83,7 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if orgID == 1 || orgID == 447951 {
+	if _, enabled := env.OccurrencesEnabledOrganizations[orgID]; enabled {
 		s = sentry.StartSpan(ctx, "processing")
 		s.Description = "Find occurrences"
 		occurrences := p.Occurrences()

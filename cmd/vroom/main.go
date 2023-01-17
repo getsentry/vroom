@@ -26,12 +26,13 @@ import (
 )
 
 type environment struct {
-	OccurrencesKafkaBrokers []string `envconfig:"SENTRY_OCCURRENCES_KAFKA_BROKERS" default:"localhost:9092"`
-	OccurrencesKafkaTopic   string   `envconfig:"SENTRY_OCCURRENCES_KAFKA_TOPIC" default:"ingest-occurrences"`
-	Port                    string   `default:"8080"`
-	ProfilesBucket          string   `envconfig:"SENTRY_PROFILES_BUCKET_NAME" required:"true"`
-	SnubaHost               string   `envconfig:"SENTRY_SNUBA_HOST" required:"true"`
-	SnubaPort               string   `envconfig:"SENTRY_SNUBA_PORT"`
+	OccurrencesEnabledOrganizations map[uint64]struct{} `envconfig:"SENTRY_OCCURRENCES_ENABLED_ORGANIZATIONS"`
+	OccurrencesKafkaBrokers         []string            `envconfig:"SENTRY_OCCURRENCES_KAFKA_BROKERS" default:"localhost:9092"`
+	OccurrencesKafkaTopic           string              `envconfig:"SENTRY_OCCURRENCES_KAFKA_TOPIC" default:"ingest-occurrences"`
+	Port                            string              `default:"8080"`
+	ProfilesBucket                  string              `envconfig:"SENTRY_PROFILES_BUCKET_NAME" required:"true"`
+	SnubaHost                       string              `envconfig:"SENTRY_SNUBA_HOST" required:"true"`
+	SnubaPort                       string              `envconfig:"SENTRY_SNUBA_PORT"`
 
 	snuba             snubautil.Client
 	occurrencesWriter *kafka.Writer
