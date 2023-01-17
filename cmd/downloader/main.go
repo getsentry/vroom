@@ -9,17 +9,13 @@ import (
 	"log"
 	"os"
 	"strings"
+	"sync"
 
 	"cloud.google.com/go/storage"
 )
 
-func download(root string, objects chan string, errorsChan chan error) {
-	ctx := context.Background()
-	client, err := storage.NewClient(ctx)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer client.Close()
+func download(client *storage.Client, root string, objects chan string, errorsChan chan error, wg *sync.WaitGroup) {
+	defer wg.Done()
 
 	b := client.Bucket("sentry-profiles")
 	for objectName := range objects {
@@ -49,6 +45,7 @@ func download(root string, objects chan string, errorsChan chan error) {
 			continue
 		}
 
+		ctx := context.Background()
 		rc, err := b.Object(objectName).NewReader(ctx)
 		if err != nil {
 			errorsChan <- err
@@ -83,6 +80,13 @@ func main() {
 		return
 	}
 
+	ctx := context.Background()
+	storageClient, err := storage.NewClient(ctx)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer storageClient.Close()
+
 	objectPathList := args[0]
 	destination := args[1]
 	file, err := os.Open(objectPathList)
@@ -91,10 +95,13 @@ func main() {
 	}
 	defer file.Close()
 
+	var wg sync.WaitGroup
+
 	objects := make(chan string)
 	errorsChan := make(chan error)
 	for i := 0; i < 128; i++ {
-		go download(destination, objects, errorsChan)
+		wg.Add(1)
+		go download(storageClient, destination, objects, errorsChan, &wg)
 	}
 
 	go func() {
@@ -113,5 +120,6 @@ func main() {
 	}
 
 	close(objects)
+	wg.Wait()
 	close(errorsChan)
 }

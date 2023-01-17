@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"sync"
 
 	"github.com/getsentry/vroom/internal/sample"
 	gojson "github.com/goccy/go-json"
@@ -39,8 +40,11 @@ func main() {
 		}
 	}()
 
+	var wg sync.WaitGroup
+
 	for w := 0; w < workersCount; w++ {
-		go AnalyzeProfile(pathChannel, errChannel)
+		wg.Add(1)
+		go AnalyzeProfile(pathChannel, errChannel, &wg)
 	}
 
 	for {
@@ -105,10 +109,13 @@ func main() {
 	}
 
 	close(pathChannel)
+	wg.Wait()
 	close(errChannel)
 }
 
-func AnalyzeProfile(pathChannel chan string, errChan chan error) {
+func AnalyzeProfile(pathChannel chan string, errChan chan error, wg *sync.WaitGroup) {
+	defer wg.Done()
+
 	for path := range pathChannel {
 		f, err := os.Open(path)
 		if err != nil {
