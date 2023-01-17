@@ -18,7 +18,6 @@ func GenerateKafkaMessageBatch(occurrences []Occurrence) ([]kafka.Message, error
 			return nil, err
 		}
 		messages = append(messages, kafka.Message{
-			Key:   []byte(o.ID),
 			Value: b,
 		})
 	}
