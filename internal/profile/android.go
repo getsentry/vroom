@@ -357,5 +357,5 @@ func (p Android) Speedscope() (speedscope.Output, error) {
 }
 
 func (p Android) Occurrences() []occurrence.Occurrence {
-	return []occurrence.Occurrence{}
+	return nil
 }

@@ -100,6 +100,14 @@ func (p *LegacyProfile) UnmarshalJSON(b []byte) error {
 		raw = p.Profile
 	}
 	switch p.Platform {
+	case "cocoa":
+		var t IOS
+		err := json.Unmarshal(raw, &t)
+		if err != nil {
+			return err
+		}
+		(*p).Trace = t
+		p.Profile = nil
 	case "android":
 		var t Android
 		err := json.Unmarshal(raw, &t)
