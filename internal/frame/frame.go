@@ -28,6 +28,7 @@ type (
 
 // IsMain returns true if the function is considered the main function.
 // It also returns an offset indicate if we need to keep the previous frame or not.
+// This only works for cocoa profiles
 func (f Frame) IsMain() (bool, int) {
 	if f.Status != "symbolicated" {
 		return false, 0
