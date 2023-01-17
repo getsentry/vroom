@@ -183,7 +183,11 @@ func (p *LegacyProfile) Raw() []byte {
 	return p.Profile
 }
 
-func (p *LegacyProfile) ReplaceIdleStacks() {}
+func (p *LegacyProfile) ReplaceIdleStacks() {
+	if p.Platform == "ios" {
+		p.Trace.(*IOS).ReplaceIdleStacks()
+	}
+}
 
 func (p *LegacyProfile) Occurrences() []occurrence.Occurrence {
 	return p.Trace.Occurrences()
