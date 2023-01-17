@@ -259,18 +259,16 @@ func (p *SampleProfile) DetectExactFrames(metadata DetectExactFrameMetadata, occ
 					Timestamp:   p.Timestamp,
 					Transaction: p.Transaction.ID,
 				},
-				EvidenceData: map[string]interface{}{
-					"transaction_name": p.Transaction.Name,
-				},
+				EvidenceData: map[string]interface{}{},
 				EvidenceDisplay: []occurrence.Evidence{
 					occurrence.Evidence{
-						Name:      "Suspect function",
+						Name:      occurrence.EvidenceNameFunction,
 						Value:     f.Function,
 						Important: true,
 					},
 					occurrence.Evidence{
-						Name:  "Package",
-						Value: f.PackageBaseName(),
+						Name:  occurrence.EvidenceNamePackage,
+						Value: packageName,
 					},
 				},
 				ID: uuid.New().String(),

@@ -12,12 +12,13 @@ import (
 )
 
 type (
+	EvidenceName   string
 	OccurrenceType int
 
 	Evidence struct {
-		Name      string `json:"name"`
-		Value     string `json:"value"`
-		Important bool   `json:"important"`
+		Name      EvidenceName `json:"name"`
+		Value     string       `json:"value"`
+		Important bool         `json:"important"`
 	}
 
 	// Event holds the metadata related to a profile
@@ -55,6 +56,9 @@ type (
 
 const (
 	ProfileBlockedThreadType OccurrenceType = 2000
+
+	EvidenceNamePackage  EvidenceName = "Package"
+	EvidenceNameFunction EvidenceName = "Suspect function"
 )
 
 func (o *Occurrence) GenerateFingerprint() error {
@@ -63,10 +67,9 @@ func (o *Occurrence) GenerateFingerprint() error {
 	_, _ = io.WriteString(h, o.IssueTitle)
 	_, _ = io.WriteString(h, o.Subtitle)
 	_, _ = io.WriteString(h, strconv.Itoa(int(o.Type)))
-	if transactionName, exists := o.EvidenceData["transaction_name"]; exists {
-		tn, ok := transactionName.(string)
-		if ok {
-			_, _ = io.WriteString(h, tn)
+	for _, e := range o.EvidenceDisplay {
+		if e.Name == EvidenceNamePackage || e.Name == EvidenceNameFunction {
+			_, _ = io.WriteString(h, e.Value)
 		}
 	}
 	o.Fingerprint = fmt.Sprintf("%x", h.Sum(nil))
