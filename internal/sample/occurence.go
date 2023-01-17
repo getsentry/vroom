@@ -1,8 +1,11 @@
 package sample
 
 import (
+	"time"
+
 	"github.com/getsentry/vroom/internal/occurrence"
 	"github.com/getsentry/vroom/internal/platform"
+	"github.com/google/uuid"
 )
 
 type (
@@ -171,16 +174,19 @@ func (p *SampleProfile) DetectExactFrames(metadata DetectExactFrameMetadata, occ
 				continue
 			}
 			occurrences = append(occurrences, occurrence.Occurrence{
+				DetectionTime: time.Now().UTC(),
 				Event: occurrence.Event{
-					ID:        p.EventID,
-					Platform:  p.Platform,
-					ProjectID: p.ProjectID,
-					Received:  p.Received,
-					Timestamp: p.Timestamp,
-					Tags:      make(map[string]string),
+					Environment: p.Environment,
+					ID:          p.EventID,
+					Platform:    p.Platform,
+					ProjectID:   p.ProjectID,
+					Received:    p.Received,
+					Tags:        map[string]string{},
+					Timestamp:   p.Timestamp,
+					Transaction: p.Transaction.ID,
 				},
 				EvidenceData: map[string]interface{}{
-					"transaction_id": p.Transaction.ID,
+					"transaction_name": p.Transaction.Name,
 				},
 				EvidenceDisplay: []occurrence.Evidence{
 					occurrence.Evidence{
@@ -193,6 +199,7 @@ func (p *SampleProfile) DetectExactFrames(metadata DetectExactFrameMetadata, occ
 						Value: f.PackageBaseName(),
 					},
 				},
+				ID: uuid.New().String(),
 				Stacktrace: occurrence.Stacktrace{
 					Frames: p.Trace.CollectFrames(sample.StackID),
 				},

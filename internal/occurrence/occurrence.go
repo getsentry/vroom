@@ -1,8 +1,10 @@
 package occurrence
 
 import (
+	"crypto/md5"
+	"fmt"
+	"io"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/getsentry/vroom/internal/frame"
@@ -20,12 +22,14 @@ type (
 
 	// Event holds the metadata related to a profile
 	Event struct {
-		ID        string            `json:"event_id"`
-		Platform  platform.Platform `json:"platform"`
-		ProjectID uint64            `json:"project_id"`
-		Received  time.Time         `json:"received"`
-		Tags      map[string]string `json:"tags,omitempty"`
-		Timestamp time.Time         `json:"timestamp"`
+		Environment string            `json:"environment"`
+		ID          string            `json:"event_id"`
+		Platform    platform.Platform `json:"platform"`
+		ProjectID   uint64            `json:"project_id"`
+		Received    time.Time         `json:"received"`
+		Tags        map[string]string `json:"tags,omitempty"`
+		Timestamp   time.Time         `json:"timestamp"`
+		Transaction string            `json:"transaction,omitempty"`
 	}
 
 	// Occurrence represents a potential issue detected
@@ -39,9 +43,9 @@ type (
 		IssueTitle      string                 `json:"issue_title"`
 		Level           string                 `json:"level,omitempty"`
 		ResourceID      string                 `json:"resource_id,omitempty"`
+		Stacktrace      Stacktrace             `json:"stacktrace"`
 		Subtitle        string                 `json:"subtitle"`
 		Type            OccurrenceType         `json:"type"`
-		Stacktrace      Stacktrace             `json:"stacktrace"`
 	}
 
 	Stacktrace struct {
@@ -54,11 +58,17 @@ const (
 )
 
 func (o *Occurrence) GenerateFingerprint() error {
-	var s strings.Builder
-	s.WriteString(strconv.FormatUint(o.Event.ProjectID, 10))
-	s.WriteString(o.IssueTitle)
-	s.WriteString(o.Subtitle)
-	s.WriteString(strconv.Itoa(int(o.Type)))
-	o.Fingerprint = s.String()
+	h := md5.New()
+	_, _ = io.WriteString(h, strconv.FormatUint(o.Event.ProjectID, 10))
+	_, _ = io.WriteString(h, o.IssueTitle)
+	_, _ = io.WriteString(h, o.Subtitle)
+	_, _ = io.WriteString(h, strconv.Itoa(int(o.Type)))
+	if transactionName, exists := o.EvidenceData["transaction_name"]; exists {
+		tn, ok := transactionName.(string)
+		if ok {
+			_, _ = io.WriteString(h, tn)
+		}
+	}
+	o.Fingerprint = fmt.Sprintf("%x", h.Sum(nil))
 	return nil
 }
