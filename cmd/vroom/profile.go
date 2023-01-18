@@ -46,7 +46,7 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 
 	hub.Scope().SetTags(map[string]string{
 		"organization_id": strconv.FormatUint(orgID, 10),
-		"platform":        p.Platform(),
+		"platform":        string(p.Platform()),
 		"profile_id":      p.ID(),
 		"project_id":      strconv.FormatUint(p.ProjectID(), 10),
 	})
@@ -86,13 +86,13 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 	if _, enabled := env.OccurrencesEnabledOrganizations[orgID]; enabled {
 		s = sentry.StartSpan(ctx, "processing")
 		s.Description = "Find occurrences"
-		occurrences := p.Occurrences()
+		occurrences := occurrence.Find(p, callTrees)
 		s.Finish()
 
 		// Log occurrences with a link to access to corresponding profiles
 		// It will be removed when the issue platform UI is functional
 		for _, o := range occurrences {
-			link := fmt.Sprintf(" https://sentry.io/api/0/profiling/projects/%d/profile/%s/?package=%s&name=%s", o.Event.ProjectID, o.Event.ID, o.EvidenceDisplay[0].Value, o.EvidenceDisplay[1].Value)
+			link := fmt.Sprintf("https://sentry.io/api/0/profiling/projects/%d/profile/%s/?package=%s&name=%s", o.Event.ProjectID, o.Event.ID, o.EvidenceDisplay[0].Value, o.EvidenceDisplay[1].Value)
 			fmt.Println(o.Event.Platform, link)
 		}
 
@@ -242,7 +242,7 @@ func (env *environment) getProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	hub.Scope().SetTag("platform", p.Platform())
+	hub.Scope().SetTag("platform", string(p.Platform()))
 
 	s = sentry.StartSpan(ctx, "json.marshal")
 	defer s.Finish()

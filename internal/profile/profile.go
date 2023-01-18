@@ -2,26 +2,31 @@ package profile
 
 import (
 	"encoding/json"
+	"time"
 
 	"github.com/getsentry/vroom/internal/metadata"
 	"github.com/getsentry/vroom/internal/nodetree"
-	"github.com/getsentry/vroom/internal/occurrence"
+	"github.com/getsentry/vroom/internal/platform"
 	"github.com/getsentry/vroom/internal/sample"
 	"github.com/getsentry/vroom/internal/speedscope"
+	"github.com/getsentry/vroom/internal/transaction"
 )
 
 type (
 	profileInterface interface {
+		GetEnvironment() string
 		GetID() string
 		GetOrganizationID() uint64
+		GetPlatform() platform.Platform
 		GetProjectID() uint64
-		GetPlatform() string
+		GetTransaction() transaction.Transaction
+		GetReceived() time.Time
+		GetTimestamp() time.Time
 
 		Metadata() metadata.Metadata
 		Raw() []byte
 
 		CallTrees() (map[uint64][]*nodetree.Node, error)
-		Occurrences() []occurrence.Occurrence
 		ReplaceIdleStacks()
 		Speedscope() (speedscope.Output, error)
 		StoragePath() string
@@ -110,7 +115,7 @@ func (p *Profile) Metadata() metadata.Metadata {
 	return p.profile.Metadata()
 }
 
-func (p *Profile) Platform() string {
+func (p *Profile) Platform() platform.Platform {
 	return p.profile.GetPlatform()
 }
 
@@ -122,6 +127,18 @@ func (p *Profile) ReplaceIdleStacks() {
 	p.profile.ReplaceIdleStacks()
 }
 
-func (p *Profile) Occurrences() []occurrence.Occurrence {
-	return p.profile.Occurrences()
+func (p *Profile) Transaction() transaction.Transaction {
+	return p.profile.GetTransaction()
+}
+
+func (p *Profile) Environment() string {
+	return p.profile.GetEnvironment()
+}
+
+func (p *Profile) Timestamp() time.Time {
+	return p.profile.GetTimestamp()
+}
+
+func (p *Profile) Received() time.Time {
+	return p.profile.GetReceived()
 }

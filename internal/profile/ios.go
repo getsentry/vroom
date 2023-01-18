@@ -8,7 +8,6 @@ import (
 	"strconv"
 
 	"github.com/getsentry/vroom/internal/nodetree"
-	"github.com/getsentry/vroom/internal/occurrence"
 	"github.com/getsentry/vroom/internal/packageutil"
 	"github.com/getsentry/vroom/internal/speedscope"
 )
@@ -387,8 +386,4 @@ func (p IOS) Speedscope() (speedscope.Output, error) {
 		Profiles:           allProfiles,
 		Shared:             speedscope.SharedData{Frames: frames},
 	}, nil
-}
-
-func (p IOS) Occurrences() []occurrence.Occurrence {
-	return nil
 }

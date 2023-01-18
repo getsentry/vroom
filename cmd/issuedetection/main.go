@@ -8,7 +8,8 @@ import (
 	"os"
 	"sync"
 
-	"github.com/getsentry/vroom/internal/sample"
+	"github.com/getsentry/vroom/internal/occurrence"
+	"github.com/getsentry/vroom/internal/profile"
 	gojson "github.com/goccy/go-json"
 	"github.com/pierrec/lz4"
 )
@@ -125,16 +126,18 @@ func AnalyzeProfile(pathChannel chan string, errChan chan error, wg *sync.WaitGr
 			continue
 		}
 		zr := lz4.NewReader(f)
-		var p sample.SampleProfile
+		var p profile.Profile
 		err = gojson.NewDecoder(zr).Decode(&p)
 		if err != nil {
 			errChan <- err
 			continue
 		}
-		if p.Version == "" {
+		callTrees, err := p.CallTrees()
+		if err != nil {
+			errChan <- err
 			continue
 		}
-		for _, o := range p.Occurrences() {
+		for _, o := range occurrence.Find(p, callTrees) {
 			fmt.Println(o.Event.Platform, o.Event.ProjectID, o.Event.ID, o.IssueTitle, o.Subtitle)
 		}
 	}

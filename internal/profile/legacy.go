@@ -11,9 +11,9 @@ import (
 	"github.com/getsentry/vroom/internal/measurements"
 	"github.com/getsentry/vroom/internal/metadata"
 	"github.com/getsentry/vroom/internal/nodetree"
-	"github.com/getsentry/vroom/internal/occurrence"
 	"github.com/getsentry/vroom/internal/platform"
 	"github.com/getsentry/vroom/internal/speedscope"
+	"github.com/getsentry/vroom/internal/transaction"
 )
 
 var (
@@ -175,8 +175,29 @@ func (p *LegacyProfile) Metadata() metadata.Metadata {
 	}
 }
 
-func (p *LegacyProfile) GetPlatform() string {
-	return string(p.Platform)
+func (p LegacyProfile) GetPlatform() platform.Platform {
+	return p.Platform
+}
+
+func (p LegacyProfile) GetEnvironment() string {
+	return p.Environment
+}
+
+func (p LegacyProfile) GetTransaction() transaction.Transaction {
+	return transaction.Transaction{
+		DurationNS: p.DurationNS,
+		ID:         p.TransactionID,
+		Name:       p.TransactionName,
+		TraceID:    p.TraceID,
+	}
+}
+
+func (p LegacyProfile) GetTimestamp() time.Time {
+	return p.Received
+}
+
+func (p LegacyProfile) GetReceived() time.Time {
+	return p.Received
 }
 
 func (p *LegacyProfile) Raw() []byte {
@@ -187,8 +208,4 @@ func (p *LegacyProfile) ReplaceIdleStacks() {
 	if p.Platform == "ios" {
 		p.Trace.(*IOS).ReplaceIdleStacks()
 	}
-}
-
-func (p *LegacyProfile) Occurrences() []occurrence.Occurrence {
-	return p.Trace.Occurrences()
 }

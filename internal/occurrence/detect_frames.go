@@ -1,27 +1,28 @@
-package sample
+package occurrence
 
 import (
 	"time"
 
-	"github.com/getsentry/vroom/internal/occurrence"
+	"github.com/getsentry/vroom/internal/nodetree"
 	"github.com/getsentry/vroom/internal/platform"
+	"github.com/getsentry/vroom/internal/profile"
 	"github.com/google/uuid"
 )
 
 type (
 	DetectExactFrameMetadata struct {
-		ActiveThreadOnly bool
-		Frames           map[string]map[string]struct{}
-		IssueTitle       string
+		ActiveThreadOnly   bool
+		FunctionsByPackage map[string]map[string]struct{}
+		IssueTitle         string
 	}
 )
 
 var (
-	detectExactFrames = map[platform.Platform][]DetectExactFrameMetadata{
+	detectExactFrameMetadata = map[platform.Platform][]DetectExactFrameMetadata{
 		platform.Node: []DetectExactFrameMetadata{
 			DetectExactFrameMetadata{
 				ActiveThreadOnly: true,
-				Frames: map[string]map[string]struct{}{
+				FunctionsByPackage: map[string]map[string]struct{}{
 					"node:fs": map[string]struct{}{
 						"accessSync":          struct{}{},
 						"appendFileSync":      struct{}{},
@@ -73,7 +74,7 @@ var (
 		platform.Cocoa: []DetectExactFrameMetadata{
 			DetectExactFrameMetadata{
 				ActiveThreadOnly: true,
-				Frames: map[string]map[string]struct{}{
+				FunctionsByPackage: map[string]map[string]struct{}{
 					"AppleJPEG": map[string]struct{}{
 						"applejpeg_decode_image_all": struct{}{},
 					},
@@ -217,68 +218,80 @@ var (
 	}
 )
 
-func (p *SampleProfile) Occurrences() []occurrence.Occurrence {
-	var occurrences []occurrence.Occurrence
-	jobs, exists := detectExactFrames[p.Platform]
-	if exists {
-		for _, metadata := range jobs {
-			p.DetectExactFrames(metadata, &occurrences)
+// DetectFrames detects occurrence of an issue based by matching frames of the profile on a list of frames
+func detectExactFrame(p profile.Profile, callTreesPerThreadID map[uint64][]*nodetree.Node, metadata DetectExactFrameMetadata, occurrences *[]Occurrence) {
+	transaction := p.Transaction()
+	var n *nodetree.Node
+	if metadata.ActiveThreadOnly {
+		callTrees, exists := callTreesPerThreadID[transaction.ActiveThreadID]
+		if !exists {
+			return
+		}
+		for _, root := range callTrees {
+			n = detectFrameOnCallTree(root, metadata.FunctionsByPackage)
+			if n != nil {
+				break
+			}
+		}
+	} else {
+		for _, callTrees := range callTreesPerThreadID {
+			for _, root := range callTrees {
+				n = detectFrameOnCallTree(root, metadata.FunctionsByPackage)
+				if n != nil {
+					break
+				}
+			}
 		}
 	}
-	return occurrences
+	if n == nil {
+		return
+	}
+	*occurrences = append(*occurrences, Occurrence{
+		DetectionTime: time.Now().UTC(),
+		Event: Event{
+			Environment: p.Environment(),
+			ID:          p.ID(),
+			Platform:    p.Platform(),
+			ProjectID:   p.ProjectID(),
+			Received:    p.Received(),
+			Tags:        map[string]string{},
+			Timestamp:   p.Timestamp(),
+			Transaction: transaction.ID,
+		},
+		EvidenceData: map[string]interface{}{},
+		EvidenceDisplay: []Evidence{
+			Evidence{
+				Name:      EvidenceNameFunction,
+				Value:     n.Name,
+				Important: true,
+			},
+			Evidence{
+				Name:  EvidenceNamePackage,
+				Value: n.Package,
+			},
+		},
+		ID:         uuid.New().String(),
+		Stacktrace: Stacktrace{},
+		IssueTitle: metadata.IssueTitle,
+		Subtitle:   transaction.Name,
+		Type:       ProfileBlockedThreadType,
+	})
 }
 
-// DetectFrames detects occurrence of an issue based by matching frames of the profile on a list of frames
-func (p *SampleProfile) DetectExactFrames(metadata DetectExactFrameMetadata, occurrences *[]occurrence.Occurrence) {
-	activeThreadID := p.Transaction.ActiveThreadID
-	for _, sample := range p.Trace.Samples {
-		if metadata.ActiveThreadOnly && sample.ThreadID != activeThreadID {
-			continue
-		}
-		stack := p.Trace.Stacks[sample.StackID]
-		for _, frameID := range stack {
-			f := p.Trace.Frames[frameID]
-			packageName := f.PackageBaseName()
-			functions, exists := metadata.Frames[packageName]
-			if !exists {
-				continue
-			}
-			_, exists = functions[f.Function]
-			if !exists {
-				continue
-			}
-			*occurrences = append(*occurrences, occurrence.Occurrence{
-				DetectionTime: time.Now().UTC(),
-				Event: occurrence.Event{
-					Environment: p.Environment,
-					ID:          p.EventID,
-					Platform:    p.Platform,
-					ProjectID:   p.ProjectID,
-					Received:    p.Received,
-					Tags:        map[string]string{},
-					Timestamp:   p.Timestamp,
-					Transaction: p.Transaction.ID,
-				},
-				EvidenceData: map[string]interface{}{},
-				EvidenceDisplay: []occurrence.Evidence{
-					occurrence.Evidence{
-						Name:      occurrence.EvidenceNameFunction,
-						Value:     f.Function,
-						Important: true,
-					},
-					occurrence.Evidence{
-						Name:  occurrence.EvidenceNamePackage,
-						Value: packageName,
-					},
-				},
-				ID: uuid.New().String(),
-				Stacktrace: occurrence.Stacktrace{
-					Frames: p.Trace.CollectFrames(sample.StackID),
-				},
-				IssueTitle: metadata.IssueTitle,
-				Subtitle:   p.Transaction.Name,
-				Type:       occurrence.ProfileBlockedThreadType,
-			})
+func detectFrameOnCallTree(n *nodetree.Node, functionsByPackage map[string]map[string]struct{}) *nodetree.Node {
+	packageName := n.Package
+	functions, exists := functionsByPackage[packageName]
+	if exists {
+		_, exists = functions[n.Name]
+		if exists {
+			return n
 		}
 	}
+	for _, c := range n.Children {
+		node := detectFrameOnCallTree(c, functionsByPackage)
+		if node != nil {
+			return node
+		}
+	}
+	return nil
 }

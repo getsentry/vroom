@@ -9,7 +9,6 @@ import (
 	"github.com/getsentry/vroom/internal/android"
 	"github.com/getsentry/vroom/internal/errorutil"
 	"github.com/getsentry/vroom/internal/nodetree"
-	"github.com/getsentry/vroom/internal/occurrence"
 	"github.com/getsentry/vroom/internal/packageutil"
 	"github.com/getsentry/vroom/internal/speedscope"
 )
@@ -354,8 +353,4 @@ func (p Android) Speedscope() (speedscope.Output, error) {
 		Profiles:           allProfiles,
 		Shared:             speedscope.SharedData{Frames: frames},
 	}, nil
-}
-
-func (p Android) Occurrences() []occurrence.Occurrence {
-	return nil
 }

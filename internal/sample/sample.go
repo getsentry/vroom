@@ -16,6 +16,7 @@ import (
 	"github.com/getsentry/vroom/internal/packageutil"
 	"github.com/getsentry/vroom/internal/platform"
 	"github.com/getsentry/vroom/internal/speedscope"
+	"github.com/getsentry/vroom/internal/transaction"
 )
 
 type (
@@ -123,8 +124,30 @@ func (p SampleProfile) StoragePath() string {
 	return StoragePath(p.OrganizationID, p.ProjectID, p.EventID)
 }
 
-func (p SampleProfile) GetPlatform() string {
-	return string(p.Platform)
+func (p SampleProfile) GetPlatform() platform.Platform {
+	return p.Platform
+}
+
+func (p SampleProfile) GetEnvironment() string {
+	return p.Environment
+}
+
+func (p SampleProfile) GetTransaction() transaction.Transaction {
+	return transaction.Transaction{
+		ActiveThreadID: p.Transaction.ActiveThreadID,
+		DurationNS:     p.Transaction.DurationNS(),
+		ID:             p.Transaction.ID,
+		Name:           p.Transaction.Name,
+		TraceID:        p.Transaction.TraceID,
+	}
+}
+
+func (p SampleProfile) GetTimestamp() time.Time {
+	return p.Timestamp
+}
+
+func (p SampleProfile) GetReceived() time.Time {
+	return p.Received
 }
 
 func (p SampleProfile) CallTrees() (map[uint64][]*nodetree.Node, error) {
