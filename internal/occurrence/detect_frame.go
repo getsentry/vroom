@@ -220,33 +220,51 @@ var (
 
 // DetectFrames detects occurrence of an issue based by matching frames of the profile on a list of frames
 func detectExactFrame(p profile.Profile, callTreesPerThreadID map[uint64][]*nodetree.Node, metadata DetectExactFrameMetadata, occurrences *[]Occurrence) {
-	transaction := p.Transaction()
 	var n *nodetree.Node
 	if metadata.ActiveThreadOnly {
-		callTrees, exists := callTreesPerThreadID[transaction.ActiveThreadID]
+		callTrees, exists := callTreesPerThreadID[p.Transaction().ActiveThreadID]
 		if !exists {
 			return
 		}
 		for _, root := range callTrees {
-			n = detectFrameOnCallTree(root, metadata.FunctionsByPackage)
+			n = detectFrameInCallTree(root, metadata.FunctionsByPackage)
 			if n != nil {
-				break
+				*occurrences = append(*occurrences, NewOccurrence(p, metadata, n))
 			}
 		}
 	} else {
 		for _, callTrees := range callTreesPerThreadID {
 			for _, root := range callTrees {
-				n = detectFrameOnCallTree(root, metadata.FunctionsByPackage)
+				n = detectFrameInCallTree(root, metadata.FunctionsByPackage)
 				if n != nil {
-					break
+					*occurrences = append(*occurrences, NewOccurrence(p, metadata, n))
 				}
 			}
 		}
 	}
-	if n == nil {
-		return
+}
+
+func detectFrameInCallTree(n *nodetree.Node, functionsByPackage map[string]map[string]struct{}) *nodetree.Node {
+	packageName := n.Package
+	functions, exists := functionsByPackage[packageName]
+	if exists {
+		_, exists = functions[n.Name]
+		if exists {
+			return n
+		}
 	}
-	*occurrences = append(*occurrences, Occurrence{
+	for _, c := range n.Children {
+		node := detectFrameInCallTree(c, functionsByPackage)
+		if node != nil {
+			return node
+		}
+	}
+	return nil
+}
+
+func NewOccurrence(p profile.Profile, metadata DetectExactFrameMetadata, n *nodetree.Node) Occurrence {
+	transaction := p.Transaction()
+	return Occurrence{
 		DetectionTime: time.Now().UTC(),
 		Event: Event{
 			Environment: p.Environment(),
@@ -275,23 +293,5 @@ func detectExactFrame(p profile.Profile, callTreesPerThreadID map[uint64][]*node
 		IssueTitle: metadata.IssueTitle,
 		Subtitle:   transaction.Name,
 		Type:       ProfileBlockedThreadType,
-	})
-}
-
-func detectFrameOnCallTree(n *nodetree.Node, functionsByPackage map[string]map[string]struct{}) *nodetree.Node {
-	packageName := n.Package
-	functions, exists := functionsByPackage[packageName]
-	if exists {
-		_, exists = functions[n.Name]
-		if exists {
-			return n
-		}
 	}
-	for _, c := range n.Children {
-		node := detectFrameOnCallTree(c, functionsByPackage)
-		if node != nil {
-			return node
-		}
-	}
-	return nil
 }
