@@ -92,7 +92,7 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 		// Log occurrences with a link to access to corresponding profiles
 		// It will be removed when the issue platform UI is functional
 		for _, o := range occurrences {
-			link := fmt.Sprintf("https://sentry.io/api/0/profiling/projects/%d/profile/%s/?package=%s&name=%s", o.Event.ProjectID, o.Event.ID, o.EvidenceDisplay[0].Value, o.EvidenceDisplay[1].Value)
+			link := fmt.Sprintf("https://sentry.io/api/0/profiling/projects/%d/profile/%s/?package=%s&name=%s", o.Event.ProjectID, o.Event.ID, o.EvidenceDisplay[1].Value, o.EvidenceDisplay[0].Value)
 			fmt.Println(o.Event.Platform, link)
 		}
 
@@ -113,6 +113,17 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 			hub.CaptureException(err)
 		}
 	}
+
+	s = sentry.StartSpan(ctx, "processing")
+	s.Description = "Collapse call trees"
+	for threadID, callTreesForThread := range callTrees {
+		collapsedCallTrees := make([]*nodetree.Node, 0, len(callTreesForThread))
+		for _, callTree := range callTreesForThread {
+			collapsedCallTrees = append(collapsedCallTrees, callTree.Collapse()...)
+		}
+		callTrees[threadID] = collapsedCallTrees
+	}
+	s.Finish()
 
 	s = sentry.StartSpan(ctx, "json.marshal")
 	s.Description = "Marshal call trees"

@@ -1,10 +1,6 @@
 package occurrence
 
 import (
-	"crypto/md5"
-	"fmt"
-	"io"
-	"strconv"
 	"time"
 
 	"github.com/getsentry/vroom/internal/frame"
@@ -60,18 +56,3 @@ const (
 	EvidenceNamePackage  EvidenceName = "Package"
 	EvidenceNameFunction EvidenceName = "Suspect function"
 )
-
-func (o *Occurrence) GenerateFingerprint() error {
-	h := md5.New()
-	_, _ = io.WriteString(h, strconv.FormatUint(o.Event.ProjectID, 10))
-	_, _ = io.WriteString(h, o.IssueTitle)
-	_, _ = io.WriteString(h, o.Subtitle)
-	_, _ = io.WriteString(h, strconv.Itoa(int(o.Type)))
-	for _, e := range o.EvidenceDisplay {
-		if e.Name == EvidenceNamePackage || e.Name == EvidenceNameFunction {
-			_, _ = io.WriteString(h, e.Value)
-		}
-	}
-	o.Fingerprint = fmt.Sprintf("%x", h.Sum(nil))
-	return nil
-}

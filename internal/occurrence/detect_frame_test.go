@@ -12,7 +12,7 @@ func TestDetectFrameOnCallTree(t *testing.T) {
 	tests := []struct {
 		name string
 		node *nodetree.Node
-		want *nodetree.Node
+		want []*nodetree.Node
 	}{
 		{
 			name: "Detect frame in call tree",
@@ -105,25 +105,28 @@ func TestDetectFrameOnCallTree(t *testing.T) {
 					},
 				},
 			},
-			want: &nodetree.Node{
-				DurationNS:    5,
-				EndNS:         5,
-				Fingerprint:   0,
-				IsApplication: false,
-				Line:          0,
-				Name:          "CFReadStreamRead",
-				Package:       "CoreFoundation",
-				Path:          "path",
-				StartNS:       0,
-				Children:      []*nodetree.Node{},
+			want: []*nodetree.Node{
+				&nodetree.Node{
+					DurationNS:    5,
+					EndNS:         5,
+					Fingerprint:   0,
+					IsApplication: false,
+					Line:          0,
+					Name:          "CFReadStreamRead",
+					Package:       "CoreFoundation",
+					Path:          "path",
+					StartNS:       0,
+					Children:      []*nodetree.Node{},
+				},
 			},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := detectFrameInCallTree(tt.node, detectExactFrameMetadata[platform.Cocoa][0].FunctionsByPackage)
-			if diff := testutil.Diff(result, tt.want); diff != "" {
+			var nodes []*nodetree.Node
+			detectFrameInCallTree(tt.node, detectExactFrameMetadata[platform.Cocoa][0].FunctionsByPackage, &nodes)
+			if diff := testutil.Diff(nodes, tt.want); diff != "" {
 				t.Fatalf("Result mismatch: got - want +\n%s", diff)
 			}
 		})

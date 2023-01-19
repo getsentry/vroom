@@ -9,10 +9,6 @@ import (
 func GenerateKafkaMessageBatch(occurrences []Occurrence) ([]kafka.Message, error) {
 	messages := make([]kafka.Message, 0, len(occurrences))
 	for _, o := range occurrences {
-		err := o.GenerateFingerprint()
-		if err != nil {
-			return nil, err
-		}
 		b, err := json.Marshal(o)
 		if err != nil {
 			return nil, err

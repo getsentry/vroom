@@ -1,6 +1,10 @@
 package occurrence
 
 import (
+	"crypto/md5"
+	"fmt"
+	"io"
+	"strconv"
 	"time"
 
 	"github.com/getsentry/vroom/internal/nodetree"
@@ -14,6 +18,11 @@ type (
 		ActiveThreadOnly   bool
 		FunctionsByPackage map[string]map[string]struct{}
 		IssueTitle         string
+	}
+
+	occurrenceKey struct {
+		Package  string
+		Function string
 	}
 )
 
@@ -211,6 +220,9 @@ var (
 					"UIKit": map[string]struct{}{
 						"-[UINib instantiateWithOwner:options:]": struct{}{},
 					},
+					"libsystem_malloc.dylib": map[string]struct{}{
+						"free_large": struct{}{},
+					},
 				},
 				IssueTitle: "File I/O function called on main thread",
 			},
@@ -220,50 +232,59 @@ var (
 
 // DetectFrames detects occurrence of an issue based by matching frames of the profile on a list of frames
 func detectExactFrame(p profile.Profile, callTreesPerThreadID map[uint64][]*nodetree.Node, metadata DetectExactFrameMetadata, occurrences *[]Occurrence) {
-	var n *nodetree.Node
+	// List nodes matching criteria
+	var nodes []*nodetree.Node
 	if metadata.ActiveThreadOnly {
 		callTrees, exists := callTreesPerThreadID[p.Transaction().ActiveThreadID]
 		if !exists {
 			return
 		}
 		for _, root := range callTrees {
-			n = detectFrameInCallTree(root, metadata.FunctionsByPackage)
-			if n != nil {
-				*occurrences = append(*occurrences, NewOccurrence(p, metadata, n))
-			}
+			detectFrameInCallTree(root, metadata.FunctionsByPackage, &nodes)
 		}
 	} else {
 		for _, callTrees := range callTreesPerThreadID {
 			for _, root := range callTrees {
-				n = detectFrameInCallTree(root, metadata.FunctionsByPackage)
-				if n != nil {
-					*occurrences = append(*occurrences, NewOccurrence(p, metadata, n))
-				}
+				detectFrameInCallTree(root, metadata.FunctionsByPackage, &nodes)
 			}
 		}
 	}
+
+	// Deduplicate and create occurrences
+	knownOccurrences := make(map[occurrenceKey]struct{})
+	for _, n := range nodes {
+		ok := occurrenceKey{
+			Package:  n.Package,
+			Function: n.Name,
+		}
+		if _, exists := knownOccurrences[ok]; !exists {
+			*occurrences = append(*occurrences, NewOccurrence(p, metadata, n))
+			knownOccurrences[ok] = struct{}{}
+		}
+	}
 }
 
-func detectFrameInCallTree(n *nodetree.Node, functionsByPackage map[string]map[string]struct{}) *nodetree.Node {
-	packageName := n.Package
-	functions, exists := functionsByPackage[packageName]
-	if exists {
-		_, exists = functions[n.Name]
-		if exists {
-			return n
+func detectFrameInCallTree(n *nodetree.Node, functionsByPackage map[string]map[string]struct{}, nodes *[]*nodetree.Node) {
+	if functions, exists := functionsByPackage[n.Package]; exists {
+		if _, exists := functions[n.Name]; exists {
+			*nodes = append(*nodes, n)
 		}
 	}
 	for _, c := range n.Children {
-		node := detectFrameInCallTree(c, functionsByPackage)
-		if node != nil {
-			return node
-		}
+		detectFrameInCallTree(c, functionsByPackage, nodes)
 	}
-	return nil
 }
 
 func NewOccurrence(p profile.Profile, metadata DetectExactFrameMetadata, n *nodetree.Node) Occurrence {
-	transaction := p.Transaction()
+	t := p.Transaction()
+	h := md5.New()
+	_, _ = io.WriteString(h, strconv.FormatUint(p.ProjectID(), 10))
+	_, _ = io.WriteString(h, metadata.IssueTitle)
+	_, _ = io.WriteString(h, t.Name)
+	_, _ = io.WriteString(h, strconv.Itoa(int(ProfileBlockedThreadType)))
+	_, _ = io.WriteString(h, n.Package)
+	_, _ = io.WriteString(h, n.Name)
+	fingerprint := fmt.Sprintf("%x", h.Sum(nil))
 	return Occurrence{
 		DetectionTime: time.Now().UTC(),
 		Event: Event{
@@ -274,7 +295,7 @@ func NewOccurrence(p profile.Profile, metadata DetectExactFrameMetadata, n *node
 			Received:    p.Received(),
 			Tags:        map[string]string{},
 			Timestamp:   p.Timestamp(),
-			Transaction: transaction.ID,
+			Transaction: t.ID,
 		},
 		EvidenceData: map[string]interface{}{},
 		EvidenceDisplay: []Evidence{
@@ -288,10 +309,11 @@ func NewOccurrence(p profile.Profile, metadata DetectExactFrameMetadata, n *node
 				Value: n.Package,
 			},
 		},
-		ID:         uuid.New().String(),
-		Stacktrace: Stacktrace{},
-		IssueTitle: metadata.IssueTitle,
-		Subtitle:   transaction.Name,
-		Type:       ProfileBlockedThreadType,
+		Fingerprint: fingerprint,
+		ID:          uuid.New().String(),
+		Stacktrace:  Stacktrace{},
+		IssueTitle:  metadata.IssueTitle,
+		Subtitle:    t.Name,
+		Type:        ProfileBlockedThreadType,
 	}
 }

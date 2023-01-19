@@ -75,20 +75,7 @@ func (p Profile) MarshalJSON() ([]byte, error) {
 }
 
 func (p *Profile) CallTrees() (map[uint64][]*nodetree.Node, error) {
-	callTrees, err := p.profile.CallTrees()
-	if err != nil {
-		return callTrees, err
-	}
-
-	for threadId, callTreesForThread := range callTrees {
-		collapsedCallTrees := make([]*nodetree.Node, 0, len(callTreesForThread))
-		for _, callTree := range callTreesForThread {
-			collapsedCallTrees = append(collapsedCallTrees, callTree.Collapse()...)
-		}
-		callTrees[threadId] = collapsedCallTrees
-	}
-
-	return callTrees, nil
+	return p.profile.CallTrees()
 }
 
 func (p *Profile) ID() string {
