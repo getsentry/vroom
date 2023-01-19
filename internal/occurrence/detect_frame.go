@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/getsentry/vroom/internal/frame"
 	"github.com/getsentry/vroom/internal/nodetree"
 	"github.com/getsentry/vroom/internal/platform"
 	"github.com/getsentry/vroom/internal/profile"
@@ -20,14 +21,19 @@ type (
 		IssueTitle         string
 	}
 
-	occurrenceKey struct {
+	nodeKey struct {
 		Package  string
 		Function string
+	}
+
+	nodeInfo struct {
+		Node       *nodetree.Node
+		StackTrace []frame.Frame
 	}
 )
 
 var (
-	detectExactFrameMetadata = map[platform.Platform][]DetectExactFrameMetadata{
+	detectFrameMetadata = map[platform.Platform][]DetectExactFrameMetadata{
 		platform.Node: []DetectExactFrameMetadata{
 			DetectExactFrameMetadata{
 				ActiveThreadOnly: true,
@@ -220,9 +226,6 @@ var (
 					"UIKit": map[string]struct{}{
 						"-[UINib instantiateWithOwner:options:]": struct{}{},
 					},
-					"libsystem_malloc.dylib": map[string]struct{}{
-						"free_large": struct{}{},
-					},
 				},
 				IssueTitle: "File I/O function called on main thread",
 			},
@@ -231,59 +234,61 @@ var (
 )
 
 // DetectFrames detects occurrence of an issue based by matching frames of the profile on a list of frames
-func detectExactFrame(p profile.Profile, callTreesPerThreadID map[uint64][]*nodetree.Node, metadata DetectExactFrameMetadata, occurrences *[]Occurrence) {
+func detectFrame(p profile.Profile, callTreesPerThreadID map[uint64][]*nodetree.Node, metadata DetectExactFrameMetadata, occurrences *[]Occurrence) {
 	// List nodes matching criteria
-	var nodes []*nodetree.Node
+	nodes := make(map[nodeKey]nodeInfo)
 	if metadata.ActiveThreadOnly {
 		callTrees, exists := callTreesPerThreadID[p.Transaction().ActiveThreadID]
 		if !exists {
 			return
 		}
 		for _, root := range callTrees {
-			detectFrameInCallTree(root, metadata.FunctionsByPackage, &nodes)
+			var stackTrace []frame.Frame
+			detectFrameInCallTree(root, metadata.FunctionsByPackage, nodes, &stackTrace)
 		}
 	} else {
 		for _, callTrees := range callTreesPerThreadID {
 			for _, root := range callTrees {
-				detectFrameInCallTree(root, metadata.FunctionsByPackage, &nodes)
+				var stackTrace []frame.Frame
+				detectFrameInCallTree(root, metadata.FunctionsByPackage, nodes, &stackTrace)
 			}
 		}
 	}
 
-	// Deduplicate and create occurrences
-	knownOccurrences := make(map[occurrenceKey]struct{})
+	// Create occurrences
 	for _, n := range nodes {
-		ok := occurrenceKey{
-			Package:  n.Package,
-			Function: n.Name,
-		}
-		if _, exists := knownOccurrences[ok]; !exists {
-			*occurrences = append(*occurrences, NewOccurrence(p, metadata, n))
-			knownOccurrences[ok] = struct{}{}
-		}
+		*occurrences = append(*occurrences, NewOccurrence(p, metadata, n))
 	}
 }
 
-func detectFrameInCallTree(n *nodetree.Node, functionsByPackage map[string]map[string]struct{}, nodes *[]*nodetree.Node) {
+func detectFrameInCallTree(n *nodetree.Node, functionsByPackage map[string]map[string]struct{}, nodes map[nodeKey]nodeInfo, stackTrace *[]frame.Frame) {
+	*stackTrace = append(*stackTrace, n.Frame())
 	if functions, exists := functionsByPackage[n.Package]; exists {
 		if _, exists := functions[n.Name]; exists {
-			*nodes = append(*nodes, n)
+			nk := nodeKey{Package: n.Package, Function: n.Name}
+			if _, exists := nodes[nk]; !exists {
+				nodes[nk] = nodeInfo{
+					Node:       n,
+					StackTrace: *stackTrace,
+				}
+			}
 		}
 	}
 	for _, c := range n.Children {
-		detectFrameInCallTree(c, functionsByPackage, nodes)
+		newStackTrace := *stackTrace
+		detectFrameInCallTree(c, functionsByPackage, nodes, &newStackTrace)
 	}
 }
 
-func NewOccurrence(p profile.Profile, metadata DetectExactFrameMetadata, n *nodetree.Node) Occurrence {
+func NewOccurrence(p profile.Profile, metadata DetectExactFrameMetadata, ni nodeInfo) Occurrence {
 	t := p.Transaction()
 	h := md5.New()
 	_, _ = io.WriteString(h, strconv.FormatUint(p.ProjectID(), 10))
 	_, _ = io.WriteString(h, metadata.IssueTitle)
 	_, _ = io.WriteString(h, t.Name)
 	_, _ = io.WriteString(h, strconv.Itoa(int(ProfileBlockedThreadType)))
-	_, _ = io.WriteString(h, n.Package)
-	_, _ = io.WriteString(h, n.Name)
+	_, _ = io.WriteString(h, ni.Node.Package)
+	_, _ = io.WriteString(h, ni.Node.Name)
 	fingerprint := fmt.Sprintf("%x", h.Sum(nil))
 	return Occurrence{
 		DetectionTime: time.Now().UTC(),
@@ -293,6 +298,7 @@ func NewOccurrence(p profile.Profile, metadata DetectExactFrameMetadata, n *node
 			Platform:    p.Platform(),
 			ProjectID:   p.ProjectID(),
 			Received:    p.Received(),
+			StackTrace:  StackTrace{Frames: ni.StackTrace},
 			Tags:        map[string]string{},
 			Timestamp:   p.Timestamp(),
 			Transaction: t.ID,
@@ -301,17 +307,16 @@ func NewOccurrence(p profile.Profile, metadata DetectExactFrameMetadata, n *node
 		EvidenceDisplay: []Evidence{
 			Evidence{
 				Name:      EvidenceNameFunction,
-				Value:     n.Name,
+				Value:     ni.Node.Name,
 				Important: true,
 			},
 			Evidence{
 				Name:  EvidenceNamePackage,
-				Value: n.Package,
+				Value: ni.Node.Package,
 			},
 		},
 		Fingerprint: fingerprint,
 		ID:          uuid.New().String(),
-		Stacktrace:  Stacktrace{},
 		IssueTitle:  metadata.IssueTitle,
 		Subtitle:    t.Name,
 		Type:        ProfileBlockedThreadType,

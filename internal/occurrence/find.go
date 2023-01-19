@@ -7,10 +7,10 @@ import (
 
 func Find(p profile.Profile, callTrees map[uint64][]*nodetree.Node) []Occurrence {
 	var occurrences []Occurrence
-	jobs, exists := detectExactFrameMetadata[p.Platform()]
+	jobs, exists := detectFrameMetadata[p.Platform()]
 	if exists {
 		for _, metadata := range jobs {
-			detectExactFrame(p, callTrees, metadata, &occurrences)
+			detectFrame(p, callTrees, metadata, &occurrences)
 		}
 	}
 	return occurrences

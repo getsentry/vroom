@@ -3,16 +3,19 @@ package occurrence
 import (
 	"testing"
 
+	"github.com/getsentry/vroom/internal/frame"
 	"github.com/getsentry/vroom/internal/nodetree"
 	"github.com/getsentry/vroom/internal/platform"
 	"github.com/getsentry/vroom/internal/testutil"
 )
 
-func TestDetectFrameOnCallTree(t *testing.T) {
+func TestDetectFrameInCallTree(t *testing.T) {
+	trueValue := true
+	falseValue := false
 	tests := []struct {
 		name string
 		node *nodetree.Node
-		want []*nodetree.Node
+		want map[nodeKey]nodeInfo
 	}{
 		{
 			name: "Detect frame in call tree",
@@ -105,18 +108,53 @@ func TestDetectFrameOnCallTree(t *testing.T) {
 					},
 				},
 			},
-			want: []*nodetree.Node{
-				&nodetree.Node{
-					DurationNS:    5,
-					EndNS:         5,
-					Fingerprint:   0,
-					IsApplication: false,
-					Line:          0,
-					Name:          "CFReadStreamRead",
-					Package:       "CoreFoundation",
-					Path:          "path",
-					StartNS:       0,
-					Children:      []*nodetree.Node{},
+			want: map[nodeKey]nodeInfo{
+				nodeKey{
+					Package:  "CoreFoundation",
+					Function: "CFReadStreamRead",
+				}: nodeInfo{
+					Node: &nodetree.Node{
+						DurationNS:    5,
+						EndNS:         5,
+						Fingerprint:   0,
+						IsApplication: false,
+						Line:          0,
+						Name:          "CFReadStreamRead",
+						Package:       "CoreFoundation",
+						Path:          "path",
+						StartNS:       0,
+						Children:      []*nodetree.Node{},
+					},
+					StackTrace: []frame.Frame{
+						frame.Frame{
+							Function: "root",
+							InApp:    &trueValue,
+							Line:     0,
+							Package:  "package",
+							Path:     "path",
+						},
+						frame.Frame{
+							Function: "child1-1",
+							InApp:    &falseValue,
+							Line:     0,
+							Package:  "package",
+							Path:     "path",
+						},
+						frame.Frame{
+							Function: "child2-1",
+							InApp:    &trueValue,
+							Line:     0,
+							Package:  "package",
+							Path:     "path",
+						},
+						frame.Frame{
+							Function: "CFReadStreamRead",
+							InApp:    &falseValue,
+							Line:     0,
+							Package:  "CoreFoundation",
+							Path:     "path",
+						},
+					},
 				},
 			},
 		},
@@ -124,8 +162,9 @@ func TestDetectFrameOnCallTree(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			var nodes []*nodetree.Node
-			detectFrameInCallTree(tt.node, detectExactFrameMetadata[platform.Cocoa][0].FunctionsByPackage, &nodes)
+			nodes := make(map[nodeKey]nodeInfo)
+			var stackTrace []frame.Frame
+			detectFrameInCallTree(tt.node, detectFrameMetadata[platform.Cocoa][0].FunctionsByPackage, nodes, &stackTrace)
 			if diff := testutil.Diff(nodes, tt.want); diff != "" {
 				t.Fatalf("Result mismatch: got - want +\n%s", diff)
 			}

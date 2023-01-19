@@ -8,7 +8,8 @@ import (
 )
 
 type (
-	EvidenceName   string
+	EvidenceName string
+
 	OccurrenceType int
 
 	Evidence struct {
@@ -24,6 +25,7 @@ type (
 		Platform    platform.Platform `json:"platform"`
 		ProjectID   uint64            `json:"project_id"`
 		Received    time.Time         `json:"received"`
+		StackTrace  StackTrace        `json:"stacktrace"`
 		Tags        map[string]string `json:"tags"`
 		Timestamp   time.Time         `json:"timestamp"`
 		Transaction string            `json:"transaction,omitempty"`
@@ -40,12 +42,11 @@ type (
 		IssueTitle      string                 `json:"issue_title"`
 		Level           string                 `json:"level,omitempty"`
 		ResourceID      string                 `json:"resource_id,omitempty"`
-		Stacktrace      Stacktrace             `json:"stacktrace"`
 		Subtitle        string                 `json:"subtitle"`
 		Type            OccurrenceType         `json:"type"`
 	}
 
-	Stacktrace struct {
+	StackTrace struct {
 		Frames []frame.Frame `json:"frames"`
 	}
 )

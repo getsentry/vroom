@@ -3,6 +3,8 @@ package nodetree
 import (
 	"hash"
 	"path"
+
+	"github.com/getsentry/vroom/internal/frame"
 )
 
 type (
@@ -35,6 +37,16 @@ func NodeFromFrame(pkg, name, path string, line uint32, start, end, fingerprint 
 		n.DurationNS = n.EndNS - n.StartNS
 	}
 	return &n
+}
+
+func (n *Node) Frame() frame.Frame {
+	return frame.Frame{
+		Function: n.Name,
+		InApp:    &n.IsApplication,
+		Line:     n.Line,
+		Package:  n.Package,
+		Path:     n.Path,
+	}
 }
 
 func (n *Node) SetDuration(t uint64) {
