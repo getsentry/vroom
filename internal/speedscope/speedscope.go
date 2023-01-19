@@ -6,6 +6,7 @@ import (
 
 	"github.com/getsentry/vroom/internal/debugmeta"
 	"github.com/getsentry/vroom/internal/measurements"
+	"github.com/getsentry/vroom/internal/platform"
 )
 
 const (
@@ -81,7 +82,7 @@ type (
 		AndroidClock       string                              `json:"androidClock,omitempty"`
 		DurationNS         uint64                              `json:"durationNS"`
 		Metadata           ProfileMetadata                     `json:"metadata"`
-		Platform           string                              `json:"platform"`
+		Platform           platform.Platform                   `json:"platform"`
 		ProfileID          string                              `json:"profileID"`
 		Profiles           []interface{}                       `json:"profiles"`
 		ProjectID          uint64                              `json:"projectID"`
@@ -111,7 +112,7 @@ type (
 		DurationNS           uint64                              `json:"durationNS"`
 		Environment          string                              `json:"environment,omitempty"`
 		OrganizationID       uint64                              `json:"organizationID"`
-		Platform             string                              `json:"platform"`
+		Platform             platform.Platform                   `json:"platform"`
 		Profile              json.RawMessage                     `json:"-"`
 		ProfileID            string                              `json:"profileID"`
 		ProjectID            uint64                              `json:"projectID"`

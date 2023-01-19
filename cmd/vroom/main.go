@@ -18,6 +18,7 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/rs/zerolog/log"
+	"github.com/segmentio/kafka-go"
 
 	"github.com/getsentry/vroom/internal/httputil"
 	"github.com/getsentry/vroom/internal/logutil"
@@ -25,12 +26,16 @@ import (
 )
 
 type environment struct {
-	Port           string `default:"8080"`
-	ProfilesBucket string `envconfig:"SENTRY_PROFILES_BUCKET_NAME" required:"true"`
-	SnubaHost      string `envconfig:"SENTRY_SNUBA_HOST" required:"true"`
-	SnubaPort      string `envconfig:"SENTRY_SNUBA_PORT"`
+	OccurrencesEnabledOrganizations map[uint64]struct{} `envconfig:"SENTRY_OCCURRENCES_ENABLED_ORGANIZATIONS"`
+	OccurrencesKafkaBrokers         []string            `envconfig:"SENTRY_OCCURRENCES_KAFKA_BROKERS" default:"localhost:9092"`
+	OccurrencesKafkaTopic           string              `envconfig:"SENTRY_OCCURRENCES_KAFKA_TOPIC" default:"ingest-occurrences"`
+	Port                            string              `default:"8080"`
+	ProfilesBucket                  string              `envconfig:"SENTRY_PROFILES_BUCKET_NAME" required:"true"`
+	SnubaHost                       string              `envconfig:"SENTRY_SNUBA_HOST" required:"true"`
+	SnubaPort                       string              `envconfig:"SENTRY_SNUBA_PORT"`
 
-	snuba snubautil.Client
+	snuba             snubautil.Client
+	occurrencesWriter *kafka.Writer
 
 	storage        *storage.Client
 	profilesBucket *storage.BucketHandle
@@ -50,19 +55,31 @@ func newEnvironment() (*environment, error) {
 	if err != nil {
 		return nil, err
 	}
+	e.occurrencesWriter = &kafka.Writer{
+		Addr:     kafka.TCP(e.OccurrencesKafkaBrokers...),
+		Topic:    e.OccurrencesKafkaTopic,
+		Balancer: kafka.CRC32Balancer{},
+	}
+	if err != nil {
+		return nil, err
+	}
 	e.profilesBucket = e.storage.Bucket(e.ProfilesBucket)
 	return &e, nil
 }
 
-func (env *environment) shutdown() {
-	err := env.storage.Close()
+func (e *environment) shutdown() {
+	err := e.storage.Close()
+	if err != nil {
+		sentry.CaptureException(err)
+	}
+	err = e.occurrencesWriter.Close()
 	if err != nil {
 		sentry.CaptureException(err)
 	}
 	sentry.Flush(5 * time.Second)
 }
 
-func (env *environment) newRouter() (*httprouter.Router, error) {
+func (e *environment) newRouter() (*httprouter.Router, error) {
 	compress, err := httpcompression.DefaultAdapter()
 	if err != nil {
 		return nil, err
@@ -73,12 +90,12 @@ func (env *environment) newRouter() (*httprouter.Router, error) {
 		path    string
 		handler http.HandlerFunc
 	}{
-		{http.MethodGet, "/organizations/:organization_id/filters", env.getFilters},
-		{http.MethodGet, "/organizations/:organization_id/projects/:project_id/functions", env.getFunctions},
-		{http.MethodGet, "/organizations/:organization_id/projects/:project_id/profiles/:profile_id", env.getProfile},
-		{http.MethodGet, "/organizations/:organization_id/projects/:project_id/raw_profiles/:profile_id", env.getRawProfile},
-		{http.MethodGet, "/organizations/:organization_id/projects/:project_id/transactions/:transaction_id", env.getProfileIDByTransactionID},
-		{http.MethodPost, "/profile", env.postProfile},
+		{http.MethodGet, "/organizations/:organization_id/filters", e.getFilters},
+		{http.MethodGet, "/organizations/:organization_id/projects/:project_id/functions", e.getFunctions},
+		{http.MethodGet, "/organizations/:organization_id/projects/:project_id/profiles/:profile_id", e.getProfile},
+		{http.MethodGet, "/organizations/:organization_id/projects/:project_id/raw_profiles/:profile_id", e.getRawProfile},
+		{http.MethodGet, "/organizations/:organization_id/projects/:project_id/transactions/:transaction_id", e.getProfileIDByTransactionID},
+		{http.MethodPost, "/profile", e.postProfile},
 	}
 
 	router := httprouter.New()
@@ -158,7 +175,7 @@ type Filter struct {
 	Values []interface{} `json:"values"`
 }
 
-func (env *environment) getFilters(w http.ResponseWriter, r *http.Request) {
+func (e *environment) getFilters(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	hub := sentry.GetHubFromContext(ctx)
 	ps := httprouter.ParamsFromContext(ctx)
@@ -172,7 +189,7 @@ func (env *environment) getFilters(w http.ResponseWriter, r *http.Request) {
 
 	hub.Scope().SetTag("organization_id", rawOrganizationID)
 
-	sqb, err := env.profilesQueryBuilderFromRequest(ctx, r.URL.Query())
+	sqb, err := e.profilesQueryBuilderFromRequest(ctx, r.URL.Query())
 	if err != nil {
 		hub.CaptureException(err)
 		w.WriteHeader(http.StatusBadRequest)

@@ -3,20 +3,24 @@ package nodetree
 import (
 	"hash"
 	"path"
+
+	"github.com/getsentry/vroom/internal/frame"
 )
 
-type Node struct {
-	DurationNS    uint64  `json:"duration_ns"`
-	EndNS         uint64  `json:"-"`
-	Fingerprint   uint64  `json:"fingerprint"`
-	IsApplication bool    `json:"is_application"`
-	Line          uint32  `json:"line,omitempty"`
-	Name          string  `json:"name"`
-	Package       string  `json:"package"`
-	Path          string  `json:"path,omitempty"`
-	StartNS       uint64  `json:"-"`
-	Children      []*Node `json:"children,omitempty"`
-}
+type (
+	Node struct {
+		DurationNS    uint64  `json:"duration_ns"`
+		EndNS         uint64  `json:"-"`
+		Fingerprint   uint64  `json:"fingerprint"`
+		IsApplication bool    `json:"is_application"`
+		Line          uint32  `json:"line,omitempty"`
+		Name          string  `json:"name"`
+		Package       string  `json:"package"`
+		Path          string  `json:"path,omitempty"`
+		StartNS       uint64  `json:"-"`
+		Children      []*Node `json:"children,omitempty"`
+	}
+)
 
 func NodeFromFrame(pkg, name, path string, line uint32, start, end, fingerprint uint64, isApplication bool) *Node {
 	n := Node{
@@ -33,6 +37,16 @@ func NodeFromFrame(pkg, name, path string, line uint32, start, end, fingerprint 
 		n.DurationNS = n.EndNS - n.StartNS
 	}
 	return &n
+}
+
+func (n *Node) Frame() frame.Frame {
+	return frame.Frame{
+		Function: n.Name,
+		InApp:    &n.IsApplication,
+		Line:     n.Line,
+		Package:  n.Package,
+		Path:     n.Path,
+	}
 }
 
 func (n *Node) SetDuration(t uint64) {
@@ -62,9 +76,7 @@ func (n Node) Collapse() []*Node {
 	// the number of children
 	children := make([]*Node, 0, len(n.Children))
 	for _, child := range n.Children {
-		for _, ct := range child.Collapse() {
-			children = append(children, ct)
-		}
+		children = append(children, child.Collapse()...)
 	}
 	n.Children = children
 

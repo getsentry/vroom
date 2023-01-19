@@ -12,9 +12,13 @@ import (
 
 	"cloud.google.com/go/storage"
 	"github.com/fsouza/fake-gcs-server/fakestorage"
+	"github.com/getsentry/vroom/internal/sample"
 	"github.com/google/uuid"
 	"github.com/phayes/freeport"
 	"github.com/pierrec/lz4/v4"
+
+	gojson "github.com/goccy/go-json"
+	jsoniter "github.com/json-iterator/go"
 )
 
 const bucketName = "profiles"
@@ -122,5 +126,33 @@ func TestDownloadProfile(t *testing.T) {
 	}
 	if !bytes.Equal(originalData, uncompressedData) {
 		t.Fatalf("data should be identical: %v %v", string(originalData), string(uncompressedData))
+	}
+}
+
+func BenchmarkGoJSON(b *testing.B) {
+	b.ReportAllocs()
+	testProfile, err := os.ReadFile("../../test/data/node.json")
+	if err != nil {
+		b.Fatal(err)
+	}
+	for i := 0; i < b.N; i++ {
+		result := sample.SampleProfile{}
+		if err := gojson.Unmarshal(testProfile, &result); err != nil {
+			b.Fatal(err)
+		}
+	}
+}
+
+func BenchmarkJsonIterator(b *testing.B) {
+	b.ReportAllocs()
+	testProfile, err := os.ReadFile("../../test/data/node.json")
+	if err != nil {
+		b.Fatal(err)
+	}
+	for n := 0; n < b.N; n++ {
+		result := sample.SampleProfile{}
+		if err := jsoniter.Unmarshal(testProfile, &result); err != nil {
+			b.Fatal(err)
+		}
 	}
 }

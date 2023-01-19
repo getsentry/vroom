@@ -3,6 +3,7 @@ package sample
 import (
 	"testing"
 
+	"github.com/getsentry/vroom/internal/frame"
 	"github.com/getsentry/vroom/internal/testutil"
 )
 
@@ -27,12 +28,12 @@ func TestReplaceIdleStacks(t *testing.T) {
 					Stack{4, 3, 2, 1, 0},
 					Stack{4, 2, 1, 0},
 				},
-				Frames: []Frame{
-					Frame{Function: "function0"},
-					Frame{Function: "function1"},
-					Frame{Function: "function2"},
-					Frame{Function: "function3"},
-					Frame{Function: "function4"},
+				Frames: []frame.Frame{
+					frame.Frame{Function: "function0"},
+					frame.Frame{Function: "function1"},
+					frame.Frame{Function: "function2"},
+					frame.Frame{Function: "function3"},
+					frame.Frame{Function: "function4"},
 				},
 			},
 			want: Trace{
@@ -49,12 +50,12 @@ func TestReplaceIdleStacks(t *testing.T) {
 					Stack{4, 2, 1, 0},
 					Stack{2, 1, 0},
 				},
-				Frames: []Frame{
-					Frame{Function: "function0"},
-					Frame{Function: "function1"},
-					Frame{Function: "function2"},
-					Frame{Function: "function3"},
-					Frame{Function: "function4"},
+				Frames: []frame.Frame{
+					frame.Frame{Function: "function0"},
+					frame.Frame{Function: "function1"},
+					frame.Frame{Function: "function2"},
+					frame.Frame{Function: "function3"},
+					frame.Frame{Function: "function4"},
 				},
 			},
 		},
@@ -73,12 +74,12 @@ func TestReplaceIdleStacks(t *testing.T) {
 					Stack{4, 3, 2, 1, 0},
 					Stack{4, 2, 1, 0},
 				},
-				Frames: []Frame{
-					Frame{Function: "function0"},
-					Frame{Function: "function1"},
-					Frame{Function: "function2"},
-					Frame{Function: "function3"},
-					Frame{Function: "function4"},
+				Frames: []frame.Frame{
+					frame.Frame{Function: "function0"},
+					frame.Frame{Function: "function1"},
+					frame.Frame{Function: "function2"},
+					frame.Frame{Function: "function3"},
+					frame.Frame{Function: "function4"},
 				},
 			},
 			want: Trace{
@@ -95,12 +96,12 @@ func TestReplaceIdleStacks(t *testing.T) {
 					Stack{4, 2, 1, 0},
 					Stack{2, 1, 0},
 				},
-				Frames: []Frame{
-					Frame{Function: "function0"},
-					Frame{Function: "function1"},
-					Frame{Function: "function2"},
-					Frame{Function: "function3"},
-					Frame{Function: "function4"},
+				Frames: []frame.Frame{
+					frame.Frame{Function: "function0"},
+					frame.Frame{Function: "function1"},
+					frame.Frame{Function: "function2"},
+					frame.Frame{Function: "function3"},
+					frame.Frame{Function: "function4"},
 				},
 			},
 		},
@@ -118,12 +119,12 @@ func TestReplaceIdleStacks(t *testing.T) {
 					Stack{},
 					Stack{4, 3, 2, 1, 0},
 				},
-				Frames: []Frame{
-					Frame{Function: "function0"},
-					Frame{Function: "function1"},
-					Frame{Function: "function2"},
-					Frame{Function: "function3"},
-					Frame{Function: "function4"},
+				Frames: []frame.Frame{
+					frame.Frame{Function: "function0"},
+					frame.Frame{Function: "function1"},
+					frame.Frame{Function: "function2"},
+					frame.Frame{Function: "function3"},
+					frame.Frame{Function: "function4"},
 				},
 			},
 			want: Trace{
@@ -138,12 +139,12 @@ func TestReplaceIdleStacks(t *testing.T) {
 					Stack{},
 					Stack{4, 3, 2, 1, 0},
 				},
-				Frames: []Frame{
-					Frame{Function: "function0"},
-					Frame{Function: "function1"},
-					Frame{Function: "function2"},
-					Frame{Function: "function3"},
-					Frame{Function: "function4"},
+				Frames: []frame.Frame{
+					frame.Frame{Function: "function0"},
+					frame.Frame{Function: "function1"},
+					frame.Frame{Function: "function2"},
+					frame.Frame{Function: "function3"},
+					frame.Frame{Function: "function4"},
 				},
 			},
 		},
@@ -167,12 +168,12 @@ func TestReplaceIdleStacks(t *testing.T) {
 					Stack{4, 3, 2, 1, 0},
 					Stack{4, 2, 1, 0},
 				},
-				Frames: []Frame{
-					Frame{Function: "function0"},
-					Frame{Function: "function1"},
-					Frame{Function: "function2"},
-					Frame{Function: "function3"},
-					Frame{Function: "function4"},
+				Frames: []frame.Frame{
+					frame.Frame{Function: "function0"},
+					frame.Frame{Function: "function1"},
+					frame.Frame{Function: "function2"},
+					frame.Frame{Function: "function3"},
+					frame.Frame{Function: "function4"},
 				},
 			},
 			want: Trace{
@@ -195,12 +196,12 @@ func TestReplaceIdleStacks(t *testing.T) {
 					Stack{2, 1, 0},
 					Stack{2, 1, 0},
 				},
-				Frames: []Frame{
-					Frame{Function: "function0"},
-					Frame{Function: "function1"},
-					Frame{Function: "function2"},
-					Frame{Function: "function3"},
-					Frame{Function: "function4"},
+				Frames: []frame.Frame{
+					frame.Frame{Function: "function0"},
+					frame.Frame{Function: "function1"},
+					frame.Frame{Function: "function2"},
+					frame.Frame{Function: "function3"},
+					frame.Frame{Function: "function4"},
 				},
 			},
 		},
@@ -222,12 +223,12 @@ func TestReplaceIdleStacks(t *testing.T) {
 					Stack{4, 2, 1, 0},
 					Stack{4, 1, 0},
 				},
-				Frames: []Frame{
-					Frame{Function: "function0"},
-					Frame{Function: "function1"},
-					Frame{Function: "function2"},
-					Frame{Function: "function3"},
-					Frame{Function: "function4"},
+				Frames: []frame.Frame{
+					frame.Frame{Function: "function0"},
+					frame.Frame{Function: "function1"},
+					frame.Frame{Function: "function2"},
+					frame.Frame{Function: "function3"},
+					frame.Frame{Function: "function4"},
 				},
 			},
 			want: Trace{
@@ -248,12 +249,12 @@ func TestReplaceIdleStacks(t *testing.T) {
 					Stack{2, 1, 0},
 					Stack{1, 0},
 				},
-				Frames: []Frame{
-					Frame{Function: "function0"},
-					Frame{Function: "function1"},
-					Frame{Function: "function2"},
-					Frame{Function: "function3"},
-					Frame{Function: "function4"},
+				Frames: []frame.Frame{
+					frame.Frame{Function: "function0"},
+					frame.Frame{Function: "function1"},
+					frame.Frame{Function: "function2"},
+					frame.Frame{Function: "function3"},
+					frame.Frame{Function: "function4"},
 				},
 			},
 		},
@@ -271,14 +272,14 @@ func TestReplaceIdleStacks(t *testing.T) {
 
 func TestInlinesProduceDifferentIDs(t *testing.T) {
 	instruction_address := "0x55bd050e168d"
-	inline_1 := Frame{
+	inline_1 := frame.Frame{
 		File:            "futures.rs",
 		Function:        "symbolicator::utils::futures::measure::{{closure}}",
 		Line:            167,
 		InstructionAddr: instruction_address,
 	}
 
-	inline_2 := Frame{
+	inline_2 := frame.Frame{
 		File:            "mod.rs",
 		Function:        "\u003ccore::future::from_generator::GenFuture\u003cT\u003e as core::future::future::Future\u003e::poll",
 		Line:            91,
@@ -291,7 +292,7 @@ func TestInlinesProduceDifferentIDs(t *testing.T) {
 }
 
 func TestSameSymbolDifferentLinesProduceDifferentIDs(t *testing.T) {
-	frame_1 := Frame{
+	frame_1 := frame.Frame{
 		File:            "mod.rs",
 		Function:        "test",
 		Line:            95,
@@ -299,7 +300,7 @@ func TestSameSymbolDifferentLinesProduceDifferentIDs(t *testing.T) {
 		SymAddr:         "0x55bd0485d020",
 	}
 
-	frame_2 := Frame{
+	frame_2 := frame.Frame{
 		File:            "mod.rs",
 		Function:        "test",
 		Line:            91,
@@ -315,7 +316,7 @@ func TestSameSymbolDifferentLinesProduceDifferentIDs(t *testing.T) {
 func TestIsInline(t *testing.T) {
 	// symbolicated but with a sym_addr
 	// so this is not an inline
-	normal_frame_1 := Frame{
+	normal_frame_1 := frame.Frame{
 		Status:  "symbolicated",
 		SymAddr: "0x55bd0485d020",
 	}
@@ -324,7 +325,7 @@ func TestIsInline(t *testing.T) {
 	}
 
 	// non-native (python, etc.)
-	normal_frame_2 := Frame{
+	normal_frame_2 := frame.Frame{
 		Status:  "",
 		SymAddr: "",
 	}
@@ -332,7 +333,7 @@ func TestIsInline(t *testing.T) {
 		t.Fatal("normal frame classified as inline")
 	}
 
-	inline_frame_1 := Frame{
+	inline_frame_1 := frame.Frame{
 		Status:  "symbolicated",
 		SymAddr: "",
 	}

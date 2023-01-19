@@ -21,5 +21,8 @@ gcloud beta run deploy vroom \
   --set-env-vars=SENTRY_PROFILES_BUCKET_NAME=sentry-profiles \
   --set-env-vars=SENTRY_RELEASE="$git_commit_id" \
   --set-env-vars=SENTRY_SNUBA_HOST=http://snuba-api.profiling \
+  --set-env-vars=SENTRY_OCCURRENCES_ENABLED_ORGANIZATIONS="1:,447951:" \
+  --set-env-vars=SENTRY_OCCURRENCES_KAFKA_BROKERS="specto-dev-kafka.service.us-central1.consul:9092" \
+  --set-env-vars=SENTRY_OCCURRENCES_KAFKA_TOPIC=ingest-occurrences \
   --timeout 30s \
   --vpc-connector sentry-ingest

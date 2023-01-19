@@ -11,7 +11,9 @@ import (
 	"github.com/getsentry/vroom/internal/measurements"
 	"github.com/getsentry/vroom/internal/metadata"
 	"github.com/getsentry/vroom/internal/nodetree"
+	"github.com/getsentry/vroom/internal/platform"
 	"github.com/getsentry/vroom/internal/speedscope"
+	"github.com/getsentry/vroom/internal/transaction"
 )
 
 var (
@@ -39,7 +41,7 @@ type (
 		DurationNS           uint64                              `json:"duration_ns"`
 		Environment          string                              `json:"environment,omitempty"`
 		OrganizationID       uint64                              `json:"organization_id"`
-		Platform             string                              `json:"platform"`
+		Platform             platform.Platform                   `json:"platform"`
 		Profile              json.RawMessage                     `json:"profile,omitempty"`
 		ProfileID            string                              `json:"profile_id"`
 		ProjectID            uint64                              `json:"project_id"`
@@ -114,24 +116,6 @@ func (p *LegacyProfile) UnmarshalJSON(b []byte) error {
 		}
 		(*p).Trace = t
 		p.Profile = nil
-	case "python":
-		var t Python
-		err := json.Unmarshal(raw, &t)
-		if err != nil {
-			return err
-		}
-		(*p).Trace = t
-		p.Profile = nil
-	case "rust":
-		var t Rust
-		err := json.Unmarshal(raw, &t)
-		if err != nil {
-			return err
-		}
-		(*p).Trace = t
-		p.Profile = nil
-	case "typescript":
-		(*p).Trace = new(Typescript)
 	default:
 		return errors.New("unknown platform")
 	}
@@ -191,8 +175,29 @@ func (p *LegacyProfile) Metadata() metadata.Metadata {
 	}
 }
 
-func (p *LegacyProfile) GetPlatform() string {
+func (p LegacyProfile) GetPlatform() platform.Platform {
 	return p.Platform
+}
+
+func (p LegacyProfile) GetEnvironment() string {
+	return p.Environment
+}
+
+func (p LegacyProfile) GetTransaction() transaction.Transaction {
+	return transaction.Transaction{
+		DurationNS: p.DurationNS,
+		ID:         p.TransactionID,
+		Name:       p.TransactionName,
+		TraceID:    p.TraceID,
+	}
+}
+
+func (p LegacyProfile) GetTimestamp() time.Time {
+	return p.Received
+}
+
+func (p LegacyProfile) GetReceived() time.Time {
+	return p.Received
 }
 
 func (p *LegacyProfile) Raw() []byte {
@@ -203,4 +208,8 @@ func (p *LegacyProfile) ReplaceIdleStacks() {
 	if p.Platform == "ios" {
 		p.Trace.(*IOS).ReplaceIdleStacks()
 	}
+}
+
+func (p LegacyProfile) GetRelease() string {
+	return FormatVersion(p.VersionName, p.VersionCode)
 }
