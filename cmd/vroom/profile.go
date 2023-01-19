@@ -103,14 +103,14 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			// Report the error but don't fail profile insertion
 			hub.CaptureException(err)
-		}
-
-		s = sentry.StartSpan(ctx, "processing")
-		err = env.occurrencesWriter.WriteMessages(context.Background(), messages...)
-		s.Finish()
-		if err != nil {
-			// Report the error but don't fail profile insertion
-			hub.CaptureException(err)
+		} else {
+			s = sentry.StartSpan(ctx, "processing")
+			err = env.occurrencesWriter.WriteMessages(context.Background(), messages...)
+			s.Finish()
+			if err != nil {
+				// Report the error but don't fail profile insertion
+				hub.CaptureException(err)
+			}
 		}
 	}
 
