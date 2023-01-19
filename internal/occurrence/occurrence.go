@@ -25,6 +25,7 @@ type (
 		Platform    platform.Platform `json:"platform"`
 		ProjectID   uint64            `json:"project_id"`
 		Received    time.Time         `json:"received"`
+		Release     string            `json:"release,omitempty"`
 		StackTrace  StackTrace        `json:"stacktrace"`
 		Tags        map[string]string `json:"tags"`
 		Timestamp   time.Time         `json:"timestamp"`

@@ -209,3 +209,7 @@ func (p *LegacyProfile) ReplaceIdleStacks() {
 		p.Trace.(*IOS).ReplaceIdleStacks()
 	}
 }
+
+func (p LegacyProfile) GetRelease() string {
+	return FormatVersion(p.VersionName, p.VersionCode)
+}

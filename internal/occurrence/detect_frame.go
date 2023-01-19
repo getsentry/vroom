@@ -257,7 +257,7 @@ func detectFrame(p profile.Profile, callTreesPerThreadID map[uint64][]*nodetree.
 
 	// Create occurrences
 	for _, n := range nodes {
-		*occurrences = append(*occurrences, NewOccurrence(p, metadata, n))
+		*occurrences = append(*occurrences, NewOccurrence(p, metadata.IssueTitle, n))
 	}
 }
 
@@ -280,16 +280,17 @@ func detectFrameInCallTree(n *nodetree.Node, functionsByPackage map[string]map[s
 	}
 }
 
-func NewOccurrence(p profile.Profile, metadata DetectExactFrameMetadata, ni nodeInfo) Occurrence {
+func NewOccurrence(p profile.Profile, title string, ni nodeInfo) Occurrence {
 	t := p.Transaction()
 	h := md5.New()
 	_, _ = io.WriteString(h, strconv.FormatUint(p.ProjectID(), 10))
-	_, _ = io.WriteString(h, metadata.IssueTitle)
+	_, _ = io.WriteString(h, title)
 	_, _ = io.WriteString(h, t.Name)
 	_, _ = io.WriteString(h, strconv.Itoa(int(ProfileBlockedThreadType)))
 	_, _ = io.WriteString(h, ni.Node.Package)
 	_, _ = io.WriteString(h, ni.Node.Name)
 	fingerprint := fmt.Sprintf("%x", h.Sum(nil))
+	tags := buildOccurrenceTags(p)
 	return Occurrence{
 		DetectionTime: time.Now().UTC(),
 		Event: Event{
@@ -298,8 +299,9 @@ func NewOccurrence(p profile.Profile, metadata DetectExactFrameMetadata, ni node
 			Platform:    p.Platform(),
 			ProjectID:   p.ProjectID(),
 			Received:    p.Received(),
+			Release:     p.Release(),
 			StackTrace:  StackTrace{Frames: ni.StackTrace},
-			Tags:        map[string]string{},
+			Tags:        tags,
 			Timestamp:   p.Timestamp(),
 			Transaction: t.ID,
 		},
@@ -317,8 +319,26 @@ func NewOccurrence(p profile.Profile, metadata DetectExactFrameMetadata, ni node
 		},
 		Fingerprint: fingerprint,
 		ID:          uuid.New().String(),
-		IssueTitle:  metadata.IssueTitle,
+		IssueTitle:  title,
 		Subtitle:    t.Name,
 		Type:        ProfileBlockedThreadType,
 	}
+}
+
+func buildOccurrenceTags(p profile.Profile) map[string]string {
+	pm := p.Metadata()
+	tags := map[string]string{
+		"device_classification": pm.DeviceClassification,
+		"device_locale":         pm.DeviceLocale,
+		"device_manufacturer":   pm.DeviceManufacturer,
+		"device_model":          pm.DeviceModel,
+		"device_os_name":        pm.DeviceOsName,
+		"device_os_version":     pm.DeviceOsVersion,
+	}
+
+	if pm.DeviceOsBuildNumber != "" {
+		tags["device_os_build_number"] = pm.DeviceOsBuildNumber
+	}
+
+	return tags
 }

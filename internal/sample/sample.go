@@ -96,6 +96,10 @@ type (
 	}
 )
 
+func (p SampleProfile) GetRelease() string {
+	return p.Release
+}
+
 func (q QueueMetadata) LabeledAsMainThread() bool {
 	return q.Label == "com.apple.main-thread"
 }

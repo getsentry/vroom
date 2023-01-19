@@ -19,9 +19,10 @@ type (
 		GetOrganizationID() uint64
 		GetPlatform() platform.Platform
 		GetProjectID() uint64
-		GetTransaction() transaction.Transaction
 		GetReceived() time.Time
+		GetRelease() string
 		GetTimestamp() time.Time
+		GetTransaction() transaction.Transaction
 
 		Metadata() metadata.Metadata
 		Raw() []byte
@@ -128,4 +129,8 @@ func (p *Profile) Timestamp() time.Time {
 
 func (p *Profile) Received() time.Time {
 	return p.profile.GetReceived()
+}
+
+func (p *Profile) Release() string {
+	return p.profile.GetRelease()
 }
