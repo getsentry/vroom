@@ -13,7 +13,6 @@ import (
 	"github.com/getsentry/vroom/internal/measurements"
 	"github.com/getsentry/vroom/internal/metadata"
 	"github.com/getsentry/vroom/internal/nodetree"
-	"github.com/getsentry/vroom/internal/packageutil"
 	"github.com/getsentry/vroom/internal/platform"
 	"github.com/getsentry/vroom/internal/speedscope"
 	"github.com/getsentry/vroom/internal/transaction"
@@ -341,10 +340,17 @@ func (p *SampleProfile) IsApplicationFrame(f frame.Frame) bool {
 	if f.InApp != nil {
 		return *f.InApp
 	}
-	if p.Platform == "node" {
-		return strings.Contains("node_modules", f.Path)
+	switch p.Platform {
+	case "node":
+		return f.IsNodeApplicationFrame()
+	case "cocoa":
+		return f.IsIOSApplicationFrame()
+	case "rust":
+		return f.IsRustApplicationFrame()
+	case "python":
+		return f.IsPythonApplicationFrame()
 	}
-	return p.IsApplicationPackage(f.Path)
+	return true
 }
 
 func (p *SampleProfile) Metadata() metadata.Metadata {
@@ -368,18 +374,6 @@ func (p *SampleProfile) Metadata() metadata.Metadata {
 
 func (p *SampleProfile) Raw() []byte {
 	return []byte{}
-}
-
-func (p *SampleProfile) IsApplicationPackage(path string) bool {
-	switch p.Platform {
-	case "cocoa":
-		return packageutil.IsIOSApplicationPackage(path)
-	case "rust":
-		return packageutil.IsRustApplicationPackage(path)
-	case "python":
-		return false
-	}
-	return true
 }
 
 func (p *SampleProfile) ReplaceIdleStacks() {

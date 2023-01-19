@@ -6,6 +6,9 @@ import (
 	"fmt"
 	"hash"
 	"path"
+	"strings"
+
+	"github.com/getsentry/vroom/internal/packageutil"
 )
 
 type (
@@ -91,4 +94,29 @@ func (f Frame) WriteToHash(h hash.Hash) {
 
 func (f Frame) IsInline() bool {
 	return f.Status == "symbolicated" && f.SymAddr == ""
+}
+
+func (f Frame) IsNodeApplicationFrame() bool {
+	return strings.Contains("node_modules", f.Path)
+}
+
+func (f Frame) IsIOSApplicationFrame() bool {
+	return packageutil.IsIOSApplicationPackage(f.Path)
+}
+
+func (f Frame) IsRustApplicationFrame() bool {
+	return packageutil.IsRustApplicationPackage(f.Path)
+}
+
+func (f Frame) IsPythonApplicationFrame() bool {
+	if strings.Contains(f.Path, "/site-packages/") ||
+		strings.Contains(f.Path, "/dist-packages/") ||
+		strings.Contains(f.Path, "\\site-packages\\") ||
+		strings.Contains(f.Path, "\\dist-packages\\") {
+		return false
+	}
+
+	module := strings.SplitN(f.Module, ".", 2)
+	_, ok := pythonStdlib[module[0]]
+	return !ok
 }

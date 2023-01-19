@@ -24,3 +24,6 @@ test:
 
 format:
 	gofmt -l -w -s .
+
+python-stdlib: scripts/make_python_stdlib.py
+	python scripts/make_python_stdlib.py
