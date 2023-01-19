@@ -1,10 +1,16 @@
 package occurrence
 
 import (
+	"crypto/md5"
+	"fmt"
+	"io"
+	"strconv"
 	"time"
 
 	"github.com/getsentry/vroom/internal/frame"
 	"github.com/getsentry/vroom/internal/platform"
+	"github.com/getsentry/vroom/internal/profile"
+	"github.com/google/uuid"
 )
 
 type (
@@ -58,3 +64,66 @@ const (
 	EvidenceNamePackage  EvidenceName = "Package"
 	EvidenceNameFunction EvidenceName = "Suspect function"
 )
+
+func NewOccurrence(p profile.Profile, title string, ni nodeInfo) Occurrence {
+	t := p.Transaction()
+	h := md5.New()
+	_, _ = io.WriteString(h, strconv.FormatUint(p.ProjectID(), 10))
+	_, _ = io.WriteString(h, title)
+	_, _ = io.WriteString(h, t.Name)
+	_, _ = io.WriteString(h, strconv.Itoa(int(ProfileBlockedThreadType)))
+	_, _ = io.WriteString(h, ni.Node.Package)
+	_, _ = io.WriteString(h, ni.Node.Name)
+	fingerprint := fmt.Sprintf("%x", h.Sum(nil))
+	tags := buildOccurrenceTags(p)
+	return Occurrence{
+		DetectionTime: time.Now().UTC(),
+		Event: Event{
+			Environment: p.Environment(),
+			ID:          p.ID(),
+			Platform:    p.Platform(),
+			ProjectID:   p.ProjectID(),
+			Received:    p.Received(),
+			Release:     p.Release(),
+			StackTrace:  StackTrace{Frames: ni.StackTrace},
+			Tags:        tags,
+			Timestamp:   p.Timestamp(),
+			Transaction: t.ID,
+		},
+		EvidenceData: map[string]interface{}{},
+		EvidenceDisplay: []Evidence{
+			Evidence{
+				Name:      EvidenceNameFunction,
+				Value:     ni.Node.Name,
+				Important: true,
+			},
+			Evidence{
+				Name:  EvidenceNamePackage,
+				Value: ni.Node.Package,
+			},
+		},
+		Fingerprint: fingerprint,
+		ID:          uuid.New().String(),
+		IssueTitle:  title,
+		Subtitle:    t.Name,
+		Type:        ProfileBlockedThreadType,
+	}
+}
+
+func buildOccurrenceTags(p profile.Profile) map[string]string {
+	pm := p.Metadata()
+	tags := map[string]string{
+		"device_classification": pm.DeviceClassification,
+		"device_locale":         pm.DeviceLocale,
+		"device_manufacturer":   pm.DeviceManufacturer,
+		"device_model":          pm.DeviceModel,
+		"device_os_name":        pm.DeviceOsName,
+		"device_os_version":     pm.DeviceOsVersion,
+	}
+
+	if pm.DeviceOsBuildNumber != "" {
+		tags["device_os_build_number"] = pm.DeviceOsBuildNumber
+	}
+
+	return tags
+}
