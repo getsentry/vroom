@@ -116,7 +116,7 @@ PYTHON_STD_LIB_GO_TEMPLATE = \
 package frame
 
 var (
-\tpythonStdlib = map[string]bool{{
+\tpythonStdlib = map[string]struct{{}}{{
 {modules}
 \t}}
 )
@@ -131,7 +131,7 @@ def generate_python_std_lib_go(modules):
         for module in sorted(modules)
     ]
     formatted_modules = "\n".join(
-        f'\t\t{module} true,' for module in module_keys
+        f'\t\t{module} {{}},' for module in module_keys
     )
     return PYTHON_STD_LIB_GO_TEMPLATE.format(modules=formatted_modules)
 
