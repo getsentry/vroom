@@ -83,19 +83,19 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	s = sentry.StartSpan(ctx, "processing")
+	s.Description = "Find occurrences"
+	occurrences := occurrence.Find(p, callTrees)
+	s.Finish()
+
+	// Log occurrences with a link to access to corresponding profiles
+	// It will be removed when the issue platform UI is functional
+	for _, o := range occurrences {
+		link := fmt.Sprintf("https://sentry.io/api/0/profiling/projects/%d/profile/%s/?package=%s&name=%s", o.Event.ProjectID, o.Event.ID, o.EvidenceDisplay[1].Value, o.EvidenceDisplay[0].Value)
+		fmt.Println(o.Event.Platform, link)
+	}
+
 	if _, enabled := env.OccurrencesEnabledOrganizations[orgID]; enabled {
-		s = sentry.StartSpan(ctx, "processing")
-		s.Description = "Find occurrences"
-		occurrences := occurrence.Find(p, callTrees)
-		s.Finish()
-
-		// Log occurrences with a link to access to corresponding profiles
-		// It will be removed when the issue platform UI is functional
-		for _, o := range occurrences {
-			link := fmt.Sprintf("https://sentry.io/api/0/profiling/projects/%d/profile/%s/?package=%s&name=%s", o.Event.ProjectID, o.Event.ID, o.EvidenceDisplay[1].Value, o.EvidenceDisplay[0].Value)
-			fmt.Println(o.Event.Platform, link)
-		}
-
 		s = sentry.StartSpan(ctx, "processing")
 		s.Description = "Build Kafka message batch"
 		messages, err := occurrence.GenerateKafkaMessageBatch(occurrences)
