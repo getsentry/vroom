@@ -1,4 +1,6 @@
 **
+!go.mod
+!go.sum
 !/cmd/vroom
 !/internal
 !/pkg
