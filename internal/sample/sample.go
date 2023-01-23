@@ -229,7 +229,6 @@ func (p *SampleProfile) Speedscope() (speedscope.Output, error) {
 			}
 			speedscopeProfile = &speedscope.SampledProfile{
 				IsMainThread: sample.ThreadID == mainThreadID,
-				Images:       p.DebugMeta.Images,
 				Name:         threadName,
 				Queues:       make(map[string]speedscope.Queue),
 				StartValue:   sample.ElapsedSinceStartNS,
@@ -304,6 +303,7 @@ func (p *SampleProfile) Speedscope() (speedscope.Output, error) {
 	return speedscope.Output{
 		ActiveProfileIndex: mainThreadProfileIndex,
 		DurationNS:         p.Transactions[0].DurationNS(),
+		Images:             p.DebugMeta.Images,
 		Metadata: speedscope.ProfileMetadata{
 			ProfileView: speedscope.ProfileView{
 				Architecture:         p.Device.Architecture,

@@ -54,19 +54,18 @@ type (
 	}
 
 	SampledProfile struct {
-		EndValue     uint64            `json:"endValue"`
-		IsMainThread bool              `json:"isMainThread"`
-		Images       []debugmeta.Image `json:"images,omitempty"`
-		Name         string            `json:"name"`
-		Priority     int               `json:"priority"`
-		Queues       map[string]Queue  `json:"queues,omitempty"`
-		Samples      [][]int           `json:"samples"`
-		StartValue   uint64            `json:"startValue"`
-		State        string            `json:"state,omitempty"`
-		ThreadID     uint64            `json:"threadID"`
-		Type         ProfileType       `json:"type"`
-		Unit         ValueUnit         `json:"unit"`
-		Weights      []uint64          `json:"weights"`
+		EndValue     uint64           `json:"endValue"`
+		IsMainThread bool             `json:"isMainThread"`
+		Name         string           `json:"name"`
+		Priority     int              `json:"priority"`
+		Queues       map[string]Queue `json:"queues,omitempty"`
+		Samples      [][]int          `json:"samples"`
+		StartValue   uint64           `json:"startValue"`
+		State        string           `json:"state,omitempty"`
+		ThreadID     uint64           `json:"threadID"`
+		Type         ProfileType      `json:"type"`
+		Unit         ValueUnit        `json:"unit"`
+		Weights      []uint64         `json:"weights"`
 	}
 
 	SharedData struct {
@@ -81,6 +80,8 @@ type (
 		ActiveProfileIndex int                                 `json:"activeProfileIndex"`
 		AndroidClock       string                              `json:"androidClock,omitempty"`
 		DurationNS         uint64                              `json:"durationNS"`
+		Images             []debugmeta.Image                   `json:"images,omitempty"`
+		Measurements       map[string]measurements.Measurement `json:"measurements,omitempty"`
 		Metadata           ProfileMetadata                     `json:"metadata"`
 		Platform           platform.Platform                   `json:"platform"`
 		ProfileID          string                              `json:"profileID"`
@@ -89,7 +90,6 @@ type (
 		Shared             SharedData                          `json:"shared"`
 		TransactionName    string                              `json:"transactionName"`
 		Version            string                              `json:"version"`
-		Measurements       map[string]measurements.Measurement `json:"measurements,omitempty"`
 	}
 
 	ProfileMetadata struct {
