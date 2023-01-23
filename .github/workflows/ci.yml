@@ -3,13 +3,16 @@ name: continuous-integration
 on:
   pull_request:
     branches:
-      - "*"
+      - '*'
     paths:
       - 'internal/**'
       - 'cmd/**'
       - 'pkg/**'
       - 'vendor/**'
       - '.github/workflows/ci.yml'
+    push:
+      branches:
+        - main
 
 env:
   SHELL: /bin/bash
@@ -19,7 +22,7 @@ defaults:
     shell: bash
 
 jobs:
-  backend:
+  test-vroom:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
