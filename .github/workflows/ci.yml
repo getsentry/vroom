@@ -22,7 +22,7 @@ defaults:
     shell: bash
 
 jobs:
-  backend:
+  test-vroom:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
