@@ -204,6 +204,21 @@ func (p SampleProfile) CallTrees() (map[uint64][]*nodetree.Node, error) {
 	return trees, nil
 }
 
+// ThreadName returns the proper name of a thread.
+// In all cases but cocoa, we'll have a thread name in the thread metadata and we should return that.
+// In the cocoa case, we need to look at queue metadata and return that.
+// Sometimes, several threads refer to the queue labeled "com.apple.main-thread" even if they're not the main thread.
+// In this case, we want to only return "com.apple.main-thread" for the main thread and blank for the rest.
+func (t *Trace) ThreadName(threadID, queueAddress string, mainThread bool) string {
+	if m, exists := t.ThreadMetadata[threadID]; exists && m.Name != "" {
+		return m.Name
+	}
+	if m, exists := t.QueueMetadata[queueAddress]; exists && ((m.LabeledAsMainThread() && mainThread) || !m.LabeledAsMainThread()) {
+		return m.Label
+	}
+	return ""
+}
+
 func (p *SampleProfile) Speedscope() (speedscope.Output, error) {
 	sort.SliceStable(p.Trace.Samples, func(i, j int) bool {
 		return p.Trace.Samples[i].ElapsedSinceStartNS < p.Trace.Samples[j].ElapsedSinceStartNS
@@ -220,39 +235,21 @@ func (p *SampleProfile) Speedscope() (speedscope.Output, error) {
 		threadID := strconv.FormatUint(sample.ThreadID, 10)
 		stack := p.Trace.Stacks[sample.StackID]
 		speedscopeProfile, exists := threadIDToProfile[sample.ThreadID]
-		queueMetadata, qmExists := p.Trace.QueueMetadata[sample.QueueAddress]
 		if !exists {
-			threadMetadata, tmExists := p.Trace.ThreadMetadata[threadID]
-			threadName := threadMetadata.Name
-			if threadName == "" && qmExists && (!queueMetadata.LabeledAsMainThread() || sample.ThreadID != mainThreadID) {
-				threadName = queueMetadata.Label
-			}
+			isMainThread := sample.ThreadID == mainThreadID
 			speedscopeProfile = &speedscope.SampledProfile{
-				IsMainThread: sample.ThreadID == mainThreadID,
-				Name:         threadName,
-				Queues:       make(map[string]speedscope.Queue),
+				IsMainThread: isMainThread,
+				Name:         p.Trace.ThreadName(threadID, sample.QueueAddress, isMainThread),
 				StartValue:   sample.ElapsedSinceStartNS,
 				ThreadID:     sample.ThreadID,
 				Type:         speedscope.ProfileTypeSampled,
 				Unit:         speedscope.ValueUnitNanoseconds,
 			}
-			if qmExists {
-				speedscopeProfile.Queues[queueMetadata.Label] = speedscope.Queue{Label: queueMetadata.Label, StartNS: sample.ElapsedSinceStartNS, EndNS: sample.ElapsedSinceStartNS}
-			}
-			if tmExists {
-				speedscopeProfile.Priority = threadMetadata.Priority
+			if metadata, exists := p.Trace.ThreadMetadata[threadID]; exists {
+				speedscopeProfile.Priority = metadata.Priority
 			}
 			threadIDToProfile[sample.ThreadID] = speedscopeProfile
 		} else {
-			if qmExists {
-				q, qExists := speedscopeProfile.Queues[queueMetadata.Label]
-				if !qExists {
-					speedscopeProfile.Queues[queueMetadata.Label] = speedscope.Queue{Label: queueMetadata.Label, StartNS: sample.ElapsedSinceStartNS, EndNS: sample.ElapsedSinceStartNS}
-				} else {
-					q.EndNS = sample.ElapsedSinceStartNS
-					speedscopeProfile.Queues[queueMetadata.Label] = q
-				}
-			}
 			speedscopeProfile.Weights = append(speedscopeProfile.Weights, sample.ElapsedSinceStartNS-threadIDToPreviousTimestampNS[sample.ThreadID])
 		}
 
