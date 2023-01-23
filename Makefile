@@ -1,4 +1,4 @@
-.PHONY: build run test issuedetection downloader
+.PHONY: build run test issuedetection downloader python-stdlib
 
 build:
 	./scripts/build.sh
@@ -25,5 +25,5 @@ test:
 format:
 	gofmt -l -w -s .
 
-python-stdlib: scripts/make_python_stdlib.py
+python-stdlib:
 	python scripts/make_python_stdlib.py
