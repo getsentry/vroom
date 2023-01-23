@@ -14,14 +14,15 @@ import (
 )
 
 type (
-	EvidenceName string
+	EvidenceNameType string
+	IssueTitleType   string
 
 	OccurrenceType int
 
 	Evidence struct {
-		Name      EvidenceName `json:"name"`
-		Value     string       `json:"value"`
-		Important bool         `json:"important"`
+		Name      EvidenceNameType `json:"name"`
+		Value     string           `json:"value"`
+		Important bool             `json:"important"`
 	}
 
 	// Event holds the metadata related to a profile
@@ -46,7 +47,7 @@ type (
 		EvidenceDisplay []Evidence             `json:"evidence_display,omitempty"`
 		Fingerprint     string                 `json:"fingerprint"`
 		ID              string                 `json:"id"`
-		IssueTitle      string                 `json:"issue_title"`
+		IssueTitle      IssueTitleType         `json:"issue_title"`
 		Level           string                 `json:"level,omitempty"`
 		ResourceID      string                 `json:"resource_id,omitempty"`
 		Subtitle        string                 `json:"subtitle"`
@@ -61,15 +62,17 @@ type (
 const (
 	ProfileBlockedThreadType OccurrenceType = 2000
 
-	EvidenceNamePackage  EvidenceName = "Package"
-	EvidenceNameFunction EvidenceName = "Suspect function"
+	EvidenceNamePackage  EvidenceNameType = "Package"
+	EvidenceNameFunction EvidenceNameType = "Suspect function"
+
+	IssueTitleBlockingFunctionOnMainThread IssueTitleType = "Blocking function called on the main thread"
 )
 
-func NewOccurrence(p profile.Profile, title string, ni nodeInfo) Occurrence {
+func NewOccurrence(p profile.Profile, title IssueTitleType, ni nodeInfo) Occurrence {
 	t := p.Transaction()
 	h := md5.New()
 	_, _ = io.WriteString(h, strconv.FormatUint(p.ProjectID(), 10))
-	_, _ = io.WriteString(h, title)
+	_, _ = io.WriteString(h, string(title))
 	_, _ = io.WriteString(h, t.Name)
 	_, _ = io.WriteString(h, strconv.Itoa(int(ProfileBlockedThreadType)))
 	_, _ = io.WriteString(h, ni.Node.Package)

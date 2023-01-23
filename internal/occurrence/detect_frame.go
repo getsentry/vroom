@@ -11,7 +11,7 @@ type (
 	DetectExactFrameMetadata struct {
 		ActiveThreadOnly   bool
 		FunctionsByPackage map[string]map[string]struct{}
-		IssueTitle         string
+		IssueTitle         IssueTitleType
 	}
 
 	nodeKey struct {
@@ -76,7 +76,7 @@ var (
 						"writevSync":          struct{}{},
 					},
 				},
-				IssueTitle: "Synchronous function called on main thread",
+				IssueTitle: IssueTitleBlockingFunctionOnMainThread,
 			},
 		},
 		platform.Cocoa: []DetectExactFrameMetadata{
@@ -220,7 +220,7 @@ var (
 						"-[UINib instantiateWithOwner:options:]": struct{}{},
 					},
 				},
-				IssueTitle: "File I/O function called on main thread",
+				IssueTitle: IssueTitleBlockingFunctionOnMainThread,
 			},
 		},
 	}
