@@ -1,13 +1,12 @@
 format_version: 10
-environments:
-    vroom-env:
-        pipelines:
-            - vroom-pipeline
 pipelines:
-    vroom-pipeline:
+    deploy-vroom:
         environment_variables:
             GITHUB_TOKEN: "{{SECRET:[devinfra-github][token]}}"
             GCP_PROJECT: internal-sentry
+            GKE_REGION:
+            GKE_CLUSTER_ZONE:
+            GKE_CLUSTER:
             ENVIRONMENT: production
         group: vroom
         lock_behavior: unlockWhenFinished
@@ -18,7 +17,7 @@ pipelines:
                 destination: vroom
                 branch: main
         stages:
-            - first_stage:
+            - checks:
                   fetch_materials: true
                   approval:
                       type: manual
@@ -30,7 +29,7 @@ pipelines:
                               - script: |
                                     /devinfra/scripts/checks/githubactions/checkruns.py \
                                         getsentry/vroom \
-                                        ${GO_REVISION_GETSENTRY_REPO} \
+                                        ${GO_REVISION_VROOM_REPO} \
                                         backend
                       check_build_status:
                           timeout: 600
@@ -38,10 +37,10 @@ pipelines:
                           tasks:
                               - script: |
                                  /devinfra/scripts/checks/googlecloud/checkcloudbuild.py \
-                                    ${GO_REVISION_VROOM} \
-                                    internal-sentry \
+                                    ${GO_REVISION_VROOM_REPO} \
+                                    ${GCP_PROJECT} \
                                     "us.gcr.io/${GCP_PROJECT}/vroom"
-            - second_stage:
+            - deploy:
                   approval:
                       type: manual
                       allow_only_on_success: true
@@ -54,5 +53,5 @@ pipelines:
                                    /devinfra/scripts/k8s/k8sdeploy.py \
                                       --context="gke_${GCP_PROJECT}_${GKE_REGION}-${GKE_CLUSTER_ZONE}_${GKE_CLUSTER}" \
                                       --label-selector="service=vroom,component=default,environment=${ENVIRONMENT}" \
-                                      --image="us.gcr.io/internal-sentry/vroom:${GO_REVISION_VROOM_REPO}" \
+                                      --image="us.gcr.io/${GCP_PROJECT}/vroom:${GO_REVISION_VROOM_REPO}" \
                                       --container-name="vroom"

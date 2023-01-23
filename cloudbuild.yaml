@@ -5,6 +5,6 @@ steps:
       ]
 
 images: [
-    "us.gcr.io/${PROJECT_ID}/vroom:${COMMIT_SHA}",
+    "us.gcr.io/internal-sentry/vroom:${COMMIT_SHA}",
   ]
 timeout: 600s
