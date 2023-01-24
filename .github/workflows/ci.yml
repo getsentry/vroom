@@ -10,9 +10,9 @@ on:
       - 'pkg/**'
       - 'vendor/**'
       - '.github/workflows/ci.yml'
-    push:
-      branches:
-        - main
+  push:
+    branches:
+      - main
 
 env:
   SHELL: /bin/bash
