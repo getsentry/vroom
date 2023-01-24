@@ -31,7 +31,7 @@ pipelines:
                                     /devinfra/scripts/checks/githubactions/checkruns.py \
                                         getsentry/vroom \
                                         ${GO_REVISION_VROOM_REPO} \
-                                        test-vroom
+                                        continuous-integration
                       check_build_status:
                           timeout: 600
                           elastic_profile_id: vroom
