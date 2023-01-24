@@ -10,9 +10,9 @@ on:
       - 'pkg/**'
       - 'vendor/**'
       - '.github/workflows/ci.yml'
-    push:
-      branches:
-        - main
+  push:
+    branches:
+      - main
 
 env:
   SHELL: /bin/bash
@@ -29,5 +29,5 @@ jobs:
       with:
         fetch-depth: 0
     - name: Run golang tests
-      uses: ./.github/actions/run-golang-tests
+      uses: ./.github/actions/test-vroom
 

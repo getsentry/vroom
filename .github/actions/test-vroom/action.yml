@@ -1,4 +1,4 @@
-name: run-golang-tests
+name: test-vroom
 
 runs:
   using: "composite"
