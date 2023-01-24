@@ -4,9 +4,9 @@ pipelines:
         environment_variables:
             GITHUB_TOKEN: "{{SECRET:[devinfra-github][token]}}"
             GCP_PROJECT: internal-sentry
-            GKE_REGION:
-            GKE_CLUSTER_ZONE:
-            GKE_CLUSTER:
+            GKE_CLUSTER: zdpwkxst
+            GKE_REGION: us-central1
+            GKE_CLUSTER_ZONE: b
             ENVIRONMENT: production
         group: vroom
         lock_behavior: unlockWhenFinished
