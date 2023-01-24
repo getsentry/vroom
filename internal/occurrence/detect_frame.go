@@ -130,7 +130,6 @@ var (
 						"-[NSFileManager contentsAtPath:]":                                        struct{}{},
 						"-[NSFileManager createFileAtPath:contents:attributes:]":                  struct{}{},
 						"-[NSISEngine performModifications:withUnsatisfiableConstraintsHandler:]": struct{}{},
-						"-[NSISEngine withBehaviors:performModifications:]":                       struct{}{},
 						"-[NSRegularExpression initWithPattern:options:error:]":                   struct{}{},
 						"@nonobjc NSData.init(contentsOf: URL, options: NSDataReadingOptions)":    struct{}{},
 						"Data.init(contentsOf: __shared URL, options: NSDataReadingOptions)":      struct{}{},
@@ -206,10 +205,6 @@ var (
 					},
 					"libxpc.dylib": map[string]struct{}{
 						"xpc_connection_send_message_with_reply_sync": struct{}{},
-					},
-					"QuartzCore": map[string]struct{}{
-						"CA::Layer::layout_and_display_if_needed(CA::Transaction*)": struct{}{},
-						"CA::Layer::layout_if_needed(CA::Transaction*)":             struct{}{},
 					},
 					"SwiftUI": map[string]struct{}{
 						"UnaryLayoutEngine.sizeThatFits(_ProposedSize)":                      struct{}{},
