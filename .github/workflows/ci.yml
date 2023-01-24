@@ -29,5 +29,5 @@ jobs:
       with:
         fetch-depth: 0
     - name: Run golang tests
-      uses: ./.github/actions/run-golang-tests
+      uses: ./.github/actions/test-vroom
 
