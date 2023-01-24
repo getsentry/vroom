@@ -73,7 +73,7 @@ func (env *environment) getFunctions(w http.ResponseWriter, r *http.Request) {
 		direction = "DESC"
 		rawOrderBy = strings.TrimPrefix(rawOrderBy, "-")
 	}
-	if rawOrderBy != "p75" && rawOrderBy != "p99" && rawOrderBy != "count" {
+	if rawOrderBy != "p75" && rawOrderBy != "p99" && rawOrderBy != "p95" && rawOrderBy != "count" {
 		hub.CaptureException(fmt.Errorf("unknown sort: %s", rawOrderBy))
 		w.WriteHeader(http.StatusBadRequest)
 		return
