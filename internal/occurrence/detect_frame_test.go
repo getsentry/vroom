@@ -2,6 +2,7 @@ package occurrence
 
 import (
 	"testing"
+	"time"
 
 	"github.com/getsentry/vroom/internal/frame"
 	"github.com/getsentry/vroom/internal/nodetree"
@@ -20,8 +21,8 @@ func TestDetectFrameInCallTree(t *testing.T) {
 		{
 			name: "Detect frame in call tree",
 			node: &nodetree.Node{
-				DurationNS:    10,
-				EndNS:         10,
+				DurationNS:    uint64(30 * time.Millisecond),
+				EndNS:         uint64(30 * time.Millisecond),
 				Fingerprint:   0,
 				IsApplication: true,
 				Line:          0,
@@ -31,8 +32,8 @@ func TestDetectFrameInCallTree(t *testing.T) {
 				StartNS:       0,
 				Children: []*nodetree.Node{
 					&nodetree.Node{
-						DurationNS:    5,
-						EndNS:         5,
+						DurationNS:    uint64(20 * time.Millisecond),
+						EndNS:         uint64(20 * time.Millisecond),
 						Fingerprint:   0,
 						IsApplication: false,
 						Line:          0,
@@ -42,8 +43,8 @@ func TestDetectFrameInCallTree(t *testing.T) {
 						StartNS:       0,
 						Children: []*nodetree.Node{
 							&nodetree.Node{
-								DurationNS:    5,
-								EndNS:         5,
+								DurationNS:    uint64(20 * time.Millisecond),
+								EndNS:         uint64(20 * time.Millisecond),
 								Fingerprint:   0,
 								IsApplication: true,
 								Line:          0,
@@ -53,8 +54,8 @@ func TestDetectFrameInCallTree(t *testing.T) {
 								StartNS:       0,
 								Children: []*nodetree.Node{
 									&nodetree.Node{
-										DurationNS:    5,
-										EndNS:         5,
+										DurationNS:    uint64(20 * time.Millisecond),
+										EndNS:         uint64(20 * time.Millisecond),
 										Fingerprint:   0,
 										IsApplication: false,
 										Line:          0,
@@ -114,8 +115,8 @@ func TestDetectFrameInCallTree(t *testing.T) {
 					Function: "CFReadStreamRead",
 				}: nodeInfo{
 					Node: &nodetree.Node{
-						DurationNS:    5,
-						EndNS:         5,
+						DurationNS:    uint64(20 * time.Millisecond),
+						EndNS:         uint64(20 * time.Millisecond),
 						Fingerprint:   0,
 						IsApplication: false,
 						Line:          0,
@@ -164,7 +165,7 @@ func TestDetectFrameInCallTree(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			nodes := make(map[nodeKey]nodeInfo)
 			var stackTrace []frame.Frame
-			detectFrameInCallTree(tt.node, detectFrameMetadata[platform.Cocoa][0].FunctionsByPackage, nodes, &stackTrace)
+			detectFrameInCallTree(tt.node, detectFrameJobs[platform.Cocoa][0], nodes, &stackTrace)
 			if diff := testutil.Diff(nodes, tt.want); diff != "" {
 				t.Fatalf("Result mismatch: got - want +\n%s", diff)
 			}

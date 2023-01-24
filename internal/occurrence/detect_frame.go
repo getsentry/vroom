@@ -1,6 +1,8 @@
 package occurrence
 
 import (
+	"time"
+
 	"github.com/getsentry/vroom/internal/frame"
 	"github.com/getsentry/vroom/internal/nodetree"
 	"github.com/getsentry/vroom/internal/platform"
@@ -8,8 +10,9 @@ import (
 )
 
 type (
-	DetectExactFrameMetadata struct {
+	DetectExactFrameOptions struct {
 		ActiveThreadOnly   bool
+		DurationThreshold  time.Duration
 		FunctionsByPackage map[string]map[string]struct{}
 		IssueTitle         IssueTitleType
 	}
@@ -26,9 +29,9 @@ type (
 )
 
 var (
-	detectFrameMetadata = map[platform.Platform][]DetectExactFrameMetadata{
-		platform.Node: []DetectExactFrameMetadata{
-			DetectExactFrameMetadata{
+	detectFrameJobs = map[platform.Platform][]DetectExactFrameOptions{
+		platform.Node: []DetectExactFrameOptions{
+			DetectExactFrameOptions{
 				ActiveThreadOnly: true,
 				FunctionsByPackage: map[string]map[string]struct{}{
 					"node:fs": map[string]struct{}{
@@ -79,9 +82,10 @@ var (
 				IssueTitle: IssueTitleBlockingFunctionOnMainThread,
 			},
 		},
-		platform.Cocoa: []DetectExactFrameMetadata{
-			DetectExactFrameMetadata{
-				ActiveThreadOnly: true,
+		platform.Cocoa: []DetectExactFrameOptions{
+			DetectExactFrameOptions{
+				ActiveThreadOnly:  true,
+				DurationThreshold: 16 * time.Millisecond,
 				FunctionsByPackage: map[string]map[string]struct{}{
 					"AppleJPEG": map[string]struct{}{
 						"applejpeg_decode_image_all": struct{}{},
@@ -227,37 +231,37 @@ var (
 )
 
 // DetectFrames detects occurrence of an issue based by matching frames of the profile on a list of frames
-func detectFrame(p profile.Profile, callTreesPerThreadID map[uint64][]*nodetree.Node, metadata DetectExactFrameMetadata, occurrences *[]Occurrence) {
+func detectFrame(p profile.Profile, callTreesPerThreadID map[uint64][]*nodetree.Node, options DetectExactFrameOptions, occurrences *[]Occurrence) {
 	// List nodes matching criteria
 	nodes := make(map[nodeKey]nodeInfo)
-	if metadata.ActiveThreadOnly {
+	if options.ActiveThreadOnly {
 		callTrees, exists := callTreesPerThreadID[p.Transaction().ActiveThreadID]
 		if !exists {
 			return
 		}
 		for _, root := range callTrees {
 			var stackTrace []frame.Frame
-			detectFrameInCallTree(root, metadata.FunctionsByPackage, nodes, &stackTrace)
+			detectFrameInCallTree(root, options, nodes, &stackTrace)
 		}
 	} else {
 		for _, callTrees := range callTreesPerThreadID {
 			for _, root := range callTrees {
 				var stackTrace []frame.Frame
-				detectFrameInCallTree(root, metadata.FunctionsByPackage, nodes, &stackTrace)
+				detectFrameInCallTree(root, options, nodes, &stackTrace)
 			}
 		}
 	}
 
 	// Create occurrences
 	for _, n := range nodes {
-		*occurrences = append(*occurrences, NewOccurrence(p, metadata.IssueTitle, n))
+		*occurrences = append(*occurrences, NewOccurrence(p, options.IssueTitle, n))
 	}
 }
 
-func detectFrameInCallTree(n *nodetree.Node, functionsByPackage map[string]map[string]struct{}, nodes map[nodeKey]nodeInfo, stackTrace *[]frame.Frame) {
+func detectFrameInCallTree(n *nodetree.Node, options DetectExactFrameOptions, nodes map[nodeKey]nodeInfo, stackTrace *[]frame.Frame) {
 	*stackTrace = append(*stackTrace, n.Frame())
-	if functions, exists := functionsByPackage[n.Package]; exists {
-		if _, exists := functions[n.Name]; exists {
+	if functions, exists := options.FunctionsByPackage[n.Package]; exists {
+		if _, exists := functions[n.Name]; exists && n.DurationNS > uint64(options.DurationThreshold) {
 			nk := nodeKey{Package: n.Package, Function: n.Name}
 			if _, exists := nodes[nk]; !exists {
 				nodes[nk] = nodeInfo{
@@ -269,6 +273,6 @@ func detectFrameInCallTree(n *nodetree.Node, functionsByPackage map[string]map[s
 	}
 	for _, c := range n.Children {
 		newStackTrace := *stackTrace
-		detectFrameInCallTree(c, functionsByPackage, nodes, &newStackTrace)
+		detectFrameInCallTree(c, options, nodes, &newStackTrace)
 	}
 }
