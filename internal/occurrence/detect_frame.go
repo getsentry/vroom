@@ -115,9 +115,6 @@ var (
 						"+[MLModel modelWithContentsOfURL:configuration:error:]":         struct{}{},
 						"-[MLNeuralNetworkEngine predictionFromFeatures:options:error:]": struct{}{},
 					},
-					"CoreAutoLayout": map[string]struct{}{
-						"-[NSISEngine withBehaviors:performModifications:]": struct{}{},
-					},
 					"Foundation": map[string]struct{}{
 						"+[NSJSONSerialization JSONObjectWithStream:options:error:]":              struct{}{},
 						"+[NSJSONSerialization writeJSONObject:toStream:options:error:]":          struct{}{},
