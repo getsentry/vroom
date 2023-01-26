@@ -253,7 +253,8 @@ func detectFrame(p profile.Profile, callTreesPerThreadID map[uint64][]*nodetree.
 func detectFrameInCallTree(n *nodetree.Node, options DetectExactFrameOptions, nodes map[nodeKey]nodeInfo, stackTrace *[]frame.Frame) {
 	*stackTrace = append(*stackTrace, n.Frame())
 	if functions, exists := options.FunctionsByPackage[n.Package]; exists {
-		if _, exists := functions[n.Name]; exists && n.DurationNS > uint64(options.DurationThreshold) {
+		// Only use time threshold when the sample count is more than one to avoid sampling issues showing up as blocking issues
+		if _, exists := functions[n.Name]; exists && n.DurationNS > uint64(options.DurationThreshold) && n.SampleCount != 1 {
 			nk := nodeKey{Package: n.Package, Function: n.Name}
 			if _, exists := nodes[nk]; !exists {
 				nodes[nk] = nodeInfo{
