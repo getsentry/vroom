@@ -9,6 +9,7 @@ import (
 
 type (
 	Node struct {
+		Children      []*Node `json:"children,omitempty"`
 		DurationNS    uint64  `json:"duration_ns"`
 		EndNS         uint64  `json:"-"`
 		Fingerprint   uint64  `json:"fingerprint"`
@@ -17,8 +18,8 @@ type (
 		Name          string  `json:"name"`
 		Package       string  `json:"package"`
 		Path          string  `json:"path,omitempty"`
+		SampleCount   int     `json:"-"`
 		StartNS       uint64  `json:"-"`
-		Children      []*Node `json:"children,omitempty"`
 	}
 )
 
@@ -32,11 +33,17 @@ func NodeFromFrame(pkg, name, path string, line uint32, start, end, fingerprint 
 		Package:       PackageBaseName(pkg),
 		Path:          path,
 		StartNS:       start,
+		SampleCount:   1,
 	}
 	if end > 0 {
 		n.DurationNS = n.EndNS - n.StartNS
 	}
 	return &n
+}
+
+func (n *Node) Update(timestamp uint64) {
+	n.SampleCount++
+	n.SetDuration(timestamp)
 }
 
 func (n *Node) Frame() frame.Frame {

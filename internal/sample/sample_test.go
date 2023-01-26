@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/getsentry/vroom/internal/frame"
+	"github.com/getsentry/vroom/internal/nodetree"
 	"github.com/getsentry/vroom/internal/testutil"
 )
 
@@ -339,5 +340,197 @@ func TestIsInline(t *testing.T) {
 	}
 	if !inline_frame_1.IsInline() {
 		t.Fatal("inline frame classified as normal")
+	}
+}
+
+func TestCallTrees(t *testing.T) {
+	tests := []struct {
+		name    string
+		profile SampleProfile
+		want    map[uint64][]*nodetree.Node
+	}{
+		{
+			name: "call tree with multiple samples per frame",
+			profile: SampleProfile{
+				Transaction: Transaction{ActiveThreadID: 1},
+				Transactions: []Transaction{
+					Transaction{ActiveThreadID: 1},
+				},
+				Trace: Trace{
+					Samples: []Sample{
+						Sample{StackID: 0, ElapsedSinceStartNS: 10, ThreadID: 1},
+						Sample{StackID: 1, ElapsedSinceStartNS: 40, ThreadID: 1},
+						Sample{StackID: 1, ElapsedSinceStartNS: 50, ThreadID: 1},
+					},
+					Stacks: []Stack{
+						Stack{1, 0},
+						Stack{2, 1, 0},
+					},
+					Frames: []frame.Frame{
+						frame.Frame{Function: "function0"},
+						frame.Frame{Function: "function1"},
+						frame.Frame{Function: "function2"},
+					},
+				},
+			},
+			want: map[uint64][]*nodetree.Node{
+				1: []*nodetree.Node{
+					&nodetree.Node{
+						DurationNS:    50,
+						EndNS:         50,
+						Fingerprint:   15444731332182868858,
+						IsApplication: true,
+						Name:          "function0",
+						SampleCount:   3,
+						Children: []*nodetree.Node{
+							&nodetree.Node{
+								DurationNS:    50,
+								EndNS:         50,
+								Fingerprint:   14164357600995800812,
+								IsApplication: true,
+								Name:          "function1",
+								SampleCount:   3,
+								Children: []*nodetree.Node{
+									&nodetree.Node{
+										DurationNS:    40,
+										EndNS:         50,
+										Fingerprint:   9531802423075301657,
+										IsApplication: true,
+										Name:          "function2",
+										SampleCount:   2,
+										StartNS:       10,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "call tree with single sample frames",
+			profile: SampleProfile{
+				Transaction: Transaction{ActiveThreadID: 1},
+				Transactions: []Transaction{
+					Transaction{ActiveThreadID: 1},
+				},
+				Trace: Trace{
+					Samples: []Sample{
+						Sample{StackID: 0, ElapsedSinceStartNS: 10, ThreadID: 1},
+						Sample{StackID: 1, ElapsedSinceStartNS: 40, ThreadID: 1},
+					},
+					Stacks: []Stack{
+						Stack{1, 0},
+						Stack{2, 1, 0},
+					},
+					Frames: []frame.Frame{
+						frame.Frame{Function: "function0"},
+						frame.Frame{Function: "function1"},
+						frame.Frame{Function: "function2"},
+					},
+				},
+			},
+			want: map[uint64][]*nodetree.Node{
+				1: []*nodetree.Node{
+					&nodetree.Node{
+						DurationNS:    40,
+						EndNS:         40,
+						Fingerprint:   15444731332182868858,
+						IsApplication: true,
+						Name:          "function0",
+						SampleCount:   2,
+						Children: []*nodetree.Node{
+							&nodetree.Node{
+								DurationNS:    40,
+								EndNS:         40,
+								Fingerprint:   14164357600995800812,
+								IsApplication: true,
+								Name:          "function1",
+								SampleCount:   2,
+								Children: []*nodetree.Node{
+									&nodetree.Node{
+										DurationNS:    30,
+										EndNS:         40,
+										Fingerprint:   9531802423075301657,
+										IsApplication: true,
+										Name:          "function2",
+										SampleCount:   1,
+										StartNS:       10,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "call tree with single samples",
+			profile: SampleProfile{
+				Transaction: Transaction{ActiveThreadID: 1},
+				Transactions: []Transaction{
+					Transaction{ActiveThreadID: 1},
+				},
+				Trace: Trace{
+					Samples: []Sample{
+						Sample{StackID: 0, ElapsedSinceStartNS: 10, ThreadID: 1},
+						Sample{StackID: 1, ElapsedSinceStartNS: 20, ThreadID: 1},
+						Sample{StackID: 2, ElapsedSinceStartNS: 30, ThreadID: 1},
+					},
+					Stacks: []Stack{
+						Stack{0},
+						Stack{1},
+						Stack{2},
+					},
+					Frames: []frame.Frame{
+						frame.Frame{Function: "function0"},
+						frame.Frame{Function: "function1"},
+						frame.Frame{Function: "function2"},
+					},
+				},
+			},
+			want: map[uint64][]*nodetree.Node{
+				1: []*nodetree.Node{
+					&nodetree.Node{
+						DurationNS:    10,
+						EndNS:         10,
+						Fingerprint:   15444731332182868858,
+						IsApplication: true,
+						Name:          "function0",
+						SampleCount:   1,
+					},
+					&nodetree.Node{
+						DurationNS:    10,
+						EndNS:         20,
+						Fingerprint:   15444731332182868859,
+						IsApplication: true,
+						Name:          "function1",
+						SampleCount:   1,
+						StartNS:       10,
+					},
+					&nodetree.Node{
+						DurationNS:    10,
+						EndNS:         30,
+						Fingerprint:   15444731332182868856,
+						IsApplication: true,
+						Name:          "function2",
+						SampleCount:   1,
+						StartNS:       20,
+					},
+				},
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			callTrees, err := test.profile.CallTrees()
+			if err != nil {
+				t.Fatalf("error while generating call trees: %+v\n", err)
+			}
+			if diff := testutil.Diff(callTrees, test.want); diff != "" {
+				t.Fatalf("Result mismatch: got - want +\n%s", diff)
+			}
+		})
 	}
 }

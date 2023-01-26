@@ -23,6 +23,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 				Name:          "root",
 				Package:       "package",
 				Path:          "path",
+				SampleCount:   1,
 				StartNS:       0,
 				Children:      []*Node{},
 			},
@@ -36,6 +37,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 				Package:       "package",
 				Path:          "path",
 				StartNS:       0,
+				SampleCount:   1,
 				Children:      []*Node{},
 			}},
 		},
@@ -50,6 +52,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 				Name:          "root",
 				Package:       "package",
 				Path:          "path",
+				SampleCount:   1,
 				StartNS:       0,
 				Children: []*Node{
 					&Node{
@@ -61,6 +64,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 						Name:          "child1",
 						Package:       "package",
 						Path:          "path",
+						SampleCount:   1,
 						StartNS:       0,
 						Children:      []*Node{},
 					},
@@ -73,6 +77,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 						Name:          "child2",
 						Package:       "package",
 						Path:          "path",
+						SampleCount:   1,
 						StartNS:       1,
 						Children:      []*Node{},
 					},
@@ -87,6 +92,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 				Name:          "root",
 				Package:       "package",
 				Path:          "path",
+				SampleCount:   1,
 				StartNS:       0,
 				Children: []*Node{
 					&Node{
@@ -98,6 +104,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 						Name:          "child1",
 						Package:       "package",
 						Path:          "path",
+						SampleCount:   1,
 						StartNS:       0,
 						Children:      []*Node{},
 					},
@@ -110,6 +117,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 						Name:          "child2",
 						Package:       "package",
 						Path:          "path",
+						SampleCount:   1,
 						StartNS:       1,
 						Children:      []*Node{},
 					},
@@ -127,6 +135,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 				Name:          "root",
 				Package:       "package",
 				Path:          "path",
+				SampleCount:   1,
 				StartNS:       0,
 				Children: []*Node{
 					&Node{
@@ -138,6 +147,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 						Name:          "child",
 						Package:       "package",
 						Path:          "path",
+						SampleCount:   1,
 						StartNS:       0,
 						Children:      []*Node{},
 					},
@@ -152,6 +162,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 				Name:          "root",
 				Package:       "package",
 				Path:          "path",
+				SampleCount:   1,
 				StartNS:       0,
 				Children: []*Node{
 					&Node{
@@ -163,6 +174,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 						Name:          "child",
 						Package:       "package",
 						Path:          "path",
+						SampleCount:   1,
 						StartNS:       0,
 						Children:      []*Node{},
 					},
@@ -180,6 +192,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 				Name:          "root",
 				Package:       "package",
 				Path:          "path",
+				SampleCount:   1,
 				StartNS:       0,
 				Children: []*Node{
 					&Node{
@@ -191,6 +204,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 						Name:          "child",
 						Package:       "package",
 						Path:          "path",
+						SampleCount:   1,
 						StartNS:       0,
 						Children:      []*Node{},
 					},
@@ -205,6 +219,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 				Name:          "child",
 				Package:       "package",
 				Path:          "path",
+				SampleCount:   1,
 				StartNS:       0,
 				Children:      []*Node{},
 			}},
@@ -220,6 +235,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 				Name:          "root",
 				Package:       "package",
 				Path:          "path",
+				SampleCount:   1,
 				StartNS:       0,
 				Children: []*Node{
 					&Node{
@@ -231,6 +247,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 						Name:          "child",
 						Package:       "package",
 						Path:          "path",
+						SampleCount:   1,
 						StartNS:       0,
 						Children:      []*Node{},
 					},
@@ -245,6 +262,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 				Name:          "child",
 				Package:       "package",
 				Path:          "path",
+				SampleCount:   1,
 				StartNS:       0,
 				Children:      []*Node{},
 			}},
@@ -260,6 +278,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 				Name:          "root",
 				Package:       "package",
 				Path:          "path",
+				SampleCount:   1,
 				StartNS:       0,
 				Children: []*Node{
 					&Node{
@@ -271,6 +290,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 						Name:          "child",
 						Package:       "package",
 						Path:          "path",
+						SampleCount:   1,
 						StartNS:       0,
 						Children:      []*Node{},
 					},
@@ -285,6 +305,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 				Name:          "root",
 				Package:       "package",
 				Path:          "path",
+				SampleCount:   1,
 				StartNS:       0,
 				Children:      []*Node{},
 			}},
@@ -300,6 +321,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 				Name:          "",
 				Package:       "",
 				Path:          "",
+				SampleCount:   1,
 				StartNS:       0,
 				Children: []*Node{
 					&Node{
@@ -311,6 +333,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 						Name:          "",
 						Package:       "",
 						Path:          "",
+						SampleCount:   1,
 						StartNS:       0,
 						Children: []*Node{
 							&Node{
@@ -322,6 +345,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 								Name:          "",
 								Package:       "",
 								Path:          "",
+								SampleCount:   1,
 								StartNS:       0,
 								Children: []*Node{
 									&Node{
@@ -333,6 +357,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 										Name:          "",
 										Package:       "",
 										Path:          "",
+										SampleCount:   1,
 										StartNS:       0,
 										Children:      []*Node{},
 									},
@@ -349,6 +374,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 						Name:          "",
 						Package:       "",
 						Path:          "",
+						SampleCount:   1,
 						StartNS:       5,
 						Children:      []*Node{},
 					},
@@ -367,6 +393,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 				Name:          "root",
 				Package:       "package",
 				Path:          "path",
+				SampleCount:   1,
 				StartNS:       0,
 				Children: []*Node{
 					&Node{
@@ -378,6 +405,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 						Name:          "child1-1",
 						Package:       "package",
 						Path:          "path",
+						SampleCount:   1,
 						StartNS:       0,
 						Children: []*Node{
 							&Node{
@@ -389,6 +417,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 								Name:          "child2-1",
 								Package:       "package",
 								Path:          "path",
+								SampleCount:   1,
 								StartNS:       0,
 								Children: []*Node{
 									&Node{
@@ -400,6 +429,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 										Name:          "child3-1",
 										Package:       "package",
 										Path:          "path",
+										SampleCount:   1,
 										StartNS:       0,
 										Children:      []*Node{},
 									},
@@ -416,6 +446,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 						Name:          "child1-2",
 						Package:       "package",
 						Path:          "path",
+						SampleCount:   1,
 						StartNS:       5,
 						Children: []*Node{
 							&Node{
@@ -427,6 +458,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 								Name:          "",
 								Package:       "",
 								Path:          "",
+								SampleCount:   1,
 								StartNS:       5,
 								Children: []*Node{
 									&Node{
@@ -438,6 +470,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 										Name:          "child3-1",
 										Package:       "package",
 										Path:          "path",
+										SampleCount:   1,
 										StartNS:       5,
 										Children:      []*Node{},
 									},
@@ -456,6 +489,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 				Name:          "root",
 				Package:       "package",
 				Path:          "path",
+				SampleCount:   1,
 				StartNS:       0,
 				Children: []*Node{
 					&Node{
@@ -467,6 +501,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 						Name:          "child2-1",
 						Package:       "package",
 						Path:          "path",
+						SampleCount:   1,
 						StartNS:       0,
 						Children:      []*Node{},
 					},
@@ -479,6 +514,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 						Name:          "child3-1",
 						Package:       "package",
 						Path:          "path",
+						SampleCount:   1,
 						StartNS:       5,
 						Children:      []*Node{},
 					},

@@ -159,7 +159,7 @@ func (p SampleProfile) CallTrees() (map[uint64][]*nodetree.Node, error) {
 	})
 
 	activeThreadID := p.Transactions[0].ActiveThreadID
-	trees := make(map[uint64][]*nodetree.Node)
+	treesByThreadID := make(map[uint64][]*nodetree.Node)
 	previousTimestamp := make(map[uint64]uint64)
 
 	var current *nodetree.Node
@@ -175,20 +175,20 @@ func (p SampleProfile) CallTrees() (map[uint64][]*nodetree.Node, error) {
 			f.WriteToHash(h)
 			fingerprint := h.Sum64()
 			if current == nil {
-				i := len(trees[s.ThreadID]) - 1
-				if i >= 0 && trees[s.ThreadID][i].Fingerprint == fingerprint && trees[s.ThreadID][i].EndNS == previousTimestamp[s.ThreadID] {
-					current = trees[s.ThreadID][i]
-					current.SetDuration(s.ElapsedSinceStartNS)
+				i := len(treesByThreadID[s.ThreadID]) - 1
+				if i >= 0 && treesByThreadID[s.ThreadID][i].Fingerprint == fingerprint && treesByThreadID[s.ThreadID][i].EndNS == previousTimestamp[s.ThreadID] {
+					current = treesByThreadID[s.ThreadID][i]
+					current.Update(s.ElapsedSinceStartNS)
 				} else {
 					n := nodetree.NodeFromFrame(f.PackageBaseName(), f.Function, f.Path, f.Line, previousTimestamp[s.ThreadID], s.ElapsedSinceStartNS, fingerprint, p.IsApplicationFrame(f))
-					trees[s.ThreadID] = append(trees[s.ThreadID], n)
+					treesByThreadID[s.ThreadID] = append(treesByThreadID[s.ThreadID], n)
 					current = n
 				}
 			} else {
 				i := len(current.Children) - 1
 				if i >= 0 && current.Children[i].Fingerprint == fingerprint && current.Children[i].EndNS == previousTimestamp[s.ThreadID] {
 					current = current.Children[i]
-					current.SetDuration(s.ElapsedSinceStartNS)
+					current.Update(s.ElapsedSinceStartNS)
 				} else {
 					n := nodetree.NodeFromFrame(f.PackageBaseName(), f.Function, f.Path, f.Line, previousTimestamp[s.ThreadID], s.ElapsedSinceStartNS, fingerprint, p.IsApplicationFrame(f))
 					current.Children = append(current.Children, n)
@@ -200,7 +200,8 @@ func (p SampleProfile) CallTrees() (map[uint64][]*nodetree.Node, error) {
 		previousTimestamp[s.ThreadID] = s.ElapsedSinceStartNS
 		current = nil
 	}
-	return trees, nil
+
+	return treesByThreadID, nil
 }
 
 // ThreadName returns the proper name of a thread.

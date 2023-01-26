@@ -190,7 +190,7 @@ func (p Android) CallTrees() map[uint64][]*nodetree.Node {
 			}
 			i := len(stacks[e.ThreadID]) - 1
 			n := stacks[e.ThreadID][i]
-			n.DurationNS = buildTimestamp(e.Time) - n.StartNS
+			n.Update(buildTimestamp(e.Time))
 			stacks[e.ThreadID] = stacks[e.ThreadID][:i]
 		}
 	}
