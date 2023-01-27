@@ -158,13 +158,14 @@ func (p *LegacyProfile) Speedscope() (speedscope.Output, error) {
 func (p *LegacyProfile) Metadata() metadata.Metadata {
 	return metadata.Metadata{
 		AndroidAPILevel:      p.AndroidAPILevel,
+		Architecture:         "unknown",
 		DeviceClassification: p.DeviceClassification,
 		DeviceLocale:         p.DeviceLocale,
 		DeviceManufacturer:   p.DeviceManufacturer,
 		DeviceModel:          p.DeviceModel,
-		DeviceOsBuildNumber:  p.DeviceOSBuildNumber,
-		DeviceOsName:         p.DeviceOSName,
-		DeviceOsVersion:      p.DeviceOSVersion,
+		DeviceOSBuildNumber:  p.DeviceOSBuildNumber,
+		DeviceOSName:         p.DeviceOSName,
+		DeviceOSVersion:      p.DeviceOSVersion,
 		ID:                   p.ProfileID,
 		ProjectID:            strconv.FormatUint(p.GetProjectID(), 10),
 		Timestamp:            p.Received.Unix(),
@@ -215,14 +216,10 @@ func (p LegacyProfile) GetRelease() string {
 	return FormatVersion(p.VersionName, p.VersionCode)
 }
 
-func (p LegacyProfile) GetOSName() string {
-	return p.DeviceOSName
-}
-
-func (p LegacyProfile) GetOSVersion() string {
-	return p.DeviceOSVersion
-}
-
 func (p LegacyProfile) GetRetentionDays() int {
 	return p.RetentionDays
+}
+
+func (p LegacyProfile) GetDurationNS() uint64 {
+	return p.DurationNS
 }

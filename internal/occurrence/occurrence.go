@@ -120,12 +120,12 @@ func buildOccurrenceTags(p profile.Profile) map[string]string {
 		"device_locale":         pm.DeviceLocale,
 		"device_manufacturer":   pm.DeviceManufacturer,
 		"device_model":          pm.DeviceModel,
-		"device_os_name":        pm.DeviceOsName,
-		"device_os_version":     pm.DeviceOsVersion,
+		"device_os_name":        pm.DeviceOSName,
+		"device_os_version":     pm.DeviceOSVersion,
 	}
 
-	if pm.DeviceOsBuildNumber != "" {
-		tags["device_os_build_number"] = pm.DeviceOsBuildNumber
+	if pm.DeviceOSBuildNumber != "" {
+		tags["device_os_build_number"] = pm.DeviceOSBuildNumber
 	}
 
 	return tags

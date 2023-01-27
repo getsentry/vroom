@@ -14,10 +14,9 @@ import (
 
 type (
 	profileInterface interface {
+		GetDurationNS() uint64
 		GetEnvironment() string
 		GetID() string
-		GetOSName() string
-		GetOSVersion() string
 		GetOrganizationID() uint64
 		GetPlatform() platform.Platform
 		GetProjectID() uint64
@@ -138,14 +137,10 @@ func (p *Profile) Release() string {
 	return p.profile.GetRelease()
 }
 
-func (p *Profile) OSName() string {
-	return p.profile.GetOSName()
-}
-
-func (p *Profile) OSVersion() string {
-	return p.profile.GetOSVersion()
-}
-
 func (p *Profile) RetentionDays() int {
 	return p.profile.GetRetentionDays()
+}
+
+func (p *Profile) DurationNS() uint64 {
+	return p.profile.GetDurationNS()
 }

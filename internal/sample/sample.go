@@ -154,16 +154,13 @@ func (p SampleProfile) GetReceived() time.Time {
 	return p.Received
 }
 
-func (p SampleProfile) GetOSName() string {
-	return p.OS.Name
-}
-
-func (p SampleProfile) GetOSVersion() string {
-	return p.OS.Version
-}
-
 func (p SampleProfile) GetRetentionDays() int {
 	return p.RetentionDays
+}
+
+func (p SampleProfile) GetDurationNS() uint64 {
+	t := p.Transactions[0]
+	return t.RelativeEndNS - t.RelativeStartNS
 }
 
 func (p SampleProfile) CallTrees() (map[uint64][]*nodetree.Node, error) {
@@ -366,13 +363,14 @@ func (p *SampleProfile) IsApplicationFrame(f frame.Frame) bool {
 
 func (p *SampleProfile) Metadata() metadata.Metadata {
 	return metadata.Metadata{
+		Architecture:         p.Device.Architecture,
 		DeviceClassification: p.Device.Classification,
 		DeviceLocale:         p.Device.Locale,
 		DeviceManufacturer:   p.Device.Manufacturer,
 		DeviceModel:          p.Device.Model,
-		DeviceOsBuildNumber:  p.OS.BuildNumber,
-		DeviceOsName:         p.OS.Name,
-		DeviceOsVersion:      p.OS.Version,
+		DeviceOSBuildNumber:  p.OS.BuildNumber,
+		DeviceOSName:         p.OS.Name,
+		DeviceOSVersion:      p.OS.Version,
 		ID:                   p.EventID,
 		ProjectID:            strconv.FormatUint(p.ProjectID, 10),
 		Timestamp:            p.Received.Unix(),
