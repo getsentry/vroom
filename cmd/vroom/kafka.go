@@ -8,15 +8,15 @@ import (
 
 type (
 	ProfileKafkaMessage struct {
-		CallTrees       map[uint64][]*nodetree.Node `json:"call_trees,omitempty"`
+		CallTrees       map[uint64][]*nodetree.Node `json:"call_trees"`
 		Environment     string                      `json:"environment,omitempty"`
 		ID              string                      `json:"profile_id"`
 		OSName          string                      `json:"os_name"`
 		OSVersion       string                      `json:"os_version"`
 		Platform        platform.Platform           `json:"platform"`
 		ProjectID       uint64                      `json:"project_id"`
-		Release         string                      `json:"release"`
-		RetentionDays   int                         `json:"retention_days,omitempty"`
+		Release         string                      `json:"release,omitempty"`
+		RetentionDays   int                         `json:"retention_days"`
 		Timestamp       int64                       `json:"timestamp"`
 		TransactionName string                      `json:"transaction_name"`
 	}
@@ -32,6 +32,7 @@ func buildProfileKafkaMessage(p profile.Profile, callTrees map[uint64][]*nodetre
 		Platform:        p.Platform(),
 		ProjectID:       p.ProjectID(),
 		Release:         p.Release(),
+		RetentionDays:   p.RetentionDays(),
 		Timestamp:       p.Timestamp().Unix(),
 		TransactionName: p.Transaction().Name,
 	}

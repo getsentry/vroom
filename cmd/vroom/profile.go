@@ -80,6 +80,14 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// If there's no call tree, we can return a success here.
+	// There's no occurrence to look for.
+	// There's no call tree to send to snuba.
+	if len(callTrees) == 0 {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+
 	s = sentry.StartSpan(ctx, "processing")
 	s.Description = "Find occurrences"
 	occurrences := occurrence.Find(p, callTrees)

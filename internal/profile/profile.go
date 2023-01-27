@@ -23,6 +23,7 @@ type (
 		GetProjectID() uint64
 		GetReceived() time.Time
 		GetRelease() string
+		GetRetentionDays() int
 		GetTimestamp() time.Time
 		GetTransaction() transaction.Transaction
 
@@ -143,4 +144,8 @@ func (p *Profile) OSName() string {
 
 func (p *Profile) OSVersion() string {
 	return p.profile.GetOSVersion()
+}
+
+func (p *Profile) RetentionDays() int {
+	return p.profile.GetRetentionDays()
 }

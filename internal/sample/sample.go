@@ -86,6 +86,7 @@ type (
 		ProjectID      uint64                              `json:"project_id"`
 		Received       time.Time                           `json:"received"`
 		Release        string                              `json:"release"`
+		RetentionDays  int                                 `json:"retention_days"`
 		Runtime        Runtime                             `json:"runtime"`
 		Timestamp      time.Time                           `json:"timestamp"`
 		Trace          Trace                               `json:"profile"`
@@ -159,6 +160,10 @@ func (p SampleProfile) GetOSName() string {
 
 func (p SampleProfile) GetOSVersion() string {
 	return p.OS.Version
+}
+
+func (p SampleProfile) GetRetentionDays() int {
+	return p.RetentionDays
 }
 
 func (p SampleProfile) CallTrees() (map[uint64][]*nodetree.Node, error) {

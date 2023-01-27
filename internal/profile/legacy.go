@@ -40,18 +40,19 @@ type (
 		DeviceOSVersion      string                              `json:"device_os_version"`
 		DurationNS           uint64                              `json:"duration_ns"`
 		Environment          string                              `json:"environment,omitempty"`
+		Measurements         map[string]measurements.Measurement `json:"measurements,omitempty"`
 		OrganizationID       uint64                              `json:"organization_id"`
 		Platform             platform.Platform                   `json:"platform"`
 		Profile              json.RawMessage                     `json:"profile,omitempty"`
 		ProfileID            string                              `json:"profile_id"`
 		ProjectID            uint64                              `json:"project_id"`
 		Received             time.Time                           `json:"received"`
+		RetentionDays        int                                 `json:"retention_days"`
 		TraceID              string                              `json:"trace_id"`
 		TransactionID        string                              `json:"transaction_id"`
 		TransactionName      string                              `json:"transaction_name"`
 		VersionCode          string                              `json:"version_code"`
 		VersionName          string                              `json:"version_name"`
-		Measurements         map[string]measurements.Measurement `json:"measurements,omitempty"`
 	}
 )
 
@@ -220,4 +221,8 @@ func (p LegacyProfile) GetOSName() string {
 
 func (p LegacyProfile) GetOSVersion() string {
 	return p.DeviceOSVersion
+}
+
+func (p LegacyProfile) GetRetentionDays() int {
+	return p.RetentionDays
 }
