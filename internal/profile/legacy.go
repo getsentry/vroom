@@ -213,3 +213,11 @@ func (p *LegacyProfile) ReplaceIdleStacks() {
 func (p LegacyProfile) GetRelease() string {
 	return FormatVersion(p.VersionName, p.VersionCode)
 }
+
+func (p LegacyProfile) GetOSName() string {
+	return p.DeviceOSName
+}
+
+func (p LegacyProfile) GetOSVersion() string {
+	return p.DeviceOSVersion
+}

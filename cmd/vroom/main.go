@@ -29,13 +29,19 @@ type environment struct {
 	OccurrencesEnabledOrganizations map[uint64]struct{} `envconfig:"SENTRY_OCCURRENCES_ENABLED_ORGANIZATIONS"`
 	OccurrencesKafkaBrokers         []string            `envconfig:"SENTRY_OCCURRENCES_KAFKA_BROKERS" default:"localhost:9092"`
 	OccurrencesKafkaTopic           string              `envconfig:"SENTRY_OCCURRENCES_KAFKA_TOPIC" default:"ingest-occurrences"`
-	Port                            string              `default:"8080"`
-	ProfilesBucket                  string              `envconfig:"SENTRY_PROFILES_BUCKET_NAME" required:"true"`
-	SnubaHost                       string              `envconfig:"SENTRY_SNUBA_HOST" required:"true"`
-	SnubaPort                       string              `envconfig:"SENTRY_SNUBA_PORT"`
+
+	ProfilesKafkaBrokers []string `envconfig:"SENTRY_PROFILES_KAFKA_BROKERS" default:"localhost:9092"`
+	CallTreesKafkaTopic  string   `envconfig:"SENTRY_CALL_TREES_KAFKA_TOPIC" default:"profiles-call-tree"`
+	ProfilesKafkaTopic   string   `envconfig:"SENTRY_PROFILES_KAFKA_TOPIC" default:"processed-profiles"`
+
+	Port           string `default:"8080"`
+	ProfilesBucket string `envconfig:"SENTRY_PROFILES_BUCKET_NAME" required:"true"`
+	SnubaHost      string `envconfig:"SENTRY_SNUBA_HOST" required:"true"`
+	SnubaPort      string `envconfig:"SENTRY_SNUBA_PORT"`
 
 	snuba             snubautil.Client
 	occurrencesWriter *kafka.Writer
+	profilingWriter   *kafka.Writer
 
 	storage        *storage.Client
 	profilesBucket *storage.BucketHandle
@@ -60,8 +66,9 @@ func newEnvironment() (*environment, error) {
 		Topic:    e.OccurrencesKafkaTopic,
 		Balancer: kafka.CRC32Balancer{},
 	}
-	if err != nil {
-		return nil, err
+	e.profilingWriter = &kafka.Writer{
+		Addr:     kafka.TCP(e.ProfilesKafkaBrokers...),
+		Balancer: kafka.CRC32Balancer{},
 	}
 	e.profilesBucket = e.storage.Bucket(e.ProfilesBucket)
 	return &e, nil

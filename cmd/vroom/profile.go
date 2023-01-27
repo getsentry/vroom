@@ -17,12 +17,9 @@ import (
 	"github.com/google/uuid"
 	"github.com/julienschmidt/httprouter"
 	"github.com/rs/zerolog/log"
+	"github.com/segmentio/kafka-go"
 	"google.golang.org/api/googleapi"
 )
-
-type PostProfileResponse struct {
-	CallTrees map[uint64][]*nodetree.Node `json:"call_trees"`
-}
 
 func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
@@ -105,7 +102,8 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 			hub.CaptureException(err)
 		} else {
 			s = sentry.StartSpan(ctx, "processing")
-			err = env.occurrencesWriter.WriteMessages(context.Background(), messages...)
+			s.Description = "Send occurrences to Kafka"
+			err = env.occurrencesWriter.WriteMessages(ctx, messages...)
 			s.Finish()
 			if err != nil {
 				// Report the error but don't fail profile insertion
@@ -126,20 +124,29 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 	s.Finish()
 
 	s = sentry.StartSpan(ctx, "json.marshal")
-	s.Description = "Marshal call trees"
-	defer s.Finish()
-
-	b, err := json.Marshal(PostProfileResponse{
-		CallTrees: callTrees,
-	})
+	s.Description = "Marshal call trees Kafka message"
+	b, err := json.Marshal(buildProfileKafkaMessage(p, callTrees))
+	s.Finish()
 	if err != nil {
 		hub.CaptureException(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	_, _ = w.Write(b)
+	s = sentry.StartSpan(ctx, "processing")
+	s.Description = "Send call trees to Kafka"
+	err = env.profilingWriter.WriteMessages(ctx, kafka.Message{
+		Topic: env.CallTreesKafkaTopic,
+		Value: b,
+	})
+	s.Finish()
+	if err != nil {
+		hub.CaptureException(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func (env *environment) getRawProfile(w http.ResponseWriter, r *http.Request) {

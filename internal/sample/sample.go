@@ -153,6 +153,14 @@ func (p SampleProfile) GetReceived() time.Time {
 	return p.Received
 }
 
+func (p SampleProfile) GetOSName() string {
+	return p.OS.Name
+}
+
+func (p SampleProfile) GetOSVersion() string {
+	return p.OS.Version
+}
+
 func (p SampleProfile) CallTrees() (map[uint64][]*nodetree.Node, error) {
 	sort.SliceStable(p.Trace.Samples, func(i, j int) bool {
 		return p.Trace.Samples[i].ElapsedSinceStartNS < p.Trace.Samples[j].ElapsedSinceStartNS

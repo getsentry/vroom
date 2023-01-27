@@ -16,6 +16,8 @@ type (
 	profileInterface interface {
 		GetEnvironment() string
 		GetID() string
+		GetOSName() string
+		GetOSVersion() string
 		GetOrganizationID() uint64
 		GetPlatform() platform.Platform
 		GetProjectID() uint64
@@ -133,4 +135,12 @@ func (p *Profile) Received() time.Time {
 
 func (p *Profile) Release() string {
 	return p.profile.GetRelease()
+}
+
+func (p *Profile) OSName() string {
+	return p.profile.GetOSName()
+}
+
+func (p *Profile) OSVersion() string {
+	return p.profile.GetOSVersion()
 }
