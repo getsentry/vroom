@@ -19,7 +19,7 @@ type (
 		Release         string                      `json:"release"`
 		RetentionDays   int                         `json:"retention_days"`
 		Timestamp       int64                       `json:"timestamp"`
-		TransactionName string                      `json:"t_name"`
+		TransactionName string                      `json:"transaction_name"`
 	}
 
 	// ProfileKafkaMessage is representing the struct we send to Kafka to insert a profile in ClickHouse
