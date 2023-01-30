@@ -62,13 +62,22 @@ func newEnvironment() (*environment, error) {
 		return nil, err
 	}
 	e.occurrencesWriter = &kafka.Writer{
-		Addr:     kafka.TCP(e.OccurrencesKafkaBrokers...),
-		Topic:    e.OccurrencesKafkaTopic,
-		Balancer: kafka.CRC32Balancer{},
+		Addr:         kafka.TCP(e.OccurrencesKafkaBrokers...),
+		Async:        true,
+		Balancer:     kafka.CRC32Balancer{},
+		BatchSize:    100,
+		ReadTimeout:  3 * time.Second,
+		Topic:        e.OccurrencesKafkaTopic,
+		WriteTimeout: 3 * time.Second,
 	}
 	e.profilingWriter = &kafka.Writer{
-		Addr:     kafka.TCP(e.ProfilesKafkaBrokers...),
-		Balancer: kafka.CRC32Balancer{},
+		Addr:         kafka.TCP(e.ProfilesKafkaBrokers...),
+		Async:        true,
+		Balancer:     kafka.CRC32Balancer{},
+		BatchSize:    10,
+		Compression:  kafka.Lz4,
+		ReadTimeout:  3 * time.Second,
+		WriteTimeout: 3 * time.Second,
 	}
 	e.profilesBucket = e.storage.Bucket(e.ProfilesBucket)
 	return &e, nil
@@ -80,6 +89,10 @@ func (e *environment) shutdown() {
 		sentry.CaptureException(err)
 	}
 	err = e.occurrencesWriter.Close()
+	if err != nil {
+		sentry.CaptureException(err)
+	}
+	err = e.profilingWriter.Close()
 	if err != nil {
 		sentry.CaptureException(err)
 	}
@@ -152,7 +165,7 @@ func main() {
 		signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 		<-c
 
-		cctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		cctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 		defer cancel()
 
 		if err := server.Shutdown(cctx); err != nil {
