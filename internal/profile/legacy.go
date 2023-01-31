@@ -40,18 +40,19 @@ type (
 		DeviceOSVersion      string                              `json:"device_os_version"`
 		DurationNS           uint64                              `json:"duration_ns"`
 		Environment          string                              `json:"environment,omitempty"`
+		Measurements         map[string]measurements.Measurement `json:"measurements,omitempty"`
 		OrganizationID       uint64                              `json:"organization_id"`
 		Platform             platform.Platform                   `json:"platform"`
 		Profile              json.RawMessage                     `json:"profile,omitempty"`
 		ProfileID            string                              `json:"profile_id"`
 		ProjectID            uint64                              `json:"project_id"`
 		Received             time.Time                           `json:"received"`
+		RetentionDays        int                                 `json:"retention_days"`
 		TraceID              string                              `json:"trace_id"`
 		TransactionID        string                              `json:"transaction_id"`
 		TransactionName      string                              `json:"transaction_name"`
 		VersionCode          string                              `json:"version_code"`
 		VersionName          string                              `json:"version_name"`
-		Measurements         map[string]measurements.Measurement `json:"measurements,omitempty"`
 	}
 )
 
@@ -157,13 +158,14 @@ func (p *LegacyProfile) Speedscope() (speedscope.Output, error) {
 func (p *LegacyProfile) Metadata() metadata.Metadata {
 	return metadata.Metadata{
 		AndroidAPILevel:      p.AndroidAPILevel,
+		Architecture:         "unknown",
 		DeviceClassification: p.DeviceClassification,
 		DeviceLocale:         p.DeviceLocale,
 		DeviceManufacturer:   p.DeviceManufacturer,
 		DeviceModel:          p.DeviceModel,
-		DeviceOsBuildNumber:  p.DeviceOSBuildNumber,
-		DeviceOsName:         p.DeviceOSName,
-		DeviceOsVersion:      p.DeviceOSVersion,
+		DeviceOSBuildNumber:  p.DeviceOSBuildNumber,
+		DeviceOSName:         p.DeviceOSName,
+		DeviceOSVersion:      p.DeviceOSVersion,
 		ID:                   p.ProfileID,
 		ProjectID:            strconv.FormatUint(p.GetProjectID(), 10),
 		Timestamp:            p.Received.Unix(),
@@ -212,4 +214,12 @@ func (p *LegacyProfile) ReplaceIdleStacks() {
 
 func (p LegacyProfile) GetRelease() string {
 	return FormatVersion(p.VersionName, p.VersionCode)
+}
+
+func (p LegacyProfile) GetRetentionDays() int {
+	return p.RetentionDays
+}
+
+func (p LegacyProfile) GetDurationNS() uint64 {
+	return p.DurationNS
 }

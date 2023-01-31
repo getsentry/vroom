@@ -111,17 +111,18 @@ type (
 		DeviceOSVersion      string                              `json:"deviceOSVersion"`
 		DurationNS           uint64                              `json:"durationNS"`
 		Environment          string                              `json:"environment,omitempty"`
+		Measurements         map[string]measurements.Measurement `json:"-"`
 		OrganizationID       uint64                              `json:"organizationID"`
 		Platform             platform.Platform                   `json:"platform"`
 		Profile              json.RawMessage                     `json:"-"`
 		ProfileID            string                              `json:"profileID"`
 		ProjectID            uint64                              `json:"projectID"`
 		Received             time.Time                           `json:"received"`
+		RetentionDays        int                                 `json:"-"`
 		TraceID              string                              `json:"traceID"`
 		TransactionID        string                              `json:"transactionID"`
 		TransactionName      string                              `json:"transactionName"`
 		VersionCode          string                              `json:"-"`
 		VersionName          string                              `json:"-"`
-		Measurements         map[string]measurements.Measurement `json:"-"`
 	}
 )

@@ -14,6 +14,7 @@ import (
 
 type (
 	profileInterface interface {
+		GetDurationNS() uint64
 		GetEnvironment() string
 		GetID() string
 		GetOrganizationID() uint64
@@ -21,6 +22,7 @@ type (
 		GetProjectID() uint64
 		GetReceived() time.Time
 		GetRelease() string
+		GetRetentionDays() int
 		GetTimestamp() time.Time
 		GetTransaction() transaction.Transaction
 
@@ -133,4 +135,12 @@ func (p *Profile) Received() time.Time {
 
 func (p *Profile) Release() string {
 	return p.profile.GetRelease()
+}
+
+func (p *Profile) RetentionDays() int {
+	return p.profile.GetRetentionDays()
+}
+
+func (p *Profile) DurationNS() uint64 {
+	return p.profile.GetDurationNS()
 }

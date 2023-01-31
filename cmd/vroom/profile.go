@@ -17,12 +17,9 @@ import (
 	"github.com/google/uuid"
 	"github.com/julienschmidt/httprouter"
 	"github.com/rs/zerolog/log"
+	"github.com/segmentio/kafka-go"
 	"google.golang.org/api/googleapi"
 )
-
-type PostProfileResponse struct {
-	CallTrees map[uint64][]*nodetree.Node `json:"call_trees"`
-}
 
 func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
@@ -83,63 +80,95 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s = sentry.StartSpan(ctx, "processing")
-	s.Description = "Find occurrences"
-	occurrences := occurrence.Find(p, callTrees)
-	s.Finish()
+	messages := make([]kafka.Message, 0, 2)
 
-	// Log occurrences with a link to access to corresponding profiles
-	// It will be removed when the issue platform UI is functional
-	for _, o := range occurrences {
-		link := fmt.Sprintf("https://sentry.io/api/0/profiling/projects/%d/profile/%s/?package=%s&name=%s", o.Event.ProjectID, o.Event.ID, o.EvidenceDisplay[1].Value, o.EvidenceDisplay[0].Value)
-		fmt.Println(o.Event.Platform, link)
-	}
-
-	if _, enabled := env.OccurrencesEnabledOrganizations[orgID]; enabled {
+	if len(callTrees) > 0 {
 		s = sentry.StartSpan(ctx, "processing")
-		s.Description = "Build Kafka message batch"
-		messages, err := occurrence.GenerateKafkaMessageBatch(occurrences)
+		s.Description = "Find occurrences"
+		occurrences := occurrence.Find(p, callTrees)
 		s.Finish()
-		if err != nil {
-			// Report the error but don't fail profile insertion
-			hub.CaptureException(err)
-		} else {
+
+		// Log occurrences with a link to access to corresponding profiles
+		// It will be removed when the issue platform UI is functional
+		for _, o := range occurrences {
+			link := fmt.Sprintf("https://sentry.io/api/0/profiling/projects/%d/profile/%s/?package=%s&name=%s", o.Event.ProjectID, o.Event.ID, o.EvidenceDisplay[1].Value, o.EvidenceDisplay[0].Value)
+			fmt.Println(o.Event.Platform, link)
+		}
+
+		if _, enabled := env.OccurrencesEnabledOrganizations[orgID]; enabled {
 			s = sentry.StartSpan(ctx, "processing")
-			err = env.occurrencesWriter.WriteMessages(context.Background(), messages...)
+			s.Description = "Build Kafka message batch"
+			messages, err := occurrence.GenerateKafkaMessageBatch(occurrences)
 			s.Finish()
 			if err != nil {
 				// Report the error but don't fail profile insertion
 				hub.CaptureException(err)
+			} else {
+				s = sentry.StartSpan(ctx, "processing")
+				s.Description = "Send occurrences to Kafka"
+				err = env.occurrencesWriter.WriteMessages(ctx, messages...)
+				s.Finish()
+				if err != nil {
+					// Report the error but don't fail profile insertion
+					hub.CaptureException(err)
+				}
 			}
 		}
-	}
 
-	s = sentry.StartSpan(ctx, "processing")
-	s.Description = "Collapse call trees"
-	for threadID, callTreesForThread := range callTrees {
-		collapsedCallTrees := make([]*nodetree.Node, 0, len(callTreesForThread))
-		for _, callTree := range callTreesForThread {
-			collapsedCallTrees = append(collapsedCallTrees, callTree.Collapse()...)
+		// Prepare call trees Kafka message
+		s = sentry.StartSpan(ctx, "processing")
+		s.Description = "Collapse call trees"
+		for threadID, callTreesForThread := range callTrees {
+			collapsedCallTrees := make([]*nodetree.Node, 0, len(callTreesForThread))
+			for _, callTree := range callTreesForThread {
+				collapsedCallTrees = append(collapsedCallTrees, callTree.Collapse()...)
+			}
+			callTrees[threadID] = collapsedCallTrees
 		}
-		callTrees[threadID] = collapsedCallTrees
+		s.Finish()
+
+		s = sentry.StartSpan(ctx, "json.marshal")
+		s.Description = "Marshal call trees Kafka message"
+		b, err := json.Marshal(buildCallTreesKafkaMessage(p, callTrees))
+		s.Finish()
+		if err != nil {
+			hub.CaptureException(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		messages = append(messages, kafka.Message{
+			Topic: env.CallTreesKafkaTopic,
+			Value: b,
+		})
 	}
+
+	// Prepare profile Kafka message
+	s = sentry.StartSpan(ctx, "processing")
+	s.Description = "Marshal profile Kafka message"
+	b, err := json.Marshal(buildProfileKafkaMessage(p))
 	s.Finish()
-
-	s = sentry.StartSpan(ctx, "json.marshal")
-	s.Description = "Marshal call trees"
-	defer s.Finish()
-
-	b, err := json.Marshal(PostProfileResponse{
-		CallTrees: callTrees,
+	if err != nil {
+		hub.CaptureException(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	messages = append(messages, kafka.Message{
+		Topic: env.ProfilesKafkaTopic,
+		Value: b,
 	})
+
+	// Send all messages to Kafka
+	s = sentry.StartSpan(ctx, "processing")
+	s.Description = "Send messages to Kafka"
+	err = env.profilingWriter.WriteMessages(ctx, messages...)
+	s.Finish()
 	if err != nil {
 		hub.CaptureException(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	_, _ = w.Write(b)
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func (env *environment) getRawProfile(w http.ResponseWriter, r *http.Request) {
