@@ -30,9 +30,9 @@ type environment struct {
 	OccurrencesKafkaBrokers         []string            `envconfig:"SENTRY_OCCURRENCES_KAFKA_BROKERS" default:"localhost:9092"`
 	OccurrencesKafkaTopic           string              `envconfig:"SENTRY_OCCURRENCES_KAFKA_TOPIC" default:"ingest-occurrences"`
 
-	ProfilesKafkaBrokers []string `envconfig:"SENTRY_PROFILES_KAFKA_BROKERS" default:"localhost:9092"`
-	CallTreesKafkaTopic  string   `envconfig:"SENTRY_CALL_TREES_KAFKA_TOPIC" default:"profiles-call-tree"`
-	ProfilesKafkaTopic   string   `envconfig:"SENTRY_PROFILES_KAFKA_TOPIC" default:"processed-profiles"`
+	ProfilingKafkaBrokers []string `envconfig:"SENTRY_PROFILING_KAFKA_BROKERS" default:"localhost:9092"`
+	CallTreesKafkaTopic   string   `envconfig:"SENTRY_CALL_TREES_KAFKA_TOPIC" default:"profiles-call-tree"`
+	ProfilesKafkaTopic    string   `envconfig:"SENTRY_PROFILES_KAFKA_TOPIC" default:"processed-profiles"`
 
 	Port           string `default:"8080"`
 	ProfilesBucket string `envconfig:"SENTRY_PROFILES_BUCKET_NAME" required:"true"`
@@ -71,7 +71,7 @@ func newEnvironment() (*environment, error) {
 		WriteTimeout: 3 * time.Second,
 	}
 	e.profilingWriter = &kafka.Writer{
-		Addr:         kafka.TCP(e.ProfilesKafkaBrokers...),
+		Addr:         kafka.TCP(e.ProfilingKafkaBrokers...),
 		Async:        true,
 		Balancer:     kafka.CRC32Balancer{},
 		BatchSize:    10,
