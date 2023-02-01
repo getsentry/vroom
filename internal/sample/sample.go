@@ -85,7 +85,7 @@ type (
 		OrganizationID uint64                              `json:"organization_id"`
 		Platform       platform.Platform                   `json:"platform"`
 		ProjectID      uint64                              `json:"project_id"`
-		Received       time.Time                           `json:"received"`
+		Received       timeutil.Time                       `json:"received"`
 		Release        string                              `json:"release"`
 		RetentionDays  int                                 `json:"retention_days"`
 		Runtime        Runtime                             `json:"runtime"`
@@ -152,7 +152,7 @@ func (p SampleProfile) GetTimestamp() time.Time {
 }
 
 func (p SampleProfile) GetReceived() time.Time {
-	return p.Received
+	return p.Received.Time()
 }
 
 func (p SampleProfile) GetRetentionDays() int {
