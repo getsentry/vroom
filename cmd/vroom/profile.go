@@ -214,6 +214,7 @@ func (env *environment) getRawProfile(w http.ResponseWriter, r *http.Request) {
 		if errors.Is(err, snubautil.ErrProfileNotFound) {
 			w.WriteHeader(http.StatusNotFound)
 		} else {
+			hub.CaptureException(err)
 			w.WriteHeader(http.StatusInternalServerError)
 		}
 		return
@@ -277,6 +278,7 @@ func (env *environment) getProfile(w http.ResponseWriter, r *http.Request) {
 		if errors.Is(err, snubautil.ErrProfileNotFound) {
 			w.WriteHeader(http.StatusNotFound)
 		} else {
+			hub.CaptureException(err)
 			w.WriteHeader(http.StatusInternalServerError)
 		}
 		return
