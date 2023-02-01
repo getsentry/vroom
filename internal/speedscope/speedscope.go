@@ -2,11 +2,11 @@ package speedscope
 
 import (
 	"encoding/json"
-	"time"
 
 	"github.com/getsentry/vroom/internal/debugmeta"
 	"github.com/getsentry/vroom/internal/measurements"
 	"github.com/getsentry/vroom/internal/platform"
+	"github.com/getsentry/vroom/internal/timeutil"
 )
 
 const (
@@ -117,7 +117,7 @@ type (
 		Profile              json.RawMessage                     `json:"-"`
 		ProfileID            string                              `json:"profileID"`
 		ProjectID            uint64                              `json:"projectID"`
-		Received             time.Time                           `json:"received"`
+		Received             timeutil.Time                       `json:"received"`
 		RetentionDays        int                                 `json:"-"`
 		TraceID              string                              `json:"traceID"`
 		TransactionID        string                              `json:"transactionID"`

@@ -13,6 +13,7 @@ import (
 	"github.com/getsentry/vroom/internal/nodetree"
 	"github.com/getsentry/vroom/internal/platform"
 	"github.com/getsentry/vroom/internal/speedscope"
+	"github.com/getsentry/vroom/internal/timeutil"
 	"github.com/getsentry/vroom/internal/transaction"
 )
 
@@ -46,7 +47,7 @@ type (
 		Profile              json.RawMessage                     `json:"profile,omitempty"`
 		ProfileID            string                              `json:"profile_id"`
 		ProjectID            uint64                              `json:"project_id"`
-		Received             time.Time                           `json:"received"`
+		Received             timeutil.Time                       `json:"received"`
 		RetentionDays        int                                 `json:"retention_days"`
 		TraceID              string                              `json:"trace_id"`
 		TransactionID        string                              `json:"transaction_id"`
@@ -168,7 +169,7 @@ func (p *LegacyProfile) Metadata() metadata.Metadata {
 		DeviceOSVersion:      p.DeviceOSVersion,
 		ID:                   p.ProfileID,
 		ProjectID:            strconv.FormatUint(p.GetProjectID(), 10),
-		Timestamp:            p.Received.Unix(),
+		Timestamp:            p.Received.Time().Unix(),
 		TraceDurationMs:      float64(p.DurationNS) / 1_000_000,
 		TransactionID:        p.TransactionID,
 		TransactionName:      p.TransactionName,
@@ -195,11 +196,11 @@ func (p LegacyProfile) GetTransaction() transaction.Transaction {
 }
 
 func (p LegacyProfile) GetTimestamp() time.Time {
-	return p.Received
+	return p.Received.Time()
 }
 
 func (p LegacyProfile) GetReceived() time.Time {
-	return p.Received
+	return p.Received.Time()
 }
 
 func (p *LegacyProfile) Raw() []byte {
