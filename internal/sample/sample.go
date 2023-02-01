@@ -15,6 +15,7 @@ import (
 	"github.com/getsentry/vroom/internal/nodetree"
 	"github.com/getsentry/vroom/internal/platform"
 	"github.com/getsentry/vroom/internal/speedscope"
+	"github.com/getsentry/vroom/internal/timeutil"
 	"github.com/getsentry/vroom/internal/transaction"
 )
 
@@ -84,7 +85,7 @@ type (
 		OrganizationID uint64                              `json:"organization_id"`
 		Platform       platform.Platform                   `json:"platform"`
 		ProjectID      uint64                              `json:"project_id"`
-		Received       time.Time                           `json:"received"`
+		Received       timeutil.Time                       `json:"received"`
 		Release        string                              `json:"release"`
 		RetentionDays  int                                 `json:"retention_days"`
 		Runtime        Runtime                             `json:"runtime"`
@@ -151,7 +152,7 @@ func (p SampleProfile) GetTimestamp() time.Time {
 }
 
 func (p SampleProfile) GetReceived() time.Time {
-	return p.Received
+	return p.Received.Time()
 }
 
 func (p SampleProfile) GetRetentionDays() int {
@@ -326,7 +327,7 @@ func (p *SampleProfile) Speedscope() (speedscope.Output, error) {
 				Platform:             p.Platform,
 				ProfileID:            p.EventID,
 				ProjectID:            p.ProjectID,
-				Received:             p.Timestamp,
+				Received:             timeutil.Time(p.Received),
 				TraceID:              p.Transactions[0].TraceID,
 				TransactionID:        p.Transactions[0].ID,
 				TransactionName:      p.Transactions[0].Name,
@@ -373,7 +374,7 @@ func (p *SampleProfile) Metadata() metadata.Metadata {
 		DeviceOSVersion:      p.OS.Version,
 		ID:                   p.EventID,
 		ProjectID:            strconv.FormatUint(p.ProjectID, 10),
-		Timestamp:            p.Received.Unix(),
+		Timestamp:            p.Timestamp.Unix(),
 		TraceDurationMs:      float64(p.Transactions[0].DurationNS()) / 1_000_000,
 		TransactionID:        p.Transactions[0].ID,
 		TransactionName:      p.Transactions[0].Name,
