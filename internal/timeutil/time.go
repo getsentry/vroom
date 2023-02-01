@@ -1,6 +1,7 @@
 package timeutil
 
 import (
+	"encoding/json"
 	"strconv"
 	"time"
 )
@@ -9,7 +10,7 @@ type Time time.Time
 
 func (t *Time) UnmarshalJSON(b []byte) error {
 	s := string(b)
-	if s == "null" {
+	if s == "null" || s == "{}" {
 		return nil
 	}
 	if s[0] == '"' {
@@ -26,6 +27,10 @@ func (t *Time) UnmarshalJSON(b []byte) error {
 		*t = Time(time.Unix(i, 0))
 	}
 	return nil
+}
+
+func (t Time) MarshalJSON() ([]byte, error) {
+	return json.Marshal(time.Time(t))
 }
 
 func (t Time) Time() time.Time {

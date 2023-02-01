@@ -32,7 +32,6 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&p)
 	s.Finish()
 	if err != nil {
-		log.Err(err).Msg("profile can't be unmarshaled")
 		hub.CaptureException(err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -211,6 +210,7 @@ func (env *environment) getRawProfile(w http.ResponseWriter, r *http.Request) {
 	err = storageutil.UnmarshalCompressed(ctx, env.profilesBucket, profile.StoragePath(organizationID, projectID, profileID), &p)
 	s.Finish()
 	if err != nil {
+		log.Err(err).Msg("profile can't be unmarshaled")
 		if errors.Is(err, snubautil.ErrProfileNotFound) {
 			w.WriteHeader(http.StatusNotFound)
 		} else {
