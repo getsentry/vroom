@@ -3,6 +3,7 @@ package profile
 import (
 	"fmt"
 	"hash/fnv"
+	"math"
 	"strings"
 	"time"
 
@@ -136,7 +137,7 @@ func (p Android) TimestampGetter() func(EventTime) uint64 {
 }
 
 // CallTrees generates call trees for a given profile
-func (p Android) CallTrees() map[uint64][]*nodetree.Node {
+func (p Android) CallTrees(merge bool) map[uint64][]*nodetree.Node {
 	var activeThreadID uint64 = 0
 	for _, thread := range p.Threads {
 		if thread.Name == "main" {
@@ -177,25 +178,67 @@ func (p Android) CallTrees() map[uint64][]*nodetree.Node {
 
 			n := nodetree.NodeFromFrame(className, methodName, m.SourceFile, m.SourceLine, buildTimestamp(e.Time), 0, 0, packageutil.IsAndroidApplicationPackage(m.ClassName))
 			if len(stacks[e.ThreadID]) == 0 {
-				trees[e.ThreadID] = append(trees[e.ThreadID], n)
+				if merge {
+					if existingNode := getMatchingNode(trees[e.ThreadID], n); existingNode != nil {
+						existingNode.StartNS = n.StartNS
+						n = existingNode
+					}
+				}
+				if n.Fingerprint == 0 {
+					// regardless of merge, if the fingerprint is 0
+					// it means we're not "recycling" a node, hence
+					// we need to add it regardless (it's a new node)
+					trees[e.ThreadID] = append(trees[e.ThreadID], n)
+				}
+
 			} else {
 				i := len(stacks[e.ThreadID]) - 1
-				stacks[e.ThreadID][i].Children = append(stacks[e.ThreadID][i].Children, n)
+				if merge {
+					// if there is an existing node in the children that matches n,
+					// update its StartNS (it'll be used later to update sample
+					// count estimate)
+					if existingNode := getMatchingNode(stacks[e.ThreadID][i].Children, n); existingNode != nil {
+						existingNode.StartNS = n.StartNS
+						n = existingNode
+					} else {
+						stacks[e.ThreadID][i].Children = append(stacks[e.ThreadID][i].Children, n)
+					}
+				} else {
+					stacks[e.ThreadID][i].Children = append(stacks[e.ThreadID][i].Children, n)
+				}
+
 			}
 			stacks[e.ThreadID] = append(stacks[e.ThreadID], n)
-			n.Fingerprint = generateFingerprint(stacks[e.ThreadID])
+			if n.Fingerprint != 0 {
+				n.Fingerprint = generateFingerprint(stacks[e.ThreadID])
+			}
 		case ExitAction, UnwindAction:
 			if len(stacks[e.ThreadID]) == 0 {
 				continue
 			}
 			i := len(stacks[e.ThreadID]) - 1
 			n := stacks[e.ThreadID][i]
-			n.Update(buildTimestamp(e.Time))
+			if merge {
+				n.EndNS = buildTimestamp(e.Time)
+				n.SampleCount += int(math.Ceil(float64(n.EndNS-n.StartNS) / 10))
+				n.DurationNS += n.EndNS - n.StartNS
+			} else {
+				n.Update(buildTimestamp(e.Time))
+			}
 			stacks[e.ThreadID] = stacks[e.ThreadID][:i]
 		}
 	}
 
 	return trees
+}
+
+func getMatchingNode(nodes []*nodetree.Node, newNode *nodetree.Node) *nodetree.Node {
+	for _, node := range nodes {
+		if node.Name == newNode.Name && node.Package == newNode.Package {
+			return node
+		}
+	}
+	return nil
 }
 
 func generateFingerprint(stack []*nodetree.Node) uint64 {

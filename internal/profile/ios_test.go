@@ -858,7 +858,7 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := tt.profile.CallTrees()
+			got := tt.profile.CallTrees(false)
 			if diff := testutil.Diff(got, tt.want); diff != "" {
 				t.Fatalf("Result mismatch: got - want +\n%s", diff)
 			}
@@ -1403,7 +1403,7 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := tt.profile.CallTrees()
+			got := tt.profile.CallTrees(false)
 			if diff := testutil.Diff(got, tt.want); diff != "" {
 				t.Fatalf("Result mismatch: got - want +\n%s", diff)
 			}
@@ -1457,7 +1457,7 @@ func TestCallTreeGenerationFromMultipleProfiles(t *testing.T) {
 		},
 	}
 
-	if diff := testutil.Diff(p1.CallTrees(), p2.CallTrees()); diff != "" {
+	if diff := testutil.Diff(p1.CallTrees(false), p2.CallTrees(false)); diff != "" {
 		t.Fatalf("Result mismatch: got - want +\n%s", diff)
 	}
 }
@@ -1482,7 +1482,7 @@ func BenchmarkCallTrees(b *testing.B) {
 
 	var total int
 	for n := 0; n < b.N; n++ {
-		c := iosProfile.CallTrees()
+		c := iosProfile.CallTrees(false)
 		total += len(c)
 	}
 	b.Logf("Total call trees generated: %d", total)

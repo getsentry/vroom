@@ -51,7 +51,7 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 
 	s = sentry.StartSpan(ctx, "processing")
 	s.Description = "Generate call trees"
-	callTrees, err := p.CallTrees()
+	callTrees, err := p.CallTrees(false)
 	s.Finish()
 	if err != nil {
 		hub.CaptureException(err)

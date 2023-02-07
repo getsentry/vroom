@@ -132,7 +132,7 @@ func AnalyzeProfile(pathChannel chan string, errChan chan error, wg *sync.WaitGr
 			errChan <- err
 			continue
 		}
-		callTrees, err := p.CallTrees()
+		callTrees, err := p.CallTrees(false)
 		if err != nil {
 			errChan <- err
 			continue

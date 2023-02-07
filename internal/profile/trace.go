@@ -7,7 +7,7 @@ import (
 
 type (
 	Trace interface {
-		CallTrees() map[uint64][]*nodetree.Node
+		CallTrees(merge bool) map[uint64][]*nodetree.Node
 		Speedscope() (speedscope.Output, error)
 	}
 )
