@@ -524,7 +524,7 @@ func TestCallTrees(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			callTrees, err := test.profile.CallTrees()
+			callTrees, err := test.profile.CallTrees(false)
 			if err != nil {
 				t.Fatalf("error while generating call trees: %+v\n", err)
 			}

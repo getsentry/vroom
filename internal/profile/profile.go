@@ -29,7 +29,7 @@ type (
 		Metadata() metadata.Metadata
 		Raw() []byte
 
-		CallTrees() (map[uint64][]*nodetree.Node, error)
+		CallTrees(merge bool) (map[uint64][]*nodetree.Node, error)
 		ReplaceIdleStacks()
 		Speedscope() (speedscope.Output, error)
 		StoragePath() string
@@ -77,8 +77,8 @@ func (p Profile) MarshalJSON() ([]byte, error) {
 	}
 }
 
-func (p *Profile) CallTrees() (map[uint64][]*nodetree.Node, error) {
-	return p.profile.CallTrees()
+func (p *Profile) CallTrees(merge bool) (map[uint64][]*nodetree.Node, error) {
+	return p.profile.CallTrees(merge)
 }
 
 func (p *Profile) ID() string {
