@@ -16,6 +16,6 @@ gcloud beta run deploy vroom \
   --vpc-egress all-traffic \
   --region us-central1 \
   --service-account service-vroom@specto-dev.iam.gserviceaccount.com \
-  --set-env-vars=ENVIRONMENT=production \
+  --set-env-vars=SENTRY_ENVIRONMENT=production \
   --timeout 30s \
   --vpc-connector sentry-ingest

@@ -39,7 +39,7 @@ type environment struct {
 var release string
 
 func newEnvironment() (*environment, error) {
-	envName := os.Getenv("ENVIRONMENT")
+	envName := os.Getenv("SENTRY_ENVIRONMENT")
 	if envName == "" {
 		envName = "development"
 	}
@@ -132,7 +132,6 @@ func (e *environment) newRouter() (*httprouter.Router, error) {
 }
 
 func main() {
-	fmt.Println("|", release, "|")
 	logutil.ConfigureLogger()
 
 	env, err := newEnvironment()
@@ -143,7 +142,7 @@ func main() {
 	err = sentry.Init(sentry.ClientOptions{
 		Dsn:              env.config.SentryDSN,
 		EnableTracing:    true,
-		Environment:      os.Getenv("ENVIRONMENT"),
+		Environment:      env.config.Environment,
 		Release:          release,
 		TracesSampleRate: 1.0,
 	})
