@@ -15,7 +15,6 @@ require (
 	github.com/google/uuid v1.3.0
 	github.com/json-iterator/go v1.1.12
 	github.com/julienschmidt/httprouter v1.3.0
-	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/phayes/freeport v0.0.0-20220201140144-74d24b5ae9f5
 	github.com/pierrec/lz4 v2.6.1+incompatible
 	github.com/pierrec/lz4/v4 v4.1.15
