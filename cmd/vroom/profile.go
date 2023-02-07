@@ -12,11 +12,9 @@ import (
 	"github.com/getsentry/vroom/internal/nodetree"
 	"github.com/getsentry/vroom/internal/occurrence"
 	"github.com/getsentry/vroom/internal/profile"
-	"github.com/getsentry/vroom/internal/snubautil"
 	"github.com/getsentry/vroom/internal/storageutil"
 	"github.com/google/uuid"
 	"github.com/julienschmidt/httprouter"
-	"github.com/rs/zerolog/log"
 	"github.com/segmentio/kafka-go"
 	"google.golang.org/api/googleapi"
 )
@@ -210,13 +208,21 @@ func (env *environment) getRawProfile(w http.ResponseWriter, r *http.Request) {
 	err = storageutil.UnmarshalCompressed(ctx, env.profilesBucket, profile.StoragePath(organizationID, projectID, profileID), &p)
 	s.Finish()
 	if err != nil {
-		log.Err(err).Msg("profile can't be unmarshaled")
-		if errors.Is(err, snubautil.ErrProfileNotFound) {
-			w.WriteHeader(http.StatusNotFound)
-		} else {
-			hub.CaptureException(err)
-			w.WriteHeader(http.StatusInternalServerError)
+		var e *googleapi.Error
+		if ok := errors.As(err, &e); ok {
+			if e.Code == 404 {
+				w.WriteHeader(http.StatusNotFound)
+				return
+			}
+			hub.Scope().SetContext("Google Cloud Storage Error", map[string]interface{}{
+				"body":    e.Body,
+				"code":    e.Code,
+				"details": e.Details,
+				"message": e.Message,
+			})
 		}
+		hub.CaptureException(err)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
@@ -275,12 +281,21 @@ func (env *environment) getProfile(w http.ResponseWriter, r *http.Request) {
 	err = storageutil.UnmarshalCompressed(ctx, env.profilesBucket, profile.StoragePath(organizationID, projectID, profileID), &p)
 	s.Finish()
 	if err != nil {
-		if errors.Is(err, snubautil.ErrProfileNotFound) {
-			w.WriteHeader(http.StatusNotFound)
-		} else {
-			hub.CaptureException(err)
-			w.WriteHeader(http.StatusInternalServerError)
+		var e *googleapi.Error
+		if ok := errors.As(err, &e); ok {
+			if e.Code == 404 {
+				w.WriteHeader(http.StatusNotFound)
+				return
+			}
+			hub.Scope().SetContext("Google Cloud Storage Error", map[string]interface{}{
+				"body":    e.Body,
+				"code":    e.Code,
+				"details": e.Details,
+				"message": e.Message,
+			})
 		}
+		hub.CaptureException(err)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
