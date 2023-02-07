@@ -115,6 +115,7 @@ func (e *environment) newRouter() (*httprouter.Router, error) {
 		{http.MethodGet, "/organizations/:organization_id/projects/:project_id/profiles/:profile_id", e.getProfile},
 		{http.MethodGet, "/organizations/:organization_id/projects/:project_id/raw_profiles/:profile_id", e.getRawProfile},
 		{http.MethodGet, "/organizations/:organization_id/projects/:project_id/transactions/:transaction_id", e.getProfileIDByTransactionID},
+		{http.MethodGet, "/health", e.getHealth},
 		{http.MethodPost, "/profile", e.postProfile},
 	}
 
@@ -187,6 +188,10 @@ func main() {
 
 	// Shutdown the rest of the environment after the HTTP connections are closed
 	env.shutdown()
+}
+
+func (e *environment) getHealth(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNoContent)
 }
 
 type Filter struct {
