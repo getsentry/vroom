@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -87,9 +86,9 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 
 		// Log occurrences with a link to access to corresponding profiles
 		// It will be removed when the issue platform UI is functional
-		for _, o := range occurrences {
-			link := fmt.Sprintf("https://sentry.io/api/0/profiling/projects/%d/profile/%s/?package=%s&name=%s", o.Event.ProjectID, o.Event.ID, o.EvidenceDisplay[1].Value, o.EvidenceDisplay[0].Value)
-			fmt.Println(o.Event.Platform, link)
+		inserter := env.occurrencesTable.Inserter()
+		if err := inserter.Put(ctx, occurrences); err != nil {
+			hub.CaptureException(err)
 		}
 
 		if _, enabled := env.config.OccurrencesEnabledOrganizations[orgID]; enabled {
@@ -304,23 +303,17 @@ func (env *environment) getProfile(w http.ResponseWriter, r *http.Request) {
 	s = sentry.StartSpan(ctx, "json.marshal")
 	defer s.Finish()
 
-	var b []byte
-	switch p.Platform() {
-	case "typescript":
-		b = p.Raw()
-	default:
-		o, err := p.Speedscope()
-		if err != nil {
-			hub.CaptureException(err)
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-		b, err = json.Marshal(o)
-		if err != nil {
-			hub.CaptureException(err)
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
+	o, err := p.Speedscope()
+	if err != nil {
+		hub.CaptureException(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	b, err := json.Marshal(o)
+	if err != nil {
+		hub.CaptureException(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")

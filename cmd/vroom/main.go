@@ -11,6 +11,7 @@ import (
 	"syscall"
 	"time"
 
+	"cloud.google.com/go/bigquery"
 	"cloud.google.com/go/storage"
 	"github.com/CAFxX/httpcompression"
 	"github.com/getsentry/sentry-go"
@@ -31,6 +32,7 @@ type environment struct {
 
 	occurrencesWriter *kafka.Writer
 	profilingWriter   *kafka.Writer
+	occurrencesTable  *bigquery.Table
 
 	storage        *storage.Client
 	profilesBucket *storage.BucketHandle
@@ -56,10 +58,16 @@ func newEnvironment() (*environment, error) {
 	if err != nil {
 		return nil, err
 	}
-	e.storage, err = storage.NewClient(context.Background())
+	ctx := context.Background()
+	e.storage, err = storage.NewClient(ctx)
 	if err != nil {
 		return nil, err
 	}
+	bqClient, err := bigquery.NewClient(ctx, "specto-dev")
+	if err != nil {
+		return nil, err
+	}
+	e.occurrencesTable = bqClient.Dataset("issues").Table("occurrences")
 	e.occurrencesWriter = &kafka.Writer{
 		Addr:         kafka.TCP(e.config.OccurrencesKafkaBrokers...),
 		Async:        true,
