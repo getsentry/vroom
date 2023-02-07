@@ -221,6 +221,15 @@ func (p Profile) CallTrees() (map[uint64][]*nodetree.Node, error) {
 	return treesByThreadID, nil
 }
 
+func getMatchingNode(nodes []*nodetree.Node, fingerprint uint64) *nodetree.Node {
+	for _, node := range nodes {
+		if node.Fingerprint == fingerprint {
+			return node
+		}
+	}
+	return nil
+}
+
 // ThreadName returns the proper name of a thread.
 // In all cases but cocoa, we'll have a thread name in the thread metadata and we should return that.
 // In the cocoa case, we need to look at queue metadata and return that.

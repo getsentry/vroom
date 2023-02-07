@@ -187,7 +187,9 @@ func (p Android) CallTrees() map[uint64][]*nodetree.Node {
 				stacks[e.ThreadID][i].Children = append(stacks[e.ThreadID][i].Children, n)
 			}
 			stacks[e.ThreadID] = append(stacks[e.ThreadID], n)
-			n.Fingerprint = generateFingerprint(stacks[e.ThreadID])
+			if n.Fingerprint != 0 {
+				n.Fingerprint = generateFingerprint(stacks[e.ThreadID])
+			}
 		case ExitAction, UnwindAction:
 			if len(stacks[e.ThreadID]) == 0 {
 				continue
@@ -200,6 +202,15 @@ func (p Android) CallTrees() map[uint64][]*nodetree.Node {
 	}
 
 	return trees
+}
+
+func getMatchingNode(nodes []*nodetree.Node, newNode *nodetree.Node) *nodetree.Node {
+	for _, node := range nodes {
+		if node.Name == newNode.Name && node.Package == newNode.Package {
+			return node
+		}
+	}
+	return nil
 }
 
 func generateFingerprint(stack []*nodetree.Node) uint64 {
