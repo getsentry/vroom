@@ -94,7 +94,7 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 			fmt.Println(o.Event.Platform, link)
 		}
 
-		if _, enabled := env.OccurrencesEnabledOrganizations[orgID]; enabled {
+		if _, enabled := env.config.OccurrencesEnabledOrganizations[orgID]; enabled {
 			s = sentry.StartSpan(ctx, "processing")
 			s.Description = "Build Kafka message batch"
 			messages, err := occurrence.GenerateKafkaMessageBatch(occurrences)
@@ -136,7 +136,7 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		messages = append(messages, kafka.Message{
-			Topic: env.CallTreesKafkaTopic,
+			Topic: env.config.CallTreesKafkaTopic,
 			Value: b,
 		})
 	}
@@ -152,7 +152,7 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	messages = append(messages, kafka.Message{
-		Topic: env.ProfilesKafkaTopic,
+		Topic: env.config.ProfilesKafkaTopic,
 		Value: b,
 	})
 
