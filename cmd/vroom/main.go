@@ -158,7 +158,7 @@ func main() {
 
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "8085"
+		port = "8080"
 	}
 	server := http.Server{
 		Addr:    ":" + port,
