@@ -164,7 +164,7 @@ func (p SampleProfile) GetDurationNS() uint64 {
 	return t.RelativeEndNS - t.RelativeStartNS
 }
 
-func (p SampleProfile) CallTrees(merge bool) (map[uint64][]*nodetree.Node, error) {
+func (p SampleProfile) CallTrees() (map[uint64][]*nodetree.Node, error) {
 	sort.SliceStable(p.Trace.Samples, func(i, j int) bool {
 		return p.Trace.Samples[i].ElapsedSinceStartNS < p.Trace.Samples[j].ElapsedSinceStartNS
 	})
@@ -187,13 +187,9 @@ func (p SampleProfile) CallTrees(merge bool) (map[uint64][]*nodetree.Node, error
 			fingerprint := h.Sum64()
 			if current == nil {
 				i := len(treesByThreadID[s.ThreadID]) - 1
-				if !merge && i >= 0 && treesByThreadID[s.ThreadID][i].Fingerprint == fingerprint && treesByThreadID[s.ThreadID][i].EndNS == previousTimestamp[s.ThreadID] {
+				if i >= 0 && treesByThreadID[s.ThreadID][i].Fingerprint == fingerprint && treesByThreadID[s.ThreadID][i].EndNS == previousTimestamp[s.ThreadID] {
 					current = treesByThreadID[s.ThreadID][i]
 					current.Update(s.ElapsedSinceStartNS)
-				} else if existingNode := getMatchingNode(treesByThreadID[s.ThreadID], fingerprint); merge && existingNode != nil {
-					current = existingNode
-					current.DurationNS += s.ElapsedSinceStartNS - previousTimestamp[s.ThreadID]
-					current.SampleCount += 1
 				} else {
 					n := nodetree.NodeFromFrame(f.PackageBaseName(), f.Function, f.Path, f.Line, previousTimestamp[s.ThreadID], s.ElapsedSinceStartNS, fingerprint, p.IsApplicationFrame(f))
 					treesByThreadID[s.ThreadID] = append(treesByThreadID[s.ThreadID], n)
@@ -201,13 +197,9 @@ func (p SampleProfile) CallTrees(merge bool) (map[uint64][]*nodetree.Node, error
 				}
 			} else {
 				i := len(current.Children) - 1
-				if !merge && i >= 0 && current.Children[i].Fingerprint == fingerprint && current.Children[i].EndNS == previousTimestamp[s.ThreadID] {
+				if i >= 0 && current.Children[i].Fingerprint == fingerprint && current.Children[i].EndNS == previousTimestamp[s.ThreadID] {
 					current = current.Children[i]
 					current.Update(s.ElapsedSinceStartNS)
-				} else if existingNode := getMatchingNode(current.Children, fingerprint); merge && existingNode != nil {
-					current = existingNode
-					current.DurationNS += s.ElapsedSinceStartNS - previousTimestamp[s.ThreadID]
-					current.SampleCount += 1
 				} else {
 					n := nodetree.NodeFromFrame(f.PackageBaseName(), f.Function, f.Path, f.Line, previousTimestamp[s.ThreadID], s.ElapsedSinceStartNS, fingerprint, p.IsApplicationFrame(f))
 					current.Children = append(current.Children, n)
@@ -221,15 +213,6 @@ func (p SampleProfile) CallTrees(merge bool) (map[uint64][]*nodetree.Node, error
 	}
 
 	return treesByThreadID, nil
-}
-
-func getMatchingNode(nodes []*nodetree.Node, fingerprint uint64) *nodetree.Node {
-	for _, node := range nodes {
-		if node.Fingerprint == fingerprint {
-			return node
-		}
-	}
-	return nil
 }
 
 // ThreadName returns the proper name of a thread.

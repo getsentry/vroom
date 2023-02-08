@@ -148,7 +148,7 @@ func (p IOS) MainThread() uint64 {
 	return candidates[0].ThreadID
 }
 
-func (p IOS) CallTrees(merge bool) map[uint64][]*nodetree.Node {
+func (p IOS) CallTrees() map[uint64][]*nodetree.Node {
 	sort.Slice(p.Samples, func(i, j int) bool {
 		return p.Samples[i].RelativeTimestampNS < p.Samples[j].RelativeTimestampNS
 	})
