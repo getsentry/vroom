@@ -24,7 +24,7 @@ var (
 		"production": ServiceConfig{
 			SentryDSN:      "https://91f2762536314cbd9cc4a163fe072682@o1.ingest.sentry.io/6424467",
 			ProfilesBucket: "sentry-profiles",
-			SnubaHost:      "http://127.0.0.1:10006",
+			SnubaHost:      "http://10.2.0.175",
 			OccurrencesEnabledOrganizations: map[uint64]struct{}{
 				1:      {},
 				447951: {},
