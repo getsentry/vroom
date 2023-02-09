@@ -242,6 +242,9 @@ var (
 					"UIKit": map[string]Category{
 						"-[UINib instantiateWithOwner:options:]": ViewInflation,
 					},
+					"libsystem_kernel.dylib": map[string]Category{
+						"mach_msg_trap": FileRead,
+					},
 				},
 				IssueTitle: IssueTitleBlockingFunctionOnMainThread,
 			},
@@ -250,7 +253,7 @@ var (
 )
 
 // DetectFrames detects occurrence of an issue based by matching frames of the profile on a list of frames
-func detectFrame(p profile.Profile, callTreesPerThreadID map[uint64][]*nodetree.Node, options DetectExactFrameOptions, occurrences *[]Occurrence) {
+func detectFrame(p profile.Profile, callTreesPerThreadID map[uint64][]*nodetree.Node, options DetectExactFrameOptions, occurrences *[]*Occurrence) {
 	// List nodes matching criteria
 	nodes := make(map[nodeKey]nodeInfo)
 	if options.ActiveThreadOnly {
@@ -281,7 +284,7 @@ func detectFrameInCallTree(n *nodetree.Node, options DetectExactFrameOptions, no
 	*stackTrace = append(*stackTrace, n.Frame())
 	if functions, exists := options.FunctionsByPackage[n.Package]; exists {
 		// Only use time threshold when the sample count is more than one to avoid sampling issues showing up as blocking issues
-		if category, exists := functions[n.Name]; exists && n.DurationNS > uint64(options.DurationThreshold) && n.SampleCount != 1 {
+		if category, exists := functions[n.Name]; exists { //&& n.DurationNS > uint64(options.DurationThreshold) && n.SampleCount != 1 {
 			nk := nodeKey{Package: n.Package, Function: n.Name}
 			if _, exists := nodes[nk]; !exists {
 				nodes[nk] = nodeInfo{

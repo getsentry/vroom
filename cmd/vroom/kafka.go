@@ -35,17 +35,17 @@ type (
 		DeviceOSVersion      string            `json:"device_os_version"`
 		DurationNS           uint64            `json:"duration_ns"`
 		Environment          string            `json:"environment,omitempty"`
+		ID                   string            `json:"profile_id"`
 		OrganizationID       uint64            `json:"organization_id"`
 		Platform             platform.Platform `json:"platform"`
-		ID                   string            `json:"profile_id"`
 		ProjectID            uint64            `json:"project_id"`
 		Received             int64             `json:"received"`
+		RetentionDays        int               `json:"retention_days"`
 		TraceID              string            `json:"trace_id"`
 		TransactionID        string            `json:"transaction_id"`
 		TransactionName      string            `json:"transaction_name"`
 		VersionCode          string            `json:"version_code"`
 		VersionName          string            `json:"version_name"`
-		RetentionDays        int               `json:"retention_days"`
 	}
 )
 

@@ -72,7 +72,7 @@ const (
 	IssueTitleBlockingFunctionOnMainThread IssueTitleType = "Blocking function called on the main thread"
 )
 
-func NewOccurrence(p profile.Profile, title IssueTitleType, ni nodeInfo) Occurrence {
+func NewOccurrence(p profile.Profile, title IssueTitleType, ni nodeInfo) *Occurrence {
 	t := p.Transaction()
 	h := md5.New()
 	_, _ = io.WriteString(h, strconv.FormatUint(p.ProjectID(), 10))
@@ -83,7 +83,7 @@ func NewOccurrence(p profile.Profile, title IssueTitleType, ni nodeInfo) Occurre
 	_, _ = io.WriteString(h, ni.Node.Name)
 	fingerprint := fmt.Sprintf("%x", h.Sum(nil))
 	tags := buildOccurrenceTags(p)
-	return Occurrence{
+	return &Occurrence{
 		Category:      ni.Category,
 		DetectionTime: time.Now().UTC(),
 		Event: Event{
@@ -149,18 +149,18 @@ func (o *Occurrence) Link() (string, error) {
 	return link.String(), nil
 }
 
-func (o *Occurrence) Save() (map[string]interface{}, string, error) {
+func (o *Occurrence) Save() (map[string]bigquery.Value, string, error) {
 	link, err := o.Link()
 	if err != nil {
 		return nil, "", err
 	}
-	return map[string]interface{}{
+	return map[string]bigquery.Value{
 		"category":        o.Category,
 		"detected_at":     o.DetectionTime,
 		"link":            link,
-		"organization_id": o.Event.OrganizationID,
+		"organization_id": strconv.FormatUint(o.Event.OrganizationID, 10),
 		"platform":        o.Event.Platform,
 		"profile_id":      o.Event.ID,
-		"project_id":      o.Event.ProjectID,
+		"project_id":      strconv.FormatUint(o.Event.ProjectID, 10),
 	}, bigquery.NoDedupeID, nil
 }
