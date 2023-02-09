@@ -30,9 +30,9 @@ type environment struct {
 
 	snuba snubautil.Client
 
-	occurrencesWriter *kafka.Writer
-	profilingWriter   *kafka.Writer
-	occurrencesTable  *bigquery.Table
+	occurrencesWriter   *kafka.Writer
+	profilingWriter     *kafka.Writer
+	occurrencesInserter *bigquery.Inserter
 
 	storage        *storage.Client
 	profilesBucket *storage.BucketHandle
@@ -67,7 +67,7 @@ func newEnvironment() (*environment, error) {
 	if err != nil {
 		return nil, err
 	}
-	e.occurrencesTable = bqClient.Dataset("issues").Table("occurrences")
+	e.occurrencesInserter = bqClient.Dataset("issues").Table("occurrences").Inserter()
 	e.occurrencesWriter = &kafka.Writer{
 		Addr:         kafka.TCP(e.config.OccurrencesKafkaBrokers...),
 		Async:        true,
