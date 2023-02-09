@@ -13,7 +13,7 @@ type (
 	DetectExactFrameOptions struct {
 		ActiveThreadOnly   bool
 		DurationThreshold  time.Duration
-		FunctionsByPackage map[string]map[string]struct{}
+		FunctionsByPackage map[string]map[string]Category
 		IssueTitle         IssueTitleType
 	}
 
@@ -23,9 +23,36 @@ type (
 	}
 
 	nodeInfo struct {
+		Category   Category
 		Node       *nodetree.Node
 		StackTrace []frame.Frame
 	}
+
+	Category string
+)
+
+const (
+	Compression      Category = "compression"
+	CoreDataBlock    Category = "core_data_block"
+	CoreDataMerge    Category = "core_data_merge"
+	CoreDataRead     Category = "core_data_read"
+	CoreDataWrite    Category = "core_data_write"
+	FileRead         Category = "file_write"
+	FileWrite        Category = "file_write"
+	HTTP             Category = "http"
+	ImageDecode      Category = "image_decode"
+	ImageEncode      Category = "image_encode"
+	JSONDecode       Category = "json_decode"
+	JSONEncode       Category = "json_encode"
+	MLModelInference Category = "ml_model_inference"
+	MLModelLoad      Category = "ml_model_load"
+	Regex            Category = "regex"
+	SQL              Category = "sql"
+	ViewInflation    Category = "view_inflation"
+	ViewLayout       Category = "view_layout"
+	ViewRender       Category = "view_render"
+	ViewUpdate       Category = "view_update"
+	XPC              Category = "xpc"
 )
 
 var (
@@ -33,50 +60,50 @@ var (
 		platform.Node: []DetectExactFrameOptions{
 			DetectExactFrameOptions{
 				ActiveThreadOnly: true,
-				FunctionsByPackage: map[string]map[string]struct{}{
-					"node:fs": map[string]struct{}{
-						"accessSync":          struct{}{},
-						"appendFileSync":      struct{}{},
-						"chmodSync":           struct{}{},
-						"chownSync":           struct{}{},
-						"closeSync":           struct{}{},
-						"copyFileSync":        struct{}{},
-						"cpSync":              struct{}{},
-						"existsSync":          struct{}{},
-						"fchmodSync":          struct{}{},
-						"fchownSync":          struct{}{},
-						"fdatasyncSync":       struct{}{},
-						"fstatSync":           struct{}{},
-						"fsyncSync":           struct{}{},
-						"ftruncateSync":       struct{}{},
-						"futimesSync":         struct{}{},
-						"lchmodSync":          struct{}{},
-						"lchownSync":          struct{}{},
-						"linkSync":            struct{}{},
-						"lstatSync":           struct{}{},
-						"lutimesSync":         struct{}{},
-						"mkdirSync":           struct{}{},
-						"mkdtempSync":         struct{}{},
-						"openSync":            struct{}{},
-						"opendirSync":         struct{}{},
-						"readFileSync":        struct{}{},
-						"readSync":            struct{}{},
-						"readdirSync":         struct{}{},
-						"readlinkSync":        struct{}{},
-						"readvSync":           struct{}{},
-						"realpathSync":        struct{}{},
-						"realpathSync.native": struct{}{},
-						"renameSync":          struct{}{},
-						"rmSync":              struct{}{},
-						"rmdirSync":           struct{}{},
-						"statSync":            struct{}{},
-						"symlinkSync":         struct{}{},
-						"truncateSync":        struct{}{},
-						"unlinkSync":          struct{}{},
-						"utimesSync":          struct{}{},
-						"writeFileSync":       struct{}{},
-						"writeSync":           struct{}{},
-						"writevSync":          struct{}{},
+				FunctionsByPackage: map[string]map[string]Category{
+					"node:fs": map[string]Category{
+						"accessSync":          FileRead,
+						"appendFileSync":      FileRead,
+						"chmodSync":           FileRead,
+						"chownSync":           FileRead,
+						"closeSync":           FileRead,
+						"copyFileSync":        FileRead,
+						"cpSync":              FileRead,
+						"existsSync":          FileRead,
+						"fchmodSync":          FileRead,
+						"fchownSync":          FileRead,
+						"fdatasyncSync":       FileRead,
+						"fstatSync":           FileRead,
+						"fsyncSync":           FileRead,
+						"ftruncateSync":       FileRead,
+						"futimesSync":         FileRead,
+						"lchmodSync":          FileRead,
+						"lchownSync":          FileRead,
+						"linkSync":            FileRead,
+						"lstatSync":           FileRead,
+						"lutimesSync":         FileRead,
+						"mkdirSync":           FileRead,
+						"mkdtempSync":         FileRead,
+						"openSync":            FileRead,
+						"opendirSync":         FileRead,
+						"readFileSync":        FileRead,
+						"readSync":            FileRead,
+						"readdirSync":         FileRead,
+						"readlinkSync":        FileRead,
+						"readvSync":           FileRead,
+						"realpathSync":        FileRead,
+						"realpathSync.native": FileRead,
+						"renameSync":          FileRead,
+						"rmSync":              FileRead,
+						"rmdirSync":           FileRead,
+						"statSync":            FileRead,
+						"symlinkSync":         FileRead,
+						"truncateSync":        FileRead,
+						"unlinkSync":          FileRead,
+						"utimesSync":          FileRead,
+						"writeFileSync":       FileRead,
+						"writeSync":           FileRead,
+						"writevSync":          FileRead,
 					},
 				},
 				IssueTitle: IssueTitleBlockingFunctionOnMainThread,
@@ -86,134 +113,137 @@ var (
 			DetectExactFrameOptions{
 				ActiveThreadOnly:  true,
 				DurationThreshold: 16 * time.Millisecond,
-				FunctionsByPackage: map[string]map[string]struct{}{
-					"AppleJPEG": map[string]struct{}{
-						"applejpeg_decode_image_all": struct{}{},
+				FunctionsByPackage: map[string]map[string]Category{
+					"AppleJPEG": map[string]Category{
+						"applejpeg_decode_image_all": ImageDecode,
 					},
-					"AttributeGraph": map[string]struct{}{
-						"AG::LayoutDescriptor::make_layout(AG::swift::metadata const*, AGComparisonMode, AG::LayoutDescriptor::HeapMode)": struct{}{},
+					"AttributeGraph": map[string]Category{
+						"AG::LayoutDescriptor::make_layout(AG::swift::metadata const*, AGComparisonMode, AG::LayoutDescriptor::HeapMode)": ViewLayout,
 					},
-					"CoreData": map[string]struct{}{
-						"-[NSManagedObjectContext countForFetchRequest:error:]":                 struct{}{},
-						"-[NSManagedObjectContext executeFetchRequest:error:]":                  struct{}{},
-						"-[NSManagedObjectContext executeRequest:error:]":                       struct{}{},
-						"-[NSManagedObjectContext mergeChangesFromContextDidSaveNotification:]": struct{}{},
-						"-[NSManagedObjectContext obtainPermanentIDsForObjects:error:]":         struct{}{},
-						"-[NSManagedObjectContext performBlockAndWait:]":                        struct{}{},
-						"-[NSManagedObjectContext save:]":                                       struct{}{},
-						"NSManagedObjectContext.fetch<A>(NSFetchRequest<A>)":                    struct{}{},
+					"CoreData": map[string]Category{
+						"-[NSManagedObjectContext countForFetchRequest:error:]":                 CoreDataRead,
+						"-[NSManagedObjectContext executeFetchRequest:error:]":                  CoreDataRead,
+						"-[NSManagedObjectContext executeRequest:error:]":                       CoreDataRead,
+						"-[NSManagedObjectContext mergeChangesFromContextDidSaveNotification:]": CoreDataMerge,
+						"-[NSManagedObjectContext obtainPermanentIDsForObjects:error:]":         CoreDataWrite,
+						"-[NSManagedObjectContext performBlockAndWait:]":                        CoreDataBlock,
+						"-[NSManagedObjectContext save:]":                                       CoreDataWrite,
+						"NSManagedObjectContext.fetch<A>(NSFetchRequest<A>)":                    CoreDataRead,
 					},
-					"CoreFoundation": map[string]struct{}{
-						"CFReadStreamRead":                         struct{}{},
-						"CFURLConnectionSendSynchronousRequest":    struct{}{},
-						"CFURLCreateData":                          struct{}{},
-						"CFURLCreateDataAndPropertiesFromResource": struct{}{},
-						"CFURLWriteDataAndPropertiesToResource":    struct{}{},
-						"CFWriteStreamWrite":                       struct{}{},
+					"CoreFoundation": map[string]Category{
+						"CFReadStreamRead":                         FileRead,
+						"CFURLConnectionSendSynchronousRequest":    HTTP,
+						"CFURLCreateData":                          FileRead,
+						"CFURLCreateDataAndPropertiesFromResource": FileRead,
+						"CFURLWriteDataAndPropertiesToResource":    FileWrite,
+						"CFWriteStreamWrite":                       FileWrite,
 					},
-					"CoreML": map[string]struct{}{
-						"+[MLModel modelWithContentsOfURL:configuration:error:]":         struct{}{},
-						"-[MLNeuralNetworkEngine predictionFromFeatures:options:error:]": struct{}{},
+					"CoreML": map[string]Category{
+						"+[MLModel modelWithContentsOfURL:configuration:error:]":         MLModelLoad,
+						"-[MLNeuralNetworkEngine predictionFromFeatures:options:error:]": MLModelInference,
 					},
-					"Foundation": map[string]struct{}{
-						"+[NSJSONSerialization JSONObjectWithStream:options:error:]":              struct{}{},
-						"+[NSJSONSerialization writeJSONObject:toStream:options:error:]":          struct{}{},
-						"+[NSRegularExpression regularExpressionWithPattern:options:error:]":      struct{}{},
-						"+[NSURLConnection sendSynchronousRequest:returningResponse:error:]":      struct{}{},
-						"-[NSData(NSData) initWithContentsOfMappedFile:]":                         struct{}{},
-						"-[NSData(NSData) initWithContentsOfURL:]":                                struct{}{},
-						"-[NSData(NSData) initWithContentsOfURL:options:maxLength:error:]":        struct{}{},
-						"-[NSData(NSData) writeToFile:atomically:]":                               struct{}{},
-						"-[NSData(NSData) writeToFile:atomically:error:]":                         struct{}{},
-						"-[NSData(NSData) writeToFile:options:error:]":                            struct{}{},
-						"-[NSData(NSData) writeToURL:atomically:]":                                struct{}{},
-						"-[NSData(NSData) writeToURL:options:error:]":                             struct{}{},
-						"-[NSFileManager contentsAtPath:]":                                        struct{}{},
-						"-[NSFileManager createFileAtPath:contents:attributes:]":                  struct{}{},
-						"-[NSISEngine performModifications:withUnsatisfiableConstraintsHandler:]": struct{}{},
-						"-[NSRegularExpression initWithPattern:options:error:]":                   struct{}{},
-						"@nonobjc NSData.init(contentsOf: URL, options: NSDataReadingOptions)":    struct{}{},
-						"Data.init(contentsOf: __shared URL, options: NSDataReadingOptions)":      struct{}{},
-						"JSONDecoder.decode<A>(_: A.Type, from: Any)":                             struct{}{},
-						"JSONDecoder.decode<A>(_: A.Type, from: Data)":                            struct{}{},
-						"JSONDecoder.decode<A>(_: A.Type, jsonData: Data, logErrors: Bool)":       struct{}{},
-						"JSONEncoder.encode<A>(A)":                                                struct{}{},
-						"NSFileManager.contents(atURL: URL)":                                      struct{}{},
+					"Foundation": map[string]Category{
+						"+[NSJSONSerialization JSONObjectWithStream:options:error:]":              JSONDecode,
+						"+[NSJSONSerialization writeJSONObject:toStream:options:error:]":          JSONEncode,
+						"+[NSRegularExpression regularExpressionWithPattern:options:error:]":      Regex,
+						"+[NSURLConnection sendSynchronousRequest:returningResponse:error:]":      HTTP,
+						"-[NSData(NSData) initWithContentsOfMappedFile:]":                         FileRead,
+						"-[NSData(NSData) initWithContentsOfURL:]":                                FileRead,
+						"-[NSData(NSData) initWithContentsOfURL:options:maxLength:error:]":        FileRead,
+						"-[NSData(NSData) writeToFile:atomically:]":                               FileWrite,
+						"-[NSData(NSData) writeToFile:atomically:error:]":                         FileWrite,
+						"-[NSData(NSData) writeToFile:options:error:]":                            FileWrite,
+						"-[NSData(NSData) writeToURL:atomically:]":                                FileWrite,
+						"-[NSData(NSData) writeToURL:options:error:]":                             FileWrite,
+						"-[NSFileManager contentsAtPath:]":                                        FileRead,
+						"-[NSFileManager createFileAtPath:contents:attributes:]":                  FileWrite,
+						"-[NSISEngine performModifications:withUnsatisfiableConstraintsHandler:]": ViewLayout,
+						"-[NSRegularExpression initWithPattern:options:error:]":                   Regex,
+						"@nonobjc NSData.init(contentsOf: URL, options: NSDataReadingOptions)":    FileRead,
+						"Data.init(contentsOf: __shared URL, options: NSDataReadingOptions)":      FileRead,
+						"JSONDecoder.decode<A>(_: A.Type, from: Any)":                             JSONDecode,
+						"JSONDecoder.decode<A>(_: A.Type, from: Data)":                            JSONDecode,
+						"JSONDecoder.decode<A>(_: A.Type, jsonData: Data, logErrors: Bool)":       JSONDecode,
+						"JSONEncoder.encode<A>(A)":                                                JSONEncode,
+						"NSFileManager.contents(atURL: URL)":                                      FileRead,
 					},
-					"ImageIO": map[string]struct{}{
-						"DecodeImageData":   struct{}{},
-						"DecodeImageStream": struct{}{},
-						"GIFReadPlugin::DoDecodeImageData(IIOImageReadSession*, GlobalGIFInfo*, ReadPluginData const&, GIFPluginData const&, unsigned char*, unsigned long, std::__1::shared_ptr<GIFBufferInfo>, long*)": struct{}{},
-						"IIOImageProviderInfo::CopyImageBlockSetWithOptions(void*, CGImageProvider*, CGRect, CGSize, __CFDictionary const*)":                                                                             struct{}{},
-						"LZWDecode":  struct{}{},
-						"NeXTDecode": struct{}{},
-						"PNGReadPlugin::DecodeFrameStandard(IIOImageReadSession*, ReadPluginData const&, PNGPluginData const&, IIODecodeFrameParams&)": struct{}{},
-						"VP8Decode":        struct{}{},
-						"VP8DecodeMB":      struct{}{},
-						"WebPDecode":       struct{}{},
-						"jpeg_huff_decode": struct{}{},
+					"ImageIO": map[string]Category{
+						"DecodeImageData":   ImageDecode,
+						"DecodeImageStream": ImageDecode,
+						"GIFReadPlugin::DoDecodeImageData(IIOImageReadSession*, GlobalGIFInfo*, ReadPluginData const&, GIFPluginData const&, unsigned char*, unsigned long, std::__1::shared_ptr<GIFBufferInfo>, long*)": ImageDecode,
+						"IIOImageProviderInfo::CopyImageBlockSetWithOptions(void*, CGImageProvider*, CGRect, CGSize, __CFDictionary const*)":                                                                             ImageDecode,
+						"LZWDecode":  ImageDecode,
+						"NeXTDecode": ImageDecode,
+						"PNGReadPlugin::DecodeFrameStandard(IIOImageReadSession*, ReadPluginData const&, PNGPluginData const&, IIODecodeFrameParams&)": ImageDecode,
+						"VP8Decode":        ImageDecode,
+						"VP8DecodeMB":      ImageDecode,
+						"WebPDecode":       ImageDecode,
+						"jpeg_huff_decode": ImageDecode,
 					},
-					"libcompression.dylib": map[string]struct{}{
-						"BrotliDecoderDecompress": struct{}{},
-						"brotli_encode_buffer":    struct{}{},
-						"lz4_decode":              struct{}{},
-						"lz4_decode_asm":          struct{}{},
-						"lzfseDecode":             struct{}{},
-						"lzfseEncode":             struct{}{},
-						"lzfseStreamDecode":       struct{}{},
-						"lzfseStreamEncode":       struct{}{},
-						"lzvnDecode":              struct{}{},
-						"lzvnEncode":              struct{}{},
-						"lzvnStreamDecode":        struct{}{},
-						"lzvnStreamEncode":        struct{}{},
-						"zlibDecodeBuffer":        struct{}{},
-						"zlib_decode_buffer":      struct{}{},
-						"zlib_encode_buffer":      struct{}{},
+					"libcompression.dylib": map[string]Category{
+						"BrotliDecoderDecompress": Compression,
+						"brotli_encode_buffer":    Compression,
+						"lz4_decode":              Compression,
+						"lz4_decode_asm":          Compression,
+						"lzfseDecode":             Compression,
+						"lzfseEncode":             Compression,
+						"lzfseStreamDecode":       Compression,
+						"lzfseStreamEncode":       Compression,
+						"lzvnDecode":              Compression,
+						"lzvnEncode":              Compression,
+						"lzvnStreamDecode":        Compression,
+						"lzvnStreamEncode":        Compression,
+						"zlibDecodeBuffer":        Compression,
+						"zlib_decode_buffer":      Compression,
+						"zlib_encode_buffer":      Compression,
 					},
-					"libsqlite3.dylib": map[string]struct{}{
-						"sqlite3_blob_read":      struct{}{},
-						"sqlite3_column_blob":    struct{}{},
-						"sqlite3_column_bytes":   struct{}{},
-						"sqlite3_column_double":  struct{}{},
-						"sqlite3_column_int":     struct{}{},
-						"sqlite3_column_int64":   struct{}{},
-						"sqlite3_column_text":    struct{}{},
-						"sqlite3_column_text16":  struct{}{},
-						"sqlite3_column_value":   struct{}{},
-						"sqlite3_step":           struct{}{},
-						"sqlite3_value_blob":     struct{}{},
-						"sqlite3_value_double":   struct{}{},
-						"sqlite3_value_int":      struct{}{},
-						"sqlite3_value_int64":    struct{}{},
-						"sqlite3_value_pointer":  struct{}{},
-						"sqlite3_value_text":     struct{}{},
-						"sqlite3_value_text16":   struct{}{},
-						"sqlite3_value_text16be": struct{}{},
-						"sqlite3_value_text16le": struct{}{},
+					"libsqlite3.dylib": map[string]Category{
+						"sqlite3_blob_read":      SQL,
+						"sqlite3_column_blob":    SQL,
+						"sqlite3_column_bytes":   SQL,
+						"sqlite3_column_double":  SQL,
+						"sqlite3_column_int":     SQL,
+						"sqlite3_column_int64":   SQL,
+						"sqlite3_column_text":    SQL,
+						"sqlite3_column_text16":  SQL,
+						"sqlite3_column_value":   SQL,
+						"sqlite3_step":           SQL,
+						"sqlite3_value_blob":     SQL,
+						"sqlite3_value_double":   SQL,
+						"sqlite3_value_int":      SQL,
+						"sqlite3_value_int64":    SQL,
+						"sqlite3_value_pointer":  SQL,
+						"sqlite3_value_text":     SQL,
+						"sqlite3_value_text16":   SQL,
+						"sqlite3_value_text16be": SQL,
+						"sqlite3_value_text16le": SQL,
 					},
-					"libswiftCoreData.dylib": map[string]struct{}{
-						"NSManagedObjectContext.count<A>(for: NSFetchRequest<A>)":                                      struct{}{},
-						"NSManagedObjectContext.fetch<A>(NSFetchRequest<A>)":                                           struct{}{},
-						"NSManagedObjectContext.perform<A>(schedule: NSManagedObjectContext.ScheduledTaskType, _: ())": struct{}{},
+					"libswiftCoreData.dylib": map[string]Category{
+						"NSManagedObjectContext.count<A>(for: NSFetchRequest<A>)":                                      CoreDataRead,
+						"NSManagedObjectContext.fetch<A>(NSFetchRequest<A>)":                                           CoreDataRead,
+						"NSManagedObjectContext.perform<A>(schedule: NSManagedObjectContext.ScheduledTaskType, _: ())": CoreDataBlock,
 					},
-					"libswiftFoundation.dylib": map[string]struct{}{
-						"__JSONDecoder.decode<A>(A.Type)": struct{}{},
-						"__JSONEncoder.encode<A>(A)":      struct{}{},
+					"libswiftFoundation.dylib": map[string]Category{
+						"__JSONDecoder.decode<A>(A.Type)": JSONDecode,
+						"__JSONEncoder.encode<A>(A)":      JSONEncode,
 					},
-					"libsystem_c.dylib": map[string]struct{}{
-						"__fread": struct{}{},
-						"fread":   struct{}{},
+					"libsystem_c.dylib": map[string]Category{
+						"__fread": FileRead,
+						"fread":   FileRead,
 					},
-					"libxpc.dylib": map[string]struct{}{
-						"xpc_connection_send_message_with_reply_sync": struct{}{},
+					"libxpc.dylib": map[string]Category{
+						"xpc_connection_send_message_with_reply_sync": XPC,
 					},
-					"SwiftUI": map[string]struct{}{
-						"UnaryLayoutEngine.sizeThatFits(_ProposedSize)":                      struct{}{},
-						"ViewRendererHost.render(interval: Double, updateDisplayList: Bool)": struct{}{},
-						"ViewRendererHost.updateViewGraph<A>(body: (ViewGraph))":             struct{}{},
+					"SwiftUI": map[string]Category{
+						"UnaryLayoutEngine.sizeThatFits(_ProposedSize)":                      ViewLayout,
+						"ViewRendererHost.render(interval: Double, updateDisplayList: Bool)": ViewRender,
+						"ViewRendererHost.updateViewGraph<A>(body: (ViewGraph))":             ViewUpdate,
 					},
-					"UIKit": map[string]struct{}{
-						"-[UINib instantiateWithOwner:options:]": struct{}{},
+					"UIKit": map[string]Category{
+						"-[UINib instantiateWithOwner:options:]": ViewInflation,
+					},
+					"libsystem_kernel.dylib": map[string]Category{
+						"mach_msg_trap": FileRead,
 					},
 				},
 				IssueTitle: IssueTitleBlockingFunctionOnMainThread,
@@ -223,7 +253,7 @@ var (
 )
 
 // DetectFrames detects occurrence of an issue based by matching frames of the profile on a list of frames
-func detectFrame(p profile.Profile, callTreesPerThreadID map[uint64][]*nodetree.Node, options DetectExactFrameOptions, occurrences *[]Occurrence) {
+func detectFrame(p profile.Profile, callTreesPerThreadID map[uint64][]*nodetree.Node, options DetectExactFrameOptions, occurrences *[]*Occurrence) {
 	// List nodes matching criteria
 	nodes := make(map[nodeKey]nodeInfo)
 	if options.ActiveThreadOnly {
@@ -254,10 +284,11 @@ func detectFrameInCallTree(n *nodetree.Node, options DetectExactFrameOptions, no
 	*stackTrace = append(*stackTrace, n.Frame())
 	if functions, exists := options.FunctionsByPackage[n.Package]; exists {
 		// Only use time threshold when the sample count is more than one to avoid sampling issues showing up as blocking issues
-		if _, exists := functions[n.Name]; exists && n.DurationNS > uint64(options.DurationThreshold) && n.SampleCount != 1 {
+		if category, exists := functions[n.Name]; exists { //&& n.DurationNS > uint64(options.DurationThreshold) && n.SampleCount != 1 {
 			nk := nodeKey{Package: n.Package, Function: n.Name}
 			if _, exists := nodes[nk]; !exists {
 				nodes[nk] = nodeInfo{
+					Category:   category,
 					Node:       n,
 					StackTrace: *stackTrace,
 				}

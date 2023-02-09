@@ -21,9 +21,9 @@ func TestDetectFrameInCallTree(t *testing.T) {
 		{
 			job: DetectExactFrameOptions{
 				DurationThreshold: 16 * time.Millisecond,
-				FunctionsByPackage: map[string]map[string]struct{}{
-					"CoreFoundation": map[string]struct{}{
-						"CFReadStreamRead": {},
+				FunctionsByPackage: map[string]map[string]Category{
+					"CoreFoundation": map[string]Category{
+						"CFReadStreamRead": FileRead,
 					},
 				},
 			},
@@ -122,6 +122,7 @@ func TestDetectFrameInCallTree(t *testing.T) {
 					Package:  "CoreFoundation",
 					Function: "CFReadStreamRead",
 				}: nodeInfo{
+					Category: FileRead,
 					Node: &nodetree.Node{
 						DurationNS:    uint64(20 * time.Millisecond),
 						EndNS:         uint64(20 * time.Millisecond),
@@ -170,12 +171,12 @@ func TestDetectFrameInCallTree(t *testing.T) {
 		{
 			job: DetectExactFrameOptions{
 				DurationThreshold: 16 * time.Millisecond,
-				FunctionsByPackage: map[string]map[string]struct{}{
-					"CoreFoundation": map[string]struct{}{
-						"CFReadStreamRead": {},
+				FunctionsByPackage: map[string]map[string]Category{
+					"CoreFoundation": map[string]Category{
+						"CFReadStreamRead": FileRead,
 					},
-					"vroom": map[string]struct{}{
-						"SuperShortFunction": {},
+					"vroom": map[string]Category{
+						"SuperShortFunction": FileRead,
 					},
 				},
 			},
@@ -236,10 +237,10 @@ func TestDetectFrameInCallTree(t *testing.T) {
 		{
 			job: DetectExactFrameOptions{
 				DurationThreshold: 16 * time.Millisecond,
-				FunctionsByPackage: map[string]map[string]struct{}{
-					"vroom": map[string]struct{}{
-						"FunctionWithOneSample":  {},
-						"FunctionWithTwoSamples": {},
+				FunctionsByPackage: map[string]map[string]Category{
+					"vroom": map[string]Category{
+						"FunctionWithOneSample":  FileRead,
+						"FunctionWithTwoSamples": FileRead,
 					},
 				},
 			},
@@ -327,6 +328,7 @@ func TestDetectFrameInCallTree(t *testing.T) {
 					Package:  "vroom",
 					Function: "FunctionWithTwoSamples",
 				}: nodeInfo{
+					Category: FileRead,
 					Node: &nodetree.Node{
 						DurationNS:    uint64(20 * time.Millisecond),
 						EndNS:         uint64(20 * time.Millisecond),
