@@ -8,7 +8,6 @@ import (
 	"os"
 	"os/signal"
 	"strconv"
-	"strings"
 	"syscall"
 	"time"
 
@@ -149,16 +148,16 @@ func main() {
 	}
 
 	err = sentry.Init(sentry.ClientOptions{
-		Dsn:              env.config.SentryDSN,
-		EnableTracing:    true,
-		Environment:      env.config.Environment,
-		Release:          release,
-		TracesSampleRate: 1.0,
-		BeforeSendTransaction: func(e *sentry.Event, h *sentry.EventHint) *sentry.Event {
-			if e.Request.Method == http.MethodGet && strings.HasSuffix(e.Request.URL, "/health") {
-				return nil
+		Dsn:           env.config.SentryDSN,
+		EnableTracing: true,
+		Environment:   env.config.Environment,
+		Release:       release,
+		TracesSampler: func(ctx sentry.SamplingContext) float64 {
+			hub := sentry.GetHubFromContext(ctx.Span.Context())
+			if hub.Scope().Transaction() == "GET /health" {
+				return 0
 			}
-			return e
+			return 1
 		},
 	})
 	if err != nil {
