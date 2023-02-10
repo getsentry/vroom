@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/signal"
 	"strconv"
+	"strings"
 	"syscall"
 	"time"
 
@@ -153,6 +154,12 @@ func main() {
 		Environment:      env.config.Environment,
 		Release:          release,
 		TracesSampleRate: 1.0,
+		BeforeSendTransaction: func(e *sentry.Event, h *sentry.EventHint) *sentry.Event {
+			if e.Request.Method == http.MethodGet && strings.HasSuffix(e.Request.URL, "/health") {
+				return nil
+			}
+			return e
+		},
 	})
 	if err != nil {
 		log.Fatal().Err(err).Msg("can't initialize sentry")
