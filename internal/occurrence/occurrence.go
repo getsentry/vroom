@@ -56,6 +56,10 @@ type (
 		ResourceID      string                 `json:"resource_id,omitempty"`
 		Subtitle        string                 `json:"subtitle"`
 		Type            OccurrenceType         `json:"type"`
+
+		// Only use for stats
+		durationNS  uint64
+		sampleCount uint64
 	}
 
 	StackTrace struct {
@@ -157,10 +161,12 @@ func (o *Occurrence) Save() (map[string]bigquery.Value, string, error) {
 	return map[string]bigquery.Value{
 		"category":        o.Category,
 		"detected_at":     o.DetectionTime,
+		"duration_ns":     int(o.durationNS),
 		"link":            link,
 		"organization_id": strconv.FormatUint(o.Event.OrganizationID, 10),
 		"platform":        o.Event.Platform,
 		"profile_id":      o.Event.ID,
 		"project_id":      strconv.FormatUint(o.Event.ProjectID, 10),
+		"sample_count":    int(o.sampleCount),
 	}, bigquery.NoDedupeID, nil
 }
