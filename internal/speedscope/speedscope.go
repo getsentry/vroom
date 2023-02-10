@@ -95,7 +95,8 @@ type (
 	ProfileMetadata struct {
 		ProfileView
 
-		Version string `json:"version"`
+		Timestamp timeutil.Time `json:"timestamp,omitempty"`
+		Version   string        `json:"version"`
 	}
 
 	ProfileView struct {
