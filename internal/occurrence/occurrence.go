@@ -59,7 +59,7 @@ type (
 
 		// Only use for stats
 		durationNS  uint64
-		sampleCount uint64
+		sampleCount int
 	}
 
 	StackTrace struct {
@@ -120,6 +120,8 @@ func NewOccurrence(p profile.Profile, title IssueTitleType, ni nodeInfo) *Occurr
 		IssueTitle:  title,
 		Subtitle:    t.Name,
 		Type:        ProfileBlockedThreadType,
+		durationNS:  ni.Node.DurationNS,
+		sampleCount: ni.Node.SampleCount,
 	}
 }
 
