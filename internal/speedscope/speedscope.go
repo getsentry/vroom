@@ -11,6 +11,7 @@ import (
 
 const (
 	ValueUnitNanoseconds ValueUnit = "nanoseconds"
+	ValueUnitCount       ValueUnit = "count"
 
 	EventTypeOpenFrame  EventType = "O"
 	EventTypeCloseFrame EventType = "C"
@@ -54,15 +55,15 @@ type (
 	}
 
 	SampledProfile struct {
-		EndValue     uint64           `json:"endValue"`
+		EndValue     uint64           `json:"endValue,omitempty"`
 		IsMainThread bool             `json:"isMainThread"`
 		Name         string           `json:"name"`
-		Priority     int              `json:"priority"`
+		Priority     int              `json:"priority,omitempty"`
 		Queues       map[string]Queue `json:"queues,omitempty"`
 		Samples      [][]int          `json:"samples"`
-		StartValue   uint64           `json:"startValue"`
+		StartValue   uint64           `json:"startValue,omitempty"`
 		State        string           `json:"state,omitempty"`
-		ThreadID     uint64           `json:"threadID"`
+		ThreadID     uint64           `json:"threadID,omitempty"`
 		Type         ProfileType      `json:"type"`
 		Unit         ValueUnit        `json:"unit"`
 		Weights      []uint64         `json:"weights"`
@@ -77,19 +78,19 @@ type (
 	ValueUnit   string
 
 	Output struct {
-		ActiveProfileIndex int                                 `json:"activeProfileIndex"`
+		ActiveProfileIndex int                                 `json:"activeProfileIndex,omitempty"`
 		AndroidClock       string                              `json:"androidClock,omitempty"`
-		DurationNS         uint64                              `json:"durationNS"`
+		DurationNS         uint64                              `json:"durationNS,omitempty"`
 		Images             []debugmeta.Image                   `json:"images,omitempty"`
 		Measurements       map[string]measurements.Measurement `json:"measurements,omitempty"`
-		Metadata           ProfileMetadata                     `json:"metadata"`
+		Metadata           ProfileMetadata                     `json:"metadata,omitempty"`
 		Platform           platform.Platform                   `json:"platform"`
-		ProfileID          string                              `json:"profileID"`
+		ProfileID          string                              `json:"profileID,omitempty"`
 		Profiles           []interface{}                       `json:"profiles"`
 		ProjectID          uint64                              `json:"projectID"`
 		Shared             SharedData                          `json:"shared"`
 		TransactionName    string                              `json:"transactionName"`
-		Version            string                              `json:"version"`
+		Version            string                              `json:"version,omitempty"`
 	}
 
 	ProfileMetadata struct {

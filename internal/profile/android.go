@@ -3,6 +3,7 @@ package profile
 import (
 	"fmt"
 	"hash/fnv"
+	"math"
 	"strings"
 	"time"
 
@@ -195,6 +196,7 @@ func (p Android) CallTrees() map[uint64][]*nodetree.Node {
 			i := len(stacks[e.ThreadID]) - 1
 			n := stacks[e.ThreadID][i]
 			n.Update(buildTimestamp(e.Time))
+			n.SampleCount = int(math.Ceil(float64(n.DurationNS) / float64((10 * time.Millisecond))))
 			stacks[e.ThreadID] = stacks[e.ThreadID][:i]
 		}
 	}
