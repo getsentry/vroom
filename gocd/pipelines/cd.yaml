@@ -43,7 +43,7 @@ pipelines:
                                     "us.gcr.io/${GCP_PROJECT}/vroom"
             - deploy:
                   approval:
-                      type: manual
+                      type: success
                       allow_only_on_success: true
                   jobs:
                       deploy-to-k8s:
