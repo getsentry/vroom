@@ -47,20 +47,28 @@ func (env *environment) getFlamegraph(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	s := sentry.StartSpan(ctx, "fetch_profile_ids")
 	profileIDs, err := snubautil.GetProfileIDs(organizationID, 100, sqb)
 	if err != nil {
+		s.Finish()
 		hub.CaptureException(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+	s.Finish()
 
+	s = sentry.StartSpan(ctx, "generate_flamegraph")
 	speedscope, err := flamegraph.GetFlamegraphFromProfiles(ctx, env.profilesBucket, organizationID, projectID, profileIDs)
 	if err != nil {
+		s.Finish()
 		hub.CaptureException(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+	s.Finish()
 
+	s = sentry.StartSpan(ctx, "marshal_flamegraph")
+	defer s.Finish()
 	b, err := json.Marshal(speedscope)
 	if err != nil {
 		hub.CaptureException(err)
