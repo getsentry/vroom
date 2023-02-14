@@ -47,7 +47,7 @@ func (env *environment) getFlamegraph(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s := sentry.StartSpan(ctx, "fetch_profile_ids")
+	s := sentry.StartSpan(ctx, "sn.read")
 	profileIDs, err := snubautil.GetProfileIDs(organizationID, 100, sqb)
 	if err != nil {
 		s.Finish()
@@ -57,7 +57,7 @@ func (env *environment) getFlamegraph(w http.ResponseWriter, r *http.Request) {
 	}
 	s.Finish()
 
-	s = sentry.StartSpan(ctx, "generate_flamegraph")
+	s = sentry.StartSpan(ctx, "processing")
 	speedscope, err := flamegraph.GetFlamegraphFromProfiles(ctx, env.profilesBucket, organizationID, projectID, profileIDs)
 	if err != nil {
 		s.Finish()
@@ -67,7 +67,7 @@ func (env *environment) getFlamegraph(w http.ResponseWriter, r *http.Request) {
 	}
 	s.Finish()
 
-	s = sentry.StartSpan(ctx, "marshal_flamegraph")
+	s = sentry.StartSpan(ctx, "json.marshal")
 	defer s.Finish()
 	b, err := json.Marshal(speedscope)
 	if err != nil {
