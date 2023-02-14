@@ -83,7 +83,7 @@ type (
 		DurationNS         uint64                              `json:"durationNS,omitempty"`
 		Images             []debugmeta.Image                   `json:"images,omitempty"`
 		Measurements       map[string]measurements.Measurement `json:"measurements,omitempty"`
-		Metadata           ProfileMetadata                     `json:"metadata,omitempty"`
+		Metadata           *ProfileMetadata                    `json:"metadata,omitempty"`
 		Platform           platform.Platform                   `json:"platform"`
 		ProfileID          string                              `json:"profileID,omitempty"`
 		Profiles           []interface{}                       `json:"profiles"`
