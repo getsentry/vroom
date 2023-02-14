@@ -75,7 +75,7 @@ func TestProcessStacksFromCallTreesFromSampledProfile(t *testing.T) {
 	}
 
 	profile := profile.Profile{}
-	profile.UnmarshalJSON(bytes)
+	json.Unmarshal(bytes, &profile)
 
 	callTrees, err := profile.CallTrees()
 	if err != nil {
@@ -144,7 +144,7 @@ func TestConvertStackTracesToFlamegraph(t *testing.T) {
 	}
 
 	profile := profile.Profile{}
-	profile.UnmarshalJSON(bytes)
+	json.Unmarshal(bytes, &profile)
 
 	callTrees, err := profile.CallTrees()
 	if err != nil {
