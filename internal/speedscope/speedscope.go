@@ -63,7 +63,7 @@ type (
 		Samples      [][]int          `json:"samples"`
 		StartValue   uint64           `json:"startValue,omitempty"`
 		State        string           `json:"state,omitempty"`
-		ThreadID     uint64           `json:"threadID,omitempty"`
+		ThreadID     uint64           `json:"threadID"`
 		Type         ProfileType      `json:"type"`
 		Unit         ValueUnit        `json:"unit"`
 		Weights      []uint64         `json:"weights"`
