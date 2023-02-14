@@ -78,7 +78,7 @@ type (
 	ValueUnit   string
 
 	Output struct {
-		ActiveProfileIndex int                                 `json:"activeProfileIndex,omitempty"`
+		ActiveProfileIndex int                                 `json:"activeProfileIndex"`
 		AndroidClock       string                              `json:"androidClock,omitempty"`
 		DurationNS         uint64                              `json:"durationNS,omitempty"`
 		Images             []debugmeta.Image                   `json:"images,omitempty"`
