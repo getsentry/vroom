@@ -34,9 +34,11 @@ func ConvertStackTracesToFlamegraph(
 	samples := make([][]int, 0, len(*stacks))
 	addressToIndex := make(map[string]int)
 	weights := make([]uint64, 0, len(*stacks))
+	var endValue uint64 = 0
 
 	for _, stack := range *stacks {
 		weight := stacksCount[stack[len(stack)-1].Fingerprint]
+		endValue += uint64(weight)
 		sample := make([]int, 0, len(stack))
 
 		for _, frame := range stack {
@@ -64,6 +66,7 @@ func ConvertStackTracesToFlamegraph(
 		IsMainThread: true,
 		Type:         speedscope.ProfileTypeSampled,
 		Unit:         speedscope.ValueUnitCount,
+		EndValue:     endValue,
 	}
 
 	return speedscope.Output{

@@ -55,13 +55,13 @@ type (
 	}
 
 	SampledProfile struct {
-		EndValue     uint64           `json:"endValue,omitempty"`
+		EndValue     uint64           `json:"endValue"`
 		IsMainThread bool             `json:"isMainThread"`
 		Name         string           `json:"name"`
 		Priority     int              `json:"priority,omitempty"`
 		Queues       map[string]Queue `json:"queues,omitempty"`
 		Samples      [][]int          `json:"samples"`
-		StartValue   uint64           `json:"startValue,omitempty"`
+		StartValue   uint64           `json:"startValue"`
 		State        string           `json:"state,omitempty"`
 		ThreadID     uint64           `json:"threadID"`
 		Type         ProfileType      `json:"type"`
