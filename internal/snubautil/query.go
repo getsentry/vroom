@@ -209,10 +209,10 @@ func GetProfileIDs(organizationID, limit uint64, sqb QueryBuilder) ([]string, er
 		return nil, err
 	}
 
-	IDs := make([]string, len(resp.IDs))
+	idS := make([]string, len(resp.IDs))
 	for i, profID := range resp.IDs {
-		IDs[i] = profID.ID
+		idS[i] = profID.ID
 	}
 
-	return IDs, nil
+	return idS, nil
 }
