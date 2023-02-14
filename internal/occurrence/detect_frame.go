@@ -57,8 +57,8 @@ const (
 
 var (
 	detectFrameJobs = map[platform.Platform][]DetectExactFrameOptions{
-		platform.Node: []DetectExactFrameOptions{
-			DetectExactFrameOptions{
+		platform.Node: {
+			{
 				ActiveThreadOnly: true,
 				FunctionsByPackage: map[string]map[string]Category{
 					"node:fs": map[string]Category{
@@ -109,8 +109,8 @@ var (
 				IssueTitle: IssueTitleBlockingFunctionOnMainThread,
 			},
 		},
-		platform.Cocoa: []DetectExactFrameOptions{
-			DetectExactFrameOptions{
+		platform.Cocoa: {
+			{
 				ActiveThreadOnly:  true,
 				DurationThreshold: 16 * time.Millisecond,
 				FunctionsByPackage: map[string]map[string]Category{

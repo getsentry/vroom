@@ -105,12 +105,12 @@ func NewOccurrence(p profile.Profile, title IssueTitleType, ni nodeInfo) *Occurr
 		},
 		EvidenceData: map[string]interface{}{},
 		EvidenceDisplay: []Evidence{
-			Evidence{
+			{
 				Name:      EvidenceNameFunction,
 				Value:     ni.Node.Name,
 				Important: true,
 			},
-			Evidence{
+			{
 				Name:  EvidenceNamePackage,
 				Value: ni.Node.Package,
 			},

@@ -27,7 +27,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 				StartNS:       0,
 				Children:      []*Node{},
 			},
-			want: []*Node{&Node{
+			want: []*Node{{
 				DurationNS:    1,
 				EndNS:         1,
 				Fingerprint:   0,
@@ -55,7 +55,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 				SampleCount:   1,
 				StartNS:       0,
 				Children: []*Node{
-					&Node{
+					{
 						DurationNS:    1,
 						EndNS:         1,
 						Fingerprint:   0,
@@ -68,7 +68,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 						StartNS:       0,
 						Children:      []*Node{},
 					},
-					&Node{
+					{
 						DurationNS:    2,
 						EndNS:         2,
 						Fingerprint:   0,
@@ -83,7 +83,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 					},
 				},
 			},
-			want: []*Node{&Node{
+			want: []*Node{{
 				DurationNS:    2,
 				EndNS:         2,
 				Fingerprint:   0,
@@ -95,7 +95,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 				SampleCount:   1,
 				StartNS:       0,
 				Children: []*Node{
-					&Node{
+					{
 						DurationNS:    1,
 						EndNS:         1,
 						Fingerprint:   0,
@@ -108,7 +108,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 						StartNS:       0,
 						Children:      []*Node{},
 					},
-					&Node{
+					{
 						DurationNS:    2,
 						EndNS:         2,
 						Fingerprint:   0,
@@ -138,7 +138,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 				SampleCount:   1,
 				StartNS:       0,
 				Children: []*Node{
-					&Node{
+					{
 						DurationNS:    1,
 						EndNS:         1,
 						Fingerprint:   0,
@@ -153,7 +153,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 					},
 				},
 			},
-			want: []*Node{&Node{
+			want: []*Node{{
 				DurationNS:    2,
 				EndNS:         2,
 				Fingerprint:   0,
@@ -165,7 +165,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 				SampleCount:   1,
 				StartNS:       0,
 				Children: []*Node{
-					&Node{
+					{
 						DurationNS:    1,
 						EndNS:         1,
 						Fingerprint:   0,
@@ -195,7 +195,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 				SampleCount:   1,
 				StartNS:       0,
 				Children: []*Node{
-					&Node{
+					{
 						DurationNS:    1,
 						EndNS:         1,
 						Fingerprint:   0,
@@ -210,7 +210,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 					},
 				},
 			},
-			want: []*Node{&Node{
+			want: []*Node{{
 				DurationNS:    1,
 				EndNS:         1,
 				Fingerprint:   0,
@@ -238,7 +238,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 				SampleCount:   1,
 				StartNS:       0,
 				Children: []*Node{
-					&Node{
+					{
 						DurationNS:    1,
 						EndNS:         1,
 						Fingerprint:   0,
@@ -253,7 +253,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 					},
 				},
 			},
-			want: []*Node{&Node{
+			want: []*Node{{
 				DurationNS:    1,
 				EndNS:         1,
 				Fingerprint:   0,
@@ -281,7 +281,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 				SampleCount:   1,
 				StartNS:       0,
 				Children: []*Node{
-					&Node{
+					{
 						DurationNS:    1,
 						EndNS:         1,
 						Fingerprint:   0,
@@ -296,7 +296,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 					},
 				},
 			},
-			want: []*Node{&Node{
+			want: []*Node{{
 				DurationNS:    1,
 				EndNS:         1,
 				Fingerprint:   0,
@@ -324,7 +324,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 				SampleCount:   1,
 				StartNS:       0,
 				Children: []*Node{
-					&Node{
+					{
 						DurationNS:    5,
 						EndNS:         5,
 						Fingerprint:   0,
@@ -336,7 +336,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 						SampleCount:   1,
 						StartNS:       0,
 						Children: []*Node{
-							&Node{
+							{
 								DurationNS:    5,
 								EndNS:         5,
 								Fingerprint:   0,
@@ -348,7 +348,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 								SampleCount:   1,
 								StartNS:       0,
 								Children: []*Node{
-									&Node{
+									{
 										DurationNS:    5,
 										EndNS:         5,
 										Fingerprint:   0,
@@ -365,7 +365,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 							},
 						},
 					},
-					&Node{
+					{
 						DurationNS:    10,
 						EndNS:         10,
 						Fingerprint:   0,
@@ -396,7 +396,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 				SampleCount:   1,
 				StartNS:       0,
 				Children: []*Node{
-					&Node{
+					{
 						DurationNS:    5,
 						EndNS:         5,
 						Fingerprint:   0,
@@ -408,7 +408,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 						SampleCount:   1,
 						StartNS:       0,
 						Children: []*Node{
-							&Node{
+							{
 								DurationNS:    5,
 								EndNS:         5,
 								Fingerprint:   0,
@@ -420,7 +420,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 								SampleCount:   1,
 								StartNS:       0,
 								Children: []*Node{
-									&Node{
+									{
 										DurationNS:    5,
 										EndNS:         5,
 										Fingerprint:   0,
@@ -437,7 +437,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 							},
 						},
 					},
-					&Node{
+					{
 						DurationNS:    5,
 						EndNS:         10,
 						Fingerprint:   0,
@@ -449,7 +449,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 						SampleCount:   1,
 						StartNS:       5,
 						Children: []*Node{
-							&Node{
+							{
 								DurationNS:    5,
 								EndNS:         10,
 								Fingerprint:   0,
@@ -461,7 +461,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 								SampleCount:   1,
 								StartNS:       5,
 								Children: []*Node{
-									&Node{
+									{
 										DurationNS:    5,
 										EndNS:         10,
 										Fingerprint:   0,
@@ -480,7 +480,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 					},
 				},
 			},
-			want: []*Node{&Node{
+			want: []*Node{{
 				DurationNS:    10,
 				EndNS:         10,
 				Fingerprint:   0,
@@ -492,7 +492,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 				SampleCount:   1,
 				StartNS:       0,
 				Children: []*Node{
-					&Node{
+					{
 						DurationNS:    5,
 						EndNS:         5,
 						Fingerprint:   0,
@@ -505,7 +505,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 						StartNS:       0,
 						Children:      []*Node{},
 					},
-					&Node{
+					{
 						DurationNS:    5,
 						EndNS:         10,
 						Fingerprint:   0,

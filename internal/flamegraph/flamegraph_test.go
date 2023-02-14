@@ -116,7 +116,7 @@ func TestProcessStacksFromCallTreesFromSampledProfile(t *testing.T) {
 		t.Fatalf("expected 3 stack traces, found %d", len(stacks))
 	}
 
-	for i, _ := range stacks {
+	for i := range stacks {
 		if !sameStackTraces(stacks[i], expectedStacks[i]) || (stacksCount[stacks[i][len(stacks[i])-1].Fingerprint] != expectedCounts[i]) {
 			t.Fatalf("the 2 stack traces differ: %v <> %v", stacks[i], expectedStacks[i])
 		}
@@ -129,7 +129,7 @@ func sameStackTraces(a, b []frame.Frame) bool {
 		return false
 	}
 
-	for i, _ := range a {
+	for i := range a {
 		if (a[i].Function != b[i].Function) || (a[i].Package != b[i].Package) {
 			return false
 		}
@@ -199,7 +199,7 @@ func sameSamples(a, b []int) bool {
 		return false
 	}
 
-	for i, _ := range a {
+	for i := range a {
 		if a[i] != b[i] {
 			return false
 		}

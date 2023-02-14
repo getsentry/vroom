@@ -39,7 +39,7 @@ func TestDetectFrameInCallTree(t *testing.T) {
 				Path:          "path",
 				StartNS:       0,
 				Children: []*nodetree.Node{
-					&nodetree.Node{
+					{
 						DurationNS:    uint64(20 * time.Millisecond),
 						EndNS:         uint64(20 * time.Millisecond),
 						Fingerprint:   0,
@@ -50,7 +50,7 @@ func TestDetectFrameInCallTree(t *testing.T) {
 						Path:          "path",
 						StartNS:       0,
 						Children: []*nodetree.Node{
-							&nodetree.Node{
+							{
 								DurationNS:    uint64(20 * time.Millisecond),
 								EndNS:         uint64(20 * time.Millisecond),
 								Fingerprint:   0,
@@ -61,7 +61,7 @@ func TestDetectFrameInCallTree(t *testing.T) {
 								Path:          "path",
 								StartNS:       0,
 								Children: []*nodetree.Node{
-									&nodetree.Node{
+									{
 										DurationNS:    uint64(20 * time.Millisecond),
 										EndNS:         uint64(20 * time.Millisecond),
 										Fingerprint:   0,
@@ -77,7 +77,7 @@ func TestDetectFrameInCallTree(t *testing.T) {
 							},
 						},
 					},
-					&nodetree.Node{
+					{
 						DurationNS:    5,
 						EndNS:         10,
 						Fingerprint:   0,
@@ -88,7 +88,7 @@ func TestDetectFrameInCallTree(t *testing.T) {
 						Path:          "path",
 						StartNS:       5,
 						Children: []*nodetree.Node{
-							&nodetree.Node{
+							{
 								DurationNS:    5,
 								EndNS:         10,
 								Fingerprint:   0,
@@ -99,7 +99,7 @@ func TestDetectFrameInCallTree(t *testing.T) {
 								Path:          "",
 								StartNS:       5,
 								Children: []*nodetree.Node{
-									&nodetree.Node{
+									{
 										DurationNS:    5,
 										EndNS:         10,
 										Fingerprint:   0,
@@ -118,7 +118,7 @@ func TestDetectFrameInCallTree(t *testing.T) {
 				},
 			},
 			want: map[nodeKey]nodeInfo{
-				nodeKey{
+				{
 					Package:  "CoreFoundation",
 					Function: "CFReadStreamRead",
 				}: nodeInfo{
@@ -136,28 +136,28 @@ func TestDetectFrameInCallTree(t *testing.T) {
 						Children:      []*nodetree.Node{},
 					},
 					StackTrace: []frame.Frame{
-						frame.Frame{
+						{
 							Function: "root",
 							InApp:    &trueValue,
 							Line:     0,
 							Package:  "package",
 							Path:     "path",
 						},
-						frame.Frame{
+						{
 							Function: "child1-1",
 							InApp:    &falseValue,
 							Line:     0,
 							Package:  "package",
 							Path:     "path",
 						},
-						frame.Frame{
+						{
 							Function: "child2-1",
 							InApp:    &trueValue,
 							Line:     0,
 							Package:  "package",
 							Path:     "path",
 						},
-						frame.Frame{
+						{
 							Function: "CFReadStreamRead",
 							InApp:    &falseValue,
 							Line:     0,
@@ -192,7 +192,7 @@ func TestDetectFrameInCallTree(t *testing.T) {
 				Path:          "path",
 				StartNS:       0,
 				Children: []*nodetree.Node{
-					&nodetree.Node{
+					{
 						DurationNS:    uint64(20 * time.Millisecond),
 						EndNS:         uint64(20 * time.Millisecond),
 						Fingerprint:   0,
@@ -203,7 +203,7 @@ func TestDetectFrameInCallTree(t *testing.T) {
 						Path:          "path",
 						StartNS:       0,
 						Children: []*nodetree.Node{
-							&nodetree.Node{
+							{
 								DurationNS:    uint64(20 * time.Millisecond),
 								EndNS:         uint64(20 * time.Millisecond),
 								Fingerprint:   0,
@@ -214,7 +214,7 @@ func TestDetectFrameInCallTree(t *testing.T) {
 								Path:          "path",
 								StartNS:       0,
 								Children: []*nodetree.Node{
-									&nodetree.Node{
+									{
 										DurationNS:    uint64(10 * time.Millisecond),
 										EndNS:         uint64(10 * time.Millisecond),
 										Fingerprint:   0,
@@ -256,7 +256,7 @@ func TestDetectFrameInCallTree(t *testing.T) {
 				Path:          "path",
 				StartNS:       0,
 				Children: []*nodetree.Node{
-					&nodetree.Node{
+					{
 						DurationNS:    uint64(20 * time.Millisecond),
 						EndNS:         uint64(20 * time.Millisecond),
 						Fingerprint:   0,
@@ -267,7 +267,7 @@ func TestDetectFrameInCallTree(t *testing.T) {
 						Path:          "path",
 						StartNS:       0,
 						Children: []*nodetree.Node{
-							&nodetree.Node{
+							{
 								DurationNS:    uint64(20 * time.Millisecond),
 								EndNS:         uint64(20 * time.Millisecond),
 								Fingerprint:   0,
@@ -278,7 +278,7 @@ func TestDetectFrameInCallTree(t *testing.T) {
 								Path:          "path",
 								StartNS:       0,
 								Children: []*nodetree.Node{
-									&nodetree.Node{
+									{
 										DurationNS:    uint64(20 * time.Millisecond),
 										EndNS:         uint64(20 * time.Millisecond),
 										Fingerprint:   0,
@@ -291,7 +291,7 @@ func TestDetectFrameInCallTree(t *testing.T) {
 										StartNS:       0,
 										Children:      []*nodetree.Node{},
 									},
-									&nodetree.Node{
+									{
 										DurationNS:    uint64(20 * time.Millisecond),
 										EndNS:         uint64(20 * time.Millisecond),
 										Fingerprint:   0,
@@ -302,7 +302,7 @@ func TestDetectFrameInCallTree(t *testing.T) {
 										Path:          "path",
 										StartNS:       0,
 										Children: []*nodetree.Node{
-											&nodetree.Node{
+											{
 												DurationNS:    uint64(20 * time.Millisecond),
 												EndNS:         uint64(20 * time.Millisecond),
 												Fingerprint:   0,
@@ -324,7 +324,7 @@ func TestDetectFrameInCallTree(t *testing.T) {
 				},
 			},
 			want: map[nodeKey]nodeInfo{
-				nodeKey{
+				{
 					Package:  "vroom",
 					Function: "FunctionWithTwoSamples",
 				}: nodeInfo{
@@ -343,35 +343,35 @@ func TestDetectFrameInCallTree(t *testing.T) {
 						Children:      []*nodetree.Node{},
 					},
 					StackTrace: []frame.Frame{
-						frame.Frame{
+						{
 							Function: "root",
 							InApp:    &trueValue,
 							Line:     0,
 							Package:  "package",
 							Path:     "path",
 						},
-						frame.Frame{
+						{
 							Function: "child1-1",
 							InApp:    &falseValue,
 							Line:     0,
 							Package:  "package",
 							Path:     "path",
 						},
-						frame.Frame{
+						{
 							Function: "child2-1",
 							InApp:    &trueValue,
 							Line:     0,
 							Package:  "package",
 							Path:     "path",
 						},
-						frame.Frame{
+						{
 							Function: "child3-1",
 							InApp:    &trueValue,
 							Line:     0,
 							Package:  "package",
 							Path:     "path",
 						},
-						frame.Frame{
+						{
 							Function: "FunctionWithTwoSamples",
 							InApp:    &falseValue,
 							Line:     0,

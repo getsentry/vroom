@@ -51,7 +51,7 @@ func TestMakeFilterFuncs(t *testing.T) {
 			name:           "invalid project",
 			makeFilterFunc: MakeProjectsFilter,
 			params: map[string][]string{
-				"project_id": []string{"a"},
+				"project_id": {"a"},
 			},
 			filter: nil,
 			err:    "invalid project ID: a",
@@ -60,7 +60,7 @@ func TestMakeFilterFuncs(t *testing.T) {
 			name:           "single project",
 			makeFilterFunc: MakeProjectsFilter,
 			params: map[string][]string{
-				"project_id": []string{"1"},
+				"project_id": {"1"},
 			},
 			filter: []string{"project_id IN tuple(1)"},
 			err:    "",
@@ -69,7 +69,7 @@ func TestMakeFilterFuncs(t *testing.T) {
 			name:           "multiple projects",
 			makeFilterFunc: MakeProjectsFilter,
 			params: map[string][]string{
-				"project_id": []string{"1", "2", "3"},
+				"project_id": {"1", "2", "3"},
 			},
 			filter: []string{"project_id IN tuple(1, 2, 3)"},
 			err:    "",
@@ -89,7 +89,7 @@ func TestMakeFilterFuncs(t *testing.T) {
 				return MakeTimeRangeFilter("timestamp", params)
 			},
 			params: map[string][]string{
-				"start": []string{"2022-01-01T00:00:00.000000+00:00"},
+				"start": {"2022-01-01T00:00:00.000000+00:00"},
 			},
 			filter: nil,
 			err:    "no range end in the request",
@@ -100,8 +100,8 @@ func TestMakeFilterFuncs(t *testing.T) {
 				return MakeTimeRangeFilter("timestamp", params)
 			},
 			params: map[string][]string{
-				"start": []string{"2022-01-01T00:00:00.000000+00:00"},
-				"end":   []string{"2023-01-01T00:00:00.000000+00:00"},
+				"start": {"2022-01-01T00:00:00.000000+00:00"},
+				"end":   {"2023-01-01T00:00:00.000000+00:00"},
 			},
 			filter: []string{
 				"timestamp >= toDateTime('2022-01-01T00:00:00.000000+00:00')",
@@ -120,7 +120,7 @@ func TestMakeFilterFuncs(t *testing.T) {
 			name:           "bad android api level",
 			makeFilterFunc: MakeAndroidApiLevelFilter,
 			params: map[string][]string{
-				"android_api_level": []string{"a"},
+				"android_api_level": {"a"},
 			},
 			filter: nil,
 			err:    "can't parse android api level",
@@ -129,7 +129,7 @@ func TestMakeFilterFuncs(t *testing.T) {
 			name:           "single android api level",
 			makeFilterFunc: MakeAndroidApiLevelFilter,
 			params: map[string][]string{
-				"android_api_level": []string{"1"},
+				"android_api_level": {"1"},
 			},
 			filter: []string{"android_api_level IN tuple(1)"},
 			err:    "",
@@ -138,7 +138,7 @@ func TestMakeFilterFuncs(t *testing.T) {
 			name:           "multiple android api level",
 			makeFilterFunc: MakeAndroidApiLevelFilter,
 			params: map[string][]string{
-				"android_api_level": []string{"1", "2", "3"},
+				"android_api_level": {"1", "2", "3"},
 			},
 			filter: []string{"android_api_level IN tuple(1, 2, 3)"},
 			err:    "",
@@ -154,7 +154,7 @@ func TestMakeFilterFuncs(t *testing.T) {
 			name:           "invalid version name or code",
 			makeFilterFunc: MakeVersionNameAndCodeFilter,
 			params: map[string][]string{
-				"version": []string{"foo"},
+				"version": {"foo"},
 			},
 			filter: nil,
 			err:    "cannot parse application_version: foo",
@@ -163,7 +163,7 @@ func TestMakeFilterFuncs(t *testing.T) {
 			name:           "single version name or code",
 			makeFilterFunc: MakeVersionNameAndCodeFilter,
 			params: map[string][]string{
-				"version": []string{"12 (34)"},
+				"version": {"12 (34)"},
 			},
 			filter: []string{
 				"((version_name = '12' AND version_code = '34'))",
@@ -174,7 +174,7 @@ func TestMakeFilterFuncs(t *testing.T) {
 			name:           "multiple version name or code",
 			makeFilterFunc: MakeVersionNameAndCodeFilter,
 			params: map[string][]string{
-				"version": []string{"12 (34)", "56 (78)"},
+				"version": {"12 (34)", "56 (78)"},
 			},
 			filter: []string{
 				"((version_name = '12' AND version_code = '34') OR (version_name = '56' AND version_code = '78'))",
@@ -205,7 +205,7 @@ func TestMakeFilterFuncs(t *testing.T) {
 				}
 				return MakeFieldsFilter(fields, params)
 			},
-			params: map[string][]string{"platform": []string{""}},
+			params: map[string][]string{"platform": {""}},
 			filter: []string{},
 			err:    "",
 		},
@@ -220,9 +220,9 @@ func TestMakeFilterFuncs(t *testing.T) {
 				return MakeFieldsFilter(fields, params)
 			},
 			params: map[string][]string{
-				"a": []string{"a"},
-				"b": []string{"b"},
-				"c": []string{"c"},
+				"a": {"a"},
+				"b": {"b"},
+				"c": {"c"},
 			},
 			filter: []string{
 				"a IN tuple('a')",
@@ -242,7 +242,7 @@ func TestMakeFilterFuncs(t *testing.T) {
 			name:           "is_application is true",
 			makeFilterFunc: MakeApplicationFilter,
 			params: map[string][]string{
-				"is_application": []string{"1"},
+				"is_application": {"1"},
 			},
 			filter: []string{"is_application = 1"},
 			err:    "",
@@ -251,7 +251,7 @@ func TestMakeFilterFuncs(t *testing.T) {
 			name:           "is_application is false",
 			makeFilterFunc: MakeApplicationFilter,
 			params: map[string][]string{
-				"is_application": []string{"0"},
+				"is_application": {"0"},
 			},
 			filter: []string{"is_application = 0"},
 			err:    "",
@@ -260,7 +260,7 @@ func TestMakeFilterFuncs(t *testing.T) {
 			name:           "invalid is_application",
 			makeFilterFunc: MakeApplicationFilter,
 			params: map[string][]string{
-				"is_application": []string{"asdf"},
+				"is_application": {"asdf"},
 			},
 			filter: []string{},
 			err:    "cannot parse is_application: asdf",
