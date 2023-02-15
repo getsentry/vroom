@@ -63,11 +63,13 @@ func newEnvironment() (*environment, error) {
 	if err != nil {
 		return nil, err
 	}
-	bqClient, err := bigquery.NewClient(ctx, "specto-dev")
-	if err != nil {
-		return nil, err
+	if envName == "production" {
+		bqClient, err := bigquery.NewClient(ctx, "specto-dev")
+		if err != nil {
+			return nil, err
+		}
+		e.occurrencesInserter = bqClient.Dataset("issues").Table("occurrences").Inserter()
 	}
-	e.occurrencesInserter = bqClient.Dataset("issues").Table("occurrences").Inserter()
 	e.occurrencesWriter = &kafka.Writer{
 		Addr:         kafka.TCP(e.config.OccurrencesKafkaBrokers...),
 		Async:        true,

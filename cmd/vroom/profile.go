@@ -84,7 +84,7 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 		occurrences := occurrence.Find(p, callTrees)
 		s.Finish()
 
-		if env.config.Environment == "production" {
+		if env.occurrencesInserter != nil {
 			// Log occurrences with a link to access to corresponding profiles
 			// It will be removed when the issue platform UI is functional
 			s = sentry.StartSpan(ctx, "bq.write")
