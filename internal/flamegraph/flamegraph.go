@@ -30,7 +30,7 @@ func ConvertStackTracesToFlamegraph(
 	}
 	*stacks = (*stacks)[:n]
 
-	frames := make([]speedscope.Frame, 0)
+	var frames []speedscope.Frame
 	samples := make([][]int, 0, len(*stacks))
 	addressToIndex := make(map[string]int)
 	weights := make([]uint64, 0, len(*stacks))
