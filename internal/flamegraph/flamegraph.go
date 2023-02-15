@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"cloud.google.com/go/storage"
+	"github.com/getsentry/sentry-go"
 	"github.com/getsentry/vroom/internal/frame"
 	"github.com/getsentry/vroom/internal/nodetree"
 	"github.com/getsentry/vroom/internal/profile"
@@ -166,16 +167,14 @@ func GetFlamegraphFromProfiles(
 	stacksCount := make(map[uint64]int)
 	callTreesQueue := make(chan map[uint64][]*nodetree.Node, numWorkers)
 	profileIDsChan := make(chan string, numWorkers)
-	errorChan := make(chan error, numWorkers)
-	var err error
+	hub := sentry.GetHubFromContext(ctx)
 
 	for i := 0; i < numWorkers; i++ {
 		wg.Add(1)
 		go func(
 			profIDsChan chan string,
 			callTreesQueue chan map[uint64][]*nodetree.Node,
-			timeout time.Duration,
-			errorChan chan error) {
+			timeout time.Duration) {
 
 			defer wg.Done()
 			// each worker should stop if
@@ -194,19 +193,19 @@ func GetFlamegraphFromProfiles(
 					var p profile.Profile
 					err := storageutil.UnmarshalCompressed(ctx, profilesBucket, profile.StoragePath(organizationID, projectID, profileID), &p)
 					if err != nil && !errors.Is(err, context.DeadlineExceeded) {
-						errorChan <- err
+						hub.CaptureException(err)
 						continue
 					}
 					callTrees, err := p.CallTrees()
 					if err != nil {
-						errorChan <- err
+						hub.CaptureException(err)
 						continue
 					}
 					callTreesQueue <- callTrees
 				}
 			}
 
-		}(profileIDsChan, callTreesQueue, timeout, errorChan)
+		}(profileIDsChan, callTreesQueue, timeout)
 	}
 
 	go func(profIDsChan chan string, profileIDs []string, timeout time.Duration) {
@@ -227,17 +226,10 @@ func GetFlamegraphFromProfiles(
 
 	}(profileIDsChan, profileIDs, timeout)
 
-	go func(err *error, errorChan chan error) {
-		for er := range errorChan {
-			*err = errors.Join(er)
-		}
-	}(&err, errorChan)
-
-	go func(callTreesQueue chan map[uint64][]*nodetree.Node, errorChan chan error) {
+	go func(callTreesQueue chan map[uint64][]*nodetree.Node) {
 		wg.Wait()
 		close(callTreesQueue)
-		close(errorChan)
-	}(callTreesQueue, errorChan)
+	}(callTreesQueue)
 
 	for callTrees := range callTreesQueue {
 		ProcessStacksFromCallTrees(callTrees, &stacks, stacksCount)
