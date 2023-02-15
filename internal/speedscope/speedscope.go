@@ -100,30 +100,30 @@ type (
 	}
 
 	ProfileView struct {
-		AndroidAPILevel      uint32                              `json:"androidAPILevel,omitempty"`
-		Architecture         string                              `json:"architecture,omitempty"`
-		DebugMeta            interface{}                         `json:"-"`
-		DeviceClassification string                              `json:"deviceClassification"`
-		DeviceLocale         string                              `json:"deviceLocale"`
-		DeviceManufacturer   string                              `json:"deviceManufacturer"`
-		DeviceModel          string                              `json:"deviceModel"`
-		DeviceOSBuildNumber  string                              `json:"deviceOSBuildNumber,omitempty"`
-		DeviceOSName         string                              `json:"deviceOSName"`
-		DeviceOSVersion      string                              `json:"deviceOSVersion"`
-		DurationNS           uint64                              `json:"durationNS"`
-		Environment          string                              `json:"environment,omitempty"`
-		Measurements         map[string]measurements.Measurement `json:"-"`
-		OrganizationID       uint64                              `json:"organizationID"`
-		Platform             platform.Platform                   `json:"platform"`
-		Profile              json.RawMessage                     `json:"-"`
-		ProfileID            string                              `json:"profileID"`
-		ProjectID            uint64                              `json:"projectID"`
-		Received             timeutil.Time                       `json:"received"`
-		RetentionDays        int                                 `json:"-"`
-		TraceID              string                              `json:"traceID"`
-		TransactionID        string                              `json:"transactionID"`
-		TransactionName      string                              `json:"transactionName"`
-		VersionCode          string                              `json:"-"`
-		VersionName          string                              `json:"-"`
+		AndroidAPILevel      uint32                              `json:"androidAPILevel,omitempty"`     //nolint:unused
+		Architecture         string                              `json:"architecture,omitempty"`        //nolint:unused
+		DebugMeta            interface{}                         `json:"-"`                             //nolint:unused
+		DeviceClassification string                              `json:"deviceClassification"`          //nolint:unused
+		DeviceLocale         string                              `json:"deviceLocale"`                  //nolint:unused
+		DeviceManufacturer   string                              `json:"deviceManufacturer"`            //nolint:unused
+		DeviceModel          string                              `json:"deviceModel"`                   //nolint:unused
+		DeviceOSBuildNumber  string                              `json:"deviceOSBuildNumber,omitempty"` //nolint:unused
+		DeviceOSName         string                              `json:"deviceOSName"`                  //nolint:unused
+		DeviceOSVersion      string                              `json:"deviceOSVersion"`               //nolint:unused
+		DurationNS           uint64                              `json:"durationNS"`                    //nolint:unused
+		Environment          string                              `json:"environment,omitempty"`         //nolint:unused
+		Measurements         map[string]measurements.Measurement `json:"-"`                             //nolint:unused
+		OrganizationID       uint64                              `json:"organizationID"`                //nolint:unused
+		Platform             platform.Platform                   `json:"platform"`                      //nolint:unused
+		Profile              json.RawMessage                     `json:"-"`                             //nolint:unused
+		ProfileID            string                              `json:"profileID"`                     //nolint:unused
+		ProjectID            uint64                              `json:"projectID"`                     //nolint:unused
+		Received             timeutil.Time                       `json:"received"`                      //nolint:unused
+		RetentionDays        int                                 `json:"-"`                             //nolint:unused
+		TraceID              string                              `json:"traceID"`                       //nolint:unused
+		TransactionID        string                              `json:"transactionID"`                 //nolint:unused
+		TransactionName      string                              `json:"transactionName"`               //nolint:unused
+		VersionCode          string                              `json:"-"`                             //nolint:unused
+		VersionName          string                              `json:"-"`                             //nolint:unused
 	}
 )
