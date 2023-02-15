@@ -84,14 +84,16 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 		occurrences := occurrence.Find(p, callTrees)
 		s.Finish()
 
-		// Log occurrences with a link to access to corresponding profiles
-		// It will be removed when the issue platform UI is functional
-		s = sentry.StartSpan(ctx, "bq.write")
-		s.Description = "Write occurrences to BigQuery"
-		err := env.occurrencesInserter.Put(ctx, occurrences)
-		s.Finish()
-		if err != nil {
-			hub.CaptureException(err)
+		if env.occurrencesInserter != nil {
+			// Log occurrences with a link to access to corresponding profiles
+			// It will be removed when the issue platform UI is functional
+			s = sentry.StartSpan(ctx, "bq.write")
+			s.Description = "Write occurrences to BigQuery"
+			err := env.occurrencesInserter.Put(ctx, occurrences)
+			s.Finish()
+			if err != nil {
+				hub.CaptureException(err)
+			}
 		}
 
 		if _, enabled := env.config.OccurrencesEnabledOrganizations[orgID]; enabled {
