@@ -4,7 +4,10 @@ import (
 	"context"
 	"crypto/md5"
 	"encoding/hex"
+	"errors"
 	"fmt"
+	"sync"
+	"time"
 
 	"cloud.google.com/go/storage"
 	"github.com/getsentry/vroom/internal/frame"
@@ -151,23 +154,94 @@ func GetFlamegraphFromProfiles(
 	profilesBucket *storage.BucketHandle,
 	organizationID uint64,
 	projectID uint64,
-	profileIDs []string) (speedscope.Output, error) {
+	profileIDs []string,
+	numWorkers int,
+	timeout time.Duration) (speedscope.Output, error) {
 
+	if numWorkers < 1 {
+		numWorkers = 1
+	}
+	var wg sync.WaitGroup
 	var stacks [][]frame.Frame
 	stacksCount := make(map[uint64]int)
+	callTreesQueue := make(chan map[uint64][]*nodetree.Node, numWorkers)
+	profileIDsChan := make(chan string, numWorkers)
+	errorChan := make(chan error, numWorkers)
+	var err error
 
-	for _, profileID := range profileIDs {
-		var p profile.Profile
-		err := storageutil.UnmarshalCompressed(ctx, profilesBucket, profile.StoragePath(organizationID, projectID, profileID), &p)
-		if err != nil {
-			return speedscope.Output{}, err
+	for i := 0; i < numWorkers; i++ {
+		wg.Add(1)
+		go func(
+			profIDsChan chan string,
+			callTreesQueue chan map[uint64][]*nodetree.Node,
+			timeout time.Duration,
+			errorChan chan error) {
+
+			defer wg.Done()
+			// each worker should stop if
+			// hitting a timeout
+			to := time.NewTimer(timeout)
+			defer to.Stop()
+
+		DONE:
+			for profileID := range profIDsChan {
+				select {
+				case <-to.C:
+					// if we've hit a timeout, stop fetching
+					// new profiles
+					break DONE
+				default:
+					var p profile.Profile
+					err := storageutil.UnmarshalCompressed(ctx, profilesBucket, profile.StoragePath(organizationID, projectID, profileID), &p)
+					if err != nil && !errors.Is(err, context.DeadlineExceeded) {
+						errorChan <- err
+						continue
+					}
+					callTrees, err := p.CallTrees()
+					if err != nil {
+						errorChan <- err
+						continue
+					}
+					callTreesQueue <- callTrees
+				}
+			}
+
+		}(profileIDsChan, callTreesQueue, timeout, errorChan)
+	}
+
+	go func(profIDsChan chan string, profileIDs []string, timeout time.Duration) {
+		// if we hit a timeout and we haven't
+		// fetched all the profiles yet, stop.
+		to := time.NewTimer(timeout)
+
+		for _, profileID := range profileIDs {
+			select {
+			case <-to.C:
+				close(profIDsChan)
+				return
+			default:
+				profIDsChan <- profileID
+			}
 		}
-		callTrees, err := p.CallTrees()
-		if err != nil {
-			return speedscope.Output{}, err
+		close(profIDsChan)
+
+	}(profileIDsChan, profileIDs, timeout)
+
+	go func(err *error, errorChan chan error) {
+		for er := range errorChan {
+			*err = errors.Join(er)
 		}
+	}(&err, errorChan)
+
+	go func(callTreesQueue chan map[uint64][]*nodetree.Node, errorChan chan error) {
+		wg.Wait()
+		close(callTreesQueue)
+		close(errorChan)
+	}(callTreesQueue, errorChan)
+
+	for callTrees := range callTreesQueue {
 		ProcessStacksFromCallTrees(callTrees, &stacks, stacksCount)
-	} // end profiles processing
+	}
 
 	if len(stacks) == 0 {
 		// early return: no need to call `ConvertStackTracesToFlamegraph`
