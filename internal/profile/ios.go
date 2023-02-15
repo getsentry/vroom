@@ -85,7 +85,7 @@ type candidate struct {
 	FrameCount int
 }
 
-// MainThread returns what we believe is the main thread ID in the profile
+// MainThread returns what we believe is the main thread ID in the profile.
 func (p IOS) MainThread() uint64 {
 	// Use metadata
 	for threadID, m := range p.ThreadMetadata {

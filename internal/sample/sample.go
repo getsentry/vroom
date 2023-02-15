@@ -52,7 +52,7 @@ type (
 		ElapsedSinceStartNS uint64 `json:"elapsed_since_start_ns"`
 		QueueAddress        string `json:"queue_address,omitempty"`
 		StackID             int    `json:"stack_id"`
-		State               string `json:"state"`
+		State               State  `json:"state"`
 		ThreadID            uint64 `json:"thread_id"`
 	}
 
@@ -75,7 +75,7 @@ type (
 		ThreadMetadata map[string]ThreadMetadata `json:"thread_metadata"`
 	}
 
-	SampleProfile struct {
+	Profile struct {
 		DebugMeta      debugmeta.DebugMeta                 `json:"debug_meta"`
 		Device         Device                              `json:"device"`
 		Environment    string                              `json:"environment,omitempty"`
@@ -95,9 +95,15 @@ type (
 		Transactions   []Transaction                       `json:"transactions"`
 		Version        string                              `json:"version"`
 	}
+
+	State string
 )
 
-func (p SampleProfile) GetRelease() string {
+const (
+	Idle State = "idle"
+)
+
+func (p Profile) GetRelease() string {
 	return p.Release
 }
 
@@ -109,35 +115,35 @@ func (t Transaction) DurationNS() uint64 {
 	return t.RelativeEndNS - t.RelativeStartNS
 }
 
-func (p SampleProfile) GetOrganizationID() uint64 {
+func (p Profile) GetOrganizationID() uint64 {
 	return p.OrganizationID
 }
 
-func (p SampleProfile) GetProjectID() uint64 {
+func (p Profile) GetProjectID() uint64 {
 	return p.ProjectID
 }
 
-func (p SampleProfile) GetID() string {
+func (p Profile) GetID() string {
 	return p.EventID
 }
 
 func StoragePath(organizationID, projectID uint64, profileID string) string {
-	return fmt.Sprintf("%d/%d/%s", organizationID, projectID, strings.Replace(profileID, "-", "", -1))
+	return fmt.Sprintf("%d/%d/%s", organizationID, projectID, strings.ReplaceAll(profileID, "-", ""))
 }
 
-func (p SampleProfile) StoragePath() string {
+func (p Profile) StoragePath() string {
 	return StoragePath(p.OrganizationID, p.ProjectID, p.EventID)
 }
 
-func (p SampleProfile) GetPlatform() platform.Platform {
+func (p Profile) GetPlatform() platform.Platform {
 	return p.Platform
 }
 
-func (p SampleProfile) GetEnvironment() string {
+func (p Profile) GetEnvironment() string {
 	return p.Environment
 }
 
-func (p SampleProfile) GetTransaction() transaction.Transaction {
+func (p Profile) GetTransaction() transaction.Transaction {
 	return transaction.Transaction{
 		ActiveThreadID: p.Transaction.ActiveThreadID,
 		DurationNS:     p.Transaction.DurationNS(),
@@ -147,24 +153,24 @@ func (p SampleProfile) GetTransaction() transaction.Transaction {
 	}
 }
 
-func (p SampleProfile) GetTimestamp() time.Time {
+func (p Profile) GetTimestamp() time.Time {
 	return p.Timestamp
 }
 
-func (p SampleProfile) GetReceived() time.Time {
+func (p Profile) GetReceived() time.Time {
 	return p.Received.Time()
 }
 
-func (p SampleProfile) GetRetentionDays() int {
+func (p Profile) GetRetentionDays() int {
 	return p.RetentionDays
 }
 
-func (p SampleProfile) GetDurationNS() uint64 {
+func (p Profile) GetDurationNS() uint64 {
 	t := p.Transactions[0]
 	return t.RelativeEndNS - t.RelativeStartNS
 }
 
-func (p SampleProfile) CallTrees() (map[uint64][]*nodetree.Node, error) {
+func (p Profile) CallTrees() (map[uint64][]*nodetree.Node, error) {
 	sort.SliceStable(p.Trace.Samples, func(i, j int) bool {
 		return p.Trace.Samples[i].ElapsedSinceStartNS < p.Trace.Samples[j].ElapsedSinceStartNS
 	})
@@ -230,7 +236,7 @@ func (t *Trace) ThreadName(threadID, queueAddress string, mainThread bool) strin
 	return ""
 }
 
-func (p *SampleProfile) Speedscope() (speedscope.Output, error) {
+func (p *Profile) Speedscope() (speedscope.Output, error) {
 	sort.SliceStable(p.Trace.Samples, func(i, j int) bool {
 		return p.Trace.Samples[i].ElapsedSinceStartNS < p.Trace.Samples[j].ElapsedSinceStartNS
 	})
@@ -327,7 +333,7 @@ func (p *SampleProfile) Speedscope() (speedscope.Output, error) {
 				Platform:             p.Platform,
 				ProfileID:            p.EventID,
 				ProjectID:            p.ProjectID,
-				Received:             timeutil.Time(p.Received),
+				Received:             p.Received,
 				TraceID:              p.Transactions[0].TraceID,
 				TransactionID:        p.Transactions[0].ID,
 				TransactionName:      p.Transactions[0].Name,
@@ -346,7 +352,7 @@ func (p *SampleProfile) Speedscope() (speedscope.Output, error) {
 	}, nil
 }
 
-func (p *SampleProfile) IsApplicationFrame(f frame.Frame) bool {
+func (p *Profile) IsApplicationFrame(f frame.Frame) bool {
 	if f.InApp != nil {
 		return *f.InApp
 	}
@@ -363,7 +369,7 @@ func (p *SampleProfile) IsApplicationFrame(f frame.Frame) bool {
 	return true
 }
 
-func (p *SampleProfile) Metadata() metadata.Metadata {
+func (p *Profile) Metadata() metadata.Metadata {
 	return metadata.Metadata{
 		Architecture:         p.Device.Architecture,
 		DeviceClassification: p.Device.Classification,
@@ -383,11 +389,11 @@ func (p *SampleProfile) Metadata() metadata.Metadata {
 	}
 }
 
-func (p *SampleProfile) Raw() []byte {
+func (p *Profile) Raw() []byte {
 	return []byte{}
 }
 
-func (p *SampleProfile) ReplaceIdleStacks() {
+func (p *Profile) ReplaceIdleStacks() {
 	p.Trace.ReplaceIdleStacks()
 }
 
@@ -406,8 +412,8 @@ func (t Trace) SamplesByThreadD() ([]uint64, map[uint64][]*Sample) {
 	return threadIDs, samples
 }
 
-func (p *Trace) ReplaceIdleStacks() {
-	threadIDs, samplesByThreadID := p.SamplesByThreadD()
+func (t *Trace) ReplaceIdleStacks() {
+	threadIDs, samplesByThreadID := t.SamplesByThreadD()
 
 	for _, threadID := range threadIDs {
 		samples := samplesByThreadID[threadID]
@@ -418,13 +424,13 @@ func (p *Trace) ReplaceIdleStacks() {
 			s := samples[i]
 
 			// keep track of the previous active sample as we go
-			if p.Stacks[s.StackID].IsActive() {
+			if t.Stacks[s.StackID].IsActive() {
 				previousActiveStackID = s.StackID
 				continue
 			}
 
 			// if there's no frame, the thread is considered idle at this time
-			s.State = "idle"
+			s.State = Idle
 
 			// if it's an idle stack but we don't have a previous active stack
 			// we keep looking
@@ -433,18 +439,18 @@ func (p *Trace) ReplaceIdleStacks() {
 			}
 
 			if i >= nextActiveSampleIndex {
-				nextActiveSampleIndex, nextActiveStackID = p.findNextActiveStackID(samples, i)
+				nextActiveSampleIndex, nextActiveStackID = t.findNextActiveStackID(samples, i)
 				if nextActiveSampleIndex == -1 {
 					// no more active sample on this thread
 					for ; i < len(samples); i++ {
-						samples[i].State = "idle"
+						samples[i].State = Idle
 					}
 					break
 				}
 			}
 
-			previousFrames := p.framesList(previousActiveStackID)
-			nextFrames := p.framesList(nextActiveStackID)
+			previousFrames := t.framesList(previousActiveStackID)
+			nextFrames := t.framesList(nextActiveStackID)
 			commonFrames := findCommonFrames(previousFrames, nextFrames)
 
 			// add the common stack to the list of stacks
@@ -452,13 +458,13 @@ func (p *Trace) ReplaceIdleStacks() {
 			for _, frame := range commonFrames {
 				commonStack = append(commonStack, frame.index)
 			}
-			commonStackID := len(p.Stacks)
-			p.Stacks = append(p.Stacks, commonStack)
+			commonStackID := len(t.Stacks)
+			t.Stacks = append(t.Stacks, commonStack)
 
 			// replace all idle stacks until next active sample
 			for ; i < nextActiveSampleIndex; i++ {
 				samples[i].StackID = commonStackID
-				samples[i].State = "idle"
+				samples[i].State = Idle
 			}
 		}
 	}

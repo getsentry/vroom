@@ -171,8 +171,9 @@ func main() {
 		port = "8080"
 	}
 	server := http.Server{
-		Addr:    ":" + port,
-		Handler: sentryhttp.New(sentryhttp.Options{}).Handle(router),
+		Addr:              ":" + port,
+		ReadHeaderTimeout: time.Second,
+		Handler:           sentryhttp.New(sentryhttp.Options{}).Handle(router),
 	}
 
 	waitForShutdown := make(chan os.Signal)

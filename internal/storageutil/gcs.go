@@ -9,7 +9,7 @@ import (
 	"github.com/pierrec/lz4/v4"
 )
 
-// CompressedWrite compresses and writes data to Google Cloud Storage
+// CompressedWrite compresses and writes data to Google Cloud Storage.
 func CompressedWrite(ctx context.Context, b *storage.BucketHandle, objectName string, d interface{}) error {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
@@ -33,7 +33,7 @@ func CompressedWrite(ctx context.Context, b *storage.BucketHandle, objectName st
 	return nil
 }
 
-// UnmarshalCompressed reads compressed JSON data from GCS and unmarshals it
+// UnmarshalCompressed reads compressed JSON data from GCS and unmarshals it.
 func UnmarshalCompressed(ctx context.Context, b *storage.BucketHandle, objectName string, d interface{}) error {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()

@@ -19,7 +19,7 @@ type (
 	EvidenceNameType string
 	IssueTitleType   string
 
-	OccurrenceType int
+	Type int
 
 	Evidence struct {
 		Name      EvidenceNameType `json:"name"`
@@ -27,7 +27,7 @@ type (
 		Important bool             `json:"important"`
 	}
 
-	// Event holds the metadata related to a profile
+	// Event holds the metadata related to a profile.
 	Event struct {
 		Environment    string            `json:"environment"`
 		ID             string            `json:"event_id"`
@@ -42,7 +42,7 @@ type (
 		Transaction    string            `json:"transaction,omitempty"`
 	}
 
-	// Occurrence represents a potential issue detected
+	// Occurrence represents a potential issue detected.
 	Occurrence struct {
 		Category        Category               `json:"-"`
 		DetectionTime   time.Time              `json:"detection_time"`
@@ -55,9 +55,9 @@ type (
 		Level           string                 `json:"level,omitempty"`
 		ResourceID      string                 `json:"resource_id,omitempty"`
 		Subtitle        string                 `json:"subtitle"`
-		Type            OccurrenceType         `json:"type"`
+		Type            Type                   `json:"type"`
 
-		// Only use for stats
+		// Only use for stats.
 		durationNS  uint64
 		sampleCount int
 	}
@@ -68,7 +68,7 @@ type (
 )
 
 const (
-	ProfileBlockedThreadType OccurrenceType = 2000
+	ProfileBlockedThreadType Type = 2000
 
 	EvidenceNamePackage  EvidenceNameType = "Package"
 	EvidenceNameFunction EvidenceNameType = "Suspect function"
@@ -105,12 +105,12 @@ func NewOccurrence(p profile.Profile, title IssueTitleType, ni nodeInfo) *Occurr
 		},
 		EvidenceData: map[string]interface{}{},
 		EvidenceDisplay: []Evidence{
-			Evidence{
+			{
 				Name:      EvidenceNameFunction,
 				Value:     ni.Node.Name,
 				Important: true,
 			},
-			Evidence{
+			{
 				Name:  EvidenceNamePackage,
 				Value: ni.Node.Package,
 			},
@@ -169,6 +169,6 @@ func (o *Occurrence) Save() (map[string]bigquery.Value, string, error) {
 		"platform":        o.Event.Platform,
 		"profile_id":      o.Event.ID,
 		"project_id":      strconv.FormatUint(o.Event.ProjectID, 10),
-		"sample_count":    int(o.sampleCount),
+		"sample_count":    o.sampleCount,
 	}, bigquery.NoDedupeID, nil
 }

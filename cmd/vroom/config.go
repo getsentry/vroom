@@ -21,7 +21,7 @@ type (
 
 var (
 	serviceConfigs = map[string]ServiceConfig{
-		"production": ServiceConfig{
+		"production": {
 			SentryDSN:      "https://91f2762536314cbd9cc4a163fe072682@o1.ingest.sentry.io/6424467",
 			ProfilesBucket: "sentry-profiles",
 			SnubaHost:      "http://10.2.0.175",
@@ -35,7 +35,7 @@ var (
 			CallTreesKafkaTopic:     "profiles-call-tree",
 			ProfilesKafkaTopic:      "processed-profiles",
 		},
-		"development": ServiceConfig{
+		"development": {
 			ProfilesBucket:          "sentry-profiles",
 			SnubaHost:               "http://localhost:1218",
 			OccurrencesKafkaTopic:   "ingest-occurrences",

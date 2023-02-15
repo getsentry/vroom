@@ -74,7 +74,7 @@ func (p LegacyProfile) Version() string {
 }
 
 func StoragePath(organizationID, projectID uint64, profileID string) string {
-	return fmt.Sprintf("%d/%d/%s", organizationID, projectID, strings.Replace(profileID, "-", "", -1))
+	return fmt.Sprintf("%d/%d/%s", organizationID, projectID, strings.ReplaceAll(profileID, "-", ""))
 }
 
 func (p LegacyProfile) StoragePath() string {
@@ -108,7 +108,7 @@ func (p *LegacyProfile) UnmarshalJSON(b []byte) error {
 		if err != nil {
 			return err
 		}
-		(*p).Trace = t
+		p.Trace = t
 		p.Profile = nil
 	case "android":
 		var t Android
@@ -116,7 +116,7 @@ func (p *LegacyProfile) UnmarshalJSON(b []byte) error {
 		if err != nil {
 			return err
 		}
-		(*p).Trace = t
+		p.Trace = t
 		p.Profile = nil
 	default:
 		return errors.New("unknown platform")

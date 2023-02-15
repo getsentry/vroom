@@ -34,7 +34,7 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 				},
 			},
 			want: map[uint64][]*nodetree.Node{
-				1: []*nodetree.Node{
+				1: {
 					{
 						DurationNS:  1,
 						EndNS:       1,
@@ -91,7 +91,7 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 				},
 			},
 			want: map[uint64][]*nodetree.Node{
-				1: []*nodetree.Node{
+				1: {
 					{
 						DurationNS:  1,
 						EndNS:       1,
@@ -175,7 +175,7 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 				},
 			},
 			want: map[uint64][]*nodetree.Node{
-				1: []*nodetree.Node{
+				1: {
 					{
 						DurationNS:  2,
 						EndNS:       2,
@@ -231,7 +231,7 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 				},
 			},
 			want: map[uint64][]*nodetree.Node{
-				1: []*nodetree.Node{
+				1: {
 					{
 						DurationNS:  2,
 						EndNS:       2,
@@ -305,7 +305,7 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 				},
 			},
 			want: map[uint64][]*nodetree.Node{
-				1: []*nodetree.Node{
+				1: {
 					{
 						DurationNS:  4,
 						EndNS:       4,
@@ -386,7 +386,7 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 				},
 			},
 			want: map[uint64][]*nodetree.Node{
-				1: []*nodetree.Node{
+				1: {
 					{
 						DurationNS:  4,
 						EndNS:       4,
@@ -468,7 +468,7 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 				},
 			},
 			want: map[uint64][]*nodetree.Node{
-				1: []*nodetree.Node{
+				1: {
 					{
 						DurationNS:  4,
 						EndNS:       4,
@@ -550,7 +550,7 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 				},
 			},
 			want: map[uint64][]*nodetree.Node{
-				1: []*nodetree.Node{
+				1: {
 					{
 						DurationNS:  4,
 						EndNS:       4,
@@ -636,7 +636,7 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 				},
 			},
 			want: map[uint64][]*nodetree.Node{
-				1: []*nodetree.Node{
+				1: {
 					{
 						DurationNS:  4,
 						EndNS:       4,
@@ -762,7 +762,7 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 				},
 			},
 			want: map[uint64][]*nodetree.Node{
-				1: []*nodetree.Node{
+				1: {
 					{
 						DurationNS:  7,
 						EndNS:       7,
@@ -900,7 +900,7 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 				},
 			},
 			want: map[uint64][]*nodetree.Node{
-				1: []*nodetree.Node{
+				1: {
 					{
 						DurationNS:  1,
 						EndNS:       1,
@@ -957,7 +957,7 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 				},
 			},
 			want: map[uint64][]*nodetree.Node{
-				1: []*nodetree.Node{
+				1: {
 					{
 						DurationNS:  1,
 						EndNS:       1,
@@ -1032,7 +1032,7 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 				},
 			},
 			want: map[uint64][]*nodetree.Node{
-				1: []*nodetree.Node{
+				1: {
 					{
 						DurationNS:  1,
 						EndNS:       1,
@@ -1135,7 +1135,7 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 				},
 			},
 			want: map[uint64][]*nodetree.Node{
-				1: []*nodetree.Node{
+				1: {
 					{
 						DurationNS:  1,
 						EndNS:       1,
@@ -1239,7 +1239,7 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 				},
 			},
 			want: map[uint64][]*nodetree.Node{
-				1: []*nodetree.Node{
+				1: {
 					{
 						DurationNS:  1,
 						EndNS:       1,
@@ -1342,7 +1342,7 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 				},
 			},
 			want: map[uint64][]*nodetree.Node{
-				1: []*nodetree.Node{
+				1: {
 					{
 						DurationNS:  1,
 						EndNS:       1,

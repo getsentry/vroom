@@ -31,13 +31,15 @@ type (
 
 // IsMain returns true if the function is considered the main function.
 // It also returns an offset indicate if we need to keep the previous frame or not.
-// This only works for cocoa profiles
+// This only works for cocoa profiles.
 func (f Frame) IsMain() (bool, int) {
 	if f.Status != "symbolicated" {
 		return false, 0
-	} else if f.Function == "main" {
+	}
+	switch f.Function {
+	case "main":
 		return true, 0
-	} else if f.Function == "UIApplicationMain" {
+	case "UIApplicationMain":
 		return true, -1
 	}
 	return false, 0
@@ -97,7 +99,7 @@ func (f Frame) IsInline() bool {
 }
 
 func (f Frame) IsNodeApplicationFrame() bool {
-	return strings.Contains("node_modules", f.Path)
+	return strings.Contains(f.Path, "node_modules")
 }
 
 func (f Frame) IsIOSApplicationFrame() bool {

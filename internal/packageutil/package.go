@@ -22,9 +22,6 @@ func IsRustApplicationPackage(path string) bool {
 func IsIOSApplicationPackage(path string) bool {
 	// These are the path patterns that iOS uses for applications, system
 	// libraries are stored elsewhere.
-	//
-	// Must be kept in sync with the corresponding Python implementation of
-	// this function in python/symbolicate/__init__.py
 	return strings.HasPrefix(path, "/private/var/containers") ||
 		strings.HasPrefix(path, "/var/containers") ||
 		strings.Contains(path, "/Developer/Xcode/DerivedData") ||
@@ -47,7 +44,7 @@ var (
 	}
 )
 
-// Checking if synmbol belongs to an Android system package
+// Checking if synmbol belongs to an Android system package.
 func IsAndroidApplicationPackage(packageName string) bool {
 	for _, p := range androidPackagePrefixes {
 		if strings.HasPrefix(packageName, p) {

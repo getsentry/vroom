@@ -136,7 +136,7 @@ func BenchmarkGoJSON(b *testing.B) {
 		b.Fatal(err)
 	}
 	for i := 0; i < b.N; i++ {
-		result := sample.SampleProfile{}
+		var result sample.Profile
 		if err := gojson.Unmarshal(testProfile, &result); err != nil {
 			b.Fatal(err)
 		}
@@ -150,7 +150,7 @@ func BenchmarkJsonIterator(b *testing.B) {
 		b.Fatal(err)
 	}
 	for n := 0; n < b.N; n++ {
-		result := sample.SampleProfile{}
+		var result sample.Profile
 		if err := jsoniter.Unmarshal(testProfile, &result); err != nil {
 			b.Fatal(err)
 		}
