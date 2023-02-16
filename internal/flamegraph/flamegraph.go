@@ -103,12 +103,12 @@ func ProcessStacksFromCallTrees(callTrees map[uint64][]*nodetree.Node, f *Flameg
 		for _, tree := range threadTrees {
 			// 128 is the max stack size
 			currentStack := make([]frame.Frame, 0, 128)
-			visitTree(f, tree, &currentStack)
+			AddCalltree(f, tree, &currentStack)
 		}
 	}
 }
 
-func visitTree(f *Flamegraph, node *nodetree.Node, currentStack *[]frame.Frame) {
+func AddCalltree(f *Flamegraph, node *nodetree.Node, currentStack *[]frame.Frame) {
 	currentFrame := node.Frame()
 	*currentStack = append(*currentStack, currentFrame)
 
@@ -120,7 +120,7 @@ func visitTree(f *Flamegraph, node *nodetree.Node, currentStack *[]frame.Frame) 
 		// else we call visitTree recursively on the children
 		for _, childNode := range node.Children {
 			totChildrenSampleCount += childNode.SampleCount
-			visitTree(f, childNode, currentStack)
+			AddCalltree(f, childNode, currentStack)
 		}
 
 		// If the children's sample count is less than the current
@@ -134,23 +134,6 @@ func visitTree(f *Flamegraph, node *nodetree.Node, currentStack *[]frame.Frame) 
 	// pop last element before returning
 	*currentStack = (*currentStack)[:len(*currentStack)-1]
 }
-
-/*
-func updateCounterAndStacks(
-	stacks *[][]frame.Frame,
-	counter map[uint64]int,
-	currentStack *[]frame.Frame,
-	fingerprint uint64,
-	sampleCount int) {
-	if _, exists := counter[fingerprint]; exists {
-		counter[fingerprint] += sampleCount
-	} else {
-		counter[fingerprint] = sampleCount
-		cp := make([]frame.Frame, len(*currentStack))
-		copy(cp, *currentStack)
-		*stacks = append(*stacks, cp)
-	}
-}*/
 
 // Here we define a function getFrameID instead
 // of reusing Frame.ID() method because we might
