@@ -82,9 +82,8 @@ func TestProcessStacksFromCallTreesFromSampledProfile(t *testing.T) {
 		t.Fatalf("error trying to generate call tree: %V", err)
 	}
 
-	var stacks [][]frame.Frame
-	stacksCount := make(map[uint64]int)
-	ProcessStacksFromCallTrees(callTrees, &stacks, stacksCount)
+	f := Flamegraph{counters: make(map[uint64]int)}
+	ProcessStacksFromCallTrees(callTrees, &f)
 
 	expectedStacks := [][]frame.Frame{
 		{
@@ -112,13 +111,15 @@ func TestProcessStacksFromCallTreesFromSampledProfile(t *testing.T) {
 	}
 	expectedCounts := []int{2, 1, 1}
 
-	if len(stacks) != 3 {
-		t.Fatalf("expected 3 stack traces, found %d", len(stacks))
+	if len(f.stacks) != 3 {
+		t.Fatalf("expected 3 stack traces, found %d", len(f.stacks))
 	}
 
-	for i, _ := range stacks {
-		if !sameStackTraces(stacks[i], expectedStacks[i]) || (stacksCount[stacks[i][len(stacks[i])-1].Fingerprint] != expectedCounts[i]) {
-			t.Fatalf("the 2 stack traces differ: %v <> %v", stacks[i], expectedStacks[i])
+	for i, _ := range f.stacks {
+		if !sameStackTraces(f.stacks[i], expectedStacks[i]) || (f.counters[f.stacks[i][len(f.stacks[i])-1].Fingerprint] != expectedCounts[i]) {
+			t.Fatalf("the 2 stack traces differ: \nstack traces: %v <> %v \ncounters: %v <> %v",
+				f.stacks[i], expectedStacks[i], f.counters[f.stacks[i][len(f.stacks[i])-1].Fingerprint], expectedCounts[i],
+			)
 		}
 	}
 
@@ -151,17 +152,16 @@ func TestConvertStackTracesToFlamegraph(t *testing.T) {
 		t.Fatalf("error trying to generate call tree: %V", err)
 	}
 
-	var stacks [][]frame.Frame
-	stacksCount := make(map[uint64]int)
+	f := Flamegraph{counters: make(map[uint64]int)}
 	// Process the CallTree twice.
 	// This way we should have
 	// [a, b] 4
 	// [c]	  2
 	// [a]    2
-	ProcessStacksFromCallTrees(callTrees, &stacks, stacksCount)
-	ProcessStacksFromCallTrees(callTrees, &stacks, stacksCount)
+	ProcessStacksFromCallTrees(callTrees, &f)
+	ProcessStacksFromCallTrees(callTrees, &f)
 
-	output := ConvertStackTracesToFlamegraph(&stacks, stacksCount, 0)
+	output := ConvertStackTracesToFlamegraph(&f, 0)
 
 	//Test frames match
 	if len(output.Shared.Frames) != 3 {
@@ -187,7 +187,7 @@ func TestConvertStackTracesToFlamegraph(t *testing.T) {
 		}
 		expectedCounts := []int{4, 2, 2}
 		for i, sample := range samples {
-			if !sameSamples(sample, expectedStacks[i]) || (stacksCount[stacks[i][len(stacks[i])-1].Fingerprint] != expectedCounts[i]) {
+			if !sameSamples(sample, expectedStacks[i]) || (f.counters[f.stacks[i][len(f.stacks[i])-1].Fingerprint] != expectedCounts[i]) {
 				t.Fatalf("the %d-index samples differ. Found %v, expected %d", i, sample, expectedStacks[i])
 			}
 		}

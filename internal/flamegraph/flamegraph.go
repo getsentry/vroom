@@ -18,30 +18,46 @@ import (
 	"github.com/getsentry/vroom/internal/storageutil"
 )
 
+type Flamegraph struct {
+	stacks   [][]frame.Frame
+	counters map[uint64]int
+}
+
+func (f *Flamegraph) AddStack(stack []frame.Frame, count int) {
+	fingerprint := stack[len(stack)-1].Fingerprint
+	if _, exists := (*f).counters[fingerprint]; exists {
+		f.counters[fingerprint] += count
+	} else {
+		f.counters[fingerprint] = count
+		cp := make([]frame.Frame, len(stack))
+		copy(cp, stack)
+		f.stacks = append(f.stacks, cp)
+	}
+}
+
 func ConvertStackTracesToFlamegraph(
-	stacks *[][]frame.Frame,
-	stacksCount map[uint64]int,
+	flamegraph *Flamegraph,
 	minFreq int) speedscope.Output {
 
 	// filter out stack traces with a frequency less
 	// than minFreq
 	n := 0
-	for _, stack := range *stacks {
-		if stacksCount[stack[len(stack)-1].Fingerprint] >= minFreq {
-			(*stacks)[n] = stack
+	for _, stack := range (*flamegraph).stacks {
+		if (*flamegraph).counters[stack[len(stack)-1].Fingerprint] >= minFreq {
+			(*flamegraph).stacks[n] = stack
 			n++
 		}
 	}
-	*stacks = (*stacks)[:n]
+	(*flamegraph).stacks = (*flamegraph).stacks[:n]
 
 	var frames []speedscope.Frame
-	samples := make([][]int, 0, len(*stacks))
+	samples := make([][]int, 0, len((*flamegraph).stacks))
 	addressToIndex := make(map[string]int)
-	weights := make([]uint64, 0, len(*stacks))
+	weights := make([]uint64, 0, len((*flamegraph).stacks))
 	var endValue uint64 = 0
 
-	for _, stack := range *stacks {
-		weight := stacksCount[stack[len(stack)-1].Fingerprint]
+	for _, stack := range (*flamegraph).stacks {
+		weight := (*flamegraph).counters[stack[len(stack)-1].Fingerprint]
 		endValue += uint64(weight)
 		sample := make([]int, 0, len(stack))
 
@@ -81,33 +97,30 @@ func ConvertStackTracesToFlamegraph(
 	}
 }
 
-func ProcessStacksFromCallTrees(
-	callTrees map[uint64][]*nodetree.Node,
-	stacks *[][]frame.Frame,
-	stacksCount map[uint64]int) {
+func ProcessStacksFromCallTrees(callTrees map[uint64][]*nodetree.Node, f *Flamegraph) {
 
 	for _, threadTrees := range callTrees {
 		for _, tree := range threadTrees {
 			// 128 is the max stack size
-			currentStack := make([]frame.Frame, 128)
-			visitTree(stacks, stacksCount, tree, &currentStack)
+			currentStack := make([]frame.Frame, 0, 128)
+			visitTree(f, tree, &currentStack)
 		}
 	}
 }
 
-func visitTree(stacks *[][]frame.Frame, counter map[uint64]int, node *nodetree.Node, currentStack *[]frame.Frame) {
+func visitTree(f *Flamegraph, node *nodetree.Node, currentStack *[]frame.Frame) {
 	currentFrame := node.Frame()
 	*currentStack = append(*currentStack, currentFrame)
 
 	// base case (when we reach leaf frames)
 	if node.Children == nil {
-		updateCounterAndStacks(stacks, counter, currentStack, node.Fingerprint, node.SampleCount)
+		f.AddStack(*currentStack, node.SampleCount)
 	} else {
 		totChildrenSampleCount := 0
 		// else we call visitTree recursively on the children
 		for _, childNode := range node.Children {
 			totChildrenSampleCount += childNode.SampleCount
-			visitTree(stacks, counter, childNode, currentStack)
+			visitTree(f, childNode, currentStack)
 		}
 
 		// If the children's sample count is less than the current
@@ -115,13 +128,14 @@ func visitTree(stacks *[][]frame.Frame, counter map[uint64]int, node *nodetree.N
 		// ending at the current node.
 		diff := node.SampleCount - totChildrenSampleCount
 		if diff > 0 {
-			updateCounterAndStacks(stacks, counter, currentStack, node.Fingerprint, diff)
+			f.AddStack(*currentStack, diff)
 		}
 	}
 	// pop last element before returning
 	*currentStack = (*currentStack)[:len(*currentStack)-1]
 }
 
+/*
 func updateCounterAndStacks(
 	stacks *[][]frame.Frame,
 	counter map[uint64]int,
@@ -136,7 +150,7 @@ func updateCounterAndStacks(
 		copy(cp, *currentStack)
 		*stacks = append(*stacks, cp)
 	}
-}
+}*/
 
 // Here we define a function getFrameID instead
 // of reusing Frame.ID() method because we might
@@ -160,8 +174,7 @@ func GetFlamegraphFromProfiles(
 		numWorkers = 1
 	}
 	var wg sync.WaitGroup
-	var stacks [][]frame.Frame
-	stacksCount := make(map[uint64]int)
+	flamegraph := Flamegraph{counters: make(map[uint64]int)}
 	callTreesQueue := make(chan map[uint64][]*nodetree.Node, numWorkers)
 	profileIDsChan := make(chan string, numWorkers)
 	hub := sentry.GetHubFromContext(ctx)
@@ -229,13 +242,13 @@ func GetFlamegraphFromProfiles(
 	}(callTreesQueue)
 
 	for callTrees := range callTreesQueue {
-		ProcessStacksFromCallTrees(callTrees, &stacks, stacksCount)
+		ProcessStacksFromCallTrees(callTrees, &flamegraph)
 	}
 
-	if len(stacks) == 0 {
+	if len(flamegraph.stacks) == 0 {
 		// early return: no need to call `ConvertStackTracesToFlamegraph`
 		return speedscope.Output{}, nil
 	} else {
-		return ConvertStackTracesToFlamegraph(&stacks, stacksCount, 4), nil
+		return ConvertStackTracesToFlamegraph(&flamegraph, 4), nil
 	}
 }
