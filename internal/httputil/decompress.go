@@ -7,7 +7,7 @@ import (
 	"github.com/andybalholm/brotli"
 )
 
-// DecompressPayload adds a reader of the right type in case you need to decompress the body
+// DecompressPayload adds a reader of the right type in case you need to decompress the body.
 func DecompressPayload(next http.Handler) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer r.Body.Close()

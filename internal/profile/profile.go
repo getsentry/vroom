@@ -40,7 +40,7 @@ type (
 
 		profile profileInterface
 
-		sample *sample.SampleProfile
+		sample *sample.Profile
 		legacy *LegacyProfile
 	}
 
@@ -62,7 +62,7 @@ func (p *Profile) UnmarshalJSON(b []byte) error {
 		p.profile = p.legacy
 		return json.Unmarshal(b, &p.legacy)
 	default:
-		p.sample = new(sample.SampleProfile)
+		p.sample = new(sample.Profile)
 		p.profile = p.sample
 		return json.Unmarshal(b, &p.sample)
 	}

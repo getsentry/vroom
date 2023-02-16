@@ -29,15 +29,14 @@ jobs:
   test-vroom:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         fetch-depth: 0
-    - name: Install Golang
-      env:
-        SHELL: /bin/bash
-      shell: bash
-      run: curl -LO https://get.golang.org/$(uname)/go_installer && chmod +x go_installer && ./go_installer && rm go_installer
-    - name: Run golang tests
-      shell: bash
-      run: make test
+    - uses: actions/setup-go@v3
+      with:
+        go-version: 'stable'
+    - run: go install golang.org/x/tools/cmd/goimports@latest
+    - run: curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.51.1
+    - uses: pre-commit/action@v3.0.0
+    - run: make test
 

@@ -7,7 +7,7 @@ import (
 )
 
 type (
-	// CallTreesKafkaMessage is representing the struct we send to Kafka to insert call trees in ClickHouse
+	// CallTreesKafkaMessage is representing the struct we send to Kafka to insert call trees in ClickHouse.
 	CallTreesKafkaMessage struct {
 		CallTrees       map[uint64][]*nodetree.Node `json:"call_trees"`
 		Environment     string                      `json:"environment,omitempty"`
@@ -22,7 +22,7 @@ type (
 		TransactionName string                      `json:"transaction_name"`
 	}
 
-	// ProfileKafkaMessage is representing the struct we send to Kafka to insert a profile in ClickHouse
+	// ProfileKafkaMessage is representing the struct we send to Kafka to insert a profile in ClickHouse.
 	ProfileKafkaMessage struct {
 		AndroidAPILevel      uint32            `json:"android_api_level,omitempty"`
 		Architecture         string            `json:"architecture,omitempty"`

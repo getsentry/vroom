@@ -57,11 +57,11 @@ const (
 
 var (
 	detectFrameJobs = map[platform.Platform][]DetectExactFrameOptions{
-		platform.Node: []DetectExactFrameOptions{
-			DetectExactFrameOptions{
+		platform.Node: {
+			{
 				ActiveThreadOnly: true,
 				FunctionsByPackage: map[string]map[string]Category{
-					"node:fs": map[string]Category{
+					"node:fs": {
 						"accessSync":          FileRead,
 						"appendFileSync":      FileRead,
 						"chmodSync":           FileRead,
@@ -109,18 +109,18 @@ var (
 				IssueTitle: IssueTitleBlockingFunctionOnMainThread,
 			},
 		},
-		platform.Cocoa: []DetectExactFrameOptions{
-			DetectExactFrameOptions{
+		platform.Cocoa: {
+			{
 				ActiveThreadOnly:  true,
 				DurationThreshold: 16 * time.Millisecond,
 				FunctionsByPackage: map[string]map[string]Category{
-					"AppleJPEG": map[string]Category{
+					"AppleJPEG": {
 						"applejpeg_decode_image_all": ImageDecode,
 					},
-					"AttributeGraph": map[string]Category{
+					"AttributeGraph": {
 						"AG::LayoutDescriptor::make_layout(AG::swift::metadata const*, AGComparisonMode, AG::LayoutDescriptor::HeapMode)": ViewLayout,
 					},
-					"CoreData": map[string]Category{
+					"CoreData": {
 						"-[NSManagedObjectContext countForFetchRequest:error:]":                 CoreDataRead,
 						"-[NSManagedObjectContext executeFetchRequest:error:]":                  CoreDataRead,
 						"-[NSManagedObjectContext executeRequest:error:]":                       CoreDataRead,
@@ -130,7 +130,7 @@ var (
 						"-[NSManagedObjectContext save:]":                                       CoreDataWrite,
 						"NSManagedObjectContext.fetch<A>(NSFetchRequest<A>)":                    CoreDataRead,
 					},
-					"CoreFoundation": map[string]Category{
+					"CoreFoundation": {
 						"CFReadStreamRead":                         FileRead,
 						"CFURLConnectionSendSynchronousRequest":    HTTP,
 						"CFURLCreateData":                          FileRead,
@@ -138,11 +138,11 @@ var (
 						"CFURLWriteDataAndPropertiesToResource":    FileWrite,
 						"CFWriteStreamWrite":                       FileWrite,
 					},
-					"CoreML": map[string]Category{
+					"CoreML": {
 						"+[MLModel modelWithContentsOfURL:configuration:error:]":         MLModelLoad,
 						"-[MLNeuralNetworkEngine predictionFromFeatures:options:error:]": MLModelInference,
 					},
-					"Foundation": map[string]Category{
+					"Foundation": {
 						"+[NSJSONSerialization JSONObjectWithStream:options:error:]":              JSONDecode,
 						"+[NSJSONSerialization writeJSONObject:toStream:options:error:]":          JSONEncode,
 						"+[NSRegularExpression regularExpressionWithPattern:options:error:]":      Regex,
@@ -167,7 +167,7 @@ var (
 						"JSONEncoder.encode<A>(A)":                                                JSONEncode,
 						"NSFileManager.contents(atURL: URL)":                                      FileRead,
 					},
-					"ImageIO": map[string]Category{
+					"ImageIO": {
 						"DecodeImageData":   ImageDecode,
 						"DecodeImageStream": ImageDecode,
 						"GIFReadPlugin::DoDecodeImageData(IIOImageReadSession*, GlobalGIFInfo*, ReadPluginData const&, GIFPluginData const&, unsigned char*, unsigned long, std::__1::shared_ptr<GIFBufferInfo>, long*)": ImageDecode,
@@ -180,7 +180,7 @@ var (
 						"WebPDecode":       ImageDecode,
 						"jpeg_huff_decode": ImageDecode,
 					},
-					"libcompression.dylib": map[string]Category{
+					"libcompression.dylib": {
 						"BrotliDecoderDecompress": Compression,
 						"brotli_encode_buffer":    Compression,
 						"lz4_decode":              Compression,
@@ -197,7 +197,7 @@ var (
 						"zlib_decode_buffer":      Compression,
 						"zlib_encode_buffer":      Compression,
 					},
-					"libsqlite3.dylib": map[string]Category{
+					"libsqlite3.dylib": {
 						"sqlite3_blob_read":      SQL,
 						"sqlite3_column_blob":    SQL,
 						"sqlite3_column_bytes":   SQL,
@@ -218,31 +218,31 @@ var (
 						"sqlite3_value_text16be": SQL,
 						"sqlite3_value_text16le": SQL,
 					},
-					"libswiftCoreData.dylib": map[string]Category{
+					"libswiftCoreData.dylib": {
 						"NSManagedObjectContext.count<A>(for: NSFetchRequest<A>)":                                      CoreDataRead,
 						"NSManagedObjectContext.fetch<A>(NSFetchRequest<A>)":                                           CoreDataRead,
 						"NSManagedObjectContext.perform<A>(schedule: NSManagedObjectContext.ScheduledTaskType, _: ())": CoreDataBlock,
 					},
-					"libswiftFoundation.dylib": map[string]Category{
+					"libswiftFoundation.dylib": {
 						"__JSONDecoder.decode<A>(A.Type)": JSONDecode,
 						"__JSONEncoder.encode<A>(A)":      JSONEncode,
 					},
-					"libsystem_c.dylib": map[string]Category{
+					"libsystem_c.dylib": {
 						"__fread": FileRead,
 						"fread":   FileRead,
 					},
-					"libxpc.dylib": map[string]Category{
+					"libxpc.dylib": {
 						"xpc_connection_send_message_with_reply_sync": XPC,
 					},
-					"SwiftUI": map[string]Category{
+					"SwiftUI": {
 						"UnaryLayoutEngine.sizeThatFits(_ProposedSize)":                      ViewLayout,
 						"ViewRendererHost.render(interval: Double, updateDisplayList: Bool)": ViewRender,
 						"ViewRendererHost.updateViewGraph<A>(body: (ViewGraph))":             ViewUpdate,
 					},
-					"UIKit": map[string]Category{
+					"UIKit": {
 						"-[UINib instantiateWithOwner:options:]": ViewInflation,
 					},
-					"libsystem_kernel.dylib": map[string]Category{
+					"libsystem_kernel.dylib": {
 						"mach_msg_trap": FileRead,
 					},
 				},
@@ -252,7 +252,7 @@ var (
 	}
 )
 
-// DetectFrames detects occurrence of an issue based by matching frames of the profile on a list of frames
+// DetectFrames detects occurrence of an issue based by matching frames of the profile on a list of frames.
 func detectFrame(p profile.Profile, callTreesPerThreadID map[uint64][]*nodetree.Node, options DetectExactFrameOptions, occurrences *[]*Occurrence) {
 	// List nodes matching criteria
 	nodes := make(map[nodeKey]nodeInfo)
@@ -274,7 +274,7 @@ func detectFrame(p profile.Profile, callTreesPerThreadID map[uint64][]*nodetree.
 		}
 	}
 
-	// Create occurrences
+	// Create occurrences.
 	for _, n := range nodes {
 		*occurrences = append(*occurrences, NewOccurrence(p, options.IssueTitle, n))
 	}
@@ -283,7 +283,7 @@ func detectFrame(p profile.Profile, callTreesPerThreadID map[uint64][]*nodetree.
 func detectFrameInCallTree(n *nodetree.Node, options DetectExactFrameOptions, nodes map[nodeKey]nodeInfo, stackTrace *[]frame.Frame) {
 	*stackTrace = append(*stackTrace, n.Frame())
 	if functions, exists := options.FunctionsByPackage[n.Package]; exists {
-		// Only use time threshold when the sample count is more than one to avoid sampling issues showing up as blocking issues
+		// Only use time threshold when the sample count is more than one to avoid sampling issues showing up as blocking issues.
 		if category, exists := functions[n.Name]; exists && n.DurationNS > uint64(options.DurationThreshold) && n.SampleCount != 1 {
 			nk := nodeKey{Package: n.Package, Function: n.Name}
 			if _, exists := nodes[nk]; !exists {

@@ -33,7 +33,7 @@ var (
 		func(params url.Values) ([]string, error) {
 			return snubautil.MakeFieldsFilter(profileFilterFields, params)
 		},
-		snubautil.MakeAndroidApiLevelFilter,
+		snubautil.MakeAndroidAPILevelFilter,
 		snubautil.MakeVersionNameAndCodeFilter,
 	}
 

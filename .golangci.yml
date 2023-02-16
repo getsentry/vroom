@@ -2,7 +2,6 @@ linters:
   disable-all: true
   enable:
     - bodyclose
-    - deadcode
     - depguard
     - dogsled
     #- dupl
@@ -12,22 +11,20 @@ linters:
     #- goconst
     #- gocritic
     - gocyclo
-    #- godot
-    #- gofmt
+    - godot
+    - gofmt
     - goimports
     #- gosec
     - gosimple
     - govet
     - ineffassign
     - misspell
-    #- nakedret
-    #- prealloc
-    #- revive
+    - nakedret
+    - prealloc
+    - revive
     - staticcheck
-    - structcheck
     - typecheck
-    #- unconvert
+    - unconvert
     - unparam
     - unused
-    - varcheck
-    #- whitespace
+    - whitespace

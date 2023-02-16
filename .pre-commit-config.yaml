@@ -1,6 +1,6 @@
 repos:
 - repo: https://github.com/dnephin/pre-commit-golang
-  rev: 96221dc741cb30cc0136999083dc6bd0e2113000
+  rev: v0.5.1
   hooks:
     - id: go-build
     - id: go-imports

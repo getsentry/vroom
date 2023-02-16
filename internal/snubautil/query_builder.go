@@ -25,7 +25,7 @@ type (
 		url        string
 	}
 
-	// query fields
+	// QueryBuilder offers a way to build a query for Snuba.
 	QueryBuilder struct {
 		client *Client
 		entity string

@@ -22,7 +22,7 @@ func TestDetectFrameInCallTree(t *testing.T) {
 			job: DetectExactFrameOptions{
 				DurationThreshold: 16 * time.Millisecond,
 				FunctionsByPackage: map[string]map[string]Category{
-					"CoreFoundation": map[string]Category{
+					"CoreFoundation": {
 						"CFReadStreamRead": FileRead,
 					},
 				},
@@ -39,7 +39,7 @@ func TestDetectFrameInCallTree(t *testing.T) {
 				Path:          "path",
 				StartNS:       0,
 				Children: []*nodetree.Node{
-					&nodetree.Node{
+					{
 						DurationNS:    uint64(20 * time.Millisecond),
 						EndNS:         uint64(20 * time.Millisecond),
 						Fingerprint:   0,
@@ -50,7 +50,7 @@ func TestDetectFrameInCallTree(t *testing.T) {
 						Path:          "path",
 						StartNS:       0,
 						Children: []*nodetree.Node{
-							&nodetree.Node{
+							{
 								DurationNS:    uint64(20 * time.Millisecond),
 								EndNS:         uint64(20 * time.Millisecond),
 								Fingerprint:   0,
@@ -61,7 +61,7 @@ func TestDetectFrameInCallTree(t *testing.T) {
 								Path:          "path",
 								StartNS:       0,
 								Children: []*nodetree.Node{
-									&nodetree.Node{
+									{
 										DurationNS:    uint64(20 * time.Millisecond),
 										EndNS:         uint64(20 * time.Millisecond),
 										Fingerprint:   0,
@@ -77,7 +77,7 @@ func TestDetectFrameInCallTree(t *testing.T) {
 							},
 						},
 					},
-					&nodetree.Node{
+					{
 						DurationNS:    5,
 						EndNS:         10,
 						Fingerprint:   0,
@@ -88,7 +88,7 @@ func TestDetectFrameInCallTree(t *testing.T) {
 						Path:          "path",
 						StartNS:       5,
 						Children: []*nodetree.Node{
-							&nodetree.Node{
+							{
 								DurationNS:    5,
 								EndNS:         10,
 								Fingerprint:   0,
@@ -99,7 +99,7 @@ func TestDetectFrameInCallTree(t *testing.T) {
 								Path:          "",
 								StartNS:       5,
 								Children: []*nodetree.Node{
-									&nodetree.Node{
+									{
 										DurationNS:    5,
 										EndNS:         10,
 										Fingerprint:   0,
@@ -118,10 +118,10 @@ func TestDetectFrameInCallTree(t *testing.T) {
 				},
 			},
 			want: map[nodeKey]nodeInfo{
-				nodeKey{
+				{
 					Package:  "CoreFoundation",
 					Function: "CFReadStreamRead",
-				}: nodeInfo{
+				}: {
 					Category: FileRead,
 					Node: &nodetree.Node{
 						DurationNS:    uint64(20 * time.Millisecond),
@@ -136,28 +136,28 @@ func TestDetectFrameInCallTree(t *testing.T) {
 						Children:      []*nodetree.Node{},
 					},
 					StackTrace: []frame.Frame{
-						frame.Frame{
+						{
 							Function: "root",
 							InApp:    &trueValue,
 							Line:     0,
 							Package:  "package",
 							Path:     "path",
 						},
-						frame.Frame{
+						{
 							Function: "child1-1",
 							InApp:    &falseValue,
 							Line:     0,
 							Package:  "package",
 							Path:     "path",
 						},
-						frame.Frame{
+						{
 							Function: "child2-1",
 							InApp:    &trueValue,
 							Line:     0,
 							Package:  "package",
 							Path:     "path",
 						},
-						frame.Frame{
+						{
 							Function: "CFReadStreamRead",
 							InApp:    &falseValue,
 							Line:     0,
@@ -172,10 +172,10 @@ func TestDetectFrameInCallTree(t *testing.T) {
 			job: DetectExactFrameOptions{
 				DurationThreshold: 16 * time.Millisecond,
 				FunctionsByPackage: map[string]map[string]Category{
-					"CoreFoundation": map[string]Category{
+					"CoreFoundation": {
 						"CFReadStreamRead": FileRead,
 					},
-					"vroom": map[string]Category{
+					"vroom": {
 						"SuperShortFunction": FileRead,
 					},
 				},
@@ -192,7 +192,7 @@ func TestDetectFrameInCallTree(t *testing.T) {
 				Path:          "path",
 				StartNS:       0,
 				Children: []*nodetree.Node{
-					&nodetree.Node{
+					{
 						DurationNS:    uint64(20 * time.Millisecond),
 						EndNS:         uint64(20 * time.Millisecond),
 						Fingerprint:   0,
@@ -203,7 +203,7 @@ func TestDetectFrameInCallTree(t *testing.T) {
 						Path:          "path",
 						StartNS:       0,
 						Children: []*nodetree.Node{
-							&nodetree.Node{
+							{
 								DurationNS:    uint64(20 * time.Millisecond),
 								EndNS:         uint64(20 * time.Millisecond),
 								Fingerprint:   0,
@@ -214,7 +214,7 @@ func TestDetectFrameInCallTree(t *testing.T) {
 								Path:          "path",
 								StartNS:       0,
 								Children: []*nodetree.Node{
-									&nodetree.Node{
+									{
 										DurationNS:    uint64(10 * time.Millisecond),
 										EndNS:         uint64(10 * time.Millisecond),
 										Fingerprint:   0,
@@ -238,7 +238,7 @@ func TestDetectFrameInCallTree(t *testing.T) {
 			job: DetectExactFrameOptions{
 				DurationThreshold: 16 * time.Millisecond,
 				FunctionsByPackage: map[string]map[string]Category{
-					"vroom": map[string]Category{
+					"vroom": {
 						"FunctionWithOneSample":  FileRead,
 						"FunctionWithTwoSamples": FileRead,
 					},
@@ -256,7 +256,7 @@ func TestDetectFrameInCallTree(t *testing.T) {
 				Path:          "path",
 				StartNS:       0,
 				Children: []*nodetree.Node{
-					&nodetree.Node{
+					{
 						DurationNS:    uint64(20 * time.Millisecond),
 						EndNS:         uint64(20 * time.Millisecond),
 						Fingerprint:   0,
@@ -267,7 +267,7 @@ func TestDetectFrameInCallTree(t *testing.T) {
 						Path:          "path",
 						StartNS:       0,
 						Children: []*nodetree.Node{
-							&nodetree.Node{
+							{
 								DurationNS:    uint64(20 * time.Millisecond),
 								EndNS:         uint64(20 * time.Millisecond),
 								Fingerprint:   0,
@@ -278,7 +278,7 @@ func TestDetectFrameInCallTree(t *testing.T) {
 								Path:          "path",
 								StartNS:       0,
 								Children: []*nodetree.Node{
-									&nodetree.Node{
+									{
 										DurationNS:    uint64(20 * time.Millisecond),
 										EndNS:         uint64(20 * time.Millisecond),
 										Fingerprint:   0,
@@ -291,7 +291,7 @@ func TestDetectFrameInCallTree(t *testing.T) {
 										StartNS:       0,
 										Children:      []*nodetree.Node{},
 									},
-									&nodetree.Node{
+									{
 										DurationNS:    uint64(20 * time.Millisecond),
 										EndNS:         uint64(20 * time.Millisecond),
 										Fingerprint:   0,
@@ -302,7 +302,7 @@ func TestDetectFrameInCallTree(t *testing.T) {
 										Path:          "path",
 										StartNS:       0,
 										Children: []*nodetree.Node{
-											&nodetree.Node{
+											{
 												DurationNS:    uint64(20 * time.Millisecond),
 												EndNS:         uint64(20 * time.Millisecond),
 												Fingerprint:   0,
@@ -324,10 +324,10 @@ func TestDetectFrameInCallTree(t *testing.T) {
 				},
 			},
 			want: map[nodeKey]nodeInfo{
-				nodeKey{
+				{
 					Package:  "vroom",
 					Function: "FunctionWithTwoSamples",
-				}: nodeInfo{
+				}: {
 					Category: FileRead,
 					Node: &nodetree.Node{
 						DurationNS:    uint64(20 * time.Millisecond),
@@ -343,35 +343,35 @@ func TestDetectFrameInCallTree(t *testing.T) {
 						Children:      []*nodetree.Node{},
 					},
 					StackTrace: []frame.Frame{
-						frame.Frame{
+						{
 							Function: "root",
 							InApp:    &trueValue,
 							Line:     0,
 							Package:  "package",
 							Path:     "path",
 						},
-						frame.Frame{
+						{
 							Function: "child1-1",
 							InApp:    &falseValue,
 							Line:     0,
 							Package:  "package",
 							Path:     "path",
 						},
-						frame.Frame{
+						{
 							Function: "child2-1",
 							InApp:    &trueValue,
 							Line:     0,
 							Package:  "package",
 							Path:     "path",
 						},
-						frame.Frame{
+						{
 							Function: "child3-1",
 							InApp:    &trueValue,
 							Line:     0,
 							Package:  "package",
 							Path:     "path",
 						},
-						frame.Frame{
+						{
 							Function: "FunctionWithTwoSamples",
 							InApp:    &falseValue,
 							Line:     0,
