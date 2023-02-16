@@ -28,6 +28,7 @@ var (
 			OccurrencesEnabledOrganizations: map[uint64]struct{}{
 				1:      {},
 				447951: {},
+				77029:  {},
 			},
 			OccurrencesKafkaTopic:   "ingest-occurrences",
 			OccurrencesKafkaBrokers: []string{"192.168.142.19:9092", "192.168.142.20:9092", "192.168.142.21:9092"},
