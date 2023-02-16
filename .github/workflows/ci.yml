@@ -33,9 +33,10 @@ jobs:
       with:
         fetch-depth: 0
     - uses: actions/setup-python@v3
+    - uses: actions/setup-go@v3
+      with:
+        go-version: 'stable'
     - run: go install golang.org/x/tools/cmd/goimports@latest
-    - run: echo "${HOME}/$(go env GOPATH)/bin" >> $GITHUB_PATH
-    - run: curl -LO https://get.golang.org/$(uname)/go_installer && chmod +x go_installer && ./go_installer && rm go_installer
     - run: curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.51.1
     - uses: pre-commit/action@v3.0.0
     - run: make test
