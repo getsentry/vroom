@@ -109,12 +109,10 @@ func visitTree(stacks *[][]frame.Frame, counter map[uint64]int, node *nodetree.N
 			totChildrenSampleCount += childNode.SampleCount
 			visitTree(stacks, counter, childNode, currentStack)
 		}
-		// once the children are visited, if node.SampleCount
-		// is bigger than totChildrenSampleCount, then it means
-		// the current non-leaf node was also the last frame of
-		// an independent sampled stack trace.
-		// node.SampleCount - totChildrenSampleCount will give us
-		// the count for that stack trace
+
+		// If the children's sample count is less than the current
+		// nodes sample count, it means there are some samples
+		// ending at the current node.
 		diff := node.SampleCount - totChildrenSampleCount
 		if diff > 0 {
 			updateCounterAndStacks(stacks, counter, currentStack, node.Fingerprint, diff)
