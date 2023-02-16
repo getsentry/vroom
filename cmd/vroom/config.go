@@ -30,7 +30,7 @@ var (
 				447951: {},
 			},
 			OccurrencesKafkaTopic:   "ingest-occurrences",
-			OccurrencesKafkaBrokers: []string{"192.168.142.19:9092", "192.168.142.20:9092", "192.168.142.21:9092"},
+			OccurrencesKafkaBrokers: []string{"kafka-issue-platform.service.us-central1.consul:9092"},
 			ProfilingKafkaBrokers:   []string{"192.168.142.19:9092", "192.168.142.20:9092", "192.168.142.21:9092"},
 			CallTreesKafkaTopic:     "profiles-call-tree",
 			ProfilesKafkaTopic:      "processed-profiles",
