@@ -25,7 +25,7 @@ type Flamegraph struct {
 
 func (f *Flamegraph) AddStack(stack []frame.Frame, count int) {
 	fingerprint := stack[len(stack)-1].Fingerprint
-	if _, exists := (*f).counters[fingerprint]; exists {
+	if _, exists := f.counters[fingerprint]; exists {
 		f.counters[fingerprint] += count
 	} else {
 		f.counters[fingerprint] = count
