@@ -19,70 +19,82 @@ import (
 )
 
 type Flamegraph struct {
-	stacks   [][]frame.Frame
-	counters map[uint64]int
+	stacks      [][]int
+	weights     []uint64
+	frames      []speedscope.Frame
+	framesIndex map[uint64]int
+	stackIndex  map[uint64]int
 }
 
-func (f *Flamegraph) AddStack(stack []frame.Frame, count int) {
+func (f *Flamegraph) AddStack(stack []frame.Frame, count uint64) {
 	fingerprint := stack[len(stack)-1].Fingerprint
-	if _, exists := f.counters[fingerprint]; exists {
-		f.counters[fingerprint] += count
+	if _, exists := f.stackIndex[fingerprint]; exists {
+		f.weights[f.stackIndex[fingerprint]] += count
 	} else {
-		f.counters[fingerprint] = count
-		cp := make([]frame.Frame, len(stack))
-		copy(cp, stack)
-		f.stacks = append(f.stacks, cp)
+		st := make([]int, len(stack))
+		for i, frame := range stack {
+			if _, exists := f.framesIndex[fingerprint]; exists {
+				st[i] = f.framesIndex[fingerprint]
+			} else {
+				fr := speedscope.Frame{
+					Name:  frame.Function,
+					Image: frame.PackageBaseName(),
+					Path:  frame.Path,
+				}
+				f.framesIndex[frame.Fingerprint] = len(f.frames)
+				f.frames = append(f.frames, fr)
+				st[i] = len(f.frames) - 1
+			}
+		}
+		f.stackIndex[fingerprint] = len(f.stackIndex)
+		f.weights = append(f.weights, count)
+		f.stacks = append(f.stacks, st)
 	}
 }
 
-func ConvertStackTracesToFlamegraph(
-	flamegraph *Flamegraph,
-	minFreq int) speedscope.Output {
+func (f *Flamegraph) toSpeedscope(minFreq uint64) speedscope.Output {
 
 	// filter out stack traces with a frequency less
 	// than minFreq
 	n := 0
-	for _, stack := range (*flamegraph).stacks {
-		if (*flamegraph).counters[stack[len(stack)-1].Fingerprint] >= minFreq {
-			(*flamegraph).stacks[n] = stack
+	for i, stack := range f.stacks {
+		if f.weights[i] >= minFreq {
+			f.weights[n] = f.weights[i]
+			f.stacks[n] = stack
 			n++
 		}
 	}
-	(*flamegraph).stacks = (*flamegraph).stacks[:n]
+	f.stacks = f.stacks[:n]
+	f.weights = f.weights[:n]
 
-	var frames []speedscope.Frame
-	samples := make([][]int, 0, len((*flamegraph).stacks))
-	addressToIndex := make(map[string]int)
-	weights := make([]uint64, 0, len((*flamegraph).stacks))
+	fmt.Printf("Called -> stacks: %v", len(f.stacks))
+
+	var uniqueFrames []speedscope.Frame
+	frameIndex := make(map[string]int)
 	var endValue uint64 = 0
 
-	for _, stack := range (*flamegraph).stacks {
-		weight := (*flamegraph).counters[stack[len(stack)-1].Fingerprint]
+	// since we've filtered some stacks, we might have to
+	// exclude some frames that are unused.
+	// this means stack index
+	for i, stack := range f.stacks {
+		weight := f.weights[i]
 		endValue += uint64(weight)
-		sample := make([]int, 0, len(stack))
-
-		for _, frame := range stack {
-			frameAddress := getFrameID(frame)
-			if index, exist := addressToIndex[frameAddress]; exist {
-				sample = append(sample, index)
+		for i, index := range stack {
+			fr := f.frames[f.framesIndex[uint64(index)]]
+			frameID := getFrameID(fr)
+			if _, exists := frameIndex[frameID]; exists {
+				stack[i] = frameIndex[frameID]
 			} else {
-				addressToIndex[frameAddress] = len(frames)
-				sample = append(sample, len(frames))
-				frames = append(frames, speedscope.Frame{
-					Name:  frame.Function,
-					Image: frame.PackageBaseName(),
-					Path:  frame.Path,
-				})
+				stack[i] = len(uniqueFrames)
+				uniqueFrames = append(uniqueFrames, fr)
 			}
 		}
-		samples = append(samples, sample)
-		weights = append(weights, uint64(weight))
 	}
 
 	aggProfiles := make([]interface{}, 1)
 	aggProfiles[0] = speedscope.SampledProfile{
-		Samples:      samples,
-		Weights:      weights,
+		Samples:      f.stacks,
+		Weights:      f.weights,
 		IsMainThread: true,
 		Type:         speedscope.ProfileTypeSampled,
 		Unit:         speedscope.ValueUnitCount,
@@ -91,7 +103,7 @@ func ConvertStackTracesToFlamegraph(
 
 	return speedscope.Output{
 		Shared: speedscope.SharedData{
-			Frames: frames,
+			Frames: uniqueFrames,
 		},
 		Profiles: aggProfiles,
 	}
@@ -114,7 +126,7 @@ func AddCalltree(f *Flamegraph, node *nodetree.Node, currentStack *[]frame.Frame
 
 	// base case (when we reach leaf frames)
 	if node.Children == nil {
-		f.AddStack(*currentStack, node.SampleCount)
+		f.AddStack(*currentStack, uint64(node.SampleCount))
 	} else {
 		totChildrenSampleCount := 0
 		// else we call visitTree recursively on the children
@@ -128,7 +140,7 @@ func AddCalltree(f *Flamegraph, node *nodetree.Node, currentStack *[]frame.Frame
 		// ending at the current node.
 		diff := node.SampleCount - totChildrenSampleCount
 		if diff > 0 {
-			f.AddStack(*currentStack, diff)
+			f.AddStack(*currentStack, uint64(diff))
 		}
 	}
 	// pop last element before returning
@@ -139,8 +151,8 @@ func AddCalltree(f *Flamegraph, node *nodetree.Node, currentStack *[]frame.Frame
 // of reusing Frame.ID() method because we might
 // want to do things differently and only solve
 // at symbol level (ignoring line and instruction_addr)
-func getFrameID(f frame.Frame) string {
-	hash := md5.Sum([]byte(fmt.Sprintf("%s:%s", f.Function, f.Package)))
+func getFrameID(f speedscope.Frame) string {
+	hash := md5.Sum([]byte(fmt.Sprintf("%s:%s", f.Name, f.Image)))
 	return hex.EncodeToString(hash[:])
 }
 
@@ -157,7 +169,10 @@ func GetFlamegraphFromProfiles(
 		numWorkers = 1
 	}
 	var wg sync.WaitGroup
-	flamegraph := Flamegraph{counters: make(map[uint64]int)}
+	flamegraph := Flamegraph{
+		framesIndex: make(map[uint64]int),
+		stackIndex:  make(map[uint64]int),
+	}
 	callTreesQueue := make(chan map[uint64][]*nodetree.Node, numWorkers)
 	profileIDsChan := make(chan string, numWorkers)
 	hub := sentry.GetHubFromContext(ctx)
@@ -232,6 +247,6 @@ func GetFlamegraphFromProfiles(
 		// early return: no need to call `ConvertStackTracesToFlamegraph`
 		return speedscope.Output{}, nil
 	} else {
-		return ConvertStackTracesToFlamegraph(&flamegraph, 4), nil
+		return flamegraph.toSpeedscope(4), nil
 	}
 }
