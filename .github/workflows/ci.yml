@@ -29,9 +29,11 @@ jobs:
   test-vroom:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         fetch-depth: 0
+    - uses: actions/setup-python@v3
+    - uses: pre-commit/action@v3.0.0
     - name: Install Golang
       env:
         SHELL: /bin/bash
