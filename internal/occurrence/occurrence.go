@@ -103,7 +103,10 @@ func NewOccurrence(p profile.Profile, title IssueTitleType, ni nodeInfo) *Occurr
 			Timestamp:      p.Timestamp(),
 			Transaction:    t.ID,
 		},
-		EvidenceData: map[string]interface{}{},
+		EvidenceData: map[string]interface{}{
+			"frame_name":    ni.Node.Name,
+			"frame_package": ni.Node.Package,
+		},
 		EvidenceDisplay: []Evidence{
 			Evidence{
 				Name:      EvidenceNameFunction,
