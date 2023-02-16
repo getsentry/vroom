@@ -88,7 +88,8 @@ func ProcessStacksFromCallTrees(
 
 	for _, threadTrees := range callTrees {
 		for _, tree := range threadTrees {
-			currentStack := make([]frame.Frame, 0)
+			// 128 is the max stack size
+			currentStack := make([]frame.Frame, 128)
 			visitTree(stacks, stacksCount, tree, &currentStack)
 		}
 	}
