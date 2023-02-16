@@ -102,8 +102,6 @@ func visitTree(stacks *[][]frame.Frame, counter map[uint64]int, node *nodetree.N
 	// base case (when we reach leaf frames)
 	if node.Children == nil {
 		updateCounterAndStacks(stacks, counter, currentStack, node.Fingerprint, node.SampleCount)
-		// pop last element before returning
-		*currentStack = (*currentStack)[:len(*currentStack)-1]
 	} else {
 		totChildrenSampleCount := 0
 		// else we call visitTree recursively on the children
@@ -121,9 +119,9 @@ func visitTree(stacks *[][]frame.Frame, counter map[uint64]int, node *nodetree.N
 		if diff > 0 {
 			updateCounterAndStacks(stacks, counter, currentStack, node.Fingerprint, diff)
 		}
-		// pop last element before returning
-		*currentStack = (*currentStack)[:len(*currentStack)-1]
 	}
+	// pop last element before returning
+	*currentStack = (*currentStack)[:len(*currentStack)-1]
 }
 
 func updateCounterAndStacks(
