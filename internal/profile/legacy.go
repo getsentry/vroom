@@ -145,7 +145,7 @@ func (p *LegacyProfile) Speedscope() (speedscope.Output, error) {
 	version := FormatVersion(p.VersionName, p.VersionCode)
 
 	o.DurationNS = p.DurationNS
-	o.Metadata = &speedscope.ProfileMetadata{ProfileView: speedscope.ProfileView(p.RawProfile), Version: version}
+	o.Metadata = speedscope.ProfileMetadata{ProfileView: speedscope.ProfileView(p.RawProfile), Version: version}
 	o.Platform = p.Platform
 	o.ProfileID = p.ProfileID
 	o.ProjectID = p.ProjectID

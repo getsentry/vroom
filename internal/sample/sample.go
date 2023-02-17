@@ -318,7 +318,7 @@ func (p *Profile) Speedscope() (speedscope.Output, error) {
 		ActiveProfileIndex: mainThreadProfileIndex,
 		DurationNS:         p.Transactions[0].DurationNS(),
 		Images:             p.DebugMeta.Images,
-		Metadata: &speedscope.ProfileMetadata{
+		Metadata: speedscope.ProfileMetadata{
 			ProfileView: speedscope.ProfileView{
 				Architecture:         p.Device.Architecture,
 				DeviceClassification: p.Device.Classification,
