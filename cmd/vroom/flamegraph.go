@@ -16,8 +16,8 @@ import (
 func (env *environment) getFlamegraph(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	hub := sentry.GetHubFromContext(ctx)
-	const NUM_WORKERS int = 5
-	const TIMEOUT time.Duration = time.Second * 5
+	const numWorkers int = 5
+	const timeout time.Duration = time.Second * 5
 	ps := httprouter.ParamsFromContext(ctx)
 	rawOrganizationID := ps.ByName("organization_id")
 	organizationID, err := strconv.ParseUint(rawOrganizationID, 10, 64)
@@ -61,7 +61,7 @@ func (env *environment) getFlamegraph(w http.ResponseWriter, r *http.Request) {
 	s.Finish()
 
 	s = sentry.StartSpan(ctx, "processing")
-	speedscope, err := flamegraph.GetFlamegraphFromProfiles(ctx, env.profilesBucket, organizationID, projectID, profileIDs, NUM_WORKERS, TIMEOUT)
+	speedscope, err := flamegraph.GetFlamegraphFromProfiles(ctx, env.profilesBucket, organizationID, projectID, profileIDs, numWorkers, timeout)
 	if err != nil {
 		s.Finish()
 		hub.CaptureException(err)
