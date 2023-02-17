@@ -16,15 +16,15 @@ import (
 )
 
 type (
-	EvidenceNameType string
-	IssueTitleType   string
+	EvidenceName string
+	IssueTitle   string
 
 	Type int
 
 	Evidence struct {
-		Name      EvidenceNameType `json:"name"`
-		Value     string           `json:"value"`
-		Important bool             `json:"important"`
+		Name      EvidenceName `json:"name"`
+		Value     string       `json:"value"`
+		Important bool         `json:"important"`
 	}
 
 	// Event holds the metadata related to a profile.
@@ -51,7 +51,7 @@ type (
 		EvidenceDisplay []Evidence             `json:"evidence_display,omitempty"`
 		Fingerprint     string                 `json:"fingerprint"`
 		ID              string                 `json:"id"`
-		IssueTitle      IssueTitleType         `json:"issue_title"`
+		IssueTitle      IssueTitle             `json:"issue_title"`
 		Level           string                 `json:"level,omitempty"`
 		ResourceID      string                 `json:"resource_id,omitempty"`
 		Subtitle        string                 `json:"subtitle"`
@@ -70,14 +70,43 @@ type (
 const (
 	ProfileBlockedThreadType Type = 2000
 
-	EvidenceNamePackage  EvidenceNameType = "Package"
-	EvidenceNameFunction EvidenceNameType = "Suspect function"
-
-	IssueTitleBlockingFunctionOnMainThread IssueTitleType = "Blocking function called on the main thread"
+	EvidenceNamePackage  EvidenceName = "Package"
+	EvidenceNameFunction EvidenceName = "Suspect function"
 )
 
-func NewOccurrence(p profile.Profile, title IssueTitleType, ni nodeInfo) *Occurrence {
+var (
+	IssueTitles = map[Category]IssueTitle{
+		Compression:      "Compression on Main Thread",
+		CoreDataBlock:    "Object Context operation on Main Thread",
+		CoreDataMerge:    "Object Context operation on Main Thread",
+		CoreDataRead:     "Object Context operation on Main Thread",
+		CoreDataWrite:    "Object Context operation on Main Thread",
+		FileRead:         "File I/O on Main Thread",
+		FileWrite:        "File I/O on Main Thread",
+		HTTP:             "Network I/O on Main Thread",
+		ImageDecode:      "Image decoding on Main Thread",
+		ImageEncode:      "Image decoding on Main Thread",
+		JSONDecode:       "JSON decoding on Main Thread",
+		JSONEncode:       "JSON encoding on Main Thread",
+		MLModelInference: "Machine Learning on Main Thread",
+		MLModelLoad:      "Machine Learning on Main Thread",
+		Regex:            "Regex on Main Thread",
+		SQL:              "SQL operation on Main Thread",
+		ViewInflation:    "View operation on Main Thread",
+		ViewLayout:       "View operation on Main Thread",
+		ViewRender:       "View operation on Main Thread",
+		ViewUpdate:       "View operation on Main Thread",
+		XPC:              "XPC operation on Main Thread",
+	}
+)
+
+// NewOccurrence returns an Occurrence struct populated with info.
+func NewOccurrence(p profile.Profile, ni nodeInfo) *Occurrence {
 	t := p.Transaction()
+	title, exists := IssueTitles[ni.Category]
+	if !exists {
+		title = "Issue detected"
+	}
 	h := md5.New()
 	_, _ = io.WriteString(h, strconv.FormatUint(p.ProjectID(), 10))
 	_, _ = io.WriteString(h, string(title))

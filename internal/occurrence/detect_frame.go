@@ -14,7 +14,6 @@ type (
 		ActiveThreadOnly   bool
 		DurationThreshold  time.Duration
 		FunctionsByPackage map[string]map[string]Category
-		IssueTitle         IssueTitleType
 	}
 
 	nodeKey struct {
@@ -37,7 +36,7 @@ const (
 	CoreDataMerge    Category = "core_data_merge"
 	CoreDataRead     Category = "core_data_read"
 	CoreDataWrite    Category = "core_data_write"
-	FileRead         Category = "file_write"
+	FileRead         Category = "file_read"
 	FileWrite        Category = "file_write"
 	HTTP             Category = "http"
 	ImageDecode      Category = "image_decode"
@@ -106,7 +105,6 @@ var (
 						"writevSync":          FileRead,
 					},
 				},
-				IssueTitle: IssueTitleBlockingFunctionOnMainThread,
 			},
 		},
 		platform.Cocoa: {
@@ -246,7 +244,6 @@ var (
 						"mach_msg_trap": FileRead,
 					},
 				},
-				IssueTitle: IssueTitleBlockingFunctionOnMainThread,
 			},
 		},
 	}
@@ -276,7 +273,7 @@ func detectFrame(p profile.Profile, callTreesPerThreadID map[uint64][]*nodetree.
 
 	// Create occurrences.
 	for _, n := range nodes {
-		*occurrences = append(*occurrences, NewOccurrence(p, options.IssueTitle, n))
+		*occurrences = append(*occurrences, NewOccurrence(p, n))
 	}
 }
 
