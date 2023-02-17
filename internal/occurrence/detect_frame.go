@@ -394,13 +394,15 @@ var (
 						"java.util.Base64$Decoder.decode(byte[]): byte[]":                 Base64Decode,
 						"java.util.Base64$Decoder.decode0(byte[]; int; int; byte[]): int": Base64Decode,
 					},
-					"kotlinx.coroutines": {
-						"kotlinx.coroutines.AwaitAll.await(d): Object":                    ThreadWait,
-						"kotlinx.coroutines.AwaitKt.awaitAll(Collection; d): Object":      ThreadWait,
-						"kotlinx.coroutines.BlockingCoroutine.joinBlocking(): Object":     ThreadWait,
-						"kotlinx.coroutines.JobSupport.join(Continuation): Object":        ThreadWait,
-						"kotlinx.coroutines.JobSupport.joinSuspend(Continuation): Object": ThreadWait,
-					},
+					/*
+						"kotlinx.coroutines": {
+							"kotlinx.coroutines.AwaitAll.await(d): Object":                    ThreadWait,
+							"kotlinx.coroutines.AwaitKt.awaitAll(Collection; d): Object":      ThreadWait,
+							"kotlinx.coroutines.BlockingCoroutine.joinBlocking(): Object":     ThreadWait,
+							"kotlinx.coroutines.JobSupport.join(Continuation): Object":        ThreadWait,
+							"kotlinx.coroutines.JobSupport.joinSuspend(Continuation): Object": ThreadWait,
+						},
+					*/
 				},
 				IssueTitle: IssueTitleBlockingFunctionOnMainThread,
 			},
