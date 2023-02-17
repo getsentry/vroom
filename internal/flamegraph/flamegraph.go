@@ -25,7 +25,6 @@ func GetFlamegraphFromProfiles(
 	profileIDs []string,
 	numWorkers int,
 	timeout time.Duration) (speedscope.Output, error) {
-
 	if numWorkers < 1 {
 		numWorkers = 1
 	}
@@ -43,7 +42,6 @@ func GetFlamegraphFromProfiles(
 			profIDsChan chan string,
 			callTreesQueue chan map[uint64][]*nodetree.Node,
 			ctx context.Context) {
-
 			defer wg.Done()
 
 			for profileID := range profIDsChan {
@@ -63,7 +61,6 @@ func GetFlamegraphFromProfiles(
 				}
 				callTreesQueue <- callTrees
 			}
-
 		}(profileIDsChan, callTreesQueue, timeoutContext)
 	}
 
@@ -78,7 +75,6 @@ func GetFlamegraphFromProfiles(
 			}
 		}
 		close(profIDsChan)
-
 	}(profileIDsChan, profileIDs, timeoutContext)
 
 	go func(callTreesQueue chan map[uint64][]*nodetree.Node) {
@@ -91,7 +87,7 @@ func GetFlamegraphFromProfiles(
 		for _, callTree := range callTrees {
 			addCallTreeToFlamegraph(&flamegraphTree, callTree)
 		}
-		countProfAggregated += 1
+		countProfAggregated++
 	}
 
 	sp := toSpeedscope(flamegraphTree, 4)
@@ -200,7 +196,6 @@ func (f *Flamegraph) visitCalltree(node *nodetree.Node, currentStack *[]int, min
 	}
 	// pop last element before returning
 	*currentStack = (*currentStack)[:len(*currentStack)-1]
-
 }
 
 func (f *Flamegraph) addSample(stack *[]int, count uint64) {
