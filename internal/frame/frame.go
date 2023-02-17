@@ -26,7 +26,6 @@ type (
 		Status          string `json:"status,omitempty"`
 		SymAddr         string `json:"sym_addr,omitempty"`
 		Symbol          string `json:"symbol,omitempty"`
-		Fingerprint     uint64 `json:"-"`
 	}
 )
 

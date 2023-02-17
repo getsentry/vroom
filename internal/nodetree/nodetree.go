@@ -48,12 +48,11 @@ func (n *Node) Update(timestamp uint64) {
 
 func (n *Node) Frame() frame.Frame {
 	return frame.Frame{
-		Function:    n.Name,
-		InApp:       &n.IsApplication,
-		Line:        n.Line,
-		Package:     n.Package,
-		Path:        n.Path,
-		Fingerprint: n.Fingerprint,
+		Function: n.Name,
+		InApp:    &n.IsApplication,
+		Line:     n.Line,
+		Package:  n.Package,
+		Path:     n.Path,
 	}
 }
 
