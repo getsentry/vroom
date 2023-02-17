@@ -70,7 +70,7 @@ func GetFlamegraphFromProfiles(
 	go func(profIDsChan chan string, profileIDs []string, ctx context.Context) {
 		for _, profileID := range profileIDs {
 			select {
-			case <-timeoutContext.Done():
+			case <-ctx.Done():
 				close(profIDsChan)
 				return
 			default:

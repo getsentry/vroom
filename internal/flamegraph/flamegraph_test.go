@@ -117,7 +117,10 @@ func TestFlamegraphSpeedscopeGeneration(t *testing.T) {
 	}
 
 	var pr profile.Profile
-	json.Unmarshal(bytes, &pr)
+	err = json.Unmarshal(bytes, &pr)
+	if err != nil {
+		t.Fatalf("error trying to unmarshal the profile: %V", err)
+	}
 
 	callTrees, err := pr.CallTrees()
 	if err != nil {
@@ -131,7 +134,10 @@ func TestFlamegraphSpeedscopeGeneration(t *testing.T) {
 		t.Fatalf("cannot marshal sampleProfile: %V", err)
 	}
 
-	json.Unmarshal(bytes, &pr)
+	err = json.Unmarshal(bytes, &pr)
+	if err != nil {
+		t.Fatalf("error trying to unmarshal the profile: %V", err)
+	}
 
 	callTrees, err = pr.CallTrees()
 	if err != nil {
