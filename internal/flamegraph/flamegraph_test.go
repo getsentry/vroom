@@ -12,7 +12,7 @@ import (
 	"github.com/getsentry/vroom/internal/testutil"
 )
 
-var firstSampledProfile = sample.SampleProfile{
+var firstSampledProfile = sample.Profile{
 	Platform: "cocoa",
 	Version:  "v1",
 	Trace: sample.Trace{
@@ -66,7 +66,7 @@ var firstSampledProfile = sample.SampleProfile{
 	}, // end Transactions
 } // end prof definition
 
-var secondSampledProfile = sample.SampleProfile{
+var secondSampledProfile = sample.Profile{
 	Platform: "cocoa",
 	Version:  "v1",
 	Trace: sample.Trace{
