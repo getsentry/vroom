@@ -79,6 +79,13 @@ func PackageBaseName(p string) string {
 }
 
 func (n Node) Collapse() []*Node {
+	// If a node has insufficient sample count, it likely isn't interesting to
+	// surface as a suspect function because we only saw it for a moment. So
+	// we only consider nodes that appear for more than 1 consecutive samples.
+	if n.SampleCount <= 1 {
+		return []*Node{}
+	}
+
 	// always collapse the children first, since pruning may reduce
 	// the number of children
 	children := make([]*Node, 0, len(n.Children))
