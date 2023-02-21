@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/url"
 	"strconv"
+	"strings"
 	"time"
 
 	"cloud.google.com/go/bigquery"
@@ -79,8 +80,10 @@ const (
 	ImageDecodeType       Type = 2002
 	JSONDecodeType        Type = 2003
 
-	EvidenceNamePackage  EvidenceName = "Package"
-	EvidenceNameFunction EvidenceName = "Suspect function"
+	EvidenceNamePackage           EvidenceName = "Package"
+	EvidenceNameFunction          EvidenceName = "Suspect function"
+	EvidenceNameDuration          EvidenceName = "Duration"
+	EvidenceNameProfilePercentage EvidenceName = "% of the profile"
 )
 
 var (
@@ -151,8 +154,10 @@ func NewOccurrence(p profile.Profile, ni nodeInfo) *Occurrence {
 			Transaction:    t.ID,
 		},
 		EvidenceData: map[string]interface{}{
-			"frame_name":    ni.Node.Name,
-			"frame_package": ni.Node.Package,
+			"frame_duration_ns":   ni.Node.DurationNS,
+			"frame_name":          ni.Node.Name,
+			"frame_package":       ni.Node.Package,
+			"profile_duration_ns": p.DurationNS(),
 		},
 		EvidenceDisplay: []Evidence{
 			{
@@ -164,10 +169,19 @@ func NewOccurrence(p profile.Profile, ni nodeInfo) *Occurrence {
 				Name:  EvidenceNamePackage,
 				Value: ni.Node.Package,
 			},
+			{
+				Name:  EvidenceNameDuration,
+				Value: time.Duration(ni.Node.DurationNS).String(),
+			},
+			{
+				Name:  EvidenceNameProfilePercentage,
+				Value: fmt.Sprintf("%0.2f%%", float64(ni.Node.DurationNS*100)/float64(p.DurationNS())),
+			},
 		},
 		Fingerprint: fingerprint,
-		ID:          uuid.New().String(),
+		ID:          strings.ReplaceAll(uuid.New().String(), "-", ""),
 		IssueTitle:  title,
+		Level:       "info",
 		ProjectID:   p.ProjectID(),
 		Subtitle:    t.Name,
 		Type:        issueType,
