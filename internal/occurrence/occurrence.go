@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/url"
 	"strconv"
+	"strings"
 	"time"
 
 	"cloud.google.com/go/bigquery"
@@ -120,7 +121,7 @@ func NewOccurrence(p profile.Profile, title IssueTitleType, ni nodeInfo) *Occurr
 			},
 		},
 		Fingerprint: fingerprint,
-		ID:          uuid.New().String(),
+		ID:          strings.ReplaceAll(uuid.New().String(), "-", ""),
 		IssueTitle:  title,
 		Level:       "info",
 		ProjectID:   p.ProjectID(),
