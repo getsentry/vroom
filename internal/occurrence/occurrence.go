@@ -92,10 +92,10 @@ var (
 		MLModelLoad:      "Machine Learning on Main Thread",
 		Regex:            "Regex on Main Thread",
 		SQL:              "SQL operation on Main Thread",
-		ViewInflation:    "View operation on Main Thread",
-		ViewLayout:       "View operation on Main Thread",
-		ViewRender:       "View operation on Main Thread",
-		ViewUpdate:       "View operation on Main Thread",
+		ViewInflation:    "SwiftUI View inflation on Main Thread",
+		ViewLayout:       "SwiftUI View layout on Main Thread",
+		ViewRender:       "SwiftUI View render on Main Thread",
+		ViewUpdate:       "SwiftUI View update on Main Thread",
 		XPC:              "XPC operation on Main Thread",
 	}
 )
