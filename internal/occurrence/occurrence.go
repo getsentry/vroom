@@ -71,8 +71,10 @@ type (
 const (
 	ProfileBlockedThreadType Type = 2000
 
-	EvidenceNamePackage  EvidenceNameType = "Package"
-	EvidenceNameFunction EvidenceNameType = "Suspect function"
+	EvidenceNamePackage           EvidenceNameType = "Package"
+	EvidenceNameFunction          EvidenceNameType = "Suspect function"
+	EvidenceNameDuration          EvidenceNameType = "Duration"
+	EvidenceNameProfilePercentage EvidenceNameType = "% of the profile"
 
 	IssueTitleBlockingFunctionOnMainThread IssueTitleType = "Blocking function called on the main thread"
 )
@@ -105,8 +107,10 @@ func NewOccurrence(p profile.Profile, title IssueTitleType, ni nodeInfo) *Occurr
 			Transaction:    t.ID,
 		},
 		EvidenceData: map[string]interface{}{
-			"frame_name":    ni.Node.Name,
-			"frame_package": ni.Node.Package,
+			"frame_duration_ns":   ni.Node.DurationNS,
+			"frame_name":          ni.Node.Name,
+			"frame_package":       ni.Node.Package,
+			"profile_duration_ns": p.DurationNS(),
 		},
 		EvidenceDisplay: []Evidence{
 			{
@@ -117,6 +121,14 @@ func NewOccurrence(p profile.Profile, title IssueTitleType, ni nodeInfo) *Occurr
 			{
 				Name:  EvidenceNamePackage,
 				Value: ni.Node.Package,
+			},
+			{
+				Name:  EvidenceNameDuration,
+				Value: fmt.Sprintf("%v", time.Duration(ni.Node.DurationNS)),
+			},
+			{
+				Name:  EvidenceNameProfilePercentage,
+				Value: fmt.Sprintf("%0.2f%%", float64(ni.Node.DurationNS*100)/float64(p.DurationNS())),
 			},
 		},
 		Fingerprint: fingerprint,
