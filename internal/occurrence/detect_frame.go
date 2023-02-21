@@ -14,7 +14,6 @@ type (
 		ActiveThreadOnly   bool
 		DurationThreshold  time.Duration
 		FunctionsByPackage map[string]map[string]Category
-		IssueTitle         IssueTitleType
 	}
 
 	nodeKey struct {
@@ -110,7 +109,6 @@ var (
 						"writevSync":          FileRead,
 					},
 				},
-				IssueTitle: IssueTitleBlockingFunctionOnMainThread,
 			},
 		},
 		platform.Cocoa: {
@@ -250,7 +248,6 @@ var (
 						"mach_msg_trap": FileRead,
 					},
 				},
-				IssueTitle: IssueTitleBlockingFunctionOnMainThread,
 			},
 		},
 		platform.Android: {
@@ -404,7 +401,6 @@ var (
 						},
 					*/
 				},
-				IssueTitle: IssueTitleBlockingFunctionOnMainThread,
 			},
 		},
 	}
@@ -434,7 +430,7 @@ func detectFrame(p profile.Profile, callTreesPerThreadID map[uint64][]*nodetree.
 
 	// Create occurrences.
 	for _, n := range nodes {
-		*occurrences = append(*occurrences, NewOccurrence(p, options.IssueTitle, n))
+		*occurrences = append(*occurrences, NewOccurrence(p, n))
 	}
 }
 

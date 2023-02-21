@@ -17,15 +17,14 @@ import (
 )
 
 type (
-	EvidenceNameType string
-	IssueTitleType   string
-
-	Type int
+	EvidenceName string
+	IssueTitle   string
+	Type         int
 
 	Evidence struct {
-		Name      EvidenceNameType `json:"name"`
-		Value     string           `json:"value"`
-		Important bool             `json:"important"`
+		Name      EvidenceName `json:"name"`
+		Value     string       `json:"value"`
+		Important bool         `json:"important"`
 	}
 
 	// Event holds the metadata related to a profile.
@@ -45,14 +44,13 @@ type (
 
 	// Occurrence represents a potential issue detected.
 	Occurrence struct {
-		Category        Category               `json:"-"`
 		DetectionTime   time.Time              `json:"detection_time"`
 		Event           Event                  `json:"event"`
 		EvidenceData    map[string]interface{} `json:"evidence_data,omitempty"`
 		EvidenceDisplay []Evidence             `json:"evidence_display,omitempty"`
 		Fingerprint     string                 `json:"fingerprint"`
 		ID              string                 `json:"id"`
-		IssueTitle      IssueTitleType         `json:"issue_title"`
+		IssueTitle      IssueTitle             `json:"issue_title"`
 		Level           string                 `json:"level,omitempty"`
 		ProjectID       uint64                 `json:"project_id"`
 		ResourceID      string                 `json:"resource_id,omitempty"`
@@ -60,6 +58,7 @@ type (
 		Type            Type                   `json:"type"`
 
 		// Only use for stats.
+		category    Category
 		durationNS  uint64
 		sampleCount int
 	}
@@ -67,32 +66,79 @@ type (
 	StackTrace struct {
 		Frames []frame.Frame `json:"frames"`
 	}
+
+	CategoryMetadata struct {
+		IssueTitle IssueTitle
+		Type       Type
+	}
 )
 
 const (
-	ProfileBlockedThreadType Type = 2000
+	NoneType              Type = 0
+	BlockedMainThreadType Type = 2000
+	FileIOType            Type = 2001
+	ImageDecodeType       Type = 2002
+	JSONDecodeType        Type = 2003
 
-	EvidenceNamePackage           EvidenceNameType = "Package"
-	EvidenceNameFunction          EvidenceNameType = "Suspect function"
-	EvidenceNameDuration          EvidenceNameType = "Duration"
-	EvidenceNameProfilePercentage EvidenceNameType = "% of the profile"
-
-	IssueTitleBlockingFunctionOnMainThread IssueTitleType = "Blocking function called on the main thread"
+	EvidenceNamePackage           EvidenceName = "Package"
+	EvidenceNameFunction          EvidenceName = "Suspect function"
+	EvidenceNameDuration          EvidenceName = "Duration"
+	EvidenceNameProfilePercentage EvidenceName = "% of the profile"
 )
 
-func NewOccurrence(p profile.Profile, title IssueTitleType, ni nodeInfo) *Occurrence {
+var (
+	IssueTitles = map[Category]CategoryMetadata{
+		Base64Decode:     {IssueTitle: "Base64 Decode on Main Thread"},
+		Base64Encode:     {IssueTitle: "Base64 Encode on Main Thread"},
+		Compression:      {IssueTitle: "Compression on Main Thread"},
+		CoreDataBlock:    {IssueTitle: "Object Context operation on Main Thread"},
+		CoreDataMerge:    {IssueTitle: "Object Context operation on Main Thread"},
+		CoreDataRead:     {IssueTitle: "Object Context operation on Main Thread"},
+		CoreDataWrite:    {IssueTitle: "Object Context operation on Main Thread"},
+		Decompression:    {IssueTitle: "Decompression on Main Thread"},
+		FileRead:         {IssueTitle: "File I/O on Main Thread", Type: FileIOType},
+		FileWrite:        {IssueTitle: "File I/O on Main Thread", Type: FileIOType},
+		HTTP:             {IssueTitle: "Network I/O on Main Thread"},
+		ImageDecode:      {IssueTitle: "Image decoding on Main Thread", Type: ImageDecodeType},
+		ImageEncode:      {IssueTitle: "Image encoding on Main Thread"},
+		JSONDecode:       {IssueTitle: "JSON decoding on Main Thread", Type: JSONDecodeType},
+		JSONEncode:       {IssueTitle: "JSON encoding on Main Thread"},
+		MLModelInference: {IssueTitle: "Machine Learning inference on Main Thread"},
+		MLModelLoad:      {IssueTitle: "Machine Learning model load on Main Thread"},
+		Regex:            {IssueTitle: "Regex on Main Thread"},
+		SQL:              {IssueTitle: "SQL operation on Main Thread"},
+		ThreadWait:       {IssueTitle: "Thread Wait on Main Thread"},
+		ViewInflation:    {IssueTitle: "SwiftUI View inflation on Main Thread"},
+		ViewLayout:       {IssueTitle: "SwiftUI View layout on Main Thread"},
+		ViewRender:       {IssueTitle: "SwiftUI View render on Main Thread"},
+		ViewUpdate:       {IssueTitle: "SwiftUI View update on Main Thread"},
+		XPC:              {IssueTitle: "XPC operation on Main Thread"},
+	}
+)
+
+// NewOccurrence returns an Occurrence struct populated with info.
+func NewOccurrence(p profile.Profile, ni nodeInfo) *Occurrence {
 	t := p.Transaction()
+	var title IssueTitle
+	var issueType Type
+	cm, exists := IssueTitles[ni.Category]
+	if exists {
+		issueType = cm.Type
+		title = cm.IssueTitle
+	} else {
+		issueType = BlockedMainThreadType
+		title = IssueTitle(fmt.Sprintf("%v issue detected", ni.Category))
+	}
 	h := md5.New()
 	_, _ = io.WriteString(h, strconv.FormatUint(p.ProjectID(), 10))
 	_, _ = io.WriteString(h, string(title))
 	_, _ = io.WriteString(h, t.Name)
-	_, _ = io.WriteString(h, strconv.Itoa(int(ProfileBlockedThreadType)))
+	_, _ = io.WriteString(h, strconv.Itoa(int(issueType)))
 	_, _ = io.WriteString(h, ni.Node.Package)
 	_, _ = io.WriteString(h, ni.Node.Name)
 	fingerprint := fmt.Sprintf("%x", h.Sum(nil))
 	tags := buildOccurrenceTags(p)
 	return &Occurrence{
-		Category:      ni.Category,
 		DetectionTime: time.Now().UTC(),
 		Event: Event{
 			Environment:    p.Environment(),
@@ -138,7 +184,8 @@ func NewOccurrence(p profile.Profile, title IssueTitleType, ni nodeInfo) *Occurr
 		Level:       "info",
 		ProjectID:   p.ProjectID(),
 		Subtitle:    t.Name,
-		Type:        ProfileBlockedThreadType,
+		Type:        issueType,
+		category:    ni.Category,
 		durationNS:  ni.Node.DurationNS,
 		sampleCount: ni.Node.SampleCount,
 	}
@@ -180,7 +227,7 @@ func (o *Occurrence) Save() (map[string]bigquery.Value, string, error) {
 		return nil, "", err
 	}
 	return map[string]bigquery.Value{
-		"category":        o.Category,
+		"category":        o.category,
 		"detected_at":     o.DetectionTime,
 		"duration_ns":     int(o.durationNS),
 		"link":            link,
