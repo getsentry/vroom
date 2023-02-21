@@ -122,6 +122,7 @@ func NewOccurrence(p profile.Profile, title IssueTitleType, ni nodeInfo) *Occurr
 		Fingerprint: fingerprint,
 		ID:          uuid.New().String(),
 		IssueTitle:  title,
+		Level:       "info",
 		ProjectID:   p.ProjectID(),
 		Subtitle:    t.Name,
 		Type:        ProfileBlockedThreadType,
