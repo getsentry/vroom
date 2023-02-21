@@ -53,6 +53,7 @@ type (
 		ID              string                 `json:"id"`
 		IssueTitle      IssueTitle             `json:"issue_title"`
 		Level           string                 `json:"level,omitempty"`
+		ProjectID       uint64                 `json:"project_id"`
 		ResourceID      string                 `json:"resource_id,omitempty"`
 		Subtitle        string                 `json:"subtitle"`
 		Type            Type                   `json:"type"`
@@ -150,6 +151,7 @@ func NewOccurrence(p profile.Profile, ni nodeInfo) *Occurrence {
 		Fingerprint: fingerprint,
 		ID:          uuid.New().String(),
 		IssueTitle:  title,
+		ProjectID:   p.ProjectID(),
 		Subtitle:    t.Name,
 		Type:        ProfileBlockedThreadType,
 		durationNS:  ni.Node.DurationNS,

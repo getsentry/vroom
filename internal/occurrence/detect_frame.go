@@ -31,11 +31,14 @@ type (
 )
 
 const (
+	Base64Decode     Category = "base64_decode"
+	Base64Encode     Category = "base64_encode"
 	Compression      Category = "compression"
 	CoreDataBlock    Category = "core_data_block"
 	CoreDataMerge    Category = "core_data_merge"
 	CoreDataRead     Category = "core_data_read"
 	CoreDataWrite    Category = "core_data_write"
+	Decompression    Category = "decompression"
 	FileRead         Category = "file_read"
 	FileWrite        Category = "file_write"
 	HTTP             Category = "http"
@@ -47,6 +50,7 @@ const (
 	MLModelLoad      Category = "ml_model_load"
 	Regex            Category = "regex"
 	SQL              Category = "sql"
+	ThreadWait       Category = "thread_wait"
 	ViewInflation    Category = "view_inflation"
 	ViewLayout       Category = "view_layout"
 	ViewRender       Category = "view_render"
@@ -243,6 +247,159 @@ var (
 					"libsystem_kernel.dylib": {
 						"mach_msg_trap": FileRead,
 					},
+				},
+			},
+		},
+		platform.Android: {
+			{
+				ActiveThreadOnly:  true,
+				DurationThreshold: 16 * time.Millisecond,
+				FunctionsByPackage: map[string]map[string]Category{
+					"android.util": {
+						"android.util.Base64.decode(String; int): byte[]":           Base64Decode,
+						"android.util.Base64.decode(byte[]; int): byte[]":           Base64Decode,
+						"android.util.Base64.decode(byte[]; int; int; int): byte[]": Base64Decode,
+						"android.util.Base64.encode(byte[]; int): byte[]":           Base64Encode,
+						"android.util.Base64.encode(byte[]; int; int; int): byte[]": Base64Encode,
+						"android.util.Base64.encodeToString(byte[]; int): String":   Base64Encode,
+						"android.util.JsonReader.hasNext(): boolean":                JSONDecode,
+						"android.util.JsonReader.nextBoolean(): boolean":            JSONDecode,
+						"android.util.JsonReader.nextDouble(): double":              JSONDecode,
+						"android.util.JsonReader.nextInt(): int":                    JSONDecode,
+						"android.util.JsonReader.nextLong(): long":                  JSONDecode,
+						"android.util.JsonReader.nextName(): String":                JSONDecode,
+						"android.util.JsonReader.nextString(): String":              JSONDecode,
+						"android.util.JsonReader.peek(): JsonToken":                 JSONDecode,
+						"android.util.JsonReader.skipValue()":                       JSONDecode,
+						"android.util.JsonWriter.beginArray(): JsonWriter":          JSONEncode,
+						"android.util.JsonWriter.beginObject(): JsonWriter":         JSONEncode,
+						"android.util.JsonWriter.close()":                           JSONEncode,
+						"android.util.JsonWriter.endArray(): JsonWriter":            JSONEncode,
+						"android.util.JsonWriter.endObject(): JsonWriter":           JSONEncode,
+						"android.util.JsonWriter.flush()":                           JSONEncode,
+						"android.util.JsonWriter.name(String): JsonWriter":          JSONEncode,
+						"android.util.JsonWriter.value(Number): JsonWriter":         JSONEncode,
+						"android.util.JsonWriter.value(String): JsonWriter":         JSONEncode,
+						"android.util.JsonWriter.value(boolean): JsonWriter":        JSONEncode,
+						"android.util.JsonWriter.value(long): JsonWriter":           JSONEncode,
+					},
+					"com.google.json": {
+						"com.google.gson.Gson.fromJson(JsonElement; Class): Object":    JSONDecode,
+						"com.google.gson.Gson.fromJson(JsonElement; Type): Object":     JSONDecode,
+						"com.google.gson.Gson.fromJson(JsonReader; Type): Object":      JSONDecode,
+						"com.google.gson.Gson.fromJson(JsonReader; TypeToken): Object": JSONDecode,
+						"com.google.gson.Gson.fromJson(Reader; Class): Object":         JSONDecode,
+						"com.google.gson.Gson.fromJson(Reader; Type): Object":          JSONDecode,
+						"com.google.gson.Gson.fromJson(Reader; TypeToken): Object":     JSONDecode,
+						"com.google.gson.Gson.fromJson(String; Class): Object":         JSONDecode,
+						"com.google.gson.Gson.fromJson(String; Type): Object":          JSONDecode,
+						"com.google.gson.Gson.toJson(JsonElement): String":             JSONEncode,
+						"com.google.gson.Gson.toJson(JsonElement; Appendable)":         JSONEncode,
+						"com.google.gson.Gson.toJson(JsonElement; JsonWriter)":         JSONEncode,
+						"com.google.gson.Gson.toJson(Object): String":                  JSONEncode,
+						"com.google.gson.Gson.toJson(Object; Appendable)":              JSONEncode,
+						"com.google.gson.Gson.toJson(Object; Type): String":            JSONEncode,
+						"com.google.gson.Gson.toJson(Object; Type; Appendable)":        JSONEncode,
+						"com.google.gson.Gson.toJson(Object; Type; JsonWriter)":        JSONEncode,
+						"com.google.gson.Gson.toJsonTree(Object): JsonElement":         JSONEncode,
+						"com.google.gson.Gson.toJsonTree(Object; Type): JsonElement":   JSONEncode,
+					},
+					"org.json": {
+						"org.json.JSONArray.get(int): Object":                    JSONDecode,
+						"org.json.JSONArray.opt(int): Object":                    JSONDecode,
+						"org.json.JSONArray.writeTo(JSONStringer)":               JSONEncode,
+						"org.json.JSONObject.checkName(String): String":          JSONDecode,
+						"org.json.JSONObject.get(String): Object":                JSONDecode,
+						"org.json.JSONObject.opt(String): Object":                JSONDecode,
+						"org.json.JSONObject.put(String; Object): JSONObject":    JSONEncode,
+						"org.json.JSONObject.putOpt(String; Object): JSONObject": JSONEncode,
+						"org.json.JSONObject.remove(String): Object":             JSONEncode,
+						"org.json.JSONObject.writeTo(JSONStringer)":              JSONEncode,
+					},
+					"android.content.res": {
+						"android.content.res.AssetManager.open(String; int): InputStream":      FileRead,
+						"android.content.res.AssetManager.openFd(String): AssetFileDescriptor": FileRead,
+					},
+					"java.io": {
+						"java.io.File.canExecute(): boolean":                        FileRead,
+						"java.io.File.canRead(): boolean":                           FileRead,
+						"java.io.File.canWrite(): boolean":                          FileRead,
+						"java.io.File.createNewFile(): boolean":                     FileWrite,
+						"java.io.File.createTempFile(String; String): File":         FileWrite,
+						"java.io.File.createTempFile(String; String; File): File":   FileWrite,
+						"java.io.File.delete(): boolean":                            FileWrite,
+						"java.io.File.exists(): boolean":                            FileRead,
+						"java.io.File.length(): long":                               FileRead,
+						"java.io.File.mkdir(): boolean":                             FileWrite,
+						"java.io.File.mkdirs(): boolean":                            FileWrite,
+						"java.io.File.mkdirs(boolean): boolean":                     FileWrite,
+						"java.io.File.renameTo(File): boolean":                      FileWrite,
+						"java.io.FileInputStream.open(String)":                      FileRead,
+						"java.io.FileInputStream.read(byte[]; int; int): int":       FileRead,
+						"java.io.FileOutputStream.open(String; boolean)":            FileRead,
+						"java.io.FileOutputStream.write(byte[]; int; int)":          FileWrite,
+						"java.io.RandomAccessFile.readBytes(byte[]; int; int): int": FileRead,
+						"java.io.RandomAccessFile.writeBytes(byte[]; int; int)":     FileWrite,
+					},
+					"okio": {
+						"okio.Buffer.read(Buffer; long): long":              FileRead,
+						"okio.Buffer.read(ByteBuffer): int":                 FileRead,
+						"okio.Buffer.read(byte[]; int; int): int":           FileRead,
+						"okio.Buffer.readByte(): byte":                      FileRead,
+						"okio.Buffer.write(Buffer; long)":                   FileWrite,
+						"okio.Buffer.write(ByteString): Buffer":             FileWrite,
+						"okio.Buffer.write(ByteString): BufferedSink":       FileWrite,
+						"okio.Buffer.write(byte[]): BufferedSink":           FileWrite,
+						"okio.Buffer.write(byte[]; int; int)":               FileWrite,
+						"okio.Buffer.write(byte[]; int; int): Buffer":       FileWrite,
+						"okio.Buffer.write(byte[]; int; int): BufferedSink": FileWrite,
+						"okio.Buffer.writeAll(Source): long":                FileWrite,
+					},
+					"android.graphics": {
+						"android.graphics.BitmapFactory.decodeByteArray(byte[]; int; int; BitmapFactory$Options): Bitmap":          ImageDecode,
+						"android.graphics.BitmapFactory.decodeFile(String; BitmapFactory$Options): Bitmap":                         ImageDecode,
+						"android.graphics.BitmapFactory.decodeFileDescriptor(FileDescriptor; Rect; BitmapFactory$Options): Bitmap": ImageDecode,
+						"android.graphics.BitmapFactory.decodeStream(InputStream; Rect; BitmapFactory$Options): Bitmap":            ImageDecode,
+						"android.graphics.BitmapFactory.decodeStream(InputStream; Rect; BitmapFactory$Options; boolean): Bitmap":   ImageDecode,
+					},
+					"android.database.sqlite": {
+						"android.database.sqlite.SQLiteDatabase.insertWithOnConflict(String; String; ContentValues; int): long":                                          SQL,
+						"android.database.sqlite.SQLiteDatabase.open()":                                                                                                  SQL,
+						"android.database.sqlite.SQLiteDatabase.open(String; String)":                                                                                    SQL,
+						"android.database.sqlite.SQLiteDatabase.query(boolean; String; String[]; String; String[]; String; String; String; String): Cursor":              SQL,
+						"android.database.sqlite.SQLiteDatabase.rawQueryWithFactory(SQLiteDatabase$CursorFactory; String; String[]; String; CancellationSignal): Cursor": SQL,
+						"android.database.sqlite.SQLiteStatement.execute()":                                                                                              SQL,
+						"android.database.sqlite.SQLiteStatement.executeInsert(): long":                                                                                  SQL,
+						"android.database.sqlite.SQLiteStatement.executeUpdateDelete(): int":                                                                             SQL,
+						"android.database.sqlite.SQLiteStatement.simpleQueryForLong(): long":                                                                             SQL,
+					},
+					"androidx.room": {
+						"androidx.room.RoomDatabase.query(SupportSQLiteQuery): Cursor":                     SQL,
+						"androidx.room.RoomDatabase.query(SupportSQLiteQuery; CancellationSignal): Cursor": SQL,
+					},
+					"java.util.zip": {
+						"java.util.zip.Deflater.deflate(byte[]; int; int; int): int":            Compression,
+						"java.util.zip.Deflater.deflateBytes(long; byte[]; int; int; int): int": Compression,
+						"java.util.zip.DeflaterOutputStream.write(byte[]; int; int)":            Compression,
+						"java.util.zip.GZIPInputStream.read(byte[]; int; int): int":             Compression,
+						"java.util.zip.GZIPOutputStream.write(byte[]; int; int)":                Compression,
+						"java.util.zip.Inflater.inflate(byte[]; int; int): int":                 Compression,
+						"java.util.zip.Inflater.inflateBytes(long; byte[]; int; int): int":      Compression,
+					},
+					"java.util": {
+						"java.util.Base64$Decoder.decode(String): byte[]":                 Base64Decode,
+						"java.util.Base64$Decoder.decode(byte[]): byte[]":                 Base64Decode,
+						"java.util.Base64$Decoder.decode0(byte[]; int; int; byte[]): int": Base64Decode,
+					},
+					/*
+						"kotlinx.coroutines": {
+							"kotlinx.coroutines.AwaitAll.await(d): Object":                    ThreadWait,
+							"kotlinx.coroutines.AwaitKt.awaitAll(Collection; d): Object":      ThreadWait,
+							"kotlinx.coroutines.BlockingCoroutine.joinBlocking(): Object":     ThreadWait,
+							"kotlinx.coroutines.JobSupport.join(Continuation): Object":        ThreadWait,
+							"kotlinx.coroutines.JobSupport.joinSuspend(Continuation): Object": ThreadWait,
+						},
+					*/
 				},
 			},
 		},
