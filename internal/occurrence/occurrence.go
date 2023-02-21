@@ -124,7 +124,7 @@ func NewOccurrence(p profile.Profile, title IssueTitleType, ni nodeInfo) *Occurr
 			},
 			{
 				Name:  EvidenceNameDuration,
-				Value: fmt.Sprintf("%v", time.Duration(ni.Node.DurationNS)),
+				Value: time.Duration(ni.Node.DurationNS).String(),
 			},
 			{
 				Name:  EvidenceNameProfilePercentage,
