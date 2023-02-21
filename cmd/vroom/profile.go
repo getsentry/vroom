@@ -97,6 +97,15 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if _, enabled := env.config.OccurrencesEnabledOrganizations[orgID]; enabled {
+			// Filter in-place occurrences without a type.
+			var i int
+			for _, o := range occurrences {
+				if o.Type != occurrence.NoneType {
+					occurrences[i] = o
+					i++
+				}
+			}
+			occurrences = occurrences[:i]
 			s = sentry.StartSpan(ctx, "processing")
 			s.Description = "Build Kafka message batch"
 			messages, err := occurrence.GenerateKafkaMessageBatch(occurrences)
