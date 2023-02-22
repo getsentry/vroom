@@ -13,11 +13,12 @@ import (
 	"github.com/getsentry/vroom/internal/snubautil"
 )
 
+const numWorkers int = 5
+const timeout time.Duration = time.Second * 5
+
 func (env *environment) getFlamegraph(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	hub := sentry.GetHubFromContext(ctx)
-	const numWorkers int = 5
-	const timeout time.Duration = time.Second * 5
 	ps := httprouter.ParamsFromContext(ctx)
 	rawOrganizationID := ps.ByName("organization_id")
 	organizationID, err := strconv.ParseUint(rawOrganizationID, 10, 64)
