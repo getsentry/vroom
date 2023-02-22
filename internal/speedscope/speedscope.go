@@ -91,7 +91,6 @@ type (
 		Shared             SharedData                          `json:"shared"`
 		TransactionName    string                              `json:"transactionName"`
 		Version            string                              `json:"version,omitempty"`
-		CountProcessed     int                                 `json:"countProcessedProfiles,omitempty"`
 	}
 
 	ProfileMetadata struct {

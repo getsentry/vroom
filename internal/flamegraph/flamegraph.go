@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"strconv"
 	"sync"
 	"time"
 
@@ -91,7 +92,7 @@ func GetFlamegraphFromProfiles(
 	}
 
 	sp := toSpeedscope(flamegraphTree, 4)
-	sp.CountProcessed = countProfAggregated
+	hub.Scope().SetTag("processed_profiles", strconv.Itoa(countProfAggregated))
 	return sp, nil
 }
 
