@@ -58,6 +58,7 @@ func (env *environment) getFlamegraph(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+	hub.Scope().SetTag("fetched_profiles", strconv.Itoa(len(profileIDs)))
 	s.Finish()
 
 	s = sentry.StartSpan(ctx, "processing")
