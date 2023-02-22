@@ -2,22 +2,21 @@ package main
 
 import (
 	"encoding/json"
-	"errors"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/getsentry/sentry-go"
-	"github.com/google/uuid"
 	"github.com/julienschmidt/httprouter"
 
+	"github.com/getsentry/vroom/internal/flamegraph"
 	"github.com/getsentry/vroom/internal/snubautil"
 )
 
-type GetProfileIDByTransactionID struct {
-	ProfileID string `json:"profile_id"`
-}
+const numWorkers int = 5
+const timeout time.Duration = time.Second * 5
 
-func (env *environment) getProfileIDByTransactionID(w http.ResponseWriter, r *http.Request) {
+func (env *environment) getFlamegraph(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	hub := sentry.GetHubFromContext(ctx)
 	ps := httprouter.ParamsFromContext(ctx)
@@ -39,38 +38,43 @@ func (env *environment) getProfileIDByTransactionID(w http.ResponseWriter, r *ht
 		return
 	}
 
+	urlValues := r.URL.Query()
+	urlValues.Set("project_id", rawProjectID)
+	r.URL.RawQuery = urlValues.Encode()
+
 	hub.Scope().SetTag("project_id", rawProjectID)
 
-	transactionID := ps.ByName("transaction_id")
-	_, err = uuid.Parse(transactionID)
+	sqb, err := env.profilesQueryBuilderFromRequest(ctx, r.URL.Query())
 	if err != nil {
 		hub.CaptureException(err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	hub.Scope().SetTag("transaction_id", transactionID)
-
-	sqb, err := env.snuba.NewQuery(ctx, "profiles")
+	s := sentry.StartSpan(ctx, "snuba.read")
+	profileIDs, err := snubautil.GetProfileIDs(organizationID, 100, sqb)
 	if err != nil {
+		s.Finish()
 		hub.CaptureException(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	profileID, err := snubautil.GetProfileIDByTransactionID(organizationID, projectID, transactionID, sqb)
+	hub.Scope().SetTag("fetched_profiles", strconv.Itoa(len(profileIDs)))
+	s.Finish()
+
+	s = sentry.StartSpan(ctx, "processing")
+	speedscope, err := flamegraph.GetFlamegraphFromProfiles(ctx, env.profilesBucket, organizationID, projectID, profileIDs, numWorkers, timeout)
 	if err != nil {
-		if errors.Is(err, snubautil.ErrProfileNotFound) {
-			w.WriteHeader(http.StatusNotFound)
-		} else {
-			hub.CaptureException(err)
-			w.WriteHeader(http.StatusInternalServerError)
-		}
+		s.Finish()
+		hub.CaptureException(err)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+	s.Finish()
 
-	b, err := json.Marshal(GetProfileIDByTransactionID{
-		ProfileID: profileID,
-	})
+	s = sentry.StartSpan(ctx, "json.marshal")
+	defer s.Finish()
+	b, err := json.Marshal(speedscope)
 	if err != nil {
 		hub.CaptureException(err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -78,7 +82,6 @@ func (env *environment) getProfileIDByTransactionID(w http.ResponseWriter, r *ht
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Cache-Control", "public, max-age=3600, immutable")
 	w.WriteHeader(http.StatusOK)
 	_, _ = w.Write(b)
 }

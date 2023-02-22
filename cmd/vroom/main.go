@@ -124,6 +124,7 @@ func (e *environment) newRouter() (*httprouter.Router, error) {
 		{http.MethodGet, "/organizations/:organization_id/projects/:project_id/profiles/:profile_id", e.getProfile},
 		{http.MethodGet, "/organizations/:organization_id/projects/:project_id/raw_profiles/:profile_id", e.getRawProfile},
 		{http.MethodGet, "/organizations/:organization_id/projects/:project_id/transactions/:transaction_id", e.getProfileIDByTransactionID},
+		{http.MethodGet, "/organizations/:organization_id/projects/:project_id/flamegraph", e.getFlamegraph},
 		{http.MethodGet, "/health", e.getHealth},
 		{http.MethodPost, "/profile", e.postProfile},
 	}

@@ -169,3 +169,50 @@ func GetProfileIDByTransactionID(organizationID, projectID uint64, transactionID
 
 	return sr.Profiles[0].ID(), nil
 }
+
+type GetProfileIDsResponse struct {
+	IDs []ProfileID `json:"data"`
+}
+type ProfileID struct {
+	ID string `json:"profile_id"`
+}
+
+func GetProfileIDs(organizationID, limit uint64, sqb QueryBuilder) ([]string, error) {
+	t := sentry.TransactionFromContext(sqb.ctx)
+	rs := t.StartChild("snuba")
+	rs.Description = "Get a list of profile IDs from the params passed in the request"
+	defer rs.Finish()
+
+	sqb.SelectCols = []string{"profile_id"}
+	now := time.Now().UTC()
+	sqb.WhereConditions = append(sqb.WhereConditions,
+		fmt.Sprintf("organization_id=%d", organizationID),
+		fmt.Sprintf("received >= toDateTime('%s')", now.AddDate(0, 0, -MaxRetentionInDays).Format(time.RFC3339)),
+		fmt.Sprintf("received < toDateTime('%s')", now.Format(time.RFC3339)),
+	)
+	sqb.Limit = limit
+	sqb.OrderBy = "received DESC"
+
+	rb, err := sqb.Do(rs)
+	if err != nil {
+		return nil, err
+	}
+	defer rb.Close()
+
+	s := rs.StartChild("json.unmarshal")
+	s.Description = "Decode response from Snuba"
+	defer s.Finish()
+
+	var resp GetProfileIDsResponse
+	err = json.NewDecoder(rb).Decode(&resp)
+	if err != nil {
+		return nil, err
+	}
+
+	idS := make([]string, len(resp.IDs))
+	for i, profID := range resp.IDs {
+		idS[i] = profID.ID
+	}
+
+	return idS, nil
+}
