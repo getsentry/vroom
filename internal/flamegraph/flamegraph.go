@@ -115,21 +115,23 @@ func addCallTreeToFlamegraph(flamegraphTree *[]*nodetree.Node, callTree []*nodet
 	}
 }
 
-type Flamegraph struct {
+type flamegraph struct {
 	samples     [][]int
 	weights     []uint64
 	frames      []speedscope.Frame
 	framesIndex map[string]int
 	endValue    uint64
+	minFreq     int
 }
 
 func toSpeedscope(trees []*nodetree.Node, minFreq int) speedscope.Output {
-	fd := &Flamegraph{
+	fd := &flamegraph{
 		framesIndex: make(map[string]int),
+		minFreq:     minFreq,
 	}
 	for _, tree := range trees {
 		stack := make([]int, 0, 128)
-		fd.visitCalltree(tree, &stack, minFreq)
+		fd.visitCalltree(tree, &stack)
 	}
 
 	aggProfiles := make([]interface{}, 1)
@@ -155,8 +157,8 @@ func getIDFromNode(node *nodetree.Node) string {
 	return hex.EncodeToString(hash[:])
 }
 
-func (f *Flamegraph) visitCalltree(node *nodetree.Node, currentStack *[]int, minFreq int) {
-	if node.SampleCount < minFreq {
+func (f *flamegraph) visitCalltree(node *nodetree.Node, currentStack *[]int) {
+	if node.SampleCount < f.minFreq {
 		return
 	}
 
@@ -183,14 +185,14 @@ func (f *Flamegraph) visitCalltree(node *nodetree.Node, currentStack *[]int, min
 		// else we call visitTree recursively on the children
 		for _, childNode := range node.Children {
 			totChildrenSampleCount += childNode.SampleCount
-			f.visitCalltree(childNode, currentStack, minFreq)
+			f.visitCalltree(childNode, currentStack)
 		}
 
 		// If the children's sample count is less than the current
 		// nodes sample count, it means there are some samples
 		// ending at the current node.
 		diff := node.SampleCount - totChildrenSampleCount
-		if diff >= minFreq {
+		if diff >= f.minFreq {
 			f.addSample(currentStack, uint64(diff))
 		}
 	}
@@ -198,7 +200,7 @@ func (f *Flamegraph) visitCalltree(node *nodetree.Node, currentStack *[]int, min
 	*currentStack = (*currentStack)[:len(*currentStack)-1]
 }
 
-func (f *Flamegraph) addSample(stack *[]int, count uint64) {
+func (f *flamegraph) addSample(stack *[]int, count uint64) {
 	cp := make([]int, len(*stack))
 	copy(cp, *stack)
 	f.samples = append(f.samples, cp)
