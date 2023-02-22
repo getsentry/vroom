@@ -50,7 +50,7 @@ func (env *environment) getFlamegraph(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s := sentry.StartSpan(ctx, "sn.read")
+	s := sentry.StartSpan(ctx, "snuba.read")
 	profileIDs, err := snubautil.GetProfileIDs(organizationID, 100, sqb)
 	if err != nil {
 		s.Finish()
