@@ -33,7 +33,7 @@ var (
 		func(params url.Values) ([]string, error) {
 			return snubautil.MakeFieldsFilter(profileFilterFields, params)
 		},
-		snubautil.MakeAndroidApiLevelFilter,
+		snubautil.MakeAndroidAPILevelFilter,
 		snubautil.MakeVersionNameAndCodeFilter,
 	}
 
@@ -117,6 +117,9 @@ func (e *environment) functionsQueryBuilderFromRequest(ctx context.Context, p ur
 		return snubautil.QueryBuilder{}, err
 	}
 	sqb.WhereConditions = make([]string, 0, 5)
+
+	// we do not want to show unknown functions, unknown package is okay
+	sqb.WhereConditions = append(sqb.WhereConditions, "name != ''")
 
 	for _, makeFilter := range functionsQueryFilterMakers {
 		conditions, err := makeFilter(p)

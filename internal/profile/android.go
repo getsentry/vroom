@@ -3,6 +3,7 @@ package profile
 import (
 	"fmt"
 	"hash/fnv"
+	"math"
 	"strings"
 	"time"
 
@@ -71,7 +72,7 @@ func (m AndroidMethod) packageNameFromAndroidMethod() string {
 
 type EventMonotonic struct {
 	Wall Duration `json:"wall,omitempty"`
-	Cpu  Duration `json:"cpu,omitempty"`
+	CPU  Duration `json:"cpu,omitempty"`
 }
 
 type EventTime struct {
@@ -99,21 +100,25 @@ type AndroidEvent struct {
 	Time     EventTime `json:"time,omitempty"`
 }
 
-type Android struct {
-	Clock     Clock           `json:"clock"`
-	Events    []AndroidEvent  `json:"events,omitempty"`
-	Methods   []AndroidMethod `json:"methods,omitempty"`
-	StartTime uint64          `json:"start_time,omitempty"`
-	Threads   []AndroidThread `json:"threads,omitempty"`
-}
+type (
+	Android struct {
+		Clock     Clock           `json:"clock"`
+		Events    []AndroidEvent  `json:"events,omitempty"`
+		Methods   []AndroidMethod `json:"methods,omitempty"`
+		StartTime uint64          `json:"start_time,omitempty"`
+		Threads   []AndroidThread `json:"threads,omitempty"`
+	}
 
-type Clock string
+	Clock string
+)
 
 const (
 	DualClock   Clock = "Dual"
 	CPUClock    Clock = "Cpu"
 	WallClock   Clock = "Wall"
 	GlobalClock Clock = "Global"
+
+	mainThread = "main"
 )
 
 func (p Android) TimestampGetter() func(EventTime) uint64 {
@@ -125,7 +130,7 @@ func (p Android) TimestampGetter() func(EventTime) uint64 {
 		}
 	case CPUClock:
 		buildTimestamp = func(t EventTime) uint64 {
-			return t.Monotonic.Cpu.Secs*uint64(time.Second) + t.Monotonic.Cpu.Nanos
+			return t.Monotonic.CPU.Secs*uint64(time.Second) + t.Monotonic.CPU.Nanos
 		}
 	default:
 		buildTimestamp = func(t EventTime) uint64 {
@@ -135,8 +140,15 @@ func (p Android) TimestampGetter() func(EventTime) uint64 {
 	return buildTimestamp
 }
 
-// CallTrees generates call trees for a given profile
+// CallTrees generates call trees for a given profile.
 func (p Android) CallTrees() map[uint64][]*nodetree.Node {
+	var activeThreadID uint64
+	for _, thread := range p.Threads {
+		if thread.Name == mainThread {
+			activeThreadID = thread.ID
+		}
+	}
+
 	buildTimestamp := p.TimestampGetter()
 	trees := make(map[uint64][]*nodetree.Node)
 	stacks := make(map[uint64][]*nodetree.Node)
@@ -145,6 +157,10 @@ func (p Android) CallTrees() map[uint64][]*nodetree.Node {
 		methods[m.ID] = m
 	}
 	for _, e := range p.Events {
+		if e.ThreadID != activeThreadID {
+			continue
+		}
+
 		switch e.Action {
 		case EnterAction:
 			m, exists := methods[e.MethodID]
@@ -179,7 +195,8 @@ func (p Android) CallTrees() map[uint64][]*nodetree.Node {
 			}
 			i := len(stacks[e.ThreadID]) - 1
 			n := stacks[e.ThreadID][i]
-			n.DurationNS = buildTimestamp(e.Time) - n.StartNS
+			n.Update(buildTimestamp(e.Time))
+			n.SampleCount = int(math.Ceil(float64(n.DurationNS) / float64((10 * time.Millisecond))))
 			stacks[e.ThreadID] = stacks[e.ThreadID][:i]
 		}
 	}
@@ -210,7 +227,6 @@ func (p Android) Speedscope() (speedscope.Output, error) {
 					Line:          m.SourceLine,
 					Name:          m.Name,
 				})
-
 			}
 		} else {
 			packageName, _, err := method.ExtractPackageNameAndSimpleMethodNameFromAndroidMethod()
@@ -330,7 +346,7 @@ func (p Android) Speedscope() (speedscope.Output, error) {
 		if !ok {
 			continue
 		}
-		if thread.Name == "main" {
+		if thread.Name == mainThread {
 			mainThreadProfileIndex = len(allProfiles)
 		}
 		prof.Name = thread.Name

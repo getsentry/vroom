@@ -3,20 +3,25 @@ package nodetree
 import (
 	"hash"
 	"path"
+
+	"github.com/getsentry/vroom/internal/frame"
 )
 
-type Node struct {
-	DurationNS    uint64  `json:"duration_ns"`
-	EndNS         uint64  `json:"-"`
-	Fingerprint   uint64  `json:"fingerprint"`
-	IsApplication bool    `json:"is_application"`
-	Line          uint32  `json:"line,omitempty"`
-	Name          string  `json:"name"`
-	Package       string  `json:"package"`
-	Path          string  `json:"path,omitempty"`
-	StartNS       uint64  `json:"-"`
-	Children      []*Node `json:"children,omitempty"`
-}
+type (
+	Node struct {
+		Children      []*Node `json:"children,omitempty"`
+		DurationNS    uint64  `json:"duration_ns"`
+		EndNS         uint64  `json:"-"`
+		Fingerprint   uint64  `json:"fingerprint"`
+		IsApplication bool    `json:"is_application"`
+		Line          uint32  `json:"line,omitempty"`
+		Name          string  `json:"name"`
+		Package       string  `json:"package"`
+		Path          string  `json:"path,omitempty"`
+		SampleCount   int     `json:"-"`
+		StartNS       uint64  `json:"-"`
+	}
+)
 
 func NodeFromFrame(pkg, name, path string, line uint32, start, end, fingerprint uint64, isApplication bool) *Node {
 	n := Node{
@@ -28,11 +33,27 @@ func NodeFromFrame(pkg, name, path string, line uint32, start, end, fingerprint 
 		Package:       PackageBaseName(pkg),
 		Path:          path,
 		StartNS:       start,
+		SampleCount:   1,
 	}
 	if end > 0 {
 		n.DurationNS = n.EndNS - n.StartNS
 	}
 	return &n
+}
+
+func (n *Node) Update(timestamp uint64) {
+	n.SampleCount++
+	n.SetDuration(timestamp)
+}
+
+func (n *Node) Frame() frame.Frame {
+	return frame.Frame{
+		Function: n.Name,
+		InApp:    &n.IsApplication,
+		Line:     n.Line,
+		Package:  n.Package,
+		Path:     n.Path,
+	}
 }
 
 func (n *Node) SetDuration(t uint64) {
@@ -57,9 +78,28 @@ func PackageBaseName(p string) string {
 	return path.Base(p)
 }
 
-func (n *Node) Collapse() {
+func (n Node) Collapse() []*Node {
+	// If a node has insufficient sample count, it likely isn't interesting to
+	// surface as a suspect function because we only saw it for a moment. So
+	// we only consider nodes that appear for more than 1 consecutive samples.
+	if n.SampleCount <= 1 {
+		return []*Node{}
+	}
+
+	// always collapse the children first, since pruning may reduce
+	// the number of children
+	children := make([]*Node, 0, len(n.Children))
 	for _, child := range n.Children {
-		child.Collapse()
+		children = append(children, child.Collapse()...)
+	}
+	n.Children = children
+
+	// If the current node is an unknown frame, we just return
+	// its children. The children are guaranteed not to be
+	// unknown nodes since they made it through a `.Collapse`
+	// call earlier already
+	if n.Name == "" {
+		return n.Children
 	}
 
 	// If the only child runs for the entirety of the parent,
@@ -68,13 +108,23 @@ func (n *Node) Collapse() {
 	if len(n.Children) == 1 {
 		child := n.Children[0]
 		if n.StartNS == child.StartNS && n.DurationNS == child.DurationNS {
-			if child.IsApplication {
-				*n = *child
-			} else if n.IsApplication {
-				n.Children = child.Children
+			if n.IsApplication {
+				if child.IsApplication {
+					// if the node and it's child are both application frames,
+					// we only want the inner one
+					n = *child
+				} else {
+					// if the node is an application frame but the child is not,
+					// we want to skip the child frame
+					n.Children = child.Children
+				}
 			} else {
-				*n = *child
+				// if the node is not an application frame,
+				// we want to skip it and favour it's child
+				n = *child
 			}
 		}
 	}
+
+	return []*Node{&n}
 }

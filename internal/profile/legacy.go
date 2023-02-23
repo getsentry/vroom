@@ -11,7 +11,10 @@ import (
 	"github.com/getsentry/vroom/internal/measurements"
 	"github.com/getsentry/vroom/internal/metadata"
 	"github.com/getsentry/vroom/internal/nodetree"
+	"github.com/getsentry/vroom/internal/platform"
 	"github.com/getsentry/vroom/internal/speedscope"
+	"github.com/getsentry/vroom/internal/timeutil"
+	"github.com/getsentry/vroom/internal/transaction"
 )
 
 var (
@@ -38,18 +41,19 @@ type (
 		DeviceOSVersion      string                              `json:"device_os_version"`
 		DurationNS           uint64                              `json:"duration_ns"`
 		Environment          string                              `json:"environment,omitempty"`
+		Measurements         map[string]measurements.Measurement `json:"measurements,omitempty"`
 		OrganizationID       uint64                              `json:"organization_id"`
-		Platform             string                              `json:"platform"`
+		Platform             platform.Platform                   `json:"platform"`
 		Profile              json.RawMessage                     `json:"profile,omitempty"`
 		ProfileID            string                              `json:"profile_id"`
 		ProjectID            uint64                              `json:"project_id"`
-		Received             time.Time                           `json:"received"`
+		Received             timeutil.Time                       `json:"received"`
+		RetentionDays        int                                 `json:"retention_days"`
 		TraceID              string                              `json:"trace_id"`
 		TransactionID        string                              `json:"transaction_id"`
 		TransactionName      string                              `json:"transaction_name"`
 		VersionCode          string                              `json:"version_code"`
 		VersionName          string                              `json:"version_name"`
-		Measurements         map[string]measurements.Measurement `json:"measurements,omitempty"`
 	}
 )
 
@@ -70,7 +74,7 @@ func (p LegacyProfile) Version() string {
 }
 
 func StoragePath(organizationID, projectID uint64, profileID string) string {
-	return fmt.Sprintf("%d/%d/%s", organizationID, projectID, strings.Replace(profileID, "-", "", -1))
+	return fmt.Sprintf("%d/%d/%s", organizationID, projectID, strings.ReplaceAll(profileID, "-", ""))
 }
 
 func (p LegacyProfile) StoragePath() string {
@@ -104,7 +108,7 @@ func (p *LegacyProfile) UnmarshalJSON(b []byte) error {
 		if err != nil {
 			return err
 		}
-		(*p).Trace = t
+		p.Trace = t
 		p.Profile = nil
 	case "android":
 		var t Android
@@ -112,26 +116,8 @@ func (p *LegacyProfile) UnmarshalJSON(b []byte) error {
 		if err != nil {
 			return err
 		}
-		(*p).Trace = t
+		p.Trace = t
 		p.Profile = nil
-	case "python":
-		var t Python
-		err := json.Unmarshal(raw, &t)
-		if err != nil {
-			return err
-		}
-		(*p).Trace = t
-		p.Profile = nil
-	case "rust":
-		var t Rust
-		err := json.Unmarshal(raw, &t)
-		if err != nil {
-			return err
-		}
-		(*p).Trace = t
-		p.Profile = nil
-	case "typescript":
-		(*p).Trace = new(Typescript)
 	default:
 		return errors.New("unknown platform")
 	}
@@ -165,6 +151,7 @@ func (p *LegacyProfile) Speedscope() (speedscope.Output, error) {
 	o.ProjectID = p.ProjectID
 	o.TransactionName = p.TransactionName
 	o.Version = version
+	o.Measurements = p.Measurements
 
 	return o, nil
 }
@@ -172,16 +159,17 @@ func (p *LegacyProfile) Speedscope() (speedscope.Output, error) {
 func (p *LegacyProfile) Metadata() metadata.Metadata {
 	return metadata.Metadata{
 		AndroidAPILevel:      p.AndroidAPILevel,
+		Architecture:         "unknown",
 		DeviceClassification: p.DeviceClassification,
 		DeviceLocale:         p.DeviceLocale,
 		DeviceManufacturer:   p.DeviceManufacturer,
 		DeviceModel:          p.DeviceModel,
-		DeviceOsBuildNumber:  p.DeviceOSBuildNumber,
-		DeviceOsName:         p.DeviceOSName,
-		DeviceOsVersion:      p.DeviceOSVersion,
+		DeviceOSBuildNumber:  p.DeviceOSBuildNumber,
+		DeviceOSName:         p.DeviceOSName,
+		DeviceOSVersion:      p.DeviceOSVersion,
 		ID:                   p.ProfileID,
 		ProjectID:            strconv.FormatUint(p.GetProjectID(), 10),
-		Timestamp:            p.Received.Unix(),
+		Timestamp:            p.Received.Time().Unix(),
 		TraceDurationMs:      float64(p.DurationNS) / 1_000_000,
 		TransactionID:        p.TransactionID,
 		TransactionName:      p.TransactionName,
@@ -190,8 +178,29 @@ func (p *LegacyProfile) Metadata() metadata.Metadata {
 	}
 }
 
-func (p *LegacyProfile) GetPlatform() string {
+func (p LegacyProfile) GetPlatform() platform.Platform {
 	return p.Platform
+}
+
+func (p LegacyProfile) GetEnvironment() string {
+	return p.Environment
+}
+
+func (p LegacyProfile) GetTransaction() transaction.Transaction {
+	return transaction.Transaction{
+		DurationNS: p.DurationNS,
+		ID:         p.TransactionID,
+		Name:       p.TransactionName,
+		TraceID:    p.TraceID,
+	}
+}
+
+func (p LegacyProfile) GetTimestamp() time.Time {
+	return p.Received.Time()
+}
+
+func (p LegacyProfile) GetReceived() time.Time {
+	return p.Received.Time()
 }
 
 func (p *LegacyProfile) Raw() []byte {
@@ -202,4 +211,16 @@ func (p *LegacyProfile) ReplaceIdleStacks() {
 	if p.Platform == "ios" {
 		p.Trace.(*IOS).ReplaceIdleStacks()
 	}
+}
+
+func (p LegacyProfile) GetRelease() string {
+	return FormatVersion(p.VersionName, p.VersionCode)
+}
+
+func (p LegacyProfile) GetRetentionDays() int {
+	return p.RetentionDays
+}
+
+func (p LegacyProfile) GetDurationNS() uint64 {
+	return p.DurationNS
 }

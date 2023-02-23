@@ -25,7 +25,7 @@ type (
 		url        string
 	}
 
-	// query fields
+	// QueryBuilder offers a way to build a query for Snuba.
 	QueryBuilder struct {
 		client *Client
 		entity string
@@ -60,24 +60,15 @@ type (
 	}
 )
 
-func NewClient(host, port, dataset string, hub *sentry.Hub) (Client, error) {
+func NewClient(host, dataset string, hub *sentry.Hub) (Client, error) {
 	if host == "" {
 		return Client{}, errors.New("host must be set")
 	}
 	if dataset == "" {
 		return Client{}, errors.New("dataset must be set")
 	}
-	var u strings.Builder
-	u.WriteString(host)
-	if port != "" {
-		u.WriteString(":")
-		u.WriteString(port)
-	}
-	u.WriteString("/")
-	u.WriteString(dataset)
-	u.WriteString("/snql")
 	return Client{
-		url:  u.String(),
+		url:  fmt.Sprintf("%s/%s/snql", host, dataset),
 		http: httpclient.NewClient(httpclient.WithHTTPTimeout(30 * time.Second)),
 	}, nil
 }

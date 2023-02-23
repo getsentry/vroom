@@ -2,19 +2,29 @@ package profile
 
 import (
 	"encoding/json"
+	"time"
 
 	"github.com/getsentry/vroom/internal/metadata"
 	"github.com/getsentry/vroom/internal/nodetree"
+	"github.com/getsentry/vroom/internal/platform"
 	"github.com/getsentry/vroom/internal/sample"
 	"github.com/getsentry/vroom/internal/speedscope"
+	"github.com/getsentry/vroom/internal/transaction"
 )
 
 type (
 	profileInterface interface {
+		GetDurationNS() uint64
+		GetEnvironment() string
 		GetID() string
 		GetOrganizationID() uint64
+		GetPlatform() platform.Platform
 		GetProjectID() uint64
-		GetPlatform() string
+		GetReceived() time.Time
+		GetRelease() string
+		GetRetentionDays() int
+		GetTimestamp() time.Time
+		GetTransaction() transaction.Transaction
 
 		Metadata() metadata.Metadata
 		Raw() []byte
@@ -30,7 +40,7 @@ type (
 
 		profile profileInterface
 
-		sample *sample.SampleProfile
+		sample *sample.Profile
 		legacy *LegacyProfile
 	}
 
@@ -52,7 +62,7 @@ func (p *Profile) UnmarshalJSON(b []byte) error {
 		p.profile = p.legacy
 		return json.Unmarshal(b, &p.legacy)
 	default:
-		p.sample = new(sample.SampleProfile)
+		p.sample = new(sample.Profile)
 		p.profile = p.sample
 		return json.Unmarshal(b, &p.sample)
 	}
@@ -68,18 +78,7 @@ func (p Profile) MarshalJSON() ([]byte, error) {
 }
 
 func (p *Profile) CallTrees() (map[uint64][]*nodetree.Node, error) {
-	callTrees, err := p.profile.CallTrees()
-	if err != nil {
-		return callTrees, err
-	}
-
-	for _, callTreesForThread := range callTrees {
-		for _, callTree := range callTreesForThread {
-			callTree.Collapse()
-		}
-	}
-
-	return callTrees, nil
+	return p.profile.CallTrees()
 }
 
 func (p *Profile) ID() string {
@@ -106,7 +105,7 @@ func (p *Profile) Metadata() metadata.Metadata {
 	return p.profile.Metadata()
 }
 
-func (p *Profile) Platform() string {
+func (p *Profile) Platform() platform.Platform {
 	return p.profile.GetPlatform()
 }
 
@@ -116,4 +115,32 @@ func (p *Profile) Raw() []byte {
 
 func (p *Profile) ReplaceIdleStacks() {
 	p.profile.ReplaceIdleStacks()
+}
+
+func (p *Profile) Transaction() transaction.Transaction {
+	return p.profile.GetTransaction()
+}
+
+func (p *Profile) Environment() string {
+	return p.profile.GetEnvironment()
+}
+
+func (p *Profile) Timestamp() time.Time {
+	return p.profile.GetTimestamp()
+}
+
+func (p *Profile) Received() time.Time {
+	return p.profile.GetReceived()
+}
+
+func (p *Profile) Release() string {
+	return p.profile.GetRelease()
+}
+
+func (p *Profile) RetentionDays() int {
+	return p.profile.GetRetentionDays()
+}
+
+func (p *Profile) DurationNS() uint64 {
+	return p.profile.GetDurationNS()
 }

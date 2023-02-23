@@ -54,7 +54,7 @@ func MakeTimeRangeFilter(column string, params url.Values) ([]string, error) {
 	return filters, nil
 }
 
-func MakeAndroidApiLevelFilter(params url.Values) ([]string, error) {
+func MakeAndroidAPILevelFilter(params url.Values) ([]string, error) {
 	if levels, exists := params["android_api_level"]; exists && len(levels) > 0 {
 		for _, l := range levels {
 			_, err := strconv.ParseUint(l, 10, 64)
@@ -89,7 +89,7 @@ func MakeVersionNameAndCodeFilter(params url.Values) ([]string, error) {
 }
 
 func GetVersionBuildFromAppVersions(appVersions []string) ([]VersionBuild, error) {
-	var versionBuilds []VersionBuild
+	versionBuilds := make([]VersionBuild, 0, len(appVersions))
 	for _, version := range appVersions {
 		versionBuild, err := GetVersionBuildFromAppVersion(version)
 		if err != nil {
@@ -109,7 +109,7 @@ func GetVersionBuildFromAppVersion(appVersion string) (VersionBuild, error) {
 }
 
 func MakeFieldsFilter(fields map[string]string, params url.Values) ([]string, error) {
-	filter := make([]string, 0)
+	var filter []string
 	for field, column := range fields {
 		values, exists := params[field]
 		if !exists {
@@ -130,14 +130,13 @@ func MakeFieldsFilter(fields map[string]string, params url.Values) ([]string, er
 }
 
 func MakeApplicationFilter(params url.Values) ([]string, error) {
-	if is_application := params.Get("is_application"); is_application != "" {
-		if is_application == "1" {
-			return []string{"is_application = 1"}, nil
-		} else if is_application == "0" {
-			return []string{"is_application = 0"}, nil
-		} else {
-			return []string{}, fmt.Errorf("cannot parse is_application: %v", is_application)
+	if isApplication := params.Get("is_application"); isApplication != "" {
+		switch isApplication {
+		case "0", "1":
+			return []string{"is_application = " + isApplication}, nil
+		default:
+			return nil, fmt.Errorf("cannot parse is_application: %v", isApplication)
 		}
 	}
-	return []string{}, nil
+	return nil, nil
 }

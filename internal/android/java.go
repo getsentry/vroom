@@ -19,13 +19,16 @@ const (
 
 // Parses a bytecode signature into its parameters and return type.
 // The returned parameters can be nil if the signature is unknown.
-func ParseBytecodeSignature(signature string) (parameters []string, returnTypeString string, error error) {
+func ParseBytecodeSignature(signature string) ([]string, string, error) {
 	if signature == "Unknown" {
 		return nil, "", nil
 	}
 
-	var state = parametersStart
-	arrayPrefix := ""
+	state := parametersStart
+
+	var arrayPrefix string
+	var returnTypeString string
+	var parameters []string
 
 	// i incrementation is handled on a case by case basis.
 	for i := 0; i < len(signature); {
@@ -94,7 +97,7 @@ func ParseBytecodeSignature(signature string) (parameters []string, returnTypeSt
 		return nil, "", fmt.Errorf("java: %w: invalid descriptor, expected %v but got: %q", errorutil.ErrDataIntegrity, expectation, signature)
 	}
 
-	return
+	return parameters, returnTypeString, nil
 }
 
 var primitiveDescriptorTypetoJava = map[uint8]string{
@@ -117,17 +120,15 @@ var primitiveDescriptorTypetoJava = map[uint8]string{
 // - "Ljava/lang/String;" becomes "String"
 // - "Lcom/google/common/util/concurrent/AbstractFuture$Listener;" becomes "AbstractFuture$Listener"
 // - "[Z" becomes "boolean[]"
-// - "Z" becomes "boolean"
+// - "Z" becomes "boolean".
 func SimpleJavaTypeFromBytecodeType(bytecodeType string) (javaType string, error error) {
 	return javaTypeFromBytecodeType(bytecodeType, func(truncatedBytecodeClass string) string {
 		lastSlashIndex := strings.LastIndex(truncatedBytecodeClass, "/")
 		if lastSlashIndex == -1 {
 			return truncatedBytecodeClass
-		} else {
-			return truncatedBytecodeClass[lastSlashIndex+1:]
 		}
+		return truncatedBytecodeClass[lastSlashIndex+1:]
 	})
-
 }
 
 // Converts a "bytecode type" into a "java type" which is meant to be more easily read by humans and contains all the
@@ -138,7 +139,7 @@ func SimpleJavaTypeFromBytecodeType(bytecodeType string) (javaType string, error
 // - "Ljava/lang/String;" becomes "java.lang.String"
 // - "Lcom/google/common/util/concurrent/AbstractFuture$Listener;" becomes "com.google.common.util.concurrent.AbstractFuture$Listener"
 // - "[Z" becomes "boolean[]"
-// - "Z" becomes "boolean"
+// - "Z" becomes "boolean".
 func JavaTypeFromBytecodeType(bytecodeType string) (javaType string, error error) {
 	return javaTypeFromBytecodeType(bytecodeType, func(truncatedBytecodeClass string) string {
 		return strings.ReplaceAll(truncatedBytecodeClass, "/", ".")

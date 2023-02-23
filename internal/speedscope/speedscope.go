@@ -2,14 +2,16 @@ package speedscope
 
 import (
 	"encoding/json"
-	"time"
 
 	"github.com/getsentry/vroom/internal/debugmeta"
 	"github.com/getsentry/vroom/internal/measurements"
+	"github.com/getsentry/vroom/internal/platform"
+	"github.com/getsentry/vroom/internal/timeutil"
 )
 
 const (
 	ValueUnitNanoseconds ValueUnit = "nanoseconds"
+	ValueUnitCount       ValueUnit = "count"
 
 	EventTypeOpenFrame  EventType = "O"
 	EventTypeCloseFrame EventType = "C"
@@ -53,19 +55,18 @@ type (
 	}
 
 	SampledProfile struct {
-		EndValue     uint64            `json:"endValue"`
-		IsMainThread bool              `json:"isMainThread"`
-		Images       []debugmeta.Image `json:"images,omitempty"`
-		Name         string            `json:"name"`
-		Priority     int               `json:"priority"`
-		Queues       map[string]Queue  `json:"queues,omitempty"`
-		Samples      [][]int           `json:"samples"`
-		StartValue   uint64            `json:"startValue"`
-		State        string            `json:"state,omitempty"`
-		ThreadID     uint64            `json:"threadID"`
-		Type         ProfileType       `json:"type"`
-		Unit         ValueUnit         `json:"unit"`
-		Weights      []uint64          `json:"weights"`
+		EndValue     uint64           `json:"endValue"`
+		IsMainThread bool             `json:"isMainThread"`
+		Name         string           `json:"name"`
+		Priority     int              `json:"priority,omitempty"`
+		Queues       map[string]Queue `json:"queues,omitempty"`
+		Samples      [][]int          `json:"samples"`
+		StartValue   uint64           `json:"startValue"`
+		State        string           `json:"state,omitempty"`
+		ThreadID     uint64           `json:"threadID"`
+		Type         ProfileType      `json:"type"`
+		Unit         ValueUnit        `json:"unit"`
+		Weights      []uint64         `json:"weights"`
 	}
 
 	SharedData struct {
@@ -77,49 +78,53 @@ type (
 	ValueUnit   string
 
 	Output struct {
-		ActiveProfileIndex int             `json:"activeProfileIndex"`
-		AndroidClock       string          `json:"androidClock,omitempty"`
-		DurationNS         uint64          `json:"durationNS"`
-		Metadata           ProfileMetadata `json:"metadata"`
-		Platform           string          `json:"platform"`
-		ProfileID          string          `json:"profileID"`
-		Profiles           []interface{}   `json:"profiles"`
-		ProjectID          uint64          `json:"projectID"`
-		Shared             SharedData      `json:"shared"`
-		TransactionName    string          `json:"transactionName"`
-		Version            string          `json:"version"`
+		ActiveProfileIndex int                                 `json:"activeProfileIndex"`
+		AndroidClock       string                              `json:"androidClock,omitempty"`
+		DurationNS         uint64                              `json:"durationNS,omitempty"`
+		Images             []debugmeta.Image                   `json:"images,omitempty"`
+		Measurements       map[string]measurements.Measurement `json:"measurements,omitempty"`
+		Metadata           ProfileMetadata                     `json:"metadata"`
+		Platform           platform.Platform                   `json:"platform"`
+		ProfileID          string                              `json:"profileID,omitempty"`
+		Profiles           []interface{}                       `json:"profiles"`
+		ProjectID          uint64                              `json:"projectID"`
+		Shared             SharedData                          `json:"shared"`
+		TransactionName    string                              `json:"transactionName"`
+		Version            string                              `json:"version,omitempty"`
 	}
 
 	ProfileMetadata struct {
 		ProfileView
 
-		Version string `json:"version"`
+		Timestamp timeutil.Time `json:"timestamp,omitempty"`
+		Version   string        `json:"version"`
 	}
 
 	ProfileView struct {
-		AndroidAPILevel      uint32                              `json:"androidAPILevel,omitempty"`
-		Architecture         string                              `json:"architecture,omitempty"`
-		DebugMeta            interface{}                         `json:"-"`
-		DeviceClassification string                              `json:"deviceClassification"`
-		DeviceLocale         string                              `json:"deviceLocale"`
-		DeviceManufacturer   string                              `json:"deviceManufacturer"`
-		DeviceModel          string                              `json:"deviceModel"`
-		DeviceOSBuildNumber  string                              `json:"deviceOSBuildNumber,omitempty"`
-		DeviceOSName         string                              `json:"deviceOSName"`
-		DeviceOSVersion      string                              `json:"deviceOSVersion"`
-		DurationNS           uint64                              `json:"durationNS"`
-		Environment          string                              `json:"environment,omitempty"`
-		OrganizationID       uint64                              `json:"organizationID"`
-		Platform             string                              `json:"platform"`
-		Profile              json.RawMessage                     `json:"-"`
-		ProfileID            string                              `json:"profileID"`
-		ProjectID            uint64                              `json:"projectID"`
-		Received             time.Time                           `json:"received"`
-		TraceID              string                              `json:"traceID"`
-		TransactionID        string                              `json:"transactionID"`
-		TransactionName      string                              `json:"transactionName"`
-		VersionCode          string                              `json:"-"`
-		VersionName          string                              `json:"-"`
-		Measurements         map[string]measurements.Measurement `json:"-"`
+		AndroidAPILevel      uint32                              `json:"androidAPILevel,omitempty"`     //nolint:unused
+		Architecture         string                              `json:"architecture,omitempty"`        //nolint:unused
+		DebugMeta            interface{}                         `json:"-"`                             //nolint:unused
+		DeviceClassification string                              `json:"deviceClassification"`          //nolint:unused
+		DeviceLocale         string                              `json:"deviceLocale"`                  //nolint:unused
+		DeviceManufacturer   string                              `json:"deviceManufacturer"`            //nolint:unused
+		DeviceModel          string                              `json:"deviceModel"`                   //nolint:unused
+		DeviceOSBuildNumber  string                              `json:"deviceOSBuildNumber,omitempty"` //nolint:unused
+		DeviceOSName         string                              `json:"deviceOSName"`                  //nolint:unused
+		DeviceOSVersion      string                              `json:"deviceOSVersion"`               //nolint:unused
+		DurationNS           uint64                              `json:"durationNS"`                    //nolint:unused
+		Environment          string                              `json:"environment,omitempty"`         //nolint:unused
+		Measurements         map[string]measurements.Measurement `json:"-"`                             //nolint:unused
+		OrganizationID       uint64                              `json:"organizationID"`                //nolint:unused
+		Platform             platform.Platform                   `json:"platform"`                      //nolint:unused
+		Profile              json.RawMessage                     `json:"-"`                             //nolint:unused
+		ProfileID            string                              `json:"profileID"`                     //nolint:unused
+		ProjectID            uint64                              `json:"projectID"`                     //nolint:unused
+		Received             timeutil.Time                       `json:"received"`                      //nolint:unused
+		RetentionDays        int                                 `json:"-"`                             //nolint:unused
+		TraceID              string                              `json:"traceID"`                       //nolint:unused
+		TransactionID        string                              `json:"transactionID"`                 //nolint:unused
+		TransactionName      string                              `json:"transactionName"`               //nolint:unused
+		VersionCode          string                              `json:"-"`                             //nolint:unused
+		VersionName          string                              `json:"-"`                             //nolint:unused
 	}
 )

@@ -1,0 +1,8 @@
+**
+!/.git
+!/cmd/vroom
+!/internal
+!/pkg
+!/vendor
+!go.mod
+!go.sum
