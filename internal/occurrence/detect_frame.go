@@ -244,9 +244,6 @@ var (
 					"UIKit": {
 						"-[UINib instantiateWithOwner:options:]": ViewInflation,
 					},
-					"libsystem_kernel.dylib": {
-						"mach_msg_trap": FileRead,
-					},
 				},
 			},
 		},
