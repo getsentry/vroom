@@ -1,10 +1,8 @@
 repos:
-- repo: https://github.com/dnephin/pre-commit-golang
-  rev: v0.5.1
+- repo: https://github.com/TekWizely/pre-commit-golang
+  rev: v1.0.0-rc.1
   hooks:
-    - id: go-build
+    - id: go-build-repo-mod
     - id: go-imports
     - id: go-mod-tidy
-    - id: golangci-lint
-    - id: no-go-testing
-    - id: validate-toml
+    - id: golangci-lint-repo-mod
