@@ -45,8 +45,8 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 	})
 
 	s = sentry.StartSpan(ctx, "processing")
-	s.Description = "Replace idle stacks"
-	p.ReplaceIdleStacks()
+	s.Description = "Normalize profile"
+	p.Normalize()
 	s.Finish()
 
 	s = sentry.StartSpan(ctx, "processing")

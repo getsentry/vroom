@@ -19,7 +19,7 @@ func IsRustApplicationPackage(path string) bool {
 
 // isApplicationSymbol determines whether the image represents that of the application
 // binary (or a binary embedded in the application binary) by checking its path.
-func IsIOSApplicationPackage(path string) bool {
+func IsCocoaApplicationPackage(path string) bool {
 	// These are the path patterns that iOS uses for applications, system
 	// libraries are stored elsewhere.
 	return strings.HasPrefix(path, "/private/var/containers") ||

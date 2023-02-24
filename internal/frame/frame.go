@@ -102,8 +102,8 @@ func (f Frame) IsNodeApplicationFrame() bool {
 	return strings.Contains(f.Path, "node_modules")
 }
 
-func (f Frame) IsIOSApplicationFrame() bool {
-	return packageutil.IsIOSApplicationPackage(f.Path)
+func (f Frame) IsCocoaApplicationFrame() bool {
+	return packageutil.IsCocoaApplicationPackage(f.Package)
 }
 
 func (f Frame) IsRustApplicationFrame() bool {

@@ -203,12 +203,8 @@ func (p LegacyProfile) GetReceived() time.Time {
 	return p.Received.Time()
 }
 
-func (p *LegacyProfile) Raw() []byte {
-	return p.Profile
-}
-
-func (p *LegacyProfile) ReplaceIdleStacks() {
-	if p.Platform == "ios" {
+func (p *LegacyProfile) Normalize() {
+	if p.Platform == platform.Cocoa {
 		p.Trace.(*IOS).ReplaceIdleStacks()
 	}
 }

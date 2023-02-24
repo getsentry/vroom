@@ -180,7 +180,7 @@ func (p IOS) CallTrees() map[uint64][]*nodetree.Node {
 					current = trees[s.ThreadID][i]
 					current.Update(s.RelativeTimestampNS)
 				} else {
-					n := nodetree.NodeFromFrame(f.Package, f.Function, f.AbsPath, f.LineNo, previousTimestamp[s.ThreadID], s.RelativeTimestampNS, fingerprint, packageutil.IsIOSApplicationPackage(f.Package))
+					n := nodetree.NodeFromFrame(f.Package, f.Function, f.AbsPath, f.LineNo, previousTimestamp[s.ThreadID], s.RelativeTimestampNS, fingerprint, packageutil.IsCocoaApplicationPackage(f.Package))
 					trees[s.ThreadID] = append(trees[s.ThreadID], n)
 					current = n
 				}
@@ -190,7 +190,7 @@ func (p IOS) CallTrees() map[uint64][]*nodetree.Node {
 					current = current.Children[i]
 					current.Update(s.RelativeTimestampNS)
 				} else {
-					n := nodetree.NodeFromFrame(f.Package, f.Function, f.AbsPath, f.LineNo, previousTimestamp[s.ThreadID], s.RelativeTimestampNS, fingerprint, packageutil.IsIOSApplicationPackage(f.Package))
+					n := nodetree.NodeFromFrame(f.Package, f.Function, f.AbsPath, f.LineNo, previousTimestamp[s.ThreadID], s.RelativeTimestampNS, fingerprint, packageutil.IsCocoaApplicationPackage(f.Package))
 					current.Children = append(current.Children, n)
 					current = n
 				}
@@ -352,7 +352,7 @@ func (p IOS) Speedscope() (speedscope.Output, error) {
 				frames = append(frames, speedscope.Frame{
 					File:          fr.Filename,
 					Image:         nodetree.PackageBaseName(fr.Package),
-					IsApplication: packageutil.IsIOSApplicationPackage(fr.Package),
+					IsApplication: packageutil.IsCocoaApplicationPackage(fr.Package),
 					Line:          fr.LineNo,
 					Name:          symbolName,
 				})
