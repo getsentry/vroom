@@ -107,7 +107,7 @@ func (f Frame) IsCocoaApplicationFrame() bool {
 }
 
 func (f Frame) IsRustApplicationFrame() bool {
-	return packageutil.IsRustApplicationPackage(f.Path)
+	return packageutil.IsRustApplicationPackage(f.Package)
 }
 
 func (f Frame) IsPythonApplicationFrame() bool {
