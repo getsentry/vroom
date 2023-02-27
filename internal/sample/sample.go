@@ -52,7 +52,7 @@ type (
 		ElapsedSinceStartNS uint64 `json:"elapsed_since_start_ns"`
 		QueueAddress        string `json:"queue_address,omitempty"`
 		StackID             int    `json:"stack_id"`
-		State               State  `json:"state"`
+		State               State  `json:"state,omitempty"`
 		ThreadID            uint64 `json:"thread_id"`
 	}
 
@@ -357,13 +357,13 @@ func (p *Profile) IsApplicationFrame(f frame.Frame) bool {
 		return *f.InApp
 	}
 	switch p.Platform {
-	case "node":
+	case platform.Node:
 		return f.IsNodeApplicationFrame()
-	case "cocoa":
-		return f.IsIOSApplicationFrame()
-	case "rust":
+	case platform.Cocoa:
+		return f.IsCocoaApplicationFrame()
+	case platform.Rust:
 		return f.IsRustApplicationFrame()
-	case "python":
+	case platform.Python:
 		return f.IsPythonApplicationFrame()
 	}
 	return true
@@ -389,12 +389,9 @@ func (p *Profile) Metadata() metadata.Metadata {
 	}
 }
 
-func (p *Profile) Raw() []byte {
-	return []byte{}
-}
-
-func (p *Profile) ReplaceIdleStacks() {
+func (p *Profile) Normalize() {
 	p.Trace.ReplaceIdleStacks()
+	p.setInAppFrames()
 }
 
 func (t Trace) SamplesByThreadD() ([]uint64, map[uint64][]*Sample) {
@@ -524,4 +521,13 @@ func (t Trace) CollectFrames(stackID int) []frame.Frame {
 		frames = append(frames, t.Frames[frameID])
 	}
 	return frames
+}
+
+func (p *Profile) setInAppFrames() {
+	for i := range p.Trace.Frames {
+		f := p.Trace.Frames[i]
+		inApp := p.IsApplicationFrame(f)
+		f.InApp = &inApp
+		p.Trace.Frames[i] = f
+	}
 }

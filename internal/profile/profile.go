@@ -26,22 +26,15 @@ type (
 		GetTimestamp() time.Time
 		GetTransaction() transaction.Transaction
 
-		Metadata() metadata.Metadata
-		Raw() []byte
-
 		CallTrees() (map[uint64][]*nodetree.Node, error)
-		ReplaceIdleStacks()
+		Metadata() metadata.Metadata
+		Normalize()
 		Speedscope() (speedscope.Output, error)
 		StoragePath() string
 	}
 
 	Profile struct {
-		version string
-
 		profile profileInterface
-
-		sample *sample.Profile
-		legacy *LegacyProfile
 	}
 
 	version struct {
@@ -55,26 +48,17 @@ func (p *Profile) UnmarshalJSON(b []byte) error {
 	if err != nil {
 		return err
 	}
-	p.version = v.Version
-	switch p.version {
+	switch v.Version {
 	case "":
-		p.legacy = new(LegacyProfile)
-		p.profile = p.legacy
-		return json.Unmarshal(b, &p.legacy)
+		p.profile = new(LegacyProfile)
 	default:
-		p.sample = new(sample.Profile)
-		p.profile = p.sample
-		return json.Unmarshal(b, &p.sample)
+		p.profile = new(sample.Profile)
 	}
+	return json.Unmarshal(b, &p.profile)
 }
 
 func (p Profile) MarshalJSON() ([]byte, error) {
-	switch p.version {
-	case "":
-		return json.Marshal(p.legacy)
-	default:
-		return json.Marshal(p.sample)
-	}
+	return json.Marshal(p.profile)
 }
 
 func (p *Profile) CallTrees() (map[uint64][]*nodetree.Node, error) {
@@ -109,12 +93,8 @@ func (p *Profile) Platform() platform.Platform {
 	return p.profile.GetPlatform()
 }
 
-func (p *Profile) Raw() []byte {
-	return p.profile.Raw()
-}
-
-func (p *Profile) ReplaceIdleStacks() {
-	p.profile.ReplaceIdleStacks()
+func (p *Profile) Normalize() {
+	p.profile.Normalize()
 }
 
 func (p *Profile) Transaction() transaction.Transaction {
