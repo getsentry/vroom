@@ -6,6 +6,7 @@ import (
 
 	"github.com/getsentry/vroom/internal/frame"
 	"github.com/getsentry/vroom/internal/nodetree"
+	"github.com/getsentry/vroom/internal/platform"
 	"github.com/getsentry/vroom/internal/profile"
 	"github.com/getsentry/vroom/internal/sample"
 	"github.com/getsentry/vroom/internal/speedscope"
@@ -13,8 +14,8 @@ import (
 )
 
 var firstSampledProfile = sample.Profile{
-	Platform: "cocoa",
-	Version:  "v1",
+	Platform: platform.Cocoa,
+	Version:  "1",
 	Trace: sample.Trace{
 		Frames: []frame.Frame{
 			{
@@ -67,8 +68,8 @@ var firstSampledProfile = sample.Profile{
 } // end prof definition
 
 var secondSampledProfile = sample.Profile{
-	Platform: "cocoa",
-	Version:  "v1",
+	Platform: platform.Cocoa,
+	Version:  "1",
 	Trace: sample.Trace{
 		Frames: []frame.Frame{
 			{
