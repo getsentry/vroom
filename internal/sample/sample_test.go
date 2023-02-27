@@ -352,24 +352,23 @@ func TestCallTrees(t *testing.T) {
 		{
 			name: "call tree with multiple samples per frame",
 			profile: Profile{
-				Transaction: Transaction{ActiveThreadID: 1},
-				Transactions: []Transaction{
-					{ActiveThreadID: 1},
-				},
-				Trace: Trace{
-					Samples: []Sample{
-						{StackID: 0, ElapsedSinceStartNS: 10, ThreadID: 1},
-						{StackID: 1, ElapsedSinceStartNS: 40, ThreadID: 1},
-						{StackID: 1, ElapsedSinceStartNS: 50, ThreadID: 1},
-					},
-					Stacks: []Stack{
-						{1, 0},
-						{2, 1, 0},
-					},
-					Frames: []frame.Frame{
-						{Function: "function0"},
-						{Function: "function1"},
-						{Function: "function2"},
+				RawProfile: RawProfile{
+					Transaction: Transaction{ActiveThreadID: 1},
+					Trace: Trace{
+						Samples: []Sample{
+							{StackID: 0, ElapsedSinceStartNS: 10, ThreadID: 1},
+							{StackID: 1, ElapsedSinceStartNS: 40, ThreadID: 1},
+							{StackID: 1, ElapsedSinceStartNS: 50, ThreadID: 1},
+						},
+						Stacks: []Stack{
+							{1, 0},
+							{2, 1, 0},
+						},
+						Frames: []frame.Frame{
+							{Function: "function0"},
+							{Function: "function1"},
+							{Function: "function2"},
+						},
 					},
 				},
 			},
@@ -410,23 +409,22 @@ func TestCallTrees(t *testing.T) {
 		{
 			name: "call tree with single sample frames",
 			profile: Profile{
-				Transaction: Transaction{ActiveThreadID: 1},
-				Transactions: []Transaction{
-					{ActiveThreadID: 1},
-				},
-				Trace: Trace{
-					Samples: []Sample{
-						{StackID: 0, ElapsedSinceStartNS: 10, ThreadID: 1},
-						{StackID: 1, ElapsedSinceStartNS: 40, ThreadID: 1},
-					},
-					Stacks: []Stack{
-						{1, 0},
-						{2, 1, 0},
-					},
-					Frames: []frame.Frame{
-						{Function: "function0"},
-						{Function: "function1"},
-						{Function: "function2"},
+				RawProfile: RawProfile{
+					Transaction: Transaction{ActiveThreadID: 1},
+					Trace: Trace{
+						Samples: []Sample{
+							{StackID: 0, ElapsedSinceStartNS: 10, ThreadID: 1},
+							{StackID: 1, ElapsedSinceStartNS: 40, ThreadID: 1},
+						},
+						Stacks: []Stack{
+							{1, 0},
+							{2, 1, 0},
+						},
+						Frames: []frame.Frame{
+							{Function: "function0"},
+							{Function: "function1"},
+							{Function: "function2"},
+						},
 					},
 				},
 			},
@@ -467,25 +465,24 @@ func TestCallTrees(t *testing.T) {
 		{
 			name: "call tree with single samples",
 			profile: Profile{
-				Transaction: Transaction{ActiveThreadID: 1},
-				Transactions: []Transaction{
-					{ActiveThreadID: 1},
-				},
-				Trace: Trace{
-					Samples: []Sample{
-						{StackID: 0, ElapsedSinceStartNS: 10, ThreadID: 1},
-						{StackID: 1, ElapsedSinceStartNS: 20, ThreadID: 1},
-						{StackID: 2, ElapsedSinceStartNS: 30, ThreadID: 1},
-					},
-					Stacks: []Stack{
-						{0},
-						{1},
-						{2},
-					},
-					Frames: []frame.Frame{
-						{Function: "function0"},
-						{Function: "function1"},
-						{Function: "function2"},
+				RawProfile: RawProfile{
+					Transaction: Transaction{ActiveThreadID: 1},
+					Trace: Trace{
+						Samples: []Sample{
+							{StackID: 0, ElapsedSinceStartNS: 10, ThreadID: 1},
+							{StackID: 1, ElapsedSinceStartNS: 20, ThreadID: 1},
+							{StackID: 2, ElapsedSinceStartNS: 30, ThreadID: 1},
+						},
+						Stacks: []Stack{
+							{0},
+							{1},
+							{2},
+						},
+						Frames: []frame.Frame{
+							{Function: "function0"},
+							{Function: "function1"},
+							{Function: "function2"},
+						},
 					},
 				},
 			},

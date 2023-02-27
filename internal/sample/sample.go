@@ -1,6 +1,7 @@
 package sample
 
 import (
+	"encoding/json"
 	"fmt"
 	"hash/fnv"
 	"sort"
@@ -76,6 +77,10 @@ type (
 	}
 
 	Profile struct {
+		RawProfile
+	}
+
+	RawProfile struct {
 		DebugMeta      debugmeta.DebugMeta                 `json:"debug_meta"`
 		Device         Device                              `json:"device"`
 		Environment    string                              `json:"environment,omitempty"`
@@ -92,7 +97,7 @@ type (
 		Timestamp      time.Time                           `json:"timestamp"`
 		Trace          Trace                               `json:"profile"`
 		Transaction    Transaction                         `json:"transaction"`
-		Transactions   []Transaction                       `json:"transactions"`
+		Transactions   []Transaction                       `json:"transactions,omitempty"`
 		Version        string                              `json:"version"`
 	}
 
@@ -102,6 +107,15 @@ type (
 const (
 	Idle State = "idle"
 )
+
+func (p *Profile) UnmarshalJSON(b []byte) error {
+	err := json.Unmarshal(b, &p.RawProfile)
+	if err != nil {
+		return err
+	}
+	p.moveTransaction()
+	return nil
+}
 
 func (p Profile) GetRelease() string {
 	return p.Release
@@ -166,7 +180,7 @@ func (p Profile) GetRetentionDays() int {
 }
 
 func (p Profile) GetDurationNS() uint64 {
-	t := p.Transactions[0]
+	t := p.Transaction
 	return t.RelativeEndNS - t.RelativeStartNS
 }
 
@@ -175,7 +189,7 @@ func (p Profile) CallTrees() (map[uint64][]*nodetree.Node, error) {
 		return p.Trace.Samples[i].ElapsedSinceStartNS < p.Trace.Samples[j].ElapsedSinceStartNS
 	})
 
-	activeThreadID := p.Transactions[0].ActiveThreadID
+	activeThreadID := p.Transaction.ActiveThreadID
 	treesByThreadID := make(map[uint64][]*nodetree.Node)
 	previousTimestamp := make(map[uint64]uint64)
 
@@ -247,7 +261,7 @@ func (p *Profile) Speedscope() (speedscope.Output, error) {
 	frames := make([]speedscope.Frame, 0)
 	// we need to find the frame index of the main function so we can remove the frames before it
 	mainFunctionFrameIndex := -1
-	mainThreadID := p.Transactions[0].ActiveThreadID
+	mainThreadID := p.Transaction.ActiveThreadID
 	for _, sample := range p.Trace.Samples {
 		threadID := strconv.FormatUint(sample.ThreadID, 10)
 		stack := p.Trace.Stacks[sample.StackID]
@@ -316,7 +330,7 @@ func (p *Profile) Speedscope() (speedscope.Output, error) {
 
 	return speedscope.Output{
 		ActiveProfileIndex: mainThreadProfileIndex,
-		DurationNS:         p.Transactions[0].DurationNS(),
+		DurationNS:         p.Transaction.DurationNS(),
 		Images:             p.DebugMeta.Images,
 		Metadata: speedscope.ProfileMetadata{
 			ProfileView: speedscope.ProfileView{
@@ -327,16 +341,16 @@ func (p *Profile) Speedscope() (speedscope.Output, error) {
 				DeviceModel:          p.Device.Model,
 				DeviceOSName:         p.OS.Name,
 				DeviceOSVersion:      p.OS.Version,
-				DurationNS:           p.Transactions[0].DurationNS(),
+				DurationNS:           p.Transaction.DurationNS(),
 				Environment:          p.Environment,
 				OrganizationID:       p.OrganizationID,
 				Platform:             p.Platform,
 				ProfileID:            p.EventID,
 				ProjectID:            p.ProjectID,
 				Received:             p.Received,
-				TraceID:              p.Transactions[0].TraceID,
-				TransactionID:        p.Transactions[0].ID,
-				TransactionName:      p.Transactions[0].Name,
+				TraceID:              p.Transaction.TraceID,
+				TransactionID:        p.Transaction.ID,
+				TransactionName:      p.Transaction.Name,
 			},
 			Timestamp: timeutil.Time(p.Timestamp),
 			Version:   p.Release,
@@ -346,7 +360,7 @@ func (p *Profile) Speedscope() (speedscope.Output, error) {
 		Profiles:        allProfiles,
 		ProjectID:       p.ProjectID,
 		Shared:          speedscope.SharedData{Frames: frames},
-		TransactionName: p.Transactions[0].Name,
+		TransactionName: p.Transaction.Name,
 		Version:         p.Release,
 		Measurements:    p.Measurements,
 	}, nil
@@ -382,9 +396,9 @@ func (p *Profile) Metadata() metadata.Metadata {
 		ID:                   p.EventID,
 		ProjectID:            strconv.FormatUint(p.ProjectID, 10),
 		Timestamp:            p.Timestamp.Unix(),
-		TraceDurationMs:      float64(p.Transactions[0].DurationNS()) / 1_000_000,
-		TransactionID:        p.Transactions[0].ID,
-		TransactionName:      p.Transactions[0].Name,
+		TraceDurationMs:      float64(p.Transaction.DurationNS()) / 1_000_000,
+		TransactionID:        p.Transaction.ID,
+		TransactionName:      p.Transaction.Name,
 		VersionName:          p.Release,
 	}
 }
@@ -529,5 +543,12 @@ func (p *Profile) setInAppFrames() {
 		inApp := p.IsApplicationFrame(f)
 		f.InApp = &inApp
 		p.Trace.Frames[i] = f
+	}
+}
+
+func (p *RawProfile) moveTransaction() {
+	if len(p.Transactions) > 0 {
+		p.Transaction = p.Transactions[0]
+		p.Transactions = nil
 	}
 }
