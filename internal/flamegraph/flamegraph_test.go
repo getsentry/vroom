@@ -11,6 +11,7 @@ import (
 	"github.com/getsentry/vroom/internal/sample"
 	"github.com/getsentry/vroom/internal/speedscope"
 	"github.com/getsentry/vroom/internal/testutil"
+	"github.com/getsentry/vroom/internal/transaction"
 )
 
 var firstSampledProfile = sample.Profile{
@@ -61,7 +62,7 @@ var firstSampledProfile = sample.Profile{
 				},
 			}, // end Samples
 		}, // end Trace
-		Transaction: sample.Transaction{
+		Transaction: transaction.Transaction{
 			ActiveThreadID: 0,
 		},
 	},
@@ -103,7 +104,7 @@ var secondSampledProfile = sample.Profile{
 				},
 			}, // end Samples
 		}, // end Trace
-		Transaction: sample.Transaction{
+		Transaction: transaction.Transaction{
 			ActiveThreadID: 0,
 		},
 	},

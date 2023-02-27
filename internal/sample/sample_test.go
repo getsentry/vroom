@@ -6,6 +6,7 @@ import (
 	"github.com/getsentry/vroom/internal/frame"
 	"github.com/getsentry/vroom/internal/nodetree"
 	"github.com/getsentry/vroom/internal/testutil"
+	"github.com/getsentry/vroom/internal/transaction"
 )
 
 func TestReplaceIdleStacks(t *testing.T) {
@@ -353,7 +354,7 @@ func TestCallTrees(t *testing.T) {
 			name: "call tree with multiple samples per frame",
 			profile: Profile{
 				RawProfile: RawProfile{
-					Transaction: Transaction{ActiveThreadID: 1},
+					Transaction: transaction.Transaction{ActiveThreadID: 1},
 					Trace: Trace{
 						Samples: []Sample{
 							{StackID: 0, ElapsedSinceStartNS: 10, ThreadID: 1},
@@ -410,7 +411,7 @@ func TestCallTrees(t *testing.T) {
 			name: "call tree with single sample frames",
 			profile: Profile{
 				RawProfile: RawProfile{
-					Transaction: Transaction{ActiveThreadID: 1},
+					Transaction: transaction.Transaction{ActiveThreadID: 1},
 					Trace: Trace{
 						Samples: []Sample{
 							{StackID: 0, ElapsedSinceStartNS: 10, ThreadID: 1},
@@ -466,7 +467,7 @@ func TestCallTrees(t *testing.T) {
 			name: "call tree with single samples",
 			profile: Profile{
 				RawProfile: RawProfile{
-					Transaction: Transaction{ActiveThreadID: 1},
+					Transaction: transaction.Transaction{ActiveThreadID: 1},
 					Trace: Trace{
 						Samples: []Sample{
 							{StackID: 0, ElapsedSinceStartNS: 10, ThreadID: 1},

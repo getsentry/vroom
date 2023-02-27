@@ -96,8 +96,8 @@ type (
 		Runtime        Runtime                             `json:"runtime"`
 		Timestamp      time.Time                           `json:"timestamp"`
 		Trace          Trace                               `json:"profile"`
-		Transaction    Transaction                         `json:"transaction"`
-		Transactions   []Transaction                       `json:"transactions,omitempty"`
+		Transaction    transaction.Transaction             `json:"transaction"`
+		Transactions   []transaction.Transaction           `json:"transactions,omitempty"`
 		Version        string                              `json:"version"`
 	}
 
@@ -123,10 +123,6 @@ func (p Profile) GetRelease() string {
 
 func (q QueueMetadata) LabeledAsMainThread() bool {
 	return q.Label == "com.apple.main-thread"
-}
-
-func (t Transaction) DurationNS() uint64 {
-	return t.RelativeEndNS - t.RelativeStartNS
 }
 
 func (p Profile) GetOrganizationID() uint64 {
@@ -158,13 +154,7 @@ func (p Profile) GetEnvironment() string {
 }
 
 func (p Profile) GetTransaction() transaction.Transaction {
-	return transaction.Transaction{
-		ActiveThreadID: p.Transaction.ActiveThreadID,
-		DurationNS:     p.Transaction.DurationNS(),
-		ID:             p.Transaction.ID,
-		Name:           p.Transaction.Name,
-		TraceID:        p.Transaction.TraceID,
-	}
+	return p.Transaction
 }
 
 func (p Profile) GetTimestamp() time.Time {
@@ -180,8 +170,11 @@ func (p Profile) GetRetentionDays() int {
 }
 
 func (p Profile) GetDurationNS() uint64 {
-	t := p.Transaction
-	return t.RelativeEndNS - t.RelativeStartNS
+	maxSampleIndex := len(p.Trace.Samples) - 1
+	if maxSampleIndex < 0 {
+		return 0
+	}
+	return p.Trace.Samples[maxSampleIndex].ElapsedSinceStartNS - p.Trace.Samples[0].ElapsedSinceStartNS
 }
 
 func (p Profile) CallTrees() (map[uint64][]*nodetree.Node, error) {
@@ -330,7 +323,7 @@ func (p *Profile) Speedscope() (speedscope.Output, error) {
 
 	return speedscope.Output{
 		ActiveProfileIndex: mainThreadProfileIndex,
-		DurationNS:         p.Transaction.DurationNS(),
+		DurationNS:         p.GetDurationNS(),
 		Images:             p.DebugMeta.Images,
 		Metadata: speedscope.ProfileMetadata{
 			ProfileView: speedscope.ProfileView{
@@ -341,7 +334,7 @@ func (p *Profile) Speedscope() (speedscope.Output, error) {
 				DeviceModel:          p.Device.Model,
 				DeviceOSName:         p.OS.Name,
 				DeviceOSVersion:      p.OS.Version,
-				DurationNS:           p.Transaction.DurationNS(),
+				DurationNS:           p.GetDurationNS(),
 				Environment:          p.Environment,
 				OrganizationID:       p.OrganizationID,
 				Platform:             p.Platform,
@@ -396,7 +389,7 @@ func (p *Profile) Metadata() metadata.Metadata {
 		ID:                   p.EventID,
 		ProjectID:            strconv.FormatUint(p.ProjectID, 10),
 		Timestamp:            p.Timestamp.Unix(),
-		TraceDurationMs:      float64(p.Transaction.DurationNS()) / 1_000_000,
+		TraceDurationMs:      float64(p.GetDurationNS()) / 1_000_000,
 		TransactionID:        p.Transaction.ID,
 		TransactionName:      p.Transaction.Name,
 		VersionName:          p.Release,
