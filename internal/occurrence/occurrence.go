@@ -20,6 +20,7 @@ type (
 	EvidenceName string
 	IssueTitle   string
 	Type         int
+	Context      string
 
 	Evidence struct {
 		Name      EvidenceName `json:"name"`
@@ -29,17 +30,17 @@ type (
 
 	// Event holds the metadata related to a profile.
 	Event struct {
-		Environment    string            `json:"environment"`
-		ID             string            `json:"event_id"`
-		OrganizationID uint64            `json:"-"`
-		Platform       platform.Platform `json:"platform"`
-		ProjectID      uint64            `json:"project_id"`
-		Received       time.Time         `json:"received"`
-		Release        string            `json:"release,omitempty"`
-		StackTrace     StackTrace        `json:"stacktrace"`
-		Tags           map[string]string `json:"tags"`
-		Timestamp      time.Time         `json:"timestamp"`
-		Transaction    string            `json:"transaction,omitempty"`
+		Contexts       map[Context]interface{} `json:"contexts"`
+		Environment    string                  `json:"environment"`
+		ID             string                  `json:"event_id"`
+		OrganizationID uint64                  `json:"-"`
+		Platform       platform.Platform       `json:"platform"`
+		ProjectID      uint64                  `json:"project_id"`
+		Received       time.Time               `json:"received"`
+		Release        string                  `json:"release,omitempty"`
+		StackTrace     StackTrace              `json:"stacktrace"`
+		Tags           map[string]string       `json:"tags"`
+		Timestamp      time.Time               `json:"timestamp"`
 	}
 
 	// Occurrence represents a potential issue detected.
@@ -80,10 +81,13 @@ const (
 	ImageDecodeType       Type = 2002
 	JSONDecodeType        Type = 2003
 
-	EvidenceNamePackage           EvidenceName = "Package"
-	EvidenceNameFunction          EvidenceName = "Suspect function"
 	EvidenceNameDuration          EvidenceName = "Duration"
+	EvidenceNameFunction          EvidenceName = "Suspect function"
+	EvidenceNamePackage           EvidenceName = "Package"
 	EvidenceNameProfilePercentage EvidenceName = "% of the profile"
+	EvidenceNameSampleCount       EvidenceName = "Sample count"
+
+	ContextTrace Context = "trace"
 )
 
 var (
@@ -141,8 +145,15 @@ func NewOccurrence(p profile.Profile, ni nodeInfo) *Occurrence {
 	return &Occurrence{
 		DetectionTime: time.Now().UTC(),
 		Event: Event{
+			Contexts: map[Context]interface{}{
+				ContextTrace: struct {
+					TraceID string `json:"trace_id"`
+				}{
+					TraceID: t.TraceID,
+				},
+			},
 			Environment:    p.Environment(),
-			ID:             p.ID(),
+			ID:             eventID(),
 			OrganizationID: p.OrganizationID(),
 			Platform:       p.Platform(),
 			ProjectID:      p.ProjectID(),
@@ -151,13 +162,16 @@ func NewOccurrence(p profile.Profile, ni nodeInfo) *Occurrence {
 			StackTrace:     StackTrace{Frames: ni.StackTrace},
 			Tags:           tags,
 			Timestamp:      p.Timestamp(),
-			Transaction:    t.ID,
 		},
 		EvidenceData: map[string]interface{}{
 			"frame_duration_ns":   ni.Node.DurationNS,
 			"frame_name":          ni.Node.Name,
 			"frame_package":       ni.Node.Package,
 			"profile_duration_ns": p.DurationNS(),
+			"profile_id":          p.ID(),
+			"sample_count":        ni.Node.SampleCount,
+			"transaction_id":      t.ID,
+			"transaction_name":    t.Name,
 		},
 		EvidenceDisplay: []Evidence{
 			{
@@ -177,9 +191,13 @@ func NewOccurrence(p profile.Profile, ni nodeInfo) *Occurrence {
 				Name:  EvidenceNameProfilePercentage,
 				Value: fmt.Sprintf("%0.2f%%", float64(ni.Node.DurationNS*100)/float64(p.DurationNS())),
 			},
+			{
+				Name:  EvidenceNameSampleCount,
+				Value: strconv.Itoa(ni.Node.SampleCount),
+			},
 		},
 		Fingerprint: fingerprint,
-		ID:          strings.ReplaceAll(uuid.New().String(), "-", ""),
+		ID:          eventID(),
 		IssueTitle:  title,
 		Level:       "info",
 		ProjectID:   p.ProjectID(),
@@ -237,4 +255,8 @@ func (o *Occurrence) Save() (map[string]bigquery.Value, string, error) {
 		"project_id":      strconv.FormatUint(o.Event.ProjectID, 10),
 		"sample_count":    o.sampleCount,
 	}, bigquery.NoDedupeID, nil
+}
+
+func eventID() string {
+	return strings.ReplaceAll(uuid.New().String(), "-", "")
 }
