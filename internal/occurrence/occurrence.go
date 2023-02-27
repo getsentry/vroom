@@ -153,7 +153,7 @@ func NewOccurrence(p profile.Profile, ni nodeInfo) *Occurrence {
 				},
 			},
 			Environment:    p.Environment(),
-			ID:             uuid4(),
+			ID:             eventID(),
 			OrganizationID: p.OrganizationID(),
 			Platform:       p.Platform(),
 			ProjectID:      p.ProjectID(),
@@ -197,7 +197,7 @@ func NewOccurrence(p profile.Profile, ni nodeInfo) *Occurrence {
 			},
 		},
 		Fingerprint: fingerprint,
-		ID:          uuid4(),
+		ID:          eventID(),
 		IssueTitle:  title,
 		Level:       "info",
 		ProjectID:   p.ProjectID(),
@@ -257,6 +257,6 @@ func (o *Occurrence) Save() (map[string]bigquery.Value, string, error) {
 	}, bigquery.NoDedupeID, nil
 }
 
-func uuid4() string {
+func eventID() string {
 	return strings.ReplaceAll(uuid.New().String(), "-", "")
 }
