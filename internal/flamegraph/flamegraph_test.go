@@ -11,102 +11,103 @@ import (
 	"github.com/getsentry/vroom/internal/sample"
 	"github.com/getsentry/vroom/internal/speedscope"
 	"github.com/getsentry/vroom/internal/testutil"
+	"github.com/getsentry/vroom/internal/transaction"
 )
 
 var firstSampledProfile = sample.Profile{
-	Platform: platform.Cocoa,
-	Version:  "1",
-	Trace: sample.Trace{
-		Frames: []frame.Frame{
-			{
-				Function: "a",
-				Package:  "test.package",
+	RawProfile: sample.RawProfile{
+		Platform: platform.Cocoa,
+		Version:  "1",
+		Trace: sample.Trace{
+			Frames: []frame.Frame{
+				{
+					Function: "a",
+					Package:  "test.package",
+				},
+				{
+					Function: "b",
+					Package:  "test.package",
+				},
+				{
+					Function: "c",
+					Package:  "test.package",
+				},
+			}, //end frames
+			Stacks: []sample.Stack{
+				{1, 0}, // b,a
+				{2},    // c
+				{1, 0}, // b,a
+				{0},    // a
 			},
-			{
-				Function: "b",
-				Package:  "test.package",
-			},
-			{
-				Function: "c",
-				Package:  "test.package",
-			},
-		}, //end frames
-		Stacks: []sample.Stack{
-			{1, 0}, // b,a
-			{2},    // c
-			{1, 0}, // b,a
-			{0},    // a
-		},
-		Samples: []sample.Sample{
-			{
-				ElapsedSinceStartNS: 0,
-				StackID:             0,
-				ThreadID:            0,
-			},
-			{
-				ElapsedSinceStartNS: 10,
-				StackID:             1,
-				ThreadID:            0,
-			},
-			{
-				ElapsedSinceStartNS: 20,
-				StackID:             2,
-				ThreadID:            0,
-			},
-			{
-				ElapsedSinceStartNS: 30,
-				StackID:             3,
-				ThreadID:            0,
-			},
-		}, // end Samples
-	}, // end Trace
-	Transactions: []sample.Transaction{
-		{
+			Samples: []sample.Sample{
+				{
+					ElapsedSinceStartNS: 0,
+					StackID:             0,
+					ThreadID:            0,
+				},
+				{
+					ElapsedSinceStartNS: 10,
+					StackID:             1,
+					ThreadID:            0,
+				},
+				{
+					ElapsedSinceStartNS: 20,
+					StackID:             2,
+					ThreadID:            0,
+				},
+				{
+					ElapsedSinceStartNS: 30,
+					StackID:             3,
+					ThreadID:            0,
+				},
+			}, // end Samples
+		}, // end Trace
+		Transaction: transaction.Transaction{
 			ActiveThreadID: 0,
 		},
-	}, // end Transactions
+	},
 } // end prof definition
 
 var secondSampledProfile = sample.Profile{
-	Platform: platform.Cocoa,
-	Version:  "1",
-	Trace: sample.Trace{
-		Frames: []frame.Frame{
-			{
-				Function: "a",
-				Package:  "test.package",
+	RawProfile: sample.RawProfile{
+		Platform: platform.Cocoa,
+		Version:  "1",
+		Trace: sample.Trace{
+			Frames: []frame.Frame{
+				{
+					Function: "a",
+					Package:  "test.package",
+				},
+				{
+					Function: "c",
+					Package:  "test.package",
+				},
+				{
+					Function: "e",
+					Package:  "test.package",
+				},
+			}, //end frames
+			Stacks: []sample.Stack{
+				{0, 1}, // a,c
+				{2},    // e
 			},
-			{
-				Function: "c",
-				Package:  "test.package",
-			},
-			{
-				Function: "e",
-				Package:  "test.package",
-			},
-		}, //end frames
-		Stacks: []sample.Stack{
-			{0, 1}, // a,c
-			{2},    // e
-		},
-		Samples: []sample.Sample{
-			{
-				ElapsedSinceStartNS: 0,
-				StackID:             0,
-				ThreadID:            0,
-			},
-			{
-				ElapsedSinceStartNS: 10,
-				StackID:             1,
-				ThreadID:            0,
-			},
-		}, // end Samples
-	}, // end Trace
-	Transactions: []sample.Transaction{
-		{
+			Samples: []sample.Sample{
+				{
+					ElapsedSinceStartNS: 0,
+					StackID:             0,
+					ThreadID:            0,
+				},
+				{
+					ElapsedSinceStartNS: 10,
+					StackID:             1,
+					ThreadID:            0,
+				},
+			}, // end Samples
+		}, // end Trace
+		Transaction: transaction.Transaction{
 			ActiveThreadID: 0,
 		},
-	}, // end Transactions
+	},
 } // end prof definition
 
 func TestFlamegraphSpeedscopeGeneration(t *testing.T) {
