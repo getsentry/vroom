@@ -4,12 +4,6 @@ on:
   pull_request:
     branches:
       - '*'
-    paths:
-      - 'internal/**'
-      - 'cmd/**'
-      - 'pkg/**'
-      - 'vendor/**'
-      - '.github/workflows/ci.yml'
   push:
     branches:
       - main
