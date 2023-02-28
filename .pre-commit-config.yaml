@@ -4,5 +4,5 @@ repos:
   hooks:
     - id: go-build-repo-mod
     - id: go-imports
-    - id: go-mod-tidy
+    - id: go-mod-tidy-repo
     - id: golangci-lint-repo-mod
