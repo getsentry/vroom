@@ -40,15 +40,6 @@ type (
 		Version string `json:"version"`
 	}
 
-	Transaction struct {
-		ActiveThreadID  uint64 `json:"active_thread_id"`
-		ID              string `json:"id"`
-		Name            string `json:"name"`
-		RelativeEndNS   uint64 `json:"relative_end_ns"`
-		RelativeStartNS uint64 `json:"relative_start_ns"`
-		TraceID         string `json:"trace_id"`
-	}
-
 	Sample struct {
 		ElapsedSinceStartNS uint64 `json:"elapsed_since_start_ns"`
 		QueueAddress        string `json:"queue_address,omitempty"`
