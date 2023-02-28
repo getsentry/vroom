@@ -49,6 +49,9 @@ func GetFlamegraphFromProfiles(
 				var p profile.Profile
 				err := storageutil.UnmarshalCompressed(ctx, profilesBucket, profile.StoragePath(organizationID, projectID, profileID), &p)
 				if err != nil {
+					if errors.Is(err, storage.ErrObjectNotExist) {
+						continue
+					}
 					if errors.Is(err, context.DeadlineExceeded) {
 						return
 					}

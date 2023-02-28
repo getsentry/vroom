@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"cloud.google.com/go/storage"
 	"github.com/getsentry/sentry-go"
 	"github.com/getsentry/vroom/internal/nodetree"
 	"github.com/getsentry/vroom/internal/occurrence"
@@ -221,12 +222,12 @@ func (env *environment) getRawProfile(w http.ResponseWriter, r *http.Request) {
 	err = storageutil.UnmarshalCompressed(ctx, env.profilesBucket, profile.StoragePath(organizationID, projectID, profileID), &p)
 	s.Finish()
 	if err != nil {
+		if errors.Is(err, storage.ErrObjectNotExist) {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
 		var e *googleapi.Error
 		if ok := errors.As(err, &e); ok {
-			if e.Code == 404 {
-				w.WriteHeader(http.StatusNotFound)
-				return
-			}
 			hub.Scope().SetContext("Google Cloud Storage Error", map[string]interface{}{
 				"body":    e.Body,
 				"code":    e.Code,
@@ -294,12 +295,12 @@ func (env *environment) getProfile(w http.ResponseWriter, r *http.Request) {
 	err = storageutil.UnmarshalCompressed(ctx, env.profilesBucket, profile.StoragePath(organizationID, projectID, profileID), &p)
 	s.Finish()
 	if err != nil {
+		if errors.Is(err, storage.ErrObjectNotExist) {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
 		var e *googleapi.Error
 		if ok := errors.As(err, &e); ok {
-			if e.Code == 404 {
-				w.WriteHeader(http.StatusNotFound)
-				return
-			}
 			hub.Scope().SetContext("Google Cloud Storage Error", map[string]interface{}{
 				"body":    e.Body,
 				"code":    e.Code,
