@@ -97,32 +97,30 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
-		if _, enabled := env.config.OccurrencesEnabledOrganizations[orgID]; enabled {
-			// Filter in-place occurrences without a type.
-			var i int
-			for _, o := range occurrences {
-				if o.Type != occurrence.NoneType {
-					occurrences[i] = o
-					i++
-				}
+		// Filter in-place occurrences without a type.
+		var i int
+		for _, o := range occurrences {
+			if o.Type != occurrence.NoneType {
+				occurrences[i] = o
+				i++
 			}
-			occurrences = occurrences[:i]
+		}
+		occurrences = occurrences[:i]
+		s = sentry.StartSpan(ctx, "processing")
+		s.Description = "Build Kafka message batch"
+		occurrenceMessages, err := occurrence.GenerateKafkaMessageBatch(occurrences)
+		s.Finish()
+		if err != nil {
+			// Report the error but don't fail profile insertion
+			hub.CaptureException(err)
+		} else {
 			s = sentry.StartSpan(ctx, "processing")
-			s.Description = "Build Kafka message batch"
-			messages, err := occurrence.GenerateKafkaMessageBatch(occurrences)
+			s.Description = "Send occurrences to Kafka"
+			err = env.occurrencesWriter.WriteMessages(ctx, occurrenceMessages...)
 			s.Finish()
 			if err != nil {
 				// Report the error but don't fail profile insertion
 				hub.CaptureException(err)
-			} else {
-				s = sentry.StartSpan(ctx, "processing")
-				s.Description = "Send occurrences to Kafka"
-				err = env.occurrencesWriter.WriteMessages(ctx, messages...)
-				s.Finish()
-				if err != nil {
-					// Report the error but don't fail profile insertion
-					hub.CaptureException(err)
-				}
 			}
 		}
 
