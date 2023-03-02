@@ -16,6 +16,7 @@ import (
 
 var firstSampledProfile = sample.Profile{
 	RawProfile: sample.RawProfile{
+		EventID:  "ab1",
 		Platform: platform.Cocoa,
 		Version:  "1",
 		Trace: sample.Trace{
@@ -70,6 +71,7 @@ var firstSampledProfile = sample.Profile{
 
 var secondSampledProfile = sample.Profile{
 	RawProfile: sample.RawProfile{
+		EventID:  "cd2",
 		Platform: platform.Cocoa,
 		Version:  "1",
 		Trace: sample.Trace{
@@ -86,10 +88,15 @@ var secondSampledProfile = sample.Profile{
 					Function: "e",
 					Package:  "test.package",
 				},
+				{
+					Function: "b",
+					Package:  "test.package",
+				},
 			}, //end frames
 			Stacks: []sample.Stack{
 				{0, 1}, // a,c
 				{2},    // e
+				{3, 0}, // b,a
 			},
 			Samples: []sample.Sample{
 				{
@@ -100,6 +107,11 @@ var secondSampledProfile = sample.Profile{
 				{
 					ElapsedSinceStartNS: 10,
 					StackID:             1,
+					ThreadID:            0,
+				},
+				{
+					ElapsedSinceStartNS: 20,
+					StackID:             2,
 					ThreadID:            0,
 				},
 			}, // end Samples
@@ -128,7 +140,7 @@ func TestFlamegraphSpeedscopeGeneration(t *testing.T) {
 	if err != nil {
 		t.Fatalf("error trying to generate call tree: %V", err)
 	}
-	addCallTreeToFlamegraph(&flamegraphTree, callTrees[0])
+	addCallTreeToFlamegraph(&flamegraphTree, callTrees[0], pr.ID())
 
 	// second
 	bytes, err = json.Marshal(secondSampledProfile)
@@ -146,26 +158,38 @@ func TestFlamegraphSpeedscopeGeneration(t *testing.T) {
 		t.Fatalf("error trying to generate call tree: %V", err)
 	}
 
-	addCallTreeToFlamegraph(&flamegraphTree, callTrees[0])
+	addCallTreeToFlamegraph(&flamegraphTree, callTrees[0], pr.ID())
 
 	sp := toSpeedscope(flamegraphTree, 1)
 	prof := sp.Profiles[0].(speedscope.SampledProfile)
 
 	expectedSamples := [][]int{
-		{0, 1},
-		{0},
-		{2, 0},
-		{2},
-		{3},
+		{0, 1}, // [a, b]   prof_id[0, 1]
+		{0},    // [a]      prof_id[0]
+		{2, 0}, // [c, a]   prof_id[1]
+		{2},    // [c]      prof_id[0]
+		{3},    // [e]      prof_id[1]
 	}
 
-	expectedWeights := []uint64{2, 1, 1, 1, 1}
+	expectedSamplesProfiles := [][]int{
+		{0, 1},
+		{0},
+		{1},
+		{0},
+		{1},
+	}
+
+	expectedWeights := []uint64{3, 1, 1, 1, 1}
 
 	if diff := testutil.Diff(expectedSamples, prof.Samples); diff != "" {
-		t.Fatalf("expected \"%v\" but was \"%v\"", expectedSamples, prof.Samples)
+		t.Fatalf("expected \"%v\" found \"%v\"", expectedSamples, prof.Samples)
 	}
 
 	if diff := testutil.Diff(expectedWeights, prof.Weights); diff != "" {
-		t.Fatalf("expected \"%v\" but was \"%v\"", expectedWeights, prof.Weights)
+		t.Fatalf("expected \"%v\" found \"%v\"", expectedWeights, prof.Weights)
+	}
+
+	if diff := testutil.Diff(expectedSamplesProfiles, prof.SamplesProfiles); diff != "" {
+		t.Fatalf("expected \"%v\" found \"%v\"", expectedSamplesProfiles, prof.SamplesProfiles)
 	}
 }
