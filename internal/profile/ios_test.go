@@ -41,6 +41,7 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 			want: map[uint64][]*nodetree.Node{
 				1: {
 					{
+						ProfileIDs:  make(map[string]struct{}),
 						DurationNS:  1,
 						EndNS:       1,
 						Fingerprint: 1124161485517443911,
@@ -53,6 +54,7 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 						},
 						Children: []*nodetree.Node{
 							{
+								ProfileIDs:  make(map[string]struct{}),
 								DurationNS:  1,
 								EndNS:       1,
 								Fingerprint: 17905447077897174944,
@@ -65,6 +67,7 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 								},
 								Children: []*nodetree.Node{
 									{
+										ProfileIDs:  make(map[string]struct{}),
 										DurationNS:  1,
 										EndNS:       1,
 										Fingerprint: 16084607411097338726,
@@ -113,6 +116,7 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 			want: map[uint64][]*nodetree.Node{
 				1: {
 					{
+						ProfileIDs:  make(map[string]struct{}),
 						DurationNS:  1,
 						EndNS:       1,
 						Fingerprint: 1124161485517443911,
@@ -125,6 +129,7 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 						},
 						Children: []*nodetree.Node{
 							{
+								ProfileIDs:  make(map[string]struct{}),
 								DurationNS:  1,
 								EndNS:       1,
 								Fingerprint: 17905447077897174944,
@@ -137,6 +142,7 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 								},
 								Children: []*nodetree.Node{
 									{
+										ProfileIDs:  make(map[string]struct{}),
 										DurationNS:  1,
 										EndNS:       1,
 										Fingerprint: 16084607411097338726,
@@ -153,6 +159,7 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 						},
 					},
 					{
+						ProfileIDs:  make(map[string]struct{}),
 						DurationNS:  1,
 						EndNS:       2,
 						Fingerprint: 1124161485517443908,
@@ -166,6 +173,7 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 						},
 						Children: []*nodetree.Node{
 							{
+								ProfileIDs:  make(map[string]struct{}),
 								DurationNS:  1,
 								EndNS:       2,
 								Fingerprint: 7967440964543288636,
@@ -179,6 +187,7 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 								},
 								Children: []*nodetree.Node{
 									{
+										ProfileIDs:  make(map[string]struct{}),
 										DurationNS:  1,
 										EndNS:       2,
 										Fingerprint: 13274796176329250277,
@@ -227,6 +236,7 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 			want: map[uint64][]*nodetree.Node{
 				1: {
 					{
+						ProfileIDs:  make(map[string]struct{}),
 						DurationNS:  2,
 						EndNS:       2,
 						Fingerprint: 1124161485517443911,
@@ -239,6 +249,7 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 						},
 						Children: []*nodetree.Node{
 							{
+								ProfileIDs:  make(map[string]struct{}),
 								DurationNS:  2,
 								EndNS:       2,
 								Fingerprint: 17905447077897174944,
@@ -251,6 +262,7 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 								},
 								Children: []*nodetree.Node{
 									{
+										ProfileIDs:  make(map[string]struct{}),
 										DurationNS:  1,
 										EndNS:       1,
 										Fingerprint: 16084607411097338726,
@@ -298,6 +310,7 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 			want: map[uint64][]*nodetree.Node{
 				1: {
 					{
+						ProfileIDs:  make(map[string]struct{}),
 						DurationNS:  2,
 						EndNS:       2,
 						Fingerprint: 1124161485517443911,
@@ -310,6 +323,7 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 						},
 						Children: []*nodetree.Node{
 							{
+								ProfileIDs:  make(map[string]struct{}),
 								DurationNS:  2,
 								EndNS:       2,
 								Fingerprint: 17905447077897174944,
@@ -322,6 +336,7 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 								},
 								Children: []*nodetree.Node{
 									{
+										ProfileIDs:  make(map[string]struct{}),
 										DurationNS:  1,
 										EndNS:       2,
 										Fingerprint: 16084607411097338726,
@@ -387,6 +402,7 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 			want: map[uint64][]*nodetree.Node{
 				1: {
 					{
+						ProfileIDs:  make(map[string]struct{}),
 						DurationNS:  4,
 						EndNS:       4,
 						Fingerprint: 1124161485517443911,
@@ -399,6 +415,7 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 						},
 						Children: []*nodetree.Node{
 							{
+								ProfileIDs:  make(map[string]struct{}),
 								DurationNS:  4,
 								EndNS:       4,
 								Fingerprint: 17905447077897174944,
@@ -411,6 +428,7 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 								},
 								Children: []*nodetree.Node{
 									{
+										ProfileIDs:  make(map[string]struct{}),
 										DurationNS:  1,
 										EndNS:       1,
 										Fingerprint: 16084607411097338726,
@@ -423,6 +441,7 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 										},
 									},
 									{
+										ProfileIDs:  make(map[string]struct{}),
 										DurationNS:  1,
 										EndNS:       3,
 										StartNS:     2,
@@ -488,6 +507,7 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 			want: map[uint64][]*nodetree.Node{
 				1: {
 					{
+						ProfileIDs:  make(map[string]struct{}),
 						DurationNS:  4,
 						EndNS:       4,
 						Fingerprint: 1124161485517443911,
@@ -500,6 +520,7 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 						},
 						Children: []*nodetree.Node{
 							{
+								ProfileIDs:  make(map[string]struct{}),
 								DurationNS:  4,
 								EndNS:       4,
 								Fingerprint: 17905447077897174944,
@@ -512,6 +533,7 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 								},
 								Children: []*nodetree.Node{
 									{
+										ProfileIDs:  make(map[string]struct{}),
 										DurationNS:  1,
 										EndNS:       2,
 										Fingerprint: 16084607411097338726,
@@ -525,6 +547,7 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 										},
 									},
 									{
+										ProfileIDs:  make(map[string]struct{}),
 										DurationNS:  1,
 										EndNS:       4,
 										Fingerprint: 16084607411097338726,
@@ -590,6 +613,7 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 			want: map[uint64][]*nodetree.Node{
 				1: {
 					{
+						ProfileIDs:  make(map[string]struct{}),
 						DurationNS:  4,
 						EndNS:       4,
 						Fingerprint: 1124161485517443911,
@@ -602,6 +626,7 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 						},
 						Children: []*nodetree.Node{
 							{
+								ProfileIDs:  make(map[string]struct{}),
 								DurationNS:  3,
 								EndNS:       3,
 								Fingerprint: 17905447077897174944,
@@ -614,6 +639,7 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 								},
 								Children: []*nodetree.Node{
 									{
+										ProfileIDs:  make(map[string]struct{}),
 										DurationNS:  2,
 										EndNS:       2,
 										Fingerprint: 16084607411097338726,
@@ -626,6 +652,7 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 										},
 										Children: []*nodetree.Node{
 											{
+												ProfileIDs:  make(map[string]struct{}),
 												DurationNS:  1,
 												EndNS:       1,
 												Fingerprint: 14019447401716285969,
@@ -692,6 +719,7 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 			want: map[uint64][]*nodetree.Node{
 				1: {
 					{
+						ProfileIDs:  make(map[string]struct{}),
 						DurationNS:  4,
 						EndNS:       4,
 						Fingerprint: 1124161485517443911,
@@ -704,6 +732,7 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 						},
 						Children: []*nodetree.Node{
 							{
+								ProfileIDs:  make(map[string]struct{}),
 								DurationNS:  3,
 								EndNS:       4,
 								Fingerprint: 17905447077897174944,
@@ -717,6 +746,7 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 								},
 								Children: []*nodetree.Node{
 									{
+										ProfileIDs:  make(map[string]struct{}),
 										DurationNS:  2,
 										EndNS:       4,
 										Fingerprint: 16084607411097338726,
@@ -730,6 +760,7 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 										},
 										Children: []*nodetree.Node{
 											{
+												ProfileIDs:  make(map[string]struct{}),
 												DurationNS:  1,
 												EndNS:       4,
 												Fingerprint: 14019447401716285969,
@@ -798,6 +829,7 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 			want: map[uint64][]*nodetree.Node{
 				1: {
 					{
+						ProfileIDs:  make(map[string]struct{}),
 						DurationNS:  4,
 						EndNS:       4,
 						Fingerprint: 1124161485517443911,
@@ -810,6 +842,7 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 						},
 						Children: []*nodetree.Node{
 							{
+								ProfileIDs:  make(map[string]struct{}),
 								DurationNS:  4,
 								EndNS:       4,
 								Fingerprint: 17905447077897174944,
@@ -822,6 +855,7 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 								},
 								Children: []*nodetree.Node{
 									{
+										ProfileIDs:  make(map[string]struct{}),
 										DurationNS:  1,
 										EndNS:       2,
 										Fingerprint: 16084607411097338726,
@@ -835,6 +869,7 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 										},
 									},
 									{
+										ProfileIDs:  make(map[string]struct{}),
 										DurationNS:  1,
 										EndNS:       3,
 										Fingerprint: 16084607411097338727,
@@ -848,6 +883,7 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 										},
 									},
 									{
+										ProfileIDs:  make(map[string]struct{}),
 										DurationNS:  1,
 										EndNS:       4,
 										Fingerprint: 16084607411097338720,
@@ -949,6 +985,7 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 			want: map[uint64][]*nodetree.Node{
 				1: {
 					{
+						ProfileIDs:  make(map[string]struct{}),
 						DurationNS:  7,
 						EndNS:       7,
 						Fingerprint: 1124161485517443911,
@@ -961,6 +998,7 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 						},
 						Children: []*nodetree.Node{
 							{
+								ProfileIDs:  make(map[string]struct{}),
 								DurationNS:  4,
 								EndNS:       4,
 								Fingerprint: 17905447077897174944,
@@ -973,6 +1011,7 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 								},
 								Children: []*nodetree.Node{
 									{
+										ProfileIDs:  make(map[string]struct{}),
 										DurationNS:  2,
 										EndNS:       3,
 										Fingerprint: 16084607411097338722,
@@ -986,6 +1025,7 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 										},
 										Children: []*nodetree.Node{
 											{
+												ProfileIDs:  make(map[string]struct{}),
 												DurationNS:  1,
 												EndNS:       3,
 												Fingerprint: 3157437670125180841,
@@ -1001,6 +1041,7 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 										},
 									},
 									{
+										ProfileIDs:  make(map[string]struct{}),
 										DurationNS:  1,
 										EndNS:       4,
 										Fingerprint: 16084607411097338721,
@@ -1014,6 +1055,7 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 										},
 										Children: []*nodetree.Node{
 											{
+												ProfileIDs:  make(map[string]struct{}),
 												DurationNS:  1,
 												EndNS:       4,
 												Fingerprint: 18225866209492738612,
@@ -1031,6 +1073,7 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 								},
 							},
 							{
+								ProfileIDs:  make(map[string]struct{}),
 								DurationNS:  2,
 								EndNS:       6,
 								Fingerprint: 17905447077897174947,
@@ -1044,6 +1087,7 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 								},
 								Children: []*nodetree.Node{
 									{
+										ProfileIDs:  make(map[string]struct{}),
 										DurationNS:  2,
 										EndNS:       6,
 										Fingerprint: 11661425725218473465,
@@ -1059,6 +1103,7 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 								},
 							},
 							{
+								ProfileIDs:  make(map[string]struct{}),
 								DurationNS:  1,
 								EndNS:       7,
 								Fingerprint: 17905447077897174946,
@@ -1074,6 +1119,7 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 						},
 					},
 					{
+						ProfileIDs:  make(map[string]struct{}),
 						DurationNS:  1,
 						EndNS:       8,
 						Fingerprint: 1124161485517443919,
@@ -1137,6 +1183,7 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 			want: map[uint64][]*nodetree.Node{
 				1: {
 					{
+						ProfileIDs:  make(map[string]struct{}),
 						DurationNS:  1,
 						EndNS:       1,
 						Fingerprint: 1124161485517443911,
@@ -1149,6 +1196,7 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 						},
 						Children: []*nodetree.Node{
 							{
+								ProfileIDs:  make(map[string]struct{}),
 								DurationNS:  1,
 								EndNS:       1,
 								Fingerprint: 17905447077897174944,
@@ -1161,6 +1209,7 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 								},
 								Children: []*nodetree.Node{
 									{
+										ProfileIDs:  make(map[string]struct{}),
 										DurationNS:  1,
 										EndNS:       1,
 										Fingerprint: 16084607411097338726,
@@ -1209,6 +1258,7 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 			want: map[uint64][]*nodetree.Node{
 				1: {
 					{
+						ProfileIDs:  make(map[string]struct{}),
 						DurationNS:  1,
 						EndNS:       1,
 						Fingerprint: 1124161485517443911,
@@ -1221,6 +1271,7 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 						},
 						Children: []*nodetree.Node{
 							{
+								ProfileIDs:  make(map[string]struct{}),
 								DurationNS:  1,
 								EndNS:       1,
 								Fingerprint: 17905447077897174944,
@@ -1233,6 +1284,7 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 								},
 								Children: []*nodetree.Node{
 									{
+										ProfileIDs:  make(map[string]struct{}),
 										DurationNS:  1,
 										EndNS:       1,
 										Fingerprint: 16084607411097338726,
@@ -1299,6 +1351,7 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 			want: map[uint64][]*nodetree.Node{
 				1: {
 					{
+						ProfileIDs:  make(map[string]struct{}),
 						DurationNS:  1,
 						EndNS:       1,
 						Fingerprint: 1124161485517443911,
@@ -1311,6 +1364,7 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 						},
 						Children: []*nodetree.Node{
 							{
+								ProfileIDs:  make(map[string]struct{}),
 								DurationNS:  1,
 								EndNS:       1,
 								Fingerprint: 17905447077897174944,
@@ -1323,6 +1377,7 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 								},
 								Children: []*nodetree.Node{
 									{
+										ProfileIDs:  make(map[string]struct{}),
 										DurationNS:  1,
 										EndNS:       1,
 										Fingerprint: 16084607411097338726,
@@ -1339,6 +1394,7 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 						},
 					},
 					{
+						ProfileIDs:  make(map[string]struct{}),
 						DurationNS:  1,
 						EndNS:       2,
 						Fingerprint: 1124161485517443908,
@@ -1352,6 +1408,7 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 						},
 						Children: []*nodetree.Node{
 							{
+								ProfileIDs:  make(map[string]struct{}),
 								DurationNS:  1,
 								EndNS:       2,
 								Fingerprint: 7967440964543288636,
@@ -1365,6 +1422,7 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 								},
 								Children: []*nodetree.Node{
 									{
+										ProfileIDs:  make(map[string]struct{}),
 										DurationNS:  1,
 										EndNS:       2,
 										Fingerprint: 13274796176329250277,
@@ -1432,6 +1490,7 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 			want: map[uint64][]*nodetree.Node{
 				1: {
 					{
+						ProfileIDs:  make(map[string]struct{}),
 						DurationNS:  1,
 						EndNS:       1,
 						Fingerprint: 1124161485517443911,
@@ -1444,6 +1503,7 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 						},
 						Children: []*nodetree.Node{
 							{
+								ProfileIDs:  make(map[string]struct{}),
 								DurationNS:  1,
 								EndNS:       1,
 								Fingerprint: 17905447077897174944,
@@ -1456,6 +1516,7 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 								},
 								Children: []*nodetree.Node{
 									{
+										ProfileIDs:  make(map[string]struct{}),
 										DurationNS:  1,
 										EndNS:       1,
 										Fingerprint: 16084607411097338726,
@@ -1472,6 +1533,7 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 						},
 					},
 					{
+						ProfileIDs:  make(map[string]struct{}),
 						DurationNS:  1,
 						EndNS:       2,
 						Fingerprint: 1124161485517443908,
@@ -1485,6 +1547,7 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 						},
 						Children: []*nodetree.Node{
 							{
+								ProfileIDs:  make(map[string]struct{}),
 								DurationNS:  1,
 								EndNS:       2,
 								Fingerprint: 7967440964543288636,
@@ -1498,6 +1561,7 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 								},
 								Children: []*nodetree.Node{
 									{
+										ProfileIDs:  make(map[string]struct{}),
 										DurationNS:  1,
 										EndNS:       2,
 										Fingerprint: 13274796176329250277,
@@ -1566,6 +1630,7 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 			want: map[uint64][]*nodetree.Node{
 				1: {
 					{
+						ProfileIDs:  make(map[string]struct{}),
 						DurationNS:  1,
 						EndNS:       1,
 						Fingerprint: 1124161485517443911,
@@ -1578,6 +1643,7 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 						},
 						Children: []*nodetree.Node{
 							{
+								ProfileIDs:  make(map[string]struct{}),
 								DurationNS:  1,
 								EndNS:       1,
 								Fingerprint: 17905447077897174944,
@@ -1590,6 +1656,7 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 								},
 								Children: []*nodetree.Node{
 									{
+										ProfileIDs:  make(map[string]struct{}),
 										DurationNS:  1,
 										EndNS:       1,
 										Fingerprint: 16084607411097338726,
@@ -1606,6 +1673,7 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 						},
 					},
 					{
+						ProfileIDs:  make(map[string]struct{}),
 						DurationNS:  1,
 						EndNS:       2,
 						Fingerprint: 1124161485517443908,
@@ -1619,6 +1687,7 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 						},
 						Children: []*nodetree.Node{
 							{
+								ProfileIDs:  make(map[string]struct{}),
 								DurationNS:  1,
 								EndNS:       2,
 								Fingerprint: 7967440964543288636,
@@ -1632,6 +1701,7 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 								},
 								Children: []*nodetree.Node{
 									{
+										ProfileIDs:  make(map[string]struct{}),
 										DurationNS:  1,
 										EndNS:       2,
 										Fingerprint: 13274796176329250277,
@@ -1699,6 +1769,7 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 			want: map[uint64][]*nodetree.Node{
 				1: {
 					{
+						ProfileIDs:  make(map[string]struct{}),
 						DurationNS:  1,
 						EndNS:       1,
 						Fingerprint: 1124161485517443911,
@@ -1711,6 +1782,7 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 						},
 						Children: []*nodetree.Node{
 							{
+								ProfileIDs:  make(map[string]struct{}),
 								DurationNS:  1,
 								EndNS:       1,
 								Fingerprint: 17905447077897174944,
@@ -1723,6 +1795,7 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 								},
 								Children: []*nodetree.Node{
 									{
+										ProfileIDs:  make(map[string]struct{}),
 										DurationNS:  1,
 										EndNS:       1,
 										Fingerprint: 16084607411097338726,
@@ -1739,6 +1812,7 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 						},
 					},
 					{
+						ProfileIDs:  make(map[string]struct{}),
 						DurationNS:  2,
 						EndNS:       3,
 						Fingerprint: 1124161485517443908,
@@ -1752,6 +1826,7 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 						},
 						Children: []*nodetree.Node{
 							{
+								ProfileIDs:  make(map[string]struct{}),
 								DurationNS:  2,
 								EndNS:       3,
 								Fingerprint: 7967440964543288636,
@@ -1765,6 +1840,7 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 								},
 								Children: []*nodetree.Node{
 									{
+										ProfileIDs:  make(map[string]struct{}),
 										DurationNS:  2,
 										EndNS:       3,
 										Fingerprint: 13274796176329250277,
