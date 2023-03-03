@@ -8,6 +8,7 @@ import (
 	"sort"
 	"strconv"
 
+	"github.com/getsentry/vroom/internal/frame"
 	"github.com/getsentry/vroom/internal/nodetree"
 	"github.com/getsentry/vroom/internal/packageutil"
 	"github.com/getsentry/vroom/internal/speedscope"
@@ -25,6 +26,25 @@ type IosFrame struct {
 	Status          string `json:"status,omitempty"`
 	SymAddr         string `json:"sym_addr,omitempty"`
 	Symbol          string `json:"symbol,omitempty"`
+}
+
+func (f IosFrame) Frame() frame.Frame {
+	inApp := packageutil.IsCocoaApplicationPackage(f.Package)
+	return frame.Frame{
+		Data: frame.Data{
+			SymbolicatorStatus: f.Status,
+		},
+		File:            f.Filename,
+		Function:        f.Function,
+		InApp:           &inApp,
+		InstructionAddr: f.InstructionAddr,
+		Lang:            f.Lang,
+		Line:            f.LineNo,
+		Package:         f.PackageBaseName(),
+		Path:            f.AbsPath,
+		SymAddr:         f.SymAddr,
+		Symbol:          f.Symbol,
+	}
 }
 
 // IsMain returns true if the function is considered the main function.
@@ -188,7 +208,7 @@ func (p IOS) CallTrees() map[uint64][]*nodetree.Node {
 					current = trees[s.ThreadID][i]
 					current.Update(s.RelativeTimestampNS)
 				} else {
-					n := nodetree.NodeFromFrame(f.PackageBaseName(), f.Function, f.AbsPath, f.Status, f.LineNo, previousTimestamp[s.ThreadID], s.RelativeTimestampNS, fingerprint, packageutil.IsCocoaApplicationPackage(f.Package))
+					n := nodetree.NodeFromFrame(f.Frame(), previousTimestamp[s.ThreadID], s.RelativeTimestampNS, fingerprint)
 					trees[s.ThreadID] = append(trees[s.ThreadID], n)
 					current = n
 				}
@@ -198,7 +218,7 @@ func (p IOS) CallTrees() map[uint64][]*nodetree.Node {
 					current = current.Children[i]
 					current.Update(s.RelativeTimestampNS)
 				} else {
-					n := nodetree.NodeFromFrame(f.PackageBaseName(), f.Function, f.AbsPath, f.Status, f.LineNo, previousTimestamp[s.ThreadID], s.RelativeTimestampNS, fingerprint, packageutil.IsCocoaApplicationPackage(f.Package))
+					n := nodetree.NodeFromFrame(f.Frame(), previousTimestamp[s.ThreadID], s.RelativeTimestampNS, fingerprint)
 					current.Children = append(current.Children, n)
 					current = n
 				}

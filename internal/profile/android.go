@@ -4,11 +4,13 @@ import (
 	"fmt"
 	"hash/fnv"
 	"math"
+	"path"
 	"strings"
 	"time"
 
 	"github.com/getsentry/vroom/internal/android"
 	"github.com/getsentry/vroom/internal/errorutil"
+	"github.com/getsentry/vroom/internal/frame"
 	"github.com/getsentry/vroom/internal/nodetree"
 	"github.com/getsentry/vroom/internal/packageutil"
 	"github.com/getsentry/vroom/internal/speedscope"
@@ -27,6 +29,26 @@ type AndroidMethod struct {
 	Signature    string          `json:"signature,omitempty"`
 	SourceFile   string          `json:"source_file,omitempty"`
 	SourceLine   uint32          `json:"source_line,omitempty"`
+}
+
+func (m AndroidMethod) Frame() frame.Frame {
+	className, _, err := m.ExtractPackageNameAndSimpleMethodNameFromAndroidMethod()
+	if err != nil {
+		className = m.ClassName
+	}
+	methodName, err := m.FullMethodNameFromAndroidMethod()
+	if err != nil {
+		methodName = m.Name
+	}
+	inApp := packageutil.IsAndroidApplicationPackage(className)
+	return frame.Frame{
+		Function: methodName,
+		Package:  className,
+		File:     path.Base(m.SourceFile),
+		Path:     m.SourceFile,
+		Line:     m.SourceLine,
+		InApp:    &inApp,
+	}
 }
 
 func (m AndroidMethod) ExtractPackageNameAndSimpleMethodNameFromAndroidMethod() (string, string, error) {
@@ -171,16 +193,7 @@ func (p Android) CallTrees() map[uint64][]*nodetree.Node {
 					Name:      "unknown",
 				}
 			}
-			className, _, err := m.ExtractPackageNameAndSimpleMethodNameFromAndroidMethod()
-			if err != nil {
-				className = m.ClassName
-			}
-			methodName, err := m.FullMethodNameFromAndroidMethod()
-			if err != nil {
-				methodName = m.Name
-			}
-
-			n := nodetree.NodeFromFrame(className, methodName, m.SourceFile, "deobfuscated", m.SourceLine, buildTimestamp(e.Time), 0, 0, packageutil.IsAndroidApplicationPackage(m.ClassName))
+			n := nodetree.NodeFromFrame(m.Frame(), buildTimestamp(e.Time), 0, 0)
 			if len(stacks[e.ThreadID]) == 0 {
 				trees[e.ThreadID] = append(trees[e.ThreadID], n)
 			} else {

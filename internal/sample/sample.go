@@ -199,7 +199,7 @@ func (p Profile) CallTrees() (map[uint64][]*nodetree.Node, error) {
 					current = treesByThreadID[s.ThreadID][i]
 					current.Update(s.ElapsedSinceStartNS)
 				} else {
-					n := nodetree.NodeFromFrame(f.PackageBaseName(), f.Function, f.Path, f.Status, f.Line, previousTimestamp[s.ThreadID], s.ElapsedSinceStartNS, fingerprint, p.IsApplicationFrame(f))
+					n := nodetree.NodeFromFrame(f, previousTimestamp[s.ThreadID], s.ElapsedSinceStartNS, fingerprint)
 					treesByThreadID[s.ThreadID] = append(treesByThreadID[s.ThreadID], n)
 					current = n
 				}
@@ -209,7 +209,7 @@ func (p Profile) CallTrees() (map[uint64][]*nodetree.Node, error) {
 					current = current.Children[i]
 					current.Update(s.ElapsedSinceStartNS)
 				} else {
-					n := nodetree.NodeFromFrame(f.PackageBaseName(), f.Function, f.Path, f.Status, f.Line, previousTimestamp[s.ThreadID], s.ElapsedSinceStartNS, fingerprint, p.IsApplicationFrame(f))
+					n := nodetree.NodeFromFrame(f, previousTimestamp[s.ThreadID], s.ElapsedSinceStartNS, fingerprint)
 					current.Children = append(current.Children, n)
 					current = n
 				}
