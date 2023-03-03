@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"hash"
 	"hash/fnv"
+	"path"
 	"sort"
 	"strconv"
 
@@ -43,9 +44,16 @@ func (f IosFrame) WriteToHash(h hash.Hash) {
 	if f.Package == "" && f.Function == "" {
 		h.Write([]byte("-"))
 	} else {
-		h.Write([]byte(nodetree.PackageBaseName(f.Package)))
+		h.Write([]byte(f.PackageBaseName()))
 		h.Write([]byte(f.Function))
 	}
+}
+
+func (f IosFrame) PackageBaseName() string {
+	if f.Package == "" {
+		return ""
+	}
+	return path.Base(f.Package)
 }
 
 func (f IosFrame) Address() string {
@@ -180,7 +188,7 @@ func (p IOS) CallTrees() map[uint64][]*nodetree.Node {
 					current = trees[s.ThreadID][i]
 					current.Update(s.RelativeTimestampNS)
 				} else {
-					n := nodetree.NodeFromFrame(f.Package, f.Function, f.AbsPath, f.LineNo, previousTimestamp[s.ThreadID], s.RelativeTimestampNS, fingerprint, packageutil.IsCocoaApplicationPackage(f.Package))
+					n := nodetree.NodeFromFrame(f.PackageBaseName(), f.Function, f.AbsPath, f.Status, f.LineNo, previousTimestamp[s.ThreadID], s.RelativeTimestampNS, fingerprint, packageutil.IsCocoaApplicationPackage(f.Package))
 					trees[s.ThreadID] = append(trees[s.ThreadID], n)
 					current = n
 				}
@@ -190,7 +198,7 @@ func (p IOS) CallTrees() map[uint64][]*nodetree.Node {
 					current = current.Children[i]
 					current.Update(s.RelativeTimestampNS)
 				} else {
-					n := nodetree.NodeFromFrame(f.Package, f.Function, f.AbsPath, f.LineNo, previousTimestamp[s.ThreadID], s.RelativeTimestampNS, fingerprint, packageutil.IsCocoaApplicationPackage(f.Package))
+					n := nodetree.NodeFromFrame(f.PackageBaseName(), f.Function, f.AbsPath, f.Status, f.LineNo, previousTimestamp[s.ThreadID], s.RelativeTimestampNS, fingerprint, packageutil.IsCocoaApplicationPackage(f.Package))
 					current.Children = append(current.Children, n)
 					current = n
 				}
@@ -351,7 +359,7 @@ func (p IOS) Speedscope() (speedscope.Output, error) {
 				addressToFrameIndex[address] = frameIndex
 				frames = append(frames, speedscope.Frame{
 					File:          fr.Filename,
-					Image:         nodetree.PackageBaseName(fr.Package),
+					Image:         fr.PackageBaseName(),
 					IsApplication: packageutil.IsCocoaApplicationPackage(fr.Package),
 					Line:          fr.LineNo,
 					Name:          symbolName,

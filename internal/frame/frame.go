@@ -14,6 +14,7 @@ import (
 type (
 	Frame struct {
 		Column          uint32 `json:"colno,omitempty"`
+		Data            Data   `json:"data"`
 		File            string `json:"filename,omitempty"`
 		Function        string `json:"function,omitempty"`
 		InApp           *bool  `json:"in_app"`
@@ -26,6 +27,10 @@ type (
 		Status          string `json:"status,omitempty"`
 		SymAddr         string `json:"sym_addr,omitempty"`
 		Symbol          string `json:"symbol,omitempty"`
+	}
+
+	Data struct {
+		SymbolicatorStatus string `json:"symbolicator_status,omitempty"`
 	}
 )
 

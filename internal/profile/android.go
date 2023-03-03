@@ -180,7 +180,7 @@ func (p Android) CallTrees() map[uint64][]*nodetree.Node {
 				methodName = m.Name
 			}
 
-			n := nodetree.NodeFromFrame(className, methodName, m.SourceFile, m.SourceLine, buildTimestamp(e.Time), 0, 0, packageutil.IsAndroidApplicationPackage(m.ClassName))
+			n := nodetree.NodeFromFrame(className, methodName, m.SourceFile, "deobfuscated", m.SourceLine, buildTimestamp(e.Time), 0, 0, packageutil.IsAndroidApplicationPackage(m.ClassName))
 			if len(stacks[e.ThreadID]) == 0 {
 				trees[e.ThreadID] = append(trees[e.ThreadID], n)
 			} else {
