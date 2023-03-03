@@ -31,7 +31,7 @@ type (
 
 	// Event holds the metadata related to a profile.
 	Event struct {
-		Contexts       map[Context]interface{} `json:"contexts"`
+		Contexts       map[Context]interface{} `json:"contexts,omitempty"`
 		DebugMeta      debugmeta.DebugMeta     `json:"debug_meta"`
 		Environment    string                  `json:"environment"`
 		ID             string                  `json:"event_id"`
@@ -77,11 +77,10 @@ type (
 )
 
 const (
-	NoneType              Type = 0
-	BlockedMainThreadType Type = 2000
-	FileIOType            Type = 2001
-	ImageDecodeType       Type = 2002
-	JSONDecodeType        Type = 2003
+	NoneType        Type = 0
+	FileIOType      Type = 2001
+	ImageDecodeType Type = 2002
+	JSONDecodeType  Type = 2003
 
 	EvidenceNameDuration          EvidenceName = "Duration"
 	EvidenceNameFunction          EvidenceName = "Suspect function"
@@ -132,7 +131,7 @@ func NewOccurrence(p profile.Profile, ni nodeInfo) *Occurrence {
 		issueType = cm.Type
 		title = cm.IssueTitle
 	} else {
-		issueType = BlockedMainThreadType
+		issueType = NoneType
 		title = IssueTitle(fmt.Sprintf("%v issue detected", ni.Category))
 	}
 	h := md5.New()
@@ -147,13 +146,6 @@ func NewOccurrence(p profile.Profile, ni nodeInfo) *Occurrence {
 	return &Occurrence{
 		DetectionTime: time.Now().UTC(),
 		Event: Event{
-			Contexts: map[Context]interface{}{
-				ContextTrace: struct {
-					TraceID string `json:"trace_id"`
-				}{
-					TraceID: t.TraceID,
-				},
-			},
 			DebugMeta:      p.DebugMeta(),
 			Environment:    p.Environment(),
 			ID:             eventID(),
