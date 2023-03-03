@@ -2,38 +2,39 @@ package nodetree
 
 import (
 	"hash"
-	"path"
 
 	"github.com/getsentry/vroom/internal/frame"
 )
 
 type (
 	Node struct {
-		Children      []*Node `json:"children,omitempty"`
-		DurationNS    uint64  `json:"duration_ns"`
-		EndNS         uint64  `json:"-"`
-		Fingerprint   uint64  `json:"fingerprint"`
-		IsApplication bool    `json:"is_application"`
-		Line          uint32  `json:"line,omitempty"`
-		Name          string  `json:"name"`
-		Package       string  `json:"package"`
-		Path          string  `json:"path,omitempty"`
-		SampleCount   int     `json:"-"`
-		StartNS       uint64  `json:"-"`
+		Children           []*Node `json:"children,omitempty"`
+		DurationNS         uint64  `json:"duration_ns"`
+		EndNS              uint64  `json:"-"`
+		Fingerprint        uint64  `json:"fingerprint"`
+		IsApplication      bool    `json:"is_application"`
+		Line               uint32  `json:"line,omitempty"`
+		Name               string  `json:"name"`
+		Package            string  `json:"package"`
+		Path               string  `json:"path,omitempty"`
+		SampleCount        int     `json:"-"`
+		StartNS            uint64  `json:"-"`
+		SymbolicatorStatus string  `json:"-"`
 	}
 )
 
-func NodeFromFrame(pkg, name, path string, line uint32, start, end, fingerprint uint64, isApplication bool) *Node {
+func NodeFromFrame(pkg, name, path, symbolicatorStatus string, line uint32, start, end, fingerprint uint64, isApplication bool) *Node {
 	n := Node{
-		EndNS:         end,
-		Fingerprint:   fingerprint,
-		IsApplication: isApplication,
-		Line:          line,
-		Name:          name,
-		Package:       PackageBaseName(pkg),
-		Path:          path,
-		StartNS:       start,
-		SampleCount:   1,
+		EndNS:              end,
+		Fingerprint:        fingerprint,
+		IsApplication:      isApplication,
+		Line:               line,
+		Name:               name,
+		Package:            pkg,
+		Path:               path,
+		SampleCount:        1,
+		StartNS:            start,
+		SymbolicatorStatus: symbolicatorStatus,
 	}
 	if end > 0 {
 		n.DurationNS = n.EndNS - n.StartNS
@@ -53,6 +54,9 @@ func (n *Node) Frame() frame.Frame {
 		Line:     n.Line,
 		Package:  n.Package,
 		Path:     n.Path,
+		Data: frame.Data{
+			SymbolicatorStatus: n.SymbolicatorStatus,
+		},
 	}
 }
 
@@ -68,14 +72,6 @@ func (n *Node) WriteToHash(h hash.Hash) {
 		h.Write([]byte(n.Package))
 		h.Write([]byte(n.Name))
 	}
-}
-
-// PackageBaseName returns the basename of the package if package is a path.
-func PackageBaseName(p string) string {
-	if p == "" {
-		return ""
-	}
-	return path.Base(p)
 }
 
 func (n Node) Collapse() []*Node {

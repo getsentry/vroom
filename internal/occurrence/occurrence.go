@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"cloud.google.com/go/bigquery"
+	"github.com/getsentry/vroom/internal/debugmeta"
 	"github.com/getsentry/vroom/internal/frame"
 	"github.com/getsentry/vroom/internal/platform"
 	"github.com/getsentry/vroom/internal/profile"
@@ -31,6 +32,7 @@ type (
 	// Event holds the metadata related to a profile.
 	Event struct {
 		Contexts       map[Context]interface{} `json:"contexts"`
+		DebugMeta      debugmeta.DebugMeta     `json:"debug_meta"`
 		Environment    string                  `json:"environment"`
 		ID             string                  `json:"event_id"`
 		OrganizationID uint64                  `json:"-"`
@@ -152,6 +154,7 @@ func NewOccurrence(p profile.Profile, ni nodeInfo) *Occurrence {
 					TraceID: t.TraceID,
 				},
 			},
+			DebugMeta:      p.DebugMeta(),
 			Environment:    p.Environment(),
 			ID:             eventID(),
 			OrganizationID: p.OrganizationID(),

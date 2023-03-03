@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"time"
 
+	"github.com/getsentry/vroom/internal/debugmeta"
 	"github.com/getsentry/vroom/internal/metadata"
 	"github.com/getsentry/vroom/internal/nodetree"
 	"github.com/getsentry/vroom/internal/platform"
@@ -14,6 +15,7 @@ import (
 
 type (
 	profileInterface interface {
+		GetDebugMeta() debugmeta.DebugMeta
 		GetDurationNS() uint64
 		GetEnvironment() string
 		GetID() string
@@ -63,6 +65,10 @@ func (p Profile) MarshalJSON() ([]byte, error) {
 
 func (p *Profile) CallTrees() (map[uint64][]*nodetree.Node, error) {
 	return p.profile.CallTrees()
+}
+
+func (p *Profile) DebugMeta() debugmeta.DebugMeta {
+	return p.profile.GetDebugMeta()
 }
 
 func (p *Profile) ID() string {
