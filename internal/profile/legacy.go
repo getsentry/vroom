@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/getsentry/vroom/internal/debugmeta"
 	"github.com/getsentry/vroom/internal/measurements"
 	"github.com/getsentry/vroom/internal/metadata"
 	"github.com/getsentry/vroom/internal/nodetree"
@@ -31,7 +32,7 @@ type (
 	RawProfile struct {
 		AndroidAPILevel      uint32                              `json:"android_api_level,omitempty"`
 		Architecture         string                              `json:"architecture,omitempty"`
-		DebugMeta            interface{}                         `json:"debug_meta,omitempty"`
+		DebugMeta            debugmeta.DebugMeta                 `json:"debug_meta,omitempty"`
 		DeviceClassification string                              `json:"device_classification"`
 		DeviceLocale         string                              `json:"device_locale"`
 		DeviceManufacturer   string                              `json:"device_manufacturer"`
@@ -102,7 +103,7 @@ func (p *LegacyProfile) UnmarshalJSON(b []byte) error {
 		raw = p.Profile
 	}
 	switch p.Platform {
-	case "cocoa":
+	case platform.Cocoa:
 		var t IOS
 		err := json.Unmarshal(raw, &t)
 		if err != nil {
@@ -110,7 +111,7 @@ func (p *LegacyProfile) UnmarshalJSON(b []byte) error {
 		}
 		p.Trace = &t
 		p.Profile = nil
-	case "android":
+	case platform.Android:
 		var t Android
 		err := json.Unmarshal(raw, &t)
 		if err != nil {
@@ -193,6 +194,10 @@ func (p LegacyProfile) GetTransaction() transaction.Transaction {
 		Name:       p.TransactionName,
 		TraceID:    p.TraceID,
 	}
+}
+
+func (p LegacyProfile) GetDebugMeta() debugmeta.DebugMeta {
+	return p.DebugMeta
 }
 
 func (p LegacyProfile) GetTimestamp() time.Time {

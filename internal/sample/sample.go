@@ -112,6 +112,10 @@ func (p Profile) GetRelease() string {
 	return p.Release
 }
 
+func (p Profile) GetDebugMeta() debugmeta.DebugMeta {
+	return p.DebugMeta
+}
+
 func (q QueueMetadata) LabeledAsMainThread() bool {
 	return q.Label == "com.apple.main-thread"
 }
