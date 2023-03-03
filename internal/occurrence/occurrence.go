@@ -137,7 +137,6 @@ func NewOccurrence(p profile.Profile, ni nodeInfo) *Occurrence {
 	h := md5.New()
 	_, _ = io.WriteString(h, strconv.FormatUint(p.ProjectID(), 10))
 	_, _ = io.WriteString(h, string(title))
-	_, _ = io.WriteString(h, t.Name)
 	_, _ = io.WriteString(h, strconv.Itoa(int(issueType)))
 	_, _ = io.WriteString(h, ni.Node.Package)
 	_, _ = io.WriteString(h, ni.Node.Name)
@@ -196,7 +195,7 @@ func NewOccurrence(p profile.Profile, ni nodeInfo) *Occurrence {
 		IssueTitle:  title,
 		Level:       "info",
 		ProjectID:   p.ProjectID(),
-		Subtitle:    t.Name,
+		Subtitle:    ni.Node.Name,
 		Type:        issueType,
 		category:    ni.Category,
 		durationNS:  ni.Node.DurationNS,
