@@ -36,7 +36,7 @@ func NodeFromFrame(f frame.Frame, start, end, fingerprint uint64) *Node {
 		IsApplication: inApp,
 		Line:          f.Line,
 		Name:          f.Function,
-		Package:       f.Package,
+		Package:       f.PackageBaseName(),
 		Path:          f.Path,
 		SampleCount:   1,
 		StartNS:       start,
