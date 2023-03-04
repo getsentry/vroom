@@ -10,32 +10,36 @@ type (
 	Node struct {
 		Children      []*Node `json:"children,omitempty"`
 		DurationNS    uint64  `json:"duration_ns"`
-		EndNS         uint64  `json:"-"`
 		Fingerprint   uint64  `json:"fingerprint"`
 		IsApplication bool    `json:"is_application"`
 		Line          uint32  `json:"line,omitempty"`
 		Name          string  `json:"name"`
 		Package       string  `json:"package"`
 		Path          string  `json:"path,omitempty"`
-		SampleCount   int     `json:"-"`
-		StartNS       uint64  `json:"-"`
 
-		frame frame.Frame
+		EndNS       uint64      `json:"-"`
+		Frame       frame.Frame `json:"-"`
+		SampleCount int         `json:"-"`
+		StartNS     uint64      `json:"-"`
 	}
 )
 
 func NodeFromFrame(f frame.Frame, start, end, fingerprint uint64) *Node {
+	inApp := true
+	if f.InApp != nil {
+		inApp = *f.InApp
+	}
 	n := Node{
 		EndNS:         end,
 		Fingerprint:   fingerprint,
-		IsApplication: *f.InApp,
+		Frame:         f,
+		IsApplication: inApp,
 		Line:          f.Line,
 		Name:          f.Function,
 		Package:       f.Package,
 		Path:          f.Path,
 		SampleCount:   1,
 		StartNS:       start,
-		frame:         f,
 	}
 	if end > 0 {
 		n.DurationNS = n.EndNS - n.StartNS
@@ -48,9 +52,9 @@ func (n *Node) Update(timestamp uint64) {
 	n.SetDuration(timestamp)
 }
 
-func (n *Node) Frame() frame.Frame {
-	n.frame.Data.SymbolicatorStatus = n.frame.Status
-	return n.frame
+func (n *Node) ToFrame() frame.Frame {
+	n.Frame.Data.SymbolicatorStatus = n.Frame.Status
+	return n.Frame
 }
 
 func (n *Node) SetDuration(t uint64) {

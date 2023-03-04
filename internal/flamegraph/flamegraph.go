@@ -170,11 +170,10 @@ func (f *flamegraph) visitCalltree(node *nodetree.Node, currentStack *[]int) {
 	if i, exists := f.framesIndex[frameID]; exists {
 		*currentStack = append(*currentStack, i)
 	} else {
-		fr := node.Frame()
 		sfr := speedscope.Frame{
-			Name:  fr.Function,
-			Image: fr.PackageBaseName(),
-			Path:  fr.Path,
+			Name:  node.Name,
+			Image: node.Package,
+			Path:  node.Path,
 		}
 		f.framesIndex[frameID] = len(f.frames)
 		*currentStack = append(*currentStack, len(f.frames))

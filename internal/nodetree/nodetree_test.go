@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/getsentry/vroom/internal/testutil"
+	"github.com/google/go-cmp/cmp/cmpopts"
 )
 
 func TestNodeTreeCollapse(t *testing.T) {
@@ -609,7 +610,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result := tt.node.Collapse()
-			if diff := testutil.Diff(result, tt.want); diff != "" {
+			if diff := testutil.Diff(result, tt.want, cmpopts.IgnoreUnexported(Node{})); diff != "" {
 				t.Fatalf("Result mismatch: got - want +\n%s", diff)
 			}
 		})
