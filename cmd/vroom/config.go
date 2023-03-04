@@ -2,43 +2,19 @@ package main
 
 type (
 	ServiceConfig struct {
-		Environment string
+		Environment string `env:"SENTRY_ENVIRONMENT" env-default:"development"`
+		Port        int    `env:"PORT" env-default:"8085"`
 
-		SentryDSN string
+		SentryDSN string `env:"SENTRY_DSN"`
 
-		OccurrencesEnabledOrganizations map[uint64]struct{}
-		OccurrencesKafkaBrokers         []string
-		OccurrencesKafkaTopic           string
+		OccurrencesKafkaBrokers []string `env:"SENTRY_KAFKA_BROKERS_OCCURRENCES" env-default:"localhost:9092"`
+		OccurrencesKafkaTopic   string   `env:"SENTRY_KAFKA_TOPIC_OCCURRENCES" env-default:"ingest-occurrences"`
 
-		ProfilingKafkaBrokers []string
-		CallTreesKafkaTopic   string
-		ProfilesKafkaTopic    string
+		ProfilingKafkaBrokers []string `env:"SENTRY_KAFKA_BROKERS_PROFILING" env-default:"localhost:9092"`
+		CallTreesKafkaTopic   string   `env:"SENTRY_KAFKA_TOPIC_CALL_TREES" env-default:"profiles-call-tree"`
+		ProfilesKafkaTopic    string   `env:"SENTRY_KAKFA_TOPIC_PROFILES" env-default:"processed-profiles"`
 
-		ProfilesBucket string
-		SnubaHost      string
-	}
-)
-
-var (
-	serviceConfigs = map[string]ServiceConfig{
-		"production": {
-			SentryDSN:               "https://91f2762536314cbd9cc4a163fe072682@o1.ingest.sentry.io/6424467",
-			ProfilesBucket:          "sentry-profiles",
-			SnubaHost:               "http://127.0.0.1:10006",
-			OccurrencesKafkaTopic:   "ingest-occurrences",
-			OccurrencesKafkaBrokers: []string{"kafka-issue-platform.service.us-central1.consul:9092"},
-			ProfilingKafkaBrokers:   []string{"specto-dev-kafka.service.us-central1.consul:9092"},
-			CallTreesKafkaTopic:     "profiles-call-tree",
-			ProfilesKafkaTopic:      "processed-profiles",
-		},
-		"development": {
-			ProfilesBucket:          "sentry-profiles",
-			SnubaHost:               "http://localhost:1218",
-			OccurrencesKafkaTopic:   "ingest-occurrences",
-			OccurrencesKafkaBrokers: []string{"localhost:9092"},
-			ProfilingKafkaBrokers:   []string{"localhost:9092"},
-			CallTreesKafkaTopic:     "profiles-call-tree",
-			ProfilesKafkaTopic:      "processed-profiles",
-		},
+		ProfilesBucket string `env:"SENTRY_GCS_BUCKET_PROFILES" env-default:"sentry-profiles"`
+		SnubaHost      string `env:"SENTRY_SNUBA_HOST" env-default:"http://localhost:1218"`
 	}
 )
