@@ -8,33 +8,38 @@ import (
 
 type (
 	Node struct {
-		Children           []*Node `json:"children,omitempty"`
-		DurationNS         uint64  `json:"duration_ns"`
-		EndNS              uint64  `json:"-"`
-		Fingerprint        uint64  `json:"fingerprint"`
-		IsApplication      bool    `json:"is_application"`
-		Line               uint32  `json:"line,omitempty"`
-		Name               string  `json:"name"`
-		Package            string  `json:"package"`
-		Path               string  `json:"path,omitempty"`
-		SampleCount        int     `json:"-"`
-		StartNS            uint64  `json:"-"`
-		SymbolicatorStatus string  `json:"-"`
+		Children      []*Node `json:"children,omitempty"`
+		DurationNS    uint64  `json:"duration_ns"`
+		Fingerprint   uint64  `json:"fingerprint"`
+		IsApplication bool    `json:"is_application"`
+		Line          uint32  `json:"line,omitempty"`
+		Name          string  `json:"name"`
+		Package       string  `json:"package"`
+		Path          string  `json:"path,omitempty"`
+
+		EndNS       uint64      `json:"-"`
+		Frame       frame.Frame `json:"-"`
+		SampleCount int         `json:"-"`
+		StartNS     uint64      `json:"-"`
 	}
 )
 
-func NodeFromFrame(pkg, name, path, symbolicatorStatus string, line uint32, start, end, fingerprint uint64, isApplication bool) *Node {
+func NodeFromFrame(f frame.Frame, start, end, fingerprint uint64) *Node {
+	inApp := true
+	if f.InApp != nil {
+		inApp = *f.InApp
+	}
 	n := Node{
-		EndNS:              end,
-		Fingerprint:        fingerprint,
-		IsApplication:      isApplication,
-		Line:               line,
-		Name:               name,
-		Package:            pkg,
-		Path:               path,
-		SampleCount:        1,
-		StartNS:            start,
-		SymbolicatorStatus: symbolicatorStatus,
+		EndNS:         end,
+		Fingerprint:   fingerprint,
+		Frame:         f,
+		IsApplication: inApp,
+		Line:          f.Line,
+		Name:          f.Function,
+		Package:       f.Package,
+		Path:          f.Path,
+		SampleCount:   1,
+		StartNS:       start,
 	}
 	if end > 0 {
 		n.DurationNS = n.EndNS - n.StartNS
@@ -47,17 +52,9 @@ func (n *Node) Update(timestamp uint64) {
 	n.SetDuration(timestamp)
 }
 
-func (n *Node) Frame() frame.Frame {
-	return frame.Frame{
-		Function: n.Name,
-		InApp:    &n.IsApplication,
-		Line:     n.Line,
-		Package:  n.Package,
-		Path:     n.Path,
-		Data: frame.Data{
-			SymbolicatorStatus: n.SymbolicatorStatus,
-		},
-	}
+func (n *Node) ToFrame() frame.Frame {
+	n.Frame.Data.SymbolicatorStatus = n.Frame.Status
+	return n.Frame
 }
 
 func (n *Node) SetDuration(t uint64) {

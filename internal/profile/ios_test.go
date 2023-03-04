@@ -5,8 +5,14 @@ import (
 	"os"
 	"testing"
 
+	"github.com/getsentry/vroom/internal/frame"
 	"github.com/getsentry/vroom/internal/nodetree"
 	"github.com/getsentry/vroom/internal/testutil"
+	"github.com/google/go-cmp/cmp/cmpopts"
+)
+
+var (
+	falseValue = false
 )
 
 func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
@@ -41,6 +47,11 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 						Fingerprint: 1124161485517443911,
 						Name:        "symbol0",
 						SampleCount: 1,
+						Frame: frame.Frame{
+							Function:        "symbol0",
+							InstructionAddr: "0",
+							InApp:           &falseValue,
+						},
 						Children: []*nodetree.Node{
 							{
 								DurationNS:  1,
@@ -48,6 +59,11 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 								Fingerprint: 17905447077897174944,
 								Name:        "symbol1",
 								SampleCount: 1,
+								Frame: frame.Frame{
+									Function:        "symbol1",
+									InstructionAddr: "1",
+									InApp:           &falseValue,
+								},
 								Children: []*nodetree.Node{
 									{
 										DurationNS:  1,
@@ -55,6 +71,11 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 										Fingerprint: 16084607411097338726,
 										Name:        "symbol2",
 										SampleCount: 1,
+										Frame: frame.Frame{
+											Function:        "symbol2",
+											InstructionAddr: "2",
+											InApp:           &falseValue,
+										},
 									},
 								},
 							},
@@ -98,6 +119,11 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 						Fingerprint: 1124161485517443911,
 						Name:        "symbol0",
 						SampleCount: 1,
+						Frame: frame.Frame{
+							Function:        "symbol0",
+							InstructionAddr: "0",
+							InApp:           &falseValue,
+						},
 						Children: []*nodetree.Node{
 							{
 								DurationNS:  1,
@@ -105,6 +131,11 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 								Fingerprint: 17905447077897174944,
 								Name:        "symbol1",
 								SampleCount: 1,
+								Frame: frame.Frame{
+									Function:        "symbol1",
+									InstructionAddr: "1",
+									InApp:           &falseValue,
+								},
 								Children: []*nodetree.Node{
 									{
 										DurationNS:  1,
@@ -112,6 +143,11 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 										Fingerprint: 16084607411097338726,
 										Name:        "symbol2",
 										SampleCount: 1,
+										Frame: frame.Frame{
+											Function:        "symbol2",
+											InstructionAddr: "2",
+											InApp:           &falseValue,
+										},
 									},
 								},
 							},
@@ -124,6 +160,11 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 						Name:        "symbol3",
 						SampleCount: 1,
 						StartNS:     1,
+						Frame: frame.Frame{
+							Function:        "symbol3",
+							InstructionAddr: "3",
+							InApp:           &falseValue,
+						},
 						Children: []*nodetree.Node{
 							{
 								DurationNS:  1,
@@ -132,6 +173,11 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 								Name:        "symbol4",
 								SampleCount: 1,
 								StartNS:     1,
+								Frame: frame.Frame{
+									Function:        "symbol4",
+									InstructionAddr: "4",
+									InApp:           &falseValue,
+								},
 								Children: []*nodetree.Node{
 									{
 										DurationNS:  1,
@@ -140,6 +186,11 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 										Name:        "symbol5",
 										SampleCount: 1,
 										StartNS:     1,
+										Frame: frame.Frame{
+											Function:        "symbol5",
+											InstructionAddr: "5",
+											InApp:           &falseValue,
+										},
 									},
 								},
 							},
@@ -182,6 +233,11 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 						Fingerprint: 1124161485517443911,
 						Name:        "symbol0",
 						SampleCount: 2,
+						Frame: frame.Frame{
+							Function:        "symbol0",
+							InstructionAddr: "0",
+							InApp:           &falseValue,
+						},
 						Children: []*nodetree.Node{
 							{
 								DurationNS:  2,
@@ -189,6 +245,11 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 								Fingerprint: 17905447077897174944,
 								Name:        "symbol1",
 								SampleCount: 2,
+								Frame: frame.Frame{
+									Function:        "symbol1",
+									InstructionAddr: "1",
+									InApp:           &falseValue,
+								},
 								Children: []*nodetree.Node{
 									{
 										DurationNS:  1,
@@ -196,6 +257,11 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 										Fingerprint: 16084607411097338726,
 										Name:        "symbol2",
 										SampleCount: 1,
+										Frame: frame.Frame{
+											Function:        "symbol2",
+											InstructionAddr: "2",
+											InApp:           &falseValue,
+										},
 									},
 								},
 							},
@@ -238,6 +304,11 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 						Fingerprint: 1124161485517443911,
 						Name:        "symbol0",
 						SampleCount: 2,
+						Frame: frame.Frame{
+							Function:        "symbol0",
+							InstructionAddr: "0",
+							InApp:           &falseValue,
+						},
 						Children: []*nodetree.Node{
 							{
 								DurationNS:  2,
@@ -245,6 +316,11 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 								Fingerprint: 17905447077897174944,
 								Name:        "symbol1",
 								SampleCount: 2,
+								Frame: frame.Frame{
+									Function:        "symbol1",
+									InstructionAddr: "1",
+									InApp:           &falseValue,
+								},
 								Children: []*nodetree.Node{
 									{
 										DurationNS:  1,
@@ -253,6 +329,11 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 										Name:        "symbol2",
 										SampleCount: 1,
 										StartNS:     1,
+										Frame: frame.Frame{
+											Function:        "symbol2",
+											InstructionAddr: "2",
+											InApp:           &falseValue,
+										},
 									},
 								},
 							},
@@ -312,6 +393,11 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 						Fingerprint: 1124161485517443911,
 						Name:        "symbol0",
 						SampleCount: 4,
+						Frame: frame.Frame{
+							Function:        "symbol0",
+							InstructionAddr: "0",
+							InApp:           &falseValue,
+						},
 						Children: []*nodetree.Node{
 							{
 								DurationNS:  4,
@@ -319,6 +405,11 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 								Fingerprint: 17905447077897174944,
 								Name:        "symbol1",
 								SampleCount: 4,
+								Frame: frame.Frame{
+									Function:        "symbol1",
+									InstructionAddr: "1",
+									InApp:           &falseValue,
+								},
 								Children: []*nodetree.Node{
 									{
 										DurationNS:  1,
@@ -326,6 +417,11 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 										Fingerprint: 16084607411097338726,
 										Name:        "symbol2",
 										SampleCount: 1,
+										Frame: frame.Frame{
+											Function:        "symbol2",
+											InstructionAddr: "2",
+											InApp:           &falseValue,
+										},
 									},
 									{
 										DurationNS:  1,
@@ -334,6 +430,11 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 										Fingerprint: 16084607411097338726,
 										Name:        "symbol2",
 										SampleCount: 1,
+										Frame: frame.Frame{
+											Function:        "symbol2",
+											InstructionAddr: "2",
+											InApp:           &falseValue,
+										},
 									},
 								},
 							},
@@ -393,6 +494,11 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 						Fingerprint: 1124161485517443911,
 						Name:        "symbol0",
 						SampleCount: 4,
+						Frame: frame.Frame{
+							Function:        "symbol0",
+							InstructionAddr: "0",
+							InApp:           &falseValue,
+						},
 						Children: []*nodetree.Node{
 							{
 								DurationNS:  4,
@@ -400,6 +506,11 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 								Fingerprint: 17905447077897174944,
 								Name:        "symbol1",
 								SampleCount: 4,
+								Frame: frame.Frame{
+									Function:        "symbol1",
+									InstructionAddr: "1",
+									InApp:           &falseValue,
+								},
 								Children: []*nodetree.Node{
 									{
 										DurationNS:  1,
@@ -408,6 +519,11 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 										Name:        "symbol2",
 										SampleCount: 1,
 										StartNS:     1,
+										Frame: frame.Frame{
+											Function:        "symbol2",
+											InstructionAddr: "2",
+											InApp:           &falseValue,
+										},
 									},
 									{
 										DurationNS:  1,
@@ -416,6 +532,11 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 										Name:        "symbol2",
 										SampleCount: 1,
 										StartNS:     3,
+										Frame: frame.Frame{
+											Function:        "symbol2",
+											InstructionAddr: "2",
+											InApp:           &falseValue,
+										},
 									},
 								},
 							},
@@ -475,6 +596,11 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 						Fingerprint: 1124161485517443911,
 						Name:        "symbol0",
 						SampleCount: 4,
+						Frame: frame.Frame{
+							Function:        "symbol0",
+							InstructionAddr: "0",
+							InApp:           &falseValue,
+						},
 						Children: []*nodetree.Node{
 							{
 								DurationNS:  3,
@@ -482,6 +608,11 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 								Fingerprint: 17905447077897174944,
 								Name:        "symbol1",
 								SampleCount: 3,
+								Frame: frame.Frame{
+									Function:        "symbol1",
+									InstructionAddr: "1",
+									InApp:           &falseValue,
+								},
 								Children: []*nodetree.Node{
 									{
 										DurationNS:  2,
@@ -489,6 +620,11 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 										Fingerprint: 16084607411097338726,
 										Name:        "symbol2",
 										SampleCount: 2,
+										Frame: frame.Frame{
+											Function:        "symbol2",
+											InstructionAddr: "2",
+											InApp:           &falseValue,
+										},
 										Children: []*nodetree.Node{
 											{
 												DurationNS:  1,
@@ -496,6 +632,11 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 												Fingerprint: 14019447401716285969,
 												Name:        "symbol3",
 												SampleCount: 1,
+												Frame: frame.Frame{
+													Function:        "symbol3",
+													InstructionAddr: "3",
+													InApp:           &falseValue,
+												},
 											},
 										},
 									},
@@ -557,6 +698,11 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 						Fingerprint: 1124161485517443911,
 						Name:        "symbol0",
 						SampleCount: 4,
+						Frame: frame.Frame{
+							Function:        "symbol0",
+							InstructionAddr: "0",
+							InApp:           &falseValue,
+						},
 						Children: []*nodetree.Node{
 							{
 								DurationNS:  3,
@@ -565,6 +711,11 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 								Name:        "symbol1",
 								SampleCount: 3,
 								StartNS:     1,
+								Frame: frame.Frame{
+									Function:        "symbol1",
+									InstructionAddr: "1",
+									InApp:           &falseValue,
+								},
 								Children: []*nodetree.Node{
 									{
 										DurationNS:  2,
@@ -573,6 +724,11 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 										Name:        "symbol2",
 										SampleCount: 2,
 										StartNS:     2,
+										Frame: frame.Frame{
+											Function:        "symbol2",
+											InstructionAddr: "2",
+											InApp:           &falseValue,
+										},
 										Children: []*nodetree.Node{
 											{
 												DurationNS:  1,
@@ -581,6 +737,11 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 												Name:        "symbol3",
 												SampleCount: 1,
 												StartNS:     3,
+												Frame: frame.Frame{
+													Function:        "symbol3",
+													InstructionAddr: "3",
+													InApp:           &falseValue,
+												},
 											},
 										},
 									},
@@ -643,6 +804,11 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 						Fingerprint: 1124161485517443911,
 						Name:        "symbol0",
 						SampleCount: 4,
+						Frame: frame.Frame{
+							Function:        "symbol0",
+							InstructionAddr: "0",
+							InApp:           &falseValue,
+						},
 						Children: []*nodetree.Node{
 							{
 								DurationNS:  4,
@@ -650,6 +816,11 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 								Fingerprint: 17905447077897174944,
 								Name:        "symbol1",
 								SampleCount: 4,
+								Frame: frame.Frame{
+									Function:        "symbol1",
+									InstructionAddr: "1",
+									InApp:           &falseValue,
+								},
 								Children: []*nodetree.Node{
 									{
 										DurationNS:  1,
@@ -658,6 +829,11 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 										Name:        "symbol2",
 										SampleCount: 1,
 										StartNS:     1,
+										Frame: frame.Frame{
+											Function:        "symbol2",
+											InstructionAddr: "2",
+											InApp:           &falseValue,
+										},
 									},
 									{
 										DurationNS:  1,
@@ -666,6 +842,11 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 										Name:        "symbol3",
 										SampleCount: 1,
 										StartNS:     2,
+										Frame: frame.Frame{
+											Function:        "symbol3",
+											InstructionAddr: "3",
+											InApp:           &falseValue,
+										},
 									},
 									{
 										DurationNS:  1,
@@ -674,6 +855,11 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 										Name:        "symbol4",
 										SampleCount: 1,
 										StartNS:     3,
+										Frame: frame.Frame{
+											Function:        "symbol4",
+											InstructionAddr: "4",
+											InApp:           &falseValue,
+										},
 									},
 								},
 							},
@@ -769,6 +955,11 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 						Fingerprint: 1124161485517443911,
 						Name:        "symbol0",
 						SampleCount: 7,
+						Frame: frame.Frame{
+							Function:        "symbol0",
+							InstructionAddr: "0",
+							InApp:           &falseValue,
+						},
 						Children: []*nodetree.Node{
 							{
 								DurationNS:  4,
@@ -776,6 +967,11 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 								Fingerprint: 17905447077897174944,
 								Name:        "symbol1",
 								SampleCount: 4,
+								Frame: frame.Frame{
+									Function:        "symbol1",
+									InstructionAddr: "1",
+									InApp:           &falseValue,
+								},
 								Children: []*nodetree.Node{
 									{
 										DurationNS:  2,
@@ -784,6 +980,11 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 										Name:        "symbol6",
 										SampleCount: 2,
 										StartNS:     1,
+										Frame: frame.Frame{
+											Function:        "symbol6",
+											InstructionAddr: "6",
+											InApp:           &falseValue,
+										},
 										Children: []*nodetree.Node{
 											{
 												DurationNS:  1,
@@ -792,6 +993,11 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 												Name:        "symbol7",
 												SampleCount: 1,
 												StartNS:     2,
+												Frame: frame.Frame{
+													Function:        "symbol7",
+													InstructionAddr: "7",
+													InApp:           &falseValue,
+												},
 											},
 										},
 									},
@@ -802,6 +1008,11 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 										Name:        "symbol5",
 										SampleCount: 1,
 										StartNS:     3,
+										Frame: frame.Frame{
+											Function:        "symbol5",
+											InstructionAddr: "5",
+											InApp:           &falseValue,
+										},
 										Children: []*nodetree.Node{
 											{
 												DurationNS:  1,
@@ -810,6 +1021,11 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 												Name:        "symbol7",
 												SampleCount: 1,
 												StartNS:     3,
+												Frame: frame.Frame{
+													Function:        "symbol7",
+													InstructionAddr: "7",
+													InApp:           &falseValue,
+												},
 											},
 										},
 									},
@@ -822,6 +1038,11 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 								Name:        "symbol2",
 								SampleCount: 2,
 								StartNS:     4,
+								Frame: frame.Frame{
+									Function:        "symbol2",
+									InstructionAddr: "2",
+									InApp:           &falseValue,
+								},
 								Children: []*nodetree.Node{
 									{
 										DurationNS:  2,
@@ -830,6 +1051,11 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 										Name:        "symbol4",
 										SampleCount: 2,
 										StartNS:     4,
+										Frame: frame.Frame{
+											Function:        "symbol4",
+											InstructionAddr: "4",
+											InApp:           &falseValue,
+										},
 									},
 								},
 							},
@@ -840,6 +1066,11 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 								Name:        "symbol3",
 								SampleCount: 1,
 								StartNS:     6,
+								Frame: frame.Frame{
+									Function:        "symbol3",
+									InstructionAddr: "3",
+									InApp:           &falseValue,
+								},
 							},
 						},
 					},
@@ -850,6 +1081,11 @@ func TestCallTreeGenerationFromSingleThreadedSamples(t *testing.T) {
 						Name:        "symbol8",
 						SampleCount: 1,
 						StartNS:     7,
+						Frame: frame.Frame{
+							Function:        "symbol8",
+							InstructionAddr: "8",
+							InApp:           &falseValue,
+						},
 					},
 				},
 			},
@@ -907,6 +1143,11 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 						Fingerprint: 1124161485517443911,
 						Name:        "symbol0",
 						SampleCount: 1,
+						Frame: frame.Frame{
+							Function:        "symbol0",
+							InstructionAddr: "0",
+							InApp:           &falseValue,
+						},
 						Children: []*nodetree.Node{
 							{
 								DurationNS:  1,
@@ -914,6 +1155,11 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 								Fingerprint: 17905447077897174944,
 								Name:        "symbol1",
 								SampleCount: 1,
+								Frame: frame.Frame{
+									Function:        "symbol1",
+									InstructionAddr: "1",
+									InApp:           &falseValue,
+								},
 								Children: []*nodetree.Node{
 									{
 										DurationNS:  1,
@@ -921,6 +1167,11 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 										Fingerprint: 16084607411097338726,
 										Name:        "symbol2",
 										SampleCount: 1,
+										Frame: frame.Frame{
+											Function:        "symbol2",
+											InstructionAddr: "2",
+											InApp:           &falseValue,
+										},
 									},
 								},
 							},
@@ -964,6 +1215,11 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 						Fingerprint: 1124161485517443911,
 						Name:        "symbol0",
 						SampleCount: 1,
+						Frame: frame.Frame{
+							Function:        "symbol0",
+							InstructionAddr: "0",
+							InApp:           &falseValue,
+						},
 						Children: []*nodetree.Node{
 							{
 								DurationNS:  1,
@@ -971,6 +1227,11 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 								Fingerprint: 17905447077897174944,
 								Name:        "symbol1",
 								SampleCount: 1,
+								Frame: frame.Frame{
+									Function:        "symbol1",
+									InstructionAddr: "1",
+									InApp:           &falseValue,
+								},
 								Children: []*nodetree.Node{
 									{
 										DurationNS:  1,
@@ -978,6 +1239,11 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 										Fingerprint: 16084607411097338726,
 										Name:        "symbol2",
 										SampleCount: 1,
+										Frame: frame.Frame{
+											Function:        "symbol2",
+											InstructionAddr: "2",
+											InApp:           &falseValue,
+										},
 									},
 								},
 							},
@@ -1039,6 +1305,11 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 						Fingerprint: 1124161485517443911,
 						Name:        "symbol0",
 						SampleCount: 1,
+						Frame: frame.Frame{
+							Function:        "symbol0",
+							InstructionAddr: "0",
+							InApp:           &falseValue,
+						},
 						Children: []*nodetree.Node{
 							{
 								DurationNS:  1,
@@ -1046,6 +1317,11 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 								Fingerprint: 17905447077897174944,
 								Name:        "symbol1",
 								SampleCount: 1,
+								Frame: frame.Frame{
+									Function:        "symbol1",
+									InstructionAddr: "1",
+									InApp:           &falseValue,
+								},
 								Children: []*nodetree.Node{
 									{
 										DurationNS:  1,
@@ -1053,6 +1329,11 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 										Fingerprint: 16084607411097338726,
 										Name:        "symbol2",
 										SampleCount: 1,
+										Frame: frame.Frame{
+											Function:        "symbol2",
+											InstructionAddr: "2",
+											InApp:           &falseValue,
+										},
 									},
 								},
 							},
@@ -1065,6 +1346,11 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 						Name:        "symbol3",
 						SampleCount: 1,
 						StartNS:     1,
+						Frame: frame.Frame{
+							Function:        "symbol3",
+							InstructionAddr: "3",
+							InApp:           &falseValue,
+						},
 						Children: []*nodetree.Node{
 							{
 								DurationNS:  1,
@@ -1073,6 +1359,11 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 								Name:        "symbol4",
 								SampleCount: 1,
 								StartNS:     1,
+								Frame: frame.Frame{
+									Function:        "symbol4",
+									InstructionAddr: "4",
+									InApp:           &falseValue,
+								},
 								Children: []*nodetree.Node{
 									{
 										DurationNS:  1,
@@ -1081,6 +1372,11 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 										Name:        "symbol5",
 										SampleCount: 1,
 										StartNS:     1,
+										Frame: frame.Frame{
+											Function:        "symbol5",
+											InstructionAddr: "5",
+											InApp:           &falseValue,
+										},
 									},
 								},
 							},
@@ -1142,6 +1438,11 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 						Fingerprint: 1124161485517443911,
 						Name:        "symbol0",
 						SampleCount: 1,
+						Frame: frame.Frame{
+							Function:        "symbol0",
+							InstructionAddr: "0",
+							InApp:           &falseValue,
+						},
 						Children: []*nodetree.Node{
 							{
 								DurationNS:  1,
@@ -1149,6 +1450,11 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 								Fingerprint: 17905447077897174944,
 								Name:        "symbol1",
 								SampleCount: 1,
+								Frame: frame.Frame{
+									Function:        "symbol1",
+									InstructionAddr: "1",
+									InApp:           &falseValue,
+								},
 								Children: []*nodetree.Node{
 									{
 										DurationNS:  1,
@@ -1156,6 +1462,11 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 										Fingerprint: 16084607411097338726,
 										Name:        "symbol2",
 										SampleCount: 1,
+										Frame: frame.Frame{
+											Function:        "symbol2",
+											InstructionAddr: "2",
+											InApp:           &falseValue,
+										},
 									},
 								},
 							},
@@ -1168,6 +1479,11 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 						Name:        "symbol3",
 						SampleCount: 1,
 						StartNS:     1,
+						Frame: frame.Frame{
+							Function:        "symbol3",
+							InstructionAddr: "3",
+							InApp:           &falseValue,
+						},
 						Children: []*nodetree.Node{
 							{
 								DurationNS:  1,
@@ -1176,6 +1492,11 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 								Name:        "symbol4",
 								SampleCount: 1,
 								StartNS:     1,
+								Frame: frame.Frame{
+									Function:        "symbol4",
+									InstructionAddr: "4",
+									InApp:           &falseValue,
+								},
 								Children: []*nodetree.Node{
 									{
 										DurationNS:  1,
@@ -1184,6 +1505,11 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 										Name:        "symbol5",
 										SampleCount: 1,
 										StartNS:     1,
+										Frame: frame.Frame{
+											Function:        "symbol5",
+											InstructionAddr: "5",
+											InApp:           &falseValue,
+										},
 									},
 								},
 							},
@@ -1246,6 +1572,11 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 						Fingerprint: 1124161485517443911,
 						Name:        "symbol0",
 						SampleCount: 1,
+						Frame: frame.Frame{
+							Function:        "symbol0",
+							InstructionAddr: "0",
+							InApp:           &falseValue,
+						},
 						Children: []*nodetree.Node{
 							{
 								DurationNS:  1,
@@ -1253,6 +1584,11 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 								Fingerprint: 17905447077897174944,
 								Name:        "symbol1",
 								SampleCount: 1,
+								Frame: frame.Frame{
+									Function:        "symbol1",
+									InstructionAddr: "1",
+									InApp:           &falseValue,
+								},
 								Children: []*nodetree.Node{
 									{
 										DurationNS:  1,
@@ -1260,6 +1596,11 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 										Fingerprint: 16084607411097338726,
 										Name:        "symbol2",
 										SampleCount: 1,
+										Frame: frame.Frame{
+											Function:        "symbol2",
+											InstructionAddr: "2",
+											InApp:           &falseValue,
+										},
 									},
 								},
 							},
@@ -1272,6 +1613,11 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 						Name:        "symbol3",
 						SampleCount: 1,
 						StartNS:     1,
+						Frame: frame.Frame{
+							Function:        "symbol3",
+							InstructionAddr: "3",
+							InApp:           &falseValue,
+						},
 						Children: []*nodetree.Node{
 							{
 								DurationNS:  1,
@@ -1280,6 +1626,11 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 								Name:        "symbol4",
 								SampleCount: 1,
 								StartNS:     1,
+								Frame: frame.Frame{
+									Function:        "symbol4",
+									InstructionAddr: "4",
+									InApp:           &falseValue,
+								},
 								Children: []*nodetree.Node{
 									{
 										DurationNS:  1,
@@ -1288,6 +1639,11 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 										Name:        "symbol5",
 										SampleCount: 1,
 										StartNS:     1,
+										Frame: frame.Frame{
+											Function:        "symbol5",
+											InstructionAddr: "5",
+											InApp:           &falseValue,
+										},
 									},
 								},
 							},
@@ -1349,6 +1705,11 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 						Fingerprint: 1124161485517443911,
 						Name:        "symbol0",
 						SampleCount: 1,
+						Frame: frame.Frame{
+							Function:        "symbol0",
+							InstructionAddr: "0",
+							InApp:           &falseValue,
+						},
 						Children: []*nodetree.Node{
 							{
 								DurationNS:  1,
@@ -1356,6 +1717,11 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 								Fingerprint: 17905447077897174944,
 								Name:        "symbol1",
 								SampleCount: 1,
+								Frame: frame.Frame{
+									Function:        "symbol1",
+									InstructionAddr: "1",
+									InApp:           &falseValue,
+								},
 								Children: []*nodetree.Node{
 									{
 										DurationNS:  1,
@@ -1363,6 +1729,11 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 										Fingerprint: 16084607411097338726,
 										Name:        "symbol2",
 										SampleCount: 1,
+										Frame: frame.Frame{
+											Function:        "symbol2",
+											InstructionAddr: "2",
+											InApp:           &falseValue,
+										},
 									},
 								},
 							},
@@ -1375,6 +1746,11 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 						Name:        "symbol3",
 						SampleCount: 1,
 						StartNS:     1,
+						Frame: frame.Frame{
+							Function:        "symbol3",
+							InstructionAddr: "3",
+							InApp:           &falseValue,
+						},
 						Children: []*nodetree.Node{
 							{
 								DurationNS:  2,
@@ -1383,6 +1759,11 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 								Name:        "symbol4",
 								SampleCount: 1,
 								StartNS:     1,
+								Frame: frame.Frame{
+									Function:        "symbol4",
+									InstructionAddr: "4",
+									InApp:           &falseValue,
+								},
 								Children: []*nodetree.Node{
 									{
 										DurationNS:  2,
@@ -1391,6 +1772,11 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 										Name:        "symbol5",
 										SampleCount: 1,
 										StartNS:     1,
+										Frame: frame.Frame{
+											Function:        "symbol5",
+											InstructionAddr: "5",
+											InApp:           &falseValue,
+										},
 									},
 								},
 							},
@@ -1404,7 +1790,7 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := tt.profile.CallTrees()
-			if diff := testutil.Diff(got, tt.want); diff != "" {
+			if diff := testutil.Diff(got, tt.want, cmpopts.IgnoreUnexported(nodetree.Node{})); diff != "" {
 				t.Fatalf("Result mismatch: got - want +\n%s", diff)
 			}
 		})

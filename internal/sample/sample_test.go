@@ -7,6 +7,7 @@ import (
 	"github.com/getsentry/vroom/internal/nodetree"
 	"github.com/getsentry/vroom/internal/testutil"
 	"github.com/getsentry/vroom/internal/transaction"
+	"github.com/google/go-cmp/cmp/cmpopts"
 )
 
 func TestReplaceIdleStacks(t *testing.T) {
@@ -265,7 +266,7 @@ func TestReplaceIdleStacks(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			test.trace.ReplaceIdleStacks()
-			if diff := testutil.Diff(test.trace, test.want); diff != "" {
+			if diff := testutil.Diff(test.trace, test.want, cmpopts.IgnoreUnexported(nodetree.Node{})); diff != "" {
 				t.Fatalf("Result mismatch: got - want +\n%s", diff)
 			}
 		})
@@ -382,6 +383,7 @@ func TestCallTrees(t *testing.T) {
 						IsApplication: true,
 						Name:          "function0",
 						SampleCount:   3,
+						Frame:         frame.Frame{Function: "function0"},
 						Children: []*nodetree.Node{
 							{
 								DurationNS:    50,
@@ -390,6 +392,7 @@ func TestCallTrees(t *testing.T) {
 								IsApplication: true,
 								Name:          "function1",
 								SampleCount:   3,
+								Frame:         frame.Frame{Function: "function1"},
 								Children: []*nodetree.Node{
 									{
 										DurationNS:    40,
@@ -399,6 +402,7 @@ func TestCallTrees(t *testing.T) {
 										Name:          "function2",
 										SampleCount:   2,
 										StartNS:       10,
+										Frame:         frame.Frame{Function: "function2"},
 									},
 								},
 							},
@@ -438,6 +442,7 @@ func TestCallTrees(t *testing.T) {
 						IsApplication: true,
 						Name:          "function0",
 						SampleCount:   2,
+						Frame:         frame.Frame{Function: "function0"},
 						Children: []*nodetree.Node{
 							{
 								DurationNS:    40,
@@ -446,6 +451,7 @@ func TestCallTrees(t *testing.T) {
 								IsApplication: true,
 								Name:          "function1",
 								SampleCount:   2,
+								Frame:         frame.Frame{Function: "function1"},
 								Children: []*nodetree.Node{
 									{
 										DurationNS:    30,
@@ -455,6 +461,7 @@ func TestCallTrees(t *testing.T) {
 										Name:          "function2",
 										SampleCount:   1,
 										StartNS:       10,
+										Frame:         frame.Frame{Function: "function2"},
 									},
 								},
 							},
@@ -496,6 +503,7 @@ func TestCallTrees(t *testing.T) {
 						IsApplication: true,
 						Name:          "function0",
 						SampleCount:   1,
+						Frame:         frame.Frame{Function: "function0"},
 					},
 					{
 						DurationNS:    10,
@@ -505,6 +513,7 @@ func TestCallTrees(t *testing.T) {
 						Name:          "function1",
 						SampleCount:   1,
 						StartNS:       10,
+						Frame:         frame.Frame{Function: "function1"},
 					},
 					{
 						DurationNS:    10,
@@ -514,6 +523,7 @@ func TestCallTrees(t *testing.T) {
 						Name:          "function2",
 						SampleCount:   1,
 						StartNS:       20,
+						Frame:         frame.Frame{Function: "function2"},
 					},
 				},
 			},
@@ -526,7 +536,7 @@ func TestCallTrees(t *testing.T) {
 			if err != nil {
 				t.Fatalf("error while generating call trees: %+v\n", err)
 			}
-			if diff := testutil.Diff(callTrees, test.want); diff != "" {
+			if diff := testutil.Diff(callTrees, test.want, cmpopts.IgnoreUnexported(nodetree.Node{})); diff != "" {
 				t.Fatalf("Result mismatch: got - want +\n%s", diff)
 			}
 		})
