@@ -1,10 +1,12 @@
 package nodetree
 
 import (
+	"encoding/json"
+	"strings"
 	"testing"
 
+	"github.com/getsentry/vroom/internal/frame"
 	"github.com/getsentry/vroom/internal/testutil"
-	"github.com/google/go-cmp/cmp/cmpopts"
 )
 
 func TestNodeTreeCollapse(t *testing.T) {
@@ -610,9 +612,29 @@ func TestNodeTreeCollapse(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result := tt.node.Collapse()
-			if diff := testutil.Diff(result, tt.want, cmpopts.IgnoreUnexported(Node{})); diff != "" {
+			if diff := testutil.Diff(result, tt.want); diff != "" {
 				t.Fatalf("Result mismatch: got - want +\n%s", diff)
 			}
 		})
+	}
+}
+
+func TestFramePackageName(t *testing.T) {
+	var f frame.Frame
+	err := json.Unmarshal([]byte(`{
+		"function": "_dispatch_event_loop_leave_immediate",
+		"in_app": false,
+		"instruction_addr": "0x1c44cfe34",
+		"package": "/usr/lib/system/libdispatch.dylib",
+		"status": "symbolicated",
+		"sym_addr": "0x1c44cfd60",
+		"symbol": "_dispatch_event_loop_leave_immediate"
+	}`), &f)
+	if err != nil {
+		t.Fatal(err)
+	}
+	n := NodeFromFrame(f, 0, 0, 1234567890)
+	if strings.HasPrefix(n.Package, "/") || n.Package != f.PackageBaseName() {
+		t.Fatal("package name should not be a path")
 	}
 }

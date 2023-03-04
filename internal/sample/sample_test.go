@@ -7,7 +7,6 @@ import (
 	"github.com/getsentry/vroom/internal/nodetree"
 	"github.com/getsentry/vroom/internal/testutil"
 	"github.com/getsentry/vroom/internal/transaction"
-	"github.com/google/go-cmp/cmp/cmpopts"
 )
 
 func TestReplaceIdleStacks(t *testing.T) {
@@ -266,7 +265,7 @@ func TestReplaceIdleStacks(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			test.trace.ReplaceIdleStacks()
-			if diff := testutil.Diff(test.trace, test.want, cmpopts.IgnoreUnexported(nodetree.Node{})); diff != "" {
+			if diff := testutil.Diff(test.trace, test.want); diff != "" {
 				t.Fatalf("Result mismatch: got - want +\n%s", diff)
 			}
 		})
@@ -536,7 +535,7 @@ func TestCallTrees(t *testing.T) {
 			if err != nil {
 				t.Fatalf("error while generating call trees: %+v\n", err)
 			}
-			if diff := testutil.Diff(callTrees, test.want, cmpopts.IgnoreUnexported(nodetree.Node{})); diff != "" {
+			if diff := testutil.Diff(callTrees, test.want); diff != "" {
 				t.Fatalf("Result mismatch: got - want +\n%s", diff)
 			}
 		})

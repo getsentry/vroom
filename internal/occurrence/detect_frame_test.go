@@ -7,7 +7,6 @@ import (
 	"github.com/getsentry/vroom/internal/frame"
 	"github.com/getsentry/vroom/internal/nodetree"
 	"github.com/getsentry/vroom/internal/testutil"
-	"github.com/google/go-cmp/cmp/cmpopts"
 )
 
 var (
@@ -507,7 +506,7 @@ func TestDetectFrameInCallTree(t *testing.T) {
 			nodes := make(map[nodeKey]nodeInfo)
 			var stackTrace []frame.Frame
 			detectFrameInCallTree(tt.node, tt.job, nodes, &stackTrace)
-			if diff := testutil.Diff(nodes, tt.want, cmpopts.IgnoreUnexported(nodetree.Node{})); diff != "" {
+			if diff := testutil.Diff(nodes, tt.want); diff != "" {
 				t.Fatalf("Result mismatch: got - want +\n%s", diff)
 			}
 		})

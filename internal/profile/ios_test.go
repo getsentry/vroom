@@ -8,7 +8,6 @@ import (
 	"github.com/getsentry/vroom/internal/frame"
 	"github.com/getsentry/vroom/internal/nodetree"
 	"github.com/getsentry/vroom/internal/testutil"
-	"github.com/google/go-cmp/cmp/cmpopts"
 )
 
 var (
@@ -1790,7 +1789,7 @@ func TestCallTreeGenerationFromMultiThreadedSamples(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := tt.profile.CallTrees()
-			if diff := testutil.Diff(got, tt.want, cmpopts.IgnoreUnexported(nodetree.Node{})); diff != "" {
+			if diff := testutil.Diff(got, tt.want); diff != "" {
 				t.Fatalf("Result mismatch: got - want +\n%s", diff)
 			}
 		})
