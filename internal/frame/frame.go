@@ -127,3 +127,7 @@ func (f Frame) IsPythonApplicationFrame() bool {
 	_, ok := pythonStdlib[module[0]]
 	return !ok
 }
+
+func (f Frame) IsPHPApplicationFrame() bool {
+	return !strings.Contains(f.Path, "/vendor/")
+}
