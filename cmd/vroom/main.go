@@ -16,6 +16,7 @@ import (
 	"github.com/CAFxX/httpcompression"
 	"github.com/getsentry/sentry-go"
 	sentryhttp "github.com/getsentry/sentry-go/http"
+	"github.com/ilyakaznacheev/cleanenv"
 	"github.com/julienschmidt/httprouter"
 	"github.com/rs/zerolog/log"
 	"github.com/segmentio/kafka-go"
@@ -41,19 +42,12 @@ type environment struct {
 var release string
 
 func newEnvironment() (*environment, error) {
-	envName := os.Getenv("SENTRY_ENVIRONMENT")
-	if envName == "" {
-		envName = "development"
-	}
 	var e environment
-	var exists bool
-	e.config, exists = serviceConfigs[envName]
-	if !exists {
-		return nil, fmt.Errorf("service config for environment %v does not exist", envName)
+	err := cleanenv.ReadEnv(&e.config)
+	if err != nil {
+		return nil, err
 	}
-	e.config.Environment = envName
 
-	var err error
 	e.snuba, err = snubautil.NewClient(e.config.SnubaHost, "profiles", sentry.CurrentHub())
 	if err != nil {
 		return nil, err
@@ -63,7 +57,7 @@ func newEnvironment() (*environment, error) {
 	if err != nil {
 		return nil, err
 	}
-	if envName == "production" {
+	if e.config.Environment == "production" {
 		bqClient, err := bigquery.NewClient(ctx, "specto-dev")
 		if err != nil {
 			return nil, err
@@ -173,12 +167,8 @@ func main() {
 		log.Fatal().Err(err).Msg("error setting up the router")
 	}
 
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
-	}
 	server := http.Server{
-		Addr:              ":" + port,
+		Addr:              fmt.Sprintf(":%d", env.config.Port),
 		ReadHeaderTimeout: time.Second,
 		Handler:           sentryhttp.New(sentryhttp.Options{}).Handle(router),
 	}
