@@ -104,7 +104,7 @@ func (f Frame) IsInline() bool {
 }
 
 func (f Frame) IsNodeApplicationFrame() bool {
-	return strings.Contains(f.Path, "node_modules")
+	return !strings.Contains(f.Path, "node_modules")
 }
 
 func (f Frame) IsCocoaApplicationFrame() bool {
@@ -126,4 +126,8 @@ func (f Frame) IsPythonApplicationFrame() bool {
 	module := strings.SplitN(f.Module, ".", 2)
 	_, ok := pythonStdlib[module[0]]
 	return !ok
+}
+
+func (f Frame) IsPHPApplicationFrame() bool {
+	return !strings.Contains(f.Path, "/vendor/")
 }

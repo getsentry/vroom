@@ -8,4 +8,5 @@ const (
 	Node    Platform = "node"
 	Python  Platform = "python"
 	Rust    Platform = "rust"
+	PHP     Platform = "php"
 )

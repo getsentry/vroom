@@ -367,6 +367,8 @@ func (p *Profile) IsApplicationFrame(f frame.Frame) bool {
 		return f.IsRustApplicationFrame()
 	case platform.Python:
 		return f.IsPythonApplicationFrame()
+	case platform.PHP:
+		return f.IsPHPApplicationFrame()
 	}
 	return true
 }
