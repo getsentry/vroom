@@ -395,7 +395,7 @@ func (p *Profile) Metadata() metadata.Metadata {
 
 func (p *Profile) Normalize() {
 	p.Trace.ReplaceIdleStacks()
-	p.setInAppFrames()
+	p.normalizeFrames()
 }
 
 func (t Trace) SamplesByThreadD() ([]uint64, map[uint64][]*Sample) {
@@ -527,11 +527,20 @@ func (t Trace) CollectFrames(stackID int) []frame.Frame {
 	return frames
 }
 
-func (p *Profile) setInAppFrames() {
+func (p *Profile) normalizeFrames() {
 	for i := range p.Trace.Frames {
 		f := p.Trace.Frames[i]
+
+		// Set if frame is in application
 		inApp := p.IsApplicationFrame(f)
 		f.InApp = &inApp
+
+		// Transform package path into a name
+		f.Package = f.PackageBaseName()
+
+		// Set Symbolicator status
+		f.Data.SymbolicatorStatus = f.Status
+
 		p.Trace.Frames[i] = f
 	}
 }
