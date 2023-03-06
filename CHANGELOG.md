@@ -11,3 +11,5 @@
 - Fix node application frame detection [(#187)](https://github.com/getsentry/vroom/pull/187)
 
 **Internal**
+
+- Use environment variables for production config [(#185)](https://github.com/getsentry/vroom/pull/185)
