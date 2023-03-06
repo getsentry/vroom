@@ -16,6 +16,7 @@ type (
 		OSVersion       string                      `json:"os_version"`
 		Platform        platform.Platform           `json:"platform"`
 		ProjectID       uint64                      `json:"project_id"`
+		Received        int64                       `json:"received"`
 		Release         string                      `json:"release"`
 		RetentionDays   int                         `json:"retention_days"`
 		Timestamp       int64                       `json:"timestamp"`
@@ -59,6 +60,7 @@ func buildCallTreesKafkaMessage(p profile.Profile, callTrees map[uint64][]*nodet
 		OSVersion:       m.DeviceOSVersion,
 		Platform:        p.Platform(),
 		ProjectID:       p.ProjectID(),
+		Received:        p.Received().Unix(),
 		Release:         p.Release(),
 		RetentionDays:   p.RetentionDays(),
 		Timestamp:       p.Timestamp().Unix(),
