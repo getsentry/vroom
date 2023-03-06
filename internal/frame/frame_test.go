@@ -85,3 +85,49 @@ func TestIsPythonApplicationFrame(t *testing.T) {
 		})
 	}
 }
+
+func TestIsPHPApplicationFrame(t *testing.T) {
+	tests := []struct {
+		name          string
+		frame         Frame
+		isApplication bool
+	}{
+		{
+			name:          "empty",
+			frame:         Frame{},
+			isApplication: true,
+		},
+		{
+			name: "file",
+			frame: Frame{
+				Function: "/var/www/http/webroot/index.php",
+				File:     "/var/www/http/webroot/index.php",
+			},
+			isApplication: true,
+		},
+		{
+			name: "src",
+			frame: Frame{
+				Function: "App\\Middleware\\SentryMiddleware::process",
+				File:     "/var/www/http/src/Middleware/SentryMiddleware.php",
+			},
+			isApplication: true,
+		},
+		{
+			name: "vendor",
+			frame: Frame{
+				File: "Cake\\Http\\Client::send",
+				Path: "/var/www/http/vendor/cakephp/cakephp/src/Http/Client.php",
+			},
+			isApplication: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if isApplication := tt.frame.IsPHPApplicationFrame(); isApplication != tt.isApplication {
+				t.Fatalf("Expected %s frame but got %s frame", frameType(tt.isApplication), frameType(isApplication))
+			}
+		})
+	}
+}
