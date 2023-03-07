@@ -56,6 +56,10 @@ const (
 	ViewRender       Category = "view_render"
 	ViewUpdate       Category = "view_update"
 	XPC              Category = "xpc"
+
+	// MinimumSampleCount is the minimum number of samples in which we need to
+	// detect the frame in order to create an occurrence.
+	minimumSampleCount = 4
 )
 
 var (
@@ -433,21 +437,47 @@ func detectFrame(p profile.Profile, callTreesPerThreadID map[uint64][]*nodetree.
 
 func detectFrameInCallTree(n *nodetree.Node, options DetectExactFrameOptions, nodes map[nodeKey]nodeInfo, stackTrace *[]frame.Frame) {
 	*stackTrace = append(*stackTrace, n.ToFrame())
-	if functions, exists := options.FunctionsByPackage[n.Package]; exists {
-		// Only use time threshold when the sample count is more than one to avoid sampling issues showing up as blocking issues.
-		if category, exists := functions[n.Name]; exists && n.DurationNS > uint64(options.DurationThreshold) && n.SampleCount != 1 {
-			nk := nodeKey{Package: n.Package, Function: n.Name}
-			if _, exists := nodes[nk]; !exists {
-				nodes[nk] = nodeInfo{
-					Category:   category,
-					Node:       n,
-					StackTrace: *stackTrace,
-				}
-			}
-		}
-	}
+	detectNode(n, options, nodes, stackTrace)
 	for _, c := range n.Children {
 		newStackTrace := *stackTrace
 		detectFrameInCallTree(c, options, nodes, &newStackTrace)
+	}
+}
+
+func detectNode(n *nodetree.Node, options DetectExactFrameOptions, nodes map[nodeKey]nodeInfo, stackTrace *[]frame.Frame) {
+	// Check if we have a list of functions associated to the package.
+	functions, exists := options.FunctionsByPackage[n.Package]
+	if !exists {
+		return
+	}
+
+	// Check if we need to detect that function.
+	category, exists := functions[n.Name]
+	if !exists {
+		return
+	}
+
+	// Check if it's above the duration threshold.
+	if n.DurationNS < uint64(options.DurationThreshold) {
+		return
+	}
+
+	// Check if it's above the sample threshold.
+	if n.SampleCount < minimumSampleCount {
+		return
+	}
+
+	// Check if we've already detected an occurrence on it.
+	nk := nodeKey{Package: n.Package, Function: n.Name}
+	_, exists = nodes[nk]
+	if exists {
+		return
+	}
+
+	// Add it to the list of nodes detected.
+	nodes[nk] = nodeInfo{
+		Category:   category,
+		Node:       n,
+		StackTrace: *stackTrace,
 	}
 }
