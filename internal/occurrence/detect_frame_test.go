@@ -91,6 +91,7 @@ func TestDetectFrameInCallTree(t *testing.T) {
 										Name:          "CFReadStreamRead",
 										Package:       "CoreFoundation",
 										Path:          "path",
+										SampleCount:   4,
 										StartNS:       0,
 										Frame: frame.Frame{
 											Function: "CFReadStreamRead",
@@ -177,6 +178,7 @@ func TestDetectFrameInCallTree(t *testing.T) {
 						Name:          "CFReadStreamRead",
 						Package:       "CoreFoundation",
 						Path:          "path",
+						SampleCount:   4,
 						StartNS:       0,
 						Frame: frame.Frame{
 							Function: "CFReadStreamRead",
@@ -231,7 +233,7 @@ func TestDetectFrameInCallTree(t *testing.T) {
 					},
 				},
 			},
-			name: "Do not detect frame in call tree under threshold",
+			name: "Do not detect frame in call tree under duration threshold",
 			node: &nodetree.Node{
 				DurationNS:    uint64(30 * time.Millisecond),
 				EndNS:         uint64(30 * time.Millisecond),
@@ -293,6 +295,7 @@ func TestDetectFrameInCallTree(t *testing.T) {
 										Package:       "vroom",
 										Path:          "path",
 										StartNS:       0,
+										SampleCount:   4,
 										Frame: frame.Frame{
 											Function: "SuperShortFunction",
 											InApp:    &falseValue,
@@ -314,12 +317,12 @@ func TestDetectFrameInCallTree(t *testing.T) {
 				DurationThreshold: 16 * time.Millisecond,
 				FunctionsByPackage: map[string]map[string]Category{
 					"vroom": {
-						"FunctionWithOneSample":  FileRead,
-						"FunctionWithTwoSamples": FileRead,
+						"FunctionWithOneSample":   FileRead,
+						"FunctionWithManySamples": FileRead,
 					},
 				},
 			},
-			name: "Do not detect frame in call tree under threshold",
+			name: "Do not detect frame in call tree under sample threshold",
 			node: &nodetree.Node{
 				DurationNS:    uint64(30 * time.Millisecond),
 				EndNS:         uint64(30 * time.Millisecond),
@@ -413,14 +416,14 @@ func TestDetectFrameInCallTree(t *testing.T) {
 												Fingerprint:   0,
 												IsApplication: false,
 												Line:          0,
-												Name:          "FunctionWithTwoSamples",
+												Name:          "FunctionWithManySamples",
 												Package:       "vroom",
 												Path:          "path",
-												SampleCount:   2,
+												SampleCount:   4,
 												StartNS:       0,
 												Children:      []*nodetree.Node{},
 												Frame: frame.Frame{
-													Function: "FunctionWithTwoSamples",
+													Function: "FunctionWithManySamples",
 													InApp:    &falseValue,
 													Package:  "vroom",
 													Path:     "path",
@@ -437,7 +440,7 @@ func TestDetectFrameInCallTree(t *testing.T) {
 			want: map[nodeKey]nodeInfo{
 				{
 					Package:  "vroom",
-					Function: "FunctionWithTwoSamples",
+					Function: "FunctionWithManySamples",
 				}: {
 					Category: FileRead,
 					Node: &nodetree.Node{
@@ -446,14 +449,14 @@ func TestDetectFrameInCallTree(t *testing.T) {
 						Fingerprint:   0,
 						IsApplication: false,
 						Line:          0,
-						Name:          "FunctionWithTwoSamples",
+						Name:          "FunctionWithManySamples",
 						Package:       "vroom",
 						Path:          "path",
-						SampleCount:   2,
+						SampleCount:   4,
 						StartNS:       0,
 						Children:      []*nodetree.Node{},
 						Frame: frame.Frame{
-							Function: "FunctionWithTwoSamples",
+							Function: "FunctionWithManySamples",
 							InApp:    &falseValue,
 							Package:  "vroom",
 							Path:     "path",
@@ -489,7 +492,7 @@ func TestDetectFrameInCallTree(t *testing.T) {
 							Path:     "path",
 						},
 						{
-							Function: "FunctionWithTwoSamples",
+							Function: "FunctionWithManySamples",
 							InApp:    &falseValue,
 							Line:     0,
 							Package:  "vroom",
