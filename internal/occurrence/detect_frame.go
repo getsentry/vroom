@@ -14,6 +14,10 @@ type (
 		ActiveThreadOnly   bool
 		DurationThreshold  time.Duration
 		FunctionsByPackage map[string]map[string]Category
+
+		// SampleThreshold is the minimum number of samples in which we need to
+		// detect the frame in order to create an occurrence.
+		SampleThreshold int
 	}
 
 	nodeKey struct {
@@ -50,16 +54,13 @@ const (
 	MLModelLoad      Category = "ml_model_load"
 	Regex            Category = "regex"
 	SQL              Category = "sql"
+	SourceContext    Category = "source_context"
 	ThreadWait       Category = "thread_wait"
 	ViewInflation    Category = "view_inflation"
 	ViewLayout       Category = "view_layout"
 	ViewRender       Category = "view_render"
 	ViewUpdate       Category = "view_update"
 	XPC              Category = "xpc"
-
-	// MinimumSampleCount is the minimum number of samples in which we need to
-	// detect the frame in order to create an occurrence.
-	minimumSampleCount = 4
 )
 
 var (
@@ -114,11 +115,21 @@ var (
 					},
 				},
 			},
+			{
+				DurationThreshold: 100 * time.Millisecond,
+				FunctionsByPackage: map[string]map[string]Category{
+					"": {
+						"addSourceContext":         SourceContext,
+						"addSourceContextToFrames": SourceContext,
+					},
+				},
+			},
 		},
 		platform.Cocoa: {
 			{
 				ActiveThreadOnly:  true,
 				DurationThreshold: 16 * time.Millisecond,
+				SampleThreshold:   4,
 				FunctionsByPackage: map[string]map[string]Category{
 					"AppleJPEG": {
 						"applejpeg_decode_image_all": ImageDecode,
@@ -463,7 +474,7 @@ func detectNode(n *nodetree.Node, options DetectExactFrameOptions, nodes map[nod
 	}
 
 	// Check if it's above the sample threshold.
-	if n.SampleCount < minimumSampleCount {
+	if n.SampleCount < options.SampleThreshold {
 		return
 	}
 
