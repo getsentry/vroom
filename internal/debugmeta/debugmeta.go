@@ -9,15 +9,15 @@ type (
 	}
 
 	Image struct {
-		Arch        string   `json:"arch"`
-		CodeFile    string   `json:"code_file"`
-		DebugID     string   `json:"debug_id"`
-		DebugStatus string   `json:"debug_status"`
-		Features    Features `json:"features"`
-		ImageAddr   string   `json:"image_addr"`
-		ImageSize   uint64   `json:"image_size"`
-		ImageVMAddr string   `json:"image_vmaddr"`
-		Type        string   `json:"type"`
+		Arch        string    `json:"arch,omitempty"`
+		CodeFile    string    `json:"code_file,omitempty"`
+		DebugID     string    `json:"debug_id,omitempty"`
+		DebugStatus string    `json:"debug_status,omitempty"`
+		Features    *Features `json:"features,omitempty"`
+		ImageAddr   string    `json:"image_addr,omitempty"`
+		ImageSize   uint64    `json:"image_size,omitempty"`
+		ImageVMAddr string    `json:"image_vmaddr,omitempty"`
+		Type        string    `json:"type,omitempty"`
 	}
 
 	DebugMeta struct {
