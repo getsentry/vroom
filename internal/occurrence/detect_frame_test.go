@@ -295,7 +295,6 @@ func TestDetectFrameInCallTree(t *testing.T) {
 										Package:       "vroom",
 										Path:          "path",
 										StartNS:       0,
-										SampleCount:   4,
 										Frame: frame.Frame{
 											Function: "SuperShortFunction",
 											InApp:    &falseValue,
@@ -315,6 +314,7 @@ func TestDetectFrameInCallTree(t *testing.T) {
 		{
 			job: DetectExactFrameOptions{
 				DurationThreshold: 16 * time.Millisecond,
+				SampleThreshold:   4,
 				FunctionsByPackage: map[string]map[string]Category{
 					"vroom": {
 						"FunctionWithOneSample":   FileRead,
