@@ -55,22 +55,24 @@ type (
 	}
 
 	SampledProfile struct {
-		EndValue     uint64           `json:"endValue"`
-		IsMainThread bool             `json:"isMainThread"`
-		Name         string           `json:"name"`
-		Priority     int              `json:"priority,omitempty"`
-		Queues       map[string]Queue `json:"queues,omitempty"`
-		Samples      [][]int          `json:"samples"`
-		StartValue   uint64           `json:"startValue"`
-		State        string           `json:"state,omitempty"`
-		ThreadID     uint64           `json:"threadID"`
-		Type         ProfileType      `json:"type"`
-		Unit         ValueUnit        `json:"unit"`
-		Weights      []uint64         `json:"weights"`
+		EndValue        uint64           `json:"endValue"`
+		IsMainThread    bool             `json:"isMainThread"`
+		Name            string           `json:"name"`
+		Priority        int              `json:"priority,omitempty"`
+		Queues          map[string]Queue `json:"queues,omitempty"`
+		Samples         [][]int          `json:"samples"`
+		SamplesProfiles [][]int          `json:"samples_profiles,omitempty"`
+		StartValue      uint64           `json:"startValue"`
+		State           string           `json:"state,omitempty"`
+		ThreadID        uint64           `json:"threadID"`
+		Type            ProfileType      `json:"type"`
+		Unit            ValueUnit        `json:"unit"`
+		Weights         []uint64         `json:"weights"`
 	}
 
 	SharedData struct {
-		Frames []Frame `json:"frames"`
+		Frames     []Frame  `json:"frames"`
+		ProfileIDs []string `json:"profile_ids,omitempty"`
 	}
 
 	EventType   string

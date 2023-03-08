@@ -29,6 +29,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 				SampleCount:   10,
 				StartNS:       0,
 				Children:      []*Node{},
+				ProfileIDs:    make(map[string]struct{}),
 			},
 			want: []*Node{{
 				DurationNS:    10,
@@ -42,6 +43,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 				StartNS:       0,
 				SampleCount:   10,
 				Children:      []*Node{},
+				ProfileIDs:    make(map[string]struct{}),
 			}},
 		},
 		{
@@ -57,6 +59,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 				Path:          "path",
 				SampleCount:   10,
 				StartNS:       0,
+				ProfileIDs:    make(map[string]struct{}),
 				Children: []*Node{
 					{
 						DurationNS:    5,
@@ -70,6 +73,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 						SampleCount:   5,
 						StartNS:       0,
 						Children:      []*Node{},
+						ProfileIDs:    make(map[string]struct{}),
 					},
 					{
 						DurationNS:    5,
@@ -83,6 +87,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 						SampleCount:   5,
 						StartNS:       5,
 						Children:      []*Node{},
+						ProfileIDs:    make(map[string]struct{}),
 					},
 				},
 			},
@@ -97,6 +102,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 				Path:          "path",
 				SampleCount:   10,
 				StartNS:       0,
+				ProfileIDs:    make(map[string]struct{}),
 				Children: []*Node{
 					{
 						DurationNS:    5,
@@ -110,6 +116,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 						SampleCount:   5,
 						StartNS:       0,
 						Children:      []*Node{},
+						ProfileIDs:    make(map[string]struct{}),
 					},
 					{
 						DurationNS:    5,
@@ -123,6 +130,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 						SampleCount:   5,
 						StartNS:       5,
 						Children:      []*Node{},
+						ProfileIDs:    make(map[string]struct{}),
 					},
 				},
 			}},
@@ -140,6 +148,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 				Path:          "path",
 				SampleCount:   4,
 				StartNS:       0,
+				ProfileIDs:    make(map[string]struct{}),
 				Children: []*Node{
 					{
 						DurationNS:    1,
@@ -153,6 +162,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 						SampleCount:   1,
 						StartNS:       0,
 						Children:      []*Node{},
+						ProfileIDs:    make(map[string]struct{}),
 					},
 					{
 						DurationNS:    1,
@@ -166,6 +176,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 						SampleCount:   1,
 						StartNS:       1,
 						Children:      []*Node{},
+						ProfileIDs:    make(map[string]struct{}),
 					},
 					{
 						DurationNS:    2,
@@ -179,6 +190,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 						SampleCount:   2,
 						StartNS:       2,
 						Children:      []*Node{},
+						ProfileIDs:    make(map[string]struct{}),
 					},
 				},
 			},
@@ -193,6 +205,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 				Path:          "path",
 				SampleCount:   4,
 				StartNS:       0,
+				ProfileIDs:    make(map[string]struct{}),
 				Children: []*Node{
 					{
 						DurationNS:    2,
@@ -206,6 +219,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 						SampleCount:   2,
 						StartNS:       2,
 						Children:      []*Node{},
+						ProfileIDs:    make(map[string]struct{}),
 					},
 				},
 			}},
@@ -223,6 +237,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 				Path:          "path",
 				SampleCount:   10,
 				StartNS:       0,
+				ProfileIDs:    make(map[string]struct{}),
 				Children: []*Node{
 					{
 						DurationNS:    5,
@@ -236,6 +251,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 						SampleCount:   5,
 						StartNS:       0,
 						Children:      []*Node{},
+						ProfileIDs:    make(map[string]struct{}),
 					},
 				},
 			},
@@ -250,6 +266,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 				Path:          "path",
 				SampleCount:   10,
 				StartNS:       0,
+				ProfileIDs:    make(map[string]struct{}),
 				Children: []*Node{
 					{
 						DurationNS:    5,
@@ -263,6 +280,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 						SampleCount:   5,
 						StartNS:       0,
 						Children:      []*Node{},
+						ProfileIDs:    make(map[string]struct{}),
 					},
 				},
 			}},
@@ -280,6 +298,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 				Path:          "path",
 				SampleCount:   10,
 				StartNS:       0,
+				ProfileIDs:    make(map[string]struct{}),
 				Children: []*Node{
 					{
 						DurationNS:    10,
@@ -293,6 +312,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 						SampleCount:   10,
 						StartNS:       0,
 						Children:      []*Node{},
+						ProfileIDs:    make(map[string]struct{}),
 					},
 				},
 			},
@@ -308,6 +328,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 				SampleCount:   10,
 				StartNS:       0,
 				Children:      []*Node{},
+				ProfileIDs:    make(map[string]struct{}),
 			}},
 		},
 		{
@@ -323,6 +344,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 				Path:          "path",
 				SampleCount:   10,
 				StartNS:       0,
+				ProfileIDs:    make(map[string]struct{}),
 				Children: []*Node{
 					{
 						DurationNS:    10,
@@ -336,6 +358,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 						SampleCount:   10,
 						StartNS:       0,
 						Children:      []*Node{},
+						ProfileIDs:    make(map[string]struct{}),
 					},
 				},
 			},
@@ -351,6 +374,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 				SampleCount:   10,
 				StartNS:       0,
 				Children:      []*Node{},
+				ProfileIDs:    make(map[string]struct{}),
 			}},
 		},
 		{
@@ -366,6 +390,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 				Path:          "path",
 				SampleCount:   10,
 				StartNS:       0,
+				ProfileIDs:    make(map[string]struct{}),
 				Children: []*Node{
 					{
 						DurationNS:    10,
@@ -379,6 +404,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 						SampleCount:   10,
 						StartNS:       0,
 						Children:      []*Node{},
+						ProfileIDs:    make(map[string]struct{}),
 					},
 				},
 			},
@@ -394,6 +420,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 				SampleCount:   10,
 				StartNS:       0,
 				Children:      []*Node{},
+				ProfileIDs:    make(map[string]struct{}),
 			}},
 		},
 		{
@@ -409,6 +436,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 				Path:          "",
 				SampleCount:   1,
 				StartNS:       0,
+				ProfileIDs:    make(map[string]struct{}),
 				Children: []*Node{
 					{
 						DurationNS:    5,
@@ -421,6 +449,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 						Path:          "",
 						SampleCount:   1,
 						StartNS:       0,
+						ProfileIDs:    make(map[string]struct{}),
 						Children: []*Node{
 							{
 								DurationNS:    5,
@@ -433,6 +462,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 								Path:          "",
 								SampleCount:   1,
 								StartNS:       0,
+								ProfileIDs:    make(map[string]struct{}),
 								Children: []*Node{
 									{
 										DurationNS:    5,
@@ -446,6 +476,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 										SampleCount:   1,
 										StartNS:       0,
 										Children:      []*Node{},
+										ProfileIDs:    make(map[string]struct{}),
 									},
 								},
 							},
@@ -463,6 +494,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 						SampleCount:   1,
 						StartNS:       5,
 						Children:      []*Node{},
+						ProfileIDs:    make(map[string]struct{}),
 					},
 				},
 			},
@@ -481,6 +513,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 				Path:          "path",
 				SampleCount:   10,
 				StartNS:       0,
+				ProfileIDs:    make(map[string]struct{}),
 				Children: []*Node{
 					{
 						DurationNS:    5,
@@ -493,6 +526,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 						Path:          "path",
 						SampleCount:   5,
 						StartNS:       0,
+						ProfileIDs:    make(map[string]struct{}),
 						Children: []*Node{
 							{
 								DurationNS:    5,
@@ -505,6 +539,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 								Path:          "path",
 								SampleCount:   5,
 								StartNS:       0,
+								ProfileIDs:    make(map[string]struct{}),
 								Children: []*Node{
 									{
 										DurationNS:    5,
@@ -518,6 +553,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 										SampleCount:   5,
 										StartNS:       0,
 										Children:      []*Node{},
+										ProfileIDs:    make(map[string]struct{}),
 									},
 								},
 							},
@@ -534,6 +570,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 						Path:          "path",
 						SampleCount:   5,
 						StartNS:       5,
+						ProfileIDs:    make(map[string]struct{}),
 						Children: []*Node{
 							{
 								DurationNS:    5,
@@ -546,6 +583,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 								Path:          "",
 								SampleCount:   5,
 								StartNS:       5,
+								ProfileIDs:    make(map[string]struct{}),
 								Children: []*Node{
 									{
 										DurationNS:    5,
@@ -559,6 +597,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 										SampleCount:   5,
 										StartNS:       5,
 										Children:      []*Node{},
+										ProfileIDs:    make(map[string]struct{}),
 									},
 								},
 							},
@@ -577,6 +616,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 				Path:          "path",
 				SampleCount:   10,
 				StartNS:       0,
+				ProfileIDs:    make(map[string]struct{}),
 				Children: []*Node{
 					{
 						DurationNS:    5,
@@ -590,6 +630,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 						SampleCount:   5,
 						StartNS:       0,
 						Children:      []*Node{},
+						ProfileIDs:    make(map[string]struct{}),
 					},
 					{
 						DurationNS:    5,
@@ -603,6 +644,7 @@ func TestNodeTreeCollapse(t *testing.T) {
 						SampleCount:   5,
 						StartNS:       5,
 						Children:      []*Node{},
+						ProfileIDs:    make(map[string]struct{}),
 					},
 				},
 			}},

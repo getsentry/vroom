@@ -383,6 +383,7 @@ func TestCallTrees(t *testing.T) {
 						Name:          "function0",
 						SampleCount:   3,
 						Frame:         frame.Frame{Function: "function0"},
+						ProfileIDs:    make(map[string]struct{}),
 						Children: []*nodetree.Node{
 							{
 								DurationNS:    50,
@@ -392,6 +393,7 @@ func TestCallTrees(t *testing.T) {
 								Name:          "function1",
 								SampleCount:   3,
 								Frame:         frame.Frame{Function: "function1"},
+								ProfileIDs:    make(map[string]struct{}),
 								Children: []*nodetree.Node{
 									{
 										DurationNS:    40,
@@ -402,6 +404,7 @@ func TestCallTrees(t *testing.T) {
 										SampleCount:   2,
 										StartNS:       10,
 										Frame:         frame.Frame{Function: "function2"},
+										ProfileIDs:    make(map[string]struct{}),
 									},
 								},
 							},
@@ -442,6 +445,7 @@ func TestCallTrees(t *testing.T) {
 						Name:          "function0",
 						SampleCount:   2,
 						Frame:         frame.Frame{Function: "function0"},
+						ProfileIDs:    make(map[string]struct{}),
 						Children: []*nodetree.Node{
 							{
 								DurationNS:    40,
@@ -451,6 +455,7 @@ func TestCallTrees(t *testing.T) {
 								Name:          "function1",
 								SampleCount:   2,
 								Frame:         frame.Frame{Function: "function1"},
+								ProfileIDs:    make(map[string]struct{}),
 								Children: []*nodetree.Node{
 									{
 										DurationNS:    30,
@@ -461,6 +466,7 @@ func TestCallTrees(t *testing.T) {
 										SampleCount:   1,
 										StartNS:       10,
 										Frame:         frame.Frame{Function: "function2"},
+										ProfileIDs:    make(map[string]struct{}),
 									},
 								},
 							},
@@ -503,6 +509,7 @@ func TestCallTrees(t *testing.T) {
 						Name:          "function0",
 						SampleCount:   1,
 						Frame:         frame.Frame{Function: "function0"},
+						ProfileIDs:    make(map[string]struct{}),
 					},
 					{
 						DurationNS:    10,
@@ -513,6 +520,7 @@ func TestCallTrees(t *testing.T) {
 						SampleCount:   1,
 						StartNS:       10,
 						Frame:         frame.Frame{Function: "function1"},
+						ProfileIDs:    make(map[string]struct{}),
 					},
 					{
 						DurationNS:    10,
@@ -523,6 +531,7 @@ func TestCallTrees(t *testing.T) {
 						SampleCount:   1,
 						StartNS:       20,
 						Frame:         frame.Frame{Function: "function2"},
+						ProfileIDs:    make(map[string]struct{}),
 					},
 				},
 			},

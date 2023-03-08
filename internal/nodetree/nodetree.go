@@ -17,10 +17,11 @@ type (
 		Package       string  `json:"package"`
 		Path          string  `json:"path,omitempty"`
 
-		EndNS       uint64      `json:"-"`
-		Frame       frame.Frame `json:"-"`
-		SampleCount int         `json:"-"`
-		StartNS     uint64      `json:"-"`
+		EndNS       uint64              `json:"-"`
+		Frame       frame.Frame         `json:"-"`
+		SampleCount int                 `json:"-"`
+		StartNS     uint64              `json:"-"`
+		ProfileIDs  map[string]struct{} `json:"profile_ids,omitempty"`
 	}
 )
 
@@ -40,6 +41,7 @@ func NodeFromFrame(f frame.Frame, start, end, fingerprint uint64) *Node {
 		Path:          f.Path,
 		SampleCount:   1,
 		StartNS:       start,
+		ProfileIDs:    map[string]struct{}{},
 	}
 	if end > 0 {
 		n.DurationNS = n.EndNS - n.StartNS
