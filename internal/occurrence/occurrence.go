@@ -89,6 +89,8 @@ const (
 	EvidenceNameSampleCount       EvidenceName = "Sample count"
 
 	ContextTrace Context = "trace"
+
+	ProfileID string = "profile_id"
 )
 
 var (
@@ -163,7 +165,7 @@ func NewOccurrence(p profile.Profile, ni nodeInfo) *Occurrence {
 			"frame_name":          ni.Node.Name,
 			"frame_package":       ni.Node.Package,
 			"profile_duration_ns": p.DurationNS(),
-			"profile_id":          p.ID(),
+			ProfileID:             p.ID(),
 			"sample_count":        ni.Node.SampleCount,
 			"transaction_id":      t.ID,
 			"transaction_name":    t.Name,
@@ -223,7 +225,7 @@ func buildOccurrenceTags(p profile.Profile) map[string]string {
 }
 
 func (o *Occurrence) Link() (string, error) {
-	link, err := url.Parse(fmt.Sprintf("https://sentry.io/api/0/profiling/projects/%d/profile/%s/", o.Event.ProjectID, o.Event.ID))
+	link, err := url.Parse(fmt.Sprintf("https://sentry.io/api/0/profiling/projects/%d/profile/%s/", o.Event.ProjectID, o.EvidenceData[ProfileID]))
 	if err != nil {
 		return "", err
 	}
@@ -246,7 +248,7 @@ func (o *Occurrence) Save() (map[string]bigquery.Value, string, error) {
 		"link":            link,
 		"organization_id": strconv.FormatUint(o.Event.OrganizationID, 10),
 		"platform":        o.Event.Platform,
-		"profile_id":      o.Event.ID,
+		"profile_id":      o.EvidenceData[ProfileID],
 		"project_id":      strconv.FormatUint(o.Event.ProjectID, 10),
 		"sample_count":    o.sampleCount,
 	}, bigquery.NoDedupeID, nil
