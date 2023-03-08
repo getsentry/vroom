@@ -112,6 +112,7 @@ var (
 		MLModelLoad:      {IssueTitle: "Machine Learning model load on Main Thread"},
 		Regex:            {IssueTitle: "Regex on Main Thread"},
 		SQL:              {IssueTitle: "SQL operation on Main Thread"},
+		SourceContext:    {IssueTitle: "Adding Source Context is slow"},
 		ThreadWait:       {IssueTitle: "Thread Wait on Main Thread"},
 		ViewInflation:    {IssueTitle: "SwiftUI View inflation on Main Thread"},
 		ViewLayout:       {IssueTitle: "SwiftUI View layout on Main Thread"},
