@@ -184,9 +184,11 @@ type flamegraph struct {
 
 func toSpeedscope(trees []*nodetree.Node, minFreq int) speedscope.Output {
 	fd := &flamegraph{
+		frames:           make([]speedscope.Frame, 0),
 		framesIndex:      make(map[string]int),
-		profilesIDsIndex: make(map[string]int),
 		minFreq:          minFreq,
+		profilesIDsIndex: make(map[string]int),
+		weights:          make([]uint64, 0),
 	}
 	for _, tree := range trees {
 		stack := make([]int, 0, 128)
