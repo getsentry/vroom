@@ -14,7 +14,10 @@ type (
 		CallTreesKafkaTopic   string   `env:"SENTRY_KAFKA_TOPIC_CALL_TREES" env-default:"profiles-call-tree"`
 		ProfilesKafkaTopic    string   `env:"SENTRY_KAKFA_TOPIC_PROFILES" env-default:"processed-profiles"`
 
-		ProfilesBucket string `env:"SENTRY_GCS_BUCKET_PROFILES" env-default:"sentry-profiles"`
-		SnubaHost      string `env:"SENTRY_SNUBA_HOST" env-default:"http://localhost:1218"`
+		SnubaHost string `env:"SENTRY_SNUBA_HOST" env-default:"http://localhost:1218"`
+
+		ProfilesStorageProvider string `env:"SENTRY_PROFILES_STORAGE_PROVIDER" env-default:"gcs"`
+		GCSProfileBucket        string `env:"SENTRY_GCS_BUCKET_PROFILES" env-default:"sentry-profiles"`
+		BadgerDBProfilePath     string `env:"SENTRY_BADGERDB_PROFILE_PATH" env-default:"/var/lib/badgerdb"`
 	}
 )

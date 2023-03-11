@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"os/signal"
@@ -14,8 +15,11 @@ import (
 	"cloud.google.com/go/bigquery"
 	"cloud.google.com/go/storage"
 	"github.com/CAFxX/httpcompression"
+	"github.com/dgraph-io/badger/v4"
 	"github.com/getsentry/sentry-go"
 	sentryhttp "github.com/getsentry/sentry-go/http"
+	"github.com/getsentry/vroom/internal/storageprovider"
+	"github.com/getsentry/vroom/internal/storageutil"
 	"github.com/ilyakaznacheev/cleanenv"
 	"github.com/julienschmidt/httprouter"
 	"github.com/rs/zerolog/log"
@@ -35,8 +39,8 @@ type environment struct {
 	profilingWriter     *kafka.Writer
 	occurrencesInserter *bigquery.Inserter
 
-	storage        *storage.Client
-	profilesBucket *storage.BucketHandle
+	storage        io.Closer
+	profilesBucket storageutil.ObjectHandler
 }
 
 var release string
@@ -53,10 +57,28 @@ func newEnvironment() (*environment, error) {
 		return nil, err
 	}
 	ctx := context.Background()
-	e.storage, err = storage.NewClient(ctx)
-	if err != nil {
-		return nil, err
+
+	switch e.config.ProfilesStorageProvider {
+	case "gcs":
+		gcsClient, err := storage.NewClient(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		e.profilesBucket = &storageprovider.Gcs{BucketHandle: gcsClient.Bucket(e.config.GCSProfileBucket)}
+		e.storage = gcsClient
+		break
+	default:
+		// Any other options should fall back to badger
+		badgerClient, err := badger.Open(badger.DefaultOptions(e.config.BadgerDBProfilePath).WithInMemory(false))
+		if err != nil {
+			return nil, err
+		}
+
+		e.profilesBucket = &storageprovider.Badger{DB: badgerClient}
+		e.storage = badgerClient
 	}
+
 	if e.config.Environment == "production" {
 		bqClient, err := bigquery.NewClient(ctx, "specto-dev")
 		if err != nil {
@@ -82,7 +104,6 @@ func newEnvironment() (*environment, error) {
 		ReadTimeout:  3 * time.Second,
 		WriteTimeout: 3 * time.Second,
 	}
-	e.profilesBucket = e.storage.Bucket(e.config.ProfilesBucket)
 	return &e, nil
 }
 

@@ -10,7 +10,7 @@ FROM alpine
 
 EXPOSE 8080
 
-RUN apk add --no-cache ca-certificates tzdata
+RUN apk add --no-cache ca-certificates tzdata && mkdir -p /var/lib/badgerdb
 
 COPY --from=builder /src/vroom /bin/vroom
 
