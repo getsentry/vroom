@@ -43,6 +43,11 @@ func (b *Badger) Get(ctx context.Context, name string) (storageutil.ReadSizeClos
 		return nil, err
 	}
 
+	err = transaction.Commit()
+	if err != nil {
+		return nil, err
+	}
+
 	return &badgerReader{
 		txn:    transaction,
 		reader: bytes.NewReader(value),
@@ -52,24 +57,28 @@ func (b *Badger) Get(ctx context.Context, name string) (storageutil.ReadSizeClos
 
 // badgerWriter implements io.WriteCloser
 type badgerWriter struct {
-	b    *bytes.Buffer
-	txn  *badger.Txn
-	name string
+	b         *bytes.Buffer
+	txn       *badger.Txn
+	name      string
+	discarded bool
 }
 
 func (bw *badgerWriter) Write(b []byte) (n int, err error) {
 	n, err = bw.Write(b)
 	if err != nil {
 		bw.txn.Discard()
+		bw.discarded = true
 	}
 
 	return
 }
 
 func (bw *badgerWriter) Close() error {
-	err := bw.txn.Set([]byte(bw.name), bw.b.Bytes())
-	if err != nil {
-		return err
+	if bw.discarded == false {
+		err := bw.txn.Set([]byte(bw.name), bw.b.Bytes())
+		if err != nil {
+			return err
+		}
 	}
 
 	return bw.txn.Commit()
@@ -87,7 +96,7 @@ func (b *badgerReader) Read(p []byte) (n int, err error) {
 }
 
 func (b *badgerReader) Close() error {
-	return b.txn.Commit()
+	return nil
 }
 
 func (b *badgerReader) Size() int64 {
