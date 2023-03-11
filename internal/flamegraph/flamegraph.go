@@ -33,7 +33,7 @@ var (
 
 func GetFlamegraphFromProfiles(
 	ctx context.Context,
-	profilesBucket *storage.BucketHandle,
+	profilesBucket storageutil.ObjectHandler,
 	organizationID uint64,
 	projectID uint64,
 	profileIDs []string,
