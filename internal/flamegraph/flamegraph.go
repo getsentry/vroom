@@ -188,6 +188,7 @@ func toSpeedscope(trees []*nodetree.Node, minFreq int) speedscope.Output {
 		framesIndex:      make(map[string]int),
 		minFreq:          minFreq,
 		profilesIDsIndex: make(map[string]int),
+		samples:          make([][]int, 0),
 		weights:          make([]uint64, 0),
 	}
 	for _, tree := range trees {
