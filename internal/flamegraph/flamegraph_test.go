@@ -171,12 +171,12 @@ func TestFlamegraphSpeedscopeGeneration(t *testing.T) {
 		{3},    // [e]      prof_id[1]
 	}
 
-	expectedSamplesProfiles := [][]int{
-		{0, 1},
-		{0},
-		{1},
-		{0},
-		{1},
+	expectedSamplesProfiles := []map[string]struct{}{
+		{firstSampledProfile.EventID: void, secondSampledProfile.EventID: void},
+		{firstSampledProfile.EventID: void},
+		{secondSampledProfile.EventID: void},
+		{firstSampledProfile.EventID: void},
+		{secondSampledProfile.EventID: void},
 	}
 
 	expectedWeights := []uint64{3, 1, 1, 1, 1}
@@ -189,7 +189,20 @@ func TestFlamegraphSpeedscopeGeneration(t *testing.T) {
 		t.Fatalf("expected \"%v\" found \"%v\"", expectedWeights, prof.Weights)
 	}
 
-	if diff := testutil.Diff(expectedSamplesProfiles, prof.SamplesProfiles); diff != "" {
-		t.Fatalf("expected \"%v\" found \"%v\"", expectedSamplesProfiles, prof.SamplesProfiles)
+	actualSamplesProfiles := getProfilesIDsfromIndexes(prof.SamplesProfiles, sp.Shared.ProfileIDs)
+	if diff := testutil.Diff(expectedSamplesProfiles, actualSamplesProfiles); diff != "" {
+		t.Fatalf("expected \"%v\" found \"%v\"", expectedSamplesProfiles, actualSamplesProfiles)
 	}
+}
+
+func getProfilesIDsfromIndexes(sampleProfilesIDX [][]int, profileIDs []string) []map[string]struct{} {
+	samplesProfilesIDs := make([]map[string]struct{}, 0, len(sampleProfilesIDX))
+	for _, sample := range sampleProfilesIDX {
+		IDs := make(map[string]struct{})
+		for _, idx := range sample {
+			IDs[profileIDs[idx]] = void
+		}
+		samplesProfilesIDs = append(samplesProfilesIDs, IDs)
+	}
+	return samplesProfilesIDs
 }
