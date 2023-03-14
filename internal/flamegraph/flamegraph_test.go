@@ -3,7 +3,9 @@ package flamegraph
 import (
 	"encoding/json"
 	"testing"
+	"time"
 
+	"github.com/getsentry/vroom/internal/debugmeta"
 	"github.com/getsentry/vroom/internal/frame"
 	"github.com/getsentry/vroom/internal/nodetree"
 	"github.com/getsentry/vroom/internal/platform"
@@ -11,7 +13,9 @@ import (
 	"github.com/getsentry/vroom/internal/sample"
 	"github.com/getsentry/vroom/internal/speedscope"
 	"github.com/getsentry/vroom/internal/testutil"
+	"github.com/getsentry/vroom/internal/timeutil"
 	"github.com/getsentry/vroom/internal/transaction"
+	"github.com/google/go-cmp/cmp"
 )
 
 var falseValue = false
@@ -132,6 +136,85 @@ var secondSampledProfile = sample.Profile{
 	},
 } // end prof definition
 
+var expectedSp = speedscope.Output{
+	ActiveProfileIndex: 0,
+	AndroidClock:       "",
+	DurationNS:         0,
+	Images:             nil,
+	Measurements:       nil,
+	Metadata: speedscope.ProfileMetadata{
+		ProfileView: speedscope.ProfileView{
+			AndroidAPILevel:      0,
+			Architecture:         "",
+			DebugMeta:            debugmeta.DebugMeta{},
+			DeviceClassification: "",
+			DeviceLocale:         "",
+			DeviceManufacturer:   "",
+			DeviceModel:          "",
+			DeviceOSBuildNumber:  "",
+			DeviceOSName:         "",
+			DeviceOSVersion:      "",
+			DurationNS:           0,
+			Environment:          "",
+			Measurements:         nil,
+			OrganizationID:       0,
+			Platform:             "",
+			Profile:              nil,
+			ProfileID:            "",
+			ProjectID:            0,
+			Received:             timeutil.Time(time.Time{}),
+			RetentionDays:        0,
+			TraceID:              "",
+			TransactionID:        "",
+			VersionCode:          "",
+			VersionName:          "",
+		},
+		Timestamp: timeutil.Time(time.Time{}),
+		Version:   "",
+	},
+	Platform:  "",
+	ProfileID: "",
+	Profiles: []interface{}{
+		speedscope.SampledProfile{
+			EndValue:     7,
+			IsMainThread: true,
+			Name:         "",
+			Priority:     0,
+			Queues:       nil,
+			Samples: [][]int{
+				{0, 1},
+				{0},
+				{2, 0},
+				{2},
+				{3},
+			},
+			SamplesProfiles: [][]int{
+				{0, 1},
+				{0},
+				{1},
+				{0},
+				{1},
+			},
+			StartValue: 0,
+			State:      "",
+			ThreadID:   0,
+			Type:       "sampled",
+			Unit:       "count",
+			Weights:    []uint64{3, 1, 1, 1, 1}},
+	},
+	ProjectID: 0,
+	Shared: speedscope.SharedData{
+		Frames: []speedscope.Frame{
+			{Image: "test.package", Name: "a"}, {Image: "test.package", Name: "b"},
+			{Image: "test.package", IsApplication: true, Name: "c"},
+			{Image: "test.package", Name: "e"},
+		},
+		ProfileIDs: []string{"ab1", "cd2"},
+	},
+	TransactionName: "",
+	Version:         "",
+}
+
 func TestFlamegraphSpeedscopeGeneration(t *testing.T) {
 	var flamegraphTree []*nodetree.Node
 
@@ -171,71 +254,8 @@ func TestFlamegraphSpeedscopeGeneration(t *testing.T) {
 	addCallTreeToFlamegraph(&flamegraphTree, callTrees[0], pr.ID())
 
 	sp := toSpeedscope(flamegraphTree, 1)
-	prof := sp.Profiles[0].(speedscope.SampledProfile)
 
-	expectedSamples := [][]int{
-		{0, 1}, // [a, b]   prof_id[0, 1]
-		{0},    // [a]      prof_id[0]
-		{2, 0}, // [c, a]   prof_id[1]
-		{2},    // [c]      prof_id[0]
-		{3},    // [e]      prof_id[1]
+	if diff := testutil.Diff(expectedSp, sp, cmp.AllowUnexported(timeutil.Time{})); diff != "" {
+		t.Fatalf("expected \"%+v\" found \"%+v\"", expectedSp, sp)
 	}
-
-	expectedSamplesProfiles := []map[string]struct{}{
-		{firstSampledProfile.EventID: void, secondSampledProfile.EventID: void},
-		{firstSampledProfile.EventID: void},
-		{secondSampledProfile.EventID: void},
-		{firstSampledProfile.EventID: void},
-		{secondSampledProfile.EventID: void},
-	}
-
-	expectedWeights := []uint64{3, 1, 1, 1, 1}
-
-	if diff := testutil.Diff(expectedSamples, prof.Samples); diff != "" {
-		t.Fatalf("expected \"%v\" found \"%v\"", expectedSamples, prof.Samples)
-	}
-
-	if diff := testutil.Diff(expectedWeights, prof.Weights); diff != "" {
-		t.Fatalf("expected \"%v\" found \"%v\"", expectedWeights, prof.Weights)
-	}
-
-	actualSamplesProfiles := getProfilesIDsfromIndexes(prof.SamplesProfiles, sp.Shared.ProfileIDs)
-	if diff := testutil.Diff(expectedSamplesProfiles, actualSamplesProfiles); diff != "" {
-		t.Fatalf("expected \"%v\" found \"%v\"", expectedSamplesProfiles, actualSamplesProfiles)
-	}
-
-	expectedAppFrames := []speedscope.Frame{
-		{
-			Name:          "c",
-			Image:          "test.package",
-			IsApplication: true,
-		},
-	}
-	actualAppFrames := getApplicationFrames(sp.Shared.Frames)
-	if diff := testutil.Diff(expectedAppFrames, actualAppFrames); diff != "" {
-		t.Fatalf("expected \"%v\" found \"%v\"", expectedAppFrames, actualAppFrames)
-	}
-}
-
-func getProfilesIDsfromIndexes(sampleProfilesIDX [][]int, profileIDs []string) []map[string]struct{} {
-	samplesProfilesIDs := make([]map[string]struct{}, 0, len(sampleProfilesIDX))
-	for _, sample := range sampleProfilesIDX {
-		IDs := make(map[string]struct{})
-		for _, idx := range sample {
-			IDs[profileIDs[idx]] = void
-		}
-		samplesProfilesIDs = append(samplesProfilesIDs, IDs)
-	}
-	return samplesProfilesIDs
-}
-
-func getApplicationFrames(frames []speedscope.Frame) []speedscope.Frame {
-	_frames := []speedscope.Frame{}
-	for _, v := range frames {
-		if v.IsApplication {
-			_frames = append(_frames, v)
-		}
-	}
-
-	return _frames
 }
