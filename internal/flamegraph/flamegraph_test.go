@@ -2,7 +2,6 @@ package flamegraph
 
 import (
 	"encoding/json"
-	"fmt"
 	"testing"
 
 	"github.com/getsentry/vroom/internal/frame"
@@ -214,7 +213,6 @@ func TestFlamegraphSpeedscopeGeneration(t *testing.T) {
 	}
 	actualAppFrames := getApplicationFrames(sp.Shared.Frames)
 	if diff := testutil.Diff(expectedAppFrames, actualAppFrames); diff != "" {
-		fmt.Println(diff)
 		t.Fatalf("expected \"%v\" found \"%v\"", expectedAppFrames, actualAppFrames)
 	}
 }
