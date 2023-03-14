@@ -234,6 +234,7 @@ func (f *flamegraph) visitCalltree(node *nodetree.Node, currentStack *[]int) {
 			Name:  node.Name,
 			Image: node.Package,
 			Path:  node.Path,
+			IsApplication: node.IsApplication,
 		}
 		f.framesIndex[frameID] = len(f.frames)
 		*currentStack = append(*currentStack, len(f.frames))

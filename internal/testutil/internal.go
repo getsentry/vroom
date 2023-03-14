@@ -36,3 +36,7 @@ func Diff(a, b interface{}, opts ...cmp.Option) string {
 	opts = append(opts, defaultCmpOptions...)
 	return cmp.Diff(a, b, opts...)
 }
+
+func BoolPtr(b bool) *bool {
+	return &b
+}
