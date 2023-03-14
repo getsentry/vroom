@@ -2,6 +2,7 @@ package flamegraph
 
 import (
 	"encoding/json"
+	"fmt"
 	"testing"
 
 	"github.com/getsentry/vroom/internal/frame"
@@ -14,6 +15,9 @@ import (
 	"github.com/getsentry/vroom/internal/transaction"
 )
 
+var falseValue = false
+var trueValue = true
+
 var firstSampledProfile = sample.Profile{
 	RawProfile: sample.RawProfile{
 		EventID:  "ab1",
@@ -24,17 +28,17 @@ var firstSampledProfile = sample.Profile{
 				{
 					Function: "a",
 					Package:  "test.package",
-					InApp: testutil.BoolPtr(false),
+					InApp:    &falseValue,
 				},
 				{
 					Function: "b",
 					Package:  "test.package",
-					InApp: testutil.BoolPtr(false),
+					InApp:    &falseValue,
 				},
 				{
 					Function: "c",
 					Package:  "test.package",
-					InApp: testutil.BoolPtr(true),
+					InApp:    &trueValue,
 				},
 			}, //end frames
 			Stacks: []sample.Stack{
@@ -82,22 +86,22 @@ var secondSampledProfile = sample.Profile{
 				{
 					Function: "a",
 					Package:  "test.package",
-					InApp: testutil.BoolPtr(false),
+					InApp:    &falseValue,
 				},
 				{
 					Function: "c",
 					Package:  "test.package",
-					InApp: testutil.BoolPtr(true),
+					InApp:    &trueValue,
 				},
 				{
 					Function: "e",
 					Package:  "test.package",
-					InApp: testutil.BoolPtr(false),
+					InApp:    &falseValue,
 				},
 				{
 					Function: "b",
 					Package:  "test.package",
-					InApp: testutil.BoolPtr(false),
+					InApp:    &falseValue,
 				},
 			}, //end frames
 			Stacks: []sample.Stack{
@@ -201,14 +205,17 @@ func TestFlamegraphSpeedscopeGeneration(t *testing.T) {
 		t.Fatalf("expected \"%v\" found \"%v\"", expectedSamplesProfiles, actualSamplesProfiles)
 	}
 
-	appFrames := getApplicationFrames(sp.Shared.Frames)
-	if len(appFrames) != 1 {
-		t.Fatalf("expected 1 application frame, found %d", len(appFrames))
+	expectedAppFrames := []speedscope.Frame{
+		{
+			Name:          "c",
+			Image:          "test.package",
+			IsApplication: true,
+		},
 	}
-
-
-	if len(appFrames) > 0 && appFrames[0].Name != "c" {
-		t.Fatalf("expected frame name \"c\", found \"%s\"", appFrames[0].Name)
+	actualAppFrames := getApplicationFrames(sp.Shared.Frames)
+	if diff := testutil.Diff(expectedAppFrames, actualAppFrames); diff != "" {
+		fmt.Println(diff)
+		t.Fatalf("expected \"%v\" found \"%v\"", expectedAppFrames, actualAppFrames)
 	}
 }
 
@@ -224,9 +231,9 @@ func getProfilesIDsfromIndexes(sampleProfilesIDX [][]int, profileIDs []string) [
 	return samplesProfilesIDs
 }
 
-func getApplicationFrames(frames []speedscope.Frame) ([]speedscope.Frame) {
+func getApplicationFrames(frames []speedscope.Frame) []speedscope.Frame {
 	_frames := []speedscope.Frame{}
-	for _, v:= range frames {
+	for _, v := range frames {
 		if v.IsApplication {
 			_frames = append(_frames, v)
 		}
