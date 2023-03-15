@@ -47,6 +47,7 @@ type (
 
 	// Occurrence represents a potential issue detected.
 	Occurrence struct {
+		Culprit         string                 `json:"culprit"`
 		DetectionTime   time.Time              `json:"detection_time"`
 		Event           Event                  `json:"event"`
 		EvidenceData    map[string]interface{} `json:"evidence_data,omitempty"`
@@ -93,43 +94,41 @@ const (
 	ProfileID string = "profile_id"
 )
 
-var (
-	IssueTitles = map[Category]CategoryMetadata{
-		Base64Decode:     {IssueTitle: "Base64 Decode on Main Thread"},
-		Base64Encode:     {IssueTitle: "Base64 Encode on Main Thread"},
-		Compression:      {IssueTitle: "Compression on Main Thread"},
-		CoreDataBlock:    {IssueTitle: "Object Context operation on Main Thread"},
-		CoreDataMerge:    {IssueTitle: "Object Context operation on Main Thread"},
-		CoreDataRead:     {IssueTitle: "Object Context operation on Main Thread"},
-		CoreDataWrite:    {IssueTitle: "Object Context operation on Main Thread"},
-		Decompression:    {IssueTitle: "Decompression on Main Thread"},
-		FileRead:         {IssueTitle: "File I/O on Main Thread", Type: FileIOType},
-		FileWrite:        {IssueTitle: "File I/O on Main Thread", Type: FileIOType},
-		HTTP:             {IssueTitle: "Network I/O on Main Thread"},
-		ImageDecode:      {IssueTitle: "Image decoding on Main Thread", Type: ImageDecodeType},
-		ImageEncode:      {IssueTitle: "Image encoding on Main Thread"},
-		JSONDecode:       {IssueTitle: "JSON decoding on Main Thread", Type: JSONDecodeType},
-		JSONEncode:       {IssueTitle: "JSON encoding on Main Thread"},
-		MLModelInference: {IssueTitle: "Machine Learning inference on Main Thread"},
-		MLModelLoad:      {IssueTitle: "Machine Learning model load on Main Thread"},
-		Regex:            {IssueTitle: "Regex on Main Thread"},
-		SQL:              {IssueTitle: "SQL operation on Main Thread"},
-		SourceContext:    {IssueTitle: "Adding Source Context is slow"},
-		ThreadWait:       {IssueTitle: "Thread Wait on Main Thread"},
-		ViewInflation:    {IssueTitle: "SwiftUI View inflation on Main Thread"},
-		ViewLayout:       {IssueTitle: "SwiftUI View layout on Main Thread"},
-		ViewRender:       {IssueTitle: "SwiftUI View render on Main Thread"},
-		ViewUpdate:       {IssueTitle: "SwiftUI View update on Main Thread"},
-		XPC:              {IssueTitle: "XPC operation on Main Thread"},
-	}
-)
+var issueTitles = map[Category]CategoryMetadata{
+	Base64Decode:     {IssueTitle: "Base64 Decode on Main Thread"},
+	Base64Encode:     {IssueTitle: "Base64 Encode on Main Thread"},
+	Compression:      {IssueTitle: "Compression on Main Thread"},
+	CoreDataBlock:    {IssueTitle: "Object Context operation on Main Thread"},
+	CoreDataMerge:    {IssueTitle: "Object Context operation on Main Thread"},
+	CoreDataRead:     {IssueTitle: "Object Context operation on Main Thread"},
+	CoreDataWrite:    {IssueTitle: "Object Context operation on Main Thread"},
+	Decompression:    {IssueTitle: "Decompression on Main Thread"},
+	FileRead:         {IssueTitle: "File I/O on Main Thread", Type: FileIOType},
+	FileWrite:        {IssueTitle: "File I/O on Main Thread", Type: FileIOType},
+	HTTP:             {IssueTitle: "Network I/O on Main Thread"},
+	ImageDecode:      {IssueTitle: "Image decoding on Main Thread", Type: ImageDecodeType},
+	ImageEncode:      {IssueTitle: "Image encoding on Main Thread"},
+	JSONDecode:       {IssueTitle: "JSON decoding on Main Thread", Type: JSONDecodeType},
+	JSONEncode:       {IssueTitle: "JSON encoding on Main Thread"},
+	MLModelInference: {IssueTitle: "Machine Learning inference on Main Thread"},
+	MLModelLoad:      {IssueTitle: "Machine Learning model load on Main Thread"},
+	Regex:            {IssueTitle: "Regex on Main Thread"},
+	SQL:              {IssueTitle: "SQL operation on Main Thread"},
+	SourceContext:    {IssueTitle: "Adding Source Context is slow"},
+	ThreadWait:       {IssueTitle: "Thread Wait on Main Thread"},
+	ViewInflation:    {IssueTitle: "SwiftUI View inflation on Main Thread"},
+	ViewLayout:       {IssueTitle: "SwiftUI View layout on Main Thread"},
+	ViewRender:       {IssueTitle: "SwiftUI View render on Main Thread"},
+	ViewUpdate:       {IssueTitle: "SwiftUI View update on Main Thread"},
+	XPC:              {IssueTitle: "XPC operation on Main Thread"},
+}
 
 // NewOccurrence returns an Occurrence struct populated with info.
 func NewOccurrence(p profile.Profile, ni nodeInfo) *Occurrence {
 	t := p.Transaction()
 	var title IssueTitle
 	var issueType Type
-	cm, exists := IssueTitles[ni.Category]
+	cm, exists := issueTitles[ni.Category]
 	if exists {
 		issueType = cm.Type
 		title = cm.IssueTitle
@@ -146,6 +145,7 @@ func NewOccurrence(p profile.Profile, ni nodeInfo) *Occurrence {
 	fingerprint := fmt.Sprintf("%x", h.Sum(nil))
 	tags := buildOccurrenceTags(p)
 	return &Occurrence{
+		Culprit:       t.Name,
 		DetectionTime: time.Now().UTC(),
 		Event: Event{
 			DebugMeta:      p.DebugMeta(),
@@ -172,10 +172,11 @@ func NewOccurrence(p profile.Profile, ni nodeInfo) *Occurrence {
 		},
 		EvidenceDisplay: []Evidence{
 			{
+				Important: true,
 				Name:      EvidenceNameFunction,
 				Value:     ni.Node.Name,
-				Important: true,
 			},
+
 			{
 				Name:  EvidenceNamePackage,
 				Value: ni.Node.Package,
@@ -185,8 +186,11 @@ func NewOccurrence(p profile.Profile, ni nodeInfo) *Occurrence {
 				Value: time.Duration(ni.Node.DurationNS).String(),
 			},
 			{
-				Name:  EvidenceNameProfilePercentage,
-				Value: fmt.Sprintf("%0.2f%%", float64(ni.Node.DurationNS*100)/float64(p.DurationNS())),
+				Name: EvidenceNameProfilePercentage,
+				Value: fmt.Sprintf(
+					"%0.2f%%",
+					float64(ni.Node.DurationNS*100)/float64(p.DurationNS()),
+				),
 			},
 			{
 				Name:  EvidenceNameSampleCount,
@@ -225,7 +229,13 @@ func buildOccurrenceTags(p profile.Profile) map[string]string {
 }
 
 func (o *Occurrence) Link() (string, error) {
-	link, err := url.Parse(fmt.Sprintf("https://sentry.io/api/0/profiling/projects/%d/profile/%s/", o.Event.ProjectID, o.EvidenceData[ProfileID]))
+	link, err := url.Parse(
+		fmt.Sprintf(
+			"https://sentry.io/api/0/profiling/projects/%d/profile/%s/",
+			o.Event.ProjectID,
+			o.EvidenceData[ProfileID],
+		),
+	)
 	if err != nil {
 		return "", err
 	}
