@@ -16,12 +16,14 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 )
 
-func TestFlamegraphSpeedscopeGeneration(t *testing.T) {
+func TestFlamegraphAggregation(t *testing.T) {
 	tests := []struct {
+		name     string
 		profiles []sample.Profile
 		output   speedscope.Output
 	}{
 		{
+			name: "Basic profiles aggregation",
 			profiles: []sample.Profile{
 				{
 					RawProfile: sample.RawProfile{
@@ -177,18 +179,20 @@ func TestFlamegraphSpeedscopeGeneration(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		var ft []*nodetree.Node
-		for _, sp := range test.profiles {
-			p := profile.New(&sp)
-			callTrees, err := p.CallTrees()
-			if err != nil {
-				t.Fatalf("error when generating calltrees: %v", err)
+		t.Run(test.name, func(t *testing.T) {
+			var ft []*nodetree.Node
+			for _, sp := range test.profiles {
+				p := profile.New(&sp)
+				callTrees, err := p.CallTrees()
+				if err != nil {
+					t.Fatalf("error when generating calltrees: %v", err)
+				}
+				addCallTreeToFlamegraph(&ft, callTrees[0], p.ID())
 			}
-			addCallTreeToFlamegraph(&ft, callTrees[0], p.ID())
-		}
 
-		if diff := testutil.Diff(toSpeedscope(ft, 1), test.output, options); diff != "" {
-			t.Fatalf("Result mismatch: got - want +\n%s", diff)
-		}
+			if diff := testutil.Diff(toSpeedscope(ft, 1), test.output, options); diff != "" {
+				t.Fatalf("Result mismatch: got - want +\n%s", diff)
+			}
+		})
 	}
 }
