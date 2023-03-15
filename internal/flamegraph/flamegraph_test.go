@@ -160,13 +160,19 @@ func TestFlamegraphSpeedscopeGeneration(t *testing.T) {
 			return a < b
 		}),
 		cmpopts.SortSlices(func(a, b []int) bool {
-			if len(a) == 0 {
-				return true
+			al, bl := len(a), len(b)
+			if al != bl {
+				// Smallest slice first
+				return al < bl
 			}
-			if len(b) == 0 {
-				return false
+			for i := 0; i < al; i++ {
+				if a[i] != b[i] {
+					// Slice with the first different smaller index first
+					return a[i] < b[i]
+				}
 			}
-			return a[0] < b[0]
+			// Both slices are 0, we don't change the order
+			return false
 		}),
 	}
 
