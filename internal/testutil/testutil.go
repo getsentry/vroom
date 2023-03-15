@@ -30,6 +30,9 @@ var (
 			return math.IsNaN(float64(x)) && math.IsNaN(float64(y))
 		}, alwaysEqual),
 	}
+
+	False = false
+	True  = true
 )
 
 func Diff(a, b interface{}, opts ...cmp.Option) string {
