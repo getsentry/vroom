@@ -1,11 +1,8 @@
 package flamegraph
 
 import (
-	"encoding/json"
 	"testing"
-	"time"
 
-	"github.com/getsentry/vroom/internal/debugmeta"
 	"github.com/getsentry/vroom/internal/frame"
 	"github.com/getsentry/vroom/internal/nodetree"
 	"github.com/getsentry/vroom/internal/platform"
@@ -14,248 +11,178 @@ import (
 	"github.com/getsentry/vroom/internal/speedscope"
 	"github.com/getsentry/vroom/internal/testutil"
 	"github.com/getsentry/vroom/internal/timeutil"
-	"github.com/getsentry/vroom/internal/transaction"
+
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 )
 
-var falseValue = false
-var trueValue = true
-
-var firstSampledProfile = sample.Profile{
-	RawProfile: sample.RawProfile{
-		EventID:  "ab1",
-		Platform: platform.Cocoa,
-		Version:  "1",
-		Trace: sample.Trace{
-			Frames: []frame.Frame{
-				{
-					Function: "a",
-					Package:  "test.package",
-					InApp:    &falseValue,
-				},
-				{
-					Function: "b",
-					Package:  "test.package",
-					InApp:    &falseValue,
-				},
-				{
-					Function: "c",
-					Package:  "test.package",
-					InApp:    &trueValue,
-				},
-			}, //end frames
-			Stacks: []sample.Stack{
-				{1, 0}, // b,a
-				{2},    // c
-				{1, 0}, // b,a
-				{0},    // a
-			},
-			Samples: []sample.Sample{
-				{
-					ElapsedSinceStartNS: 0,
-					StackID:             0,
-					ThreadID:            0,
-				},
-				{
-					ElapsedSinceStartNS: 10,
-					StackID:             1,
-					ThreadID:            0,
-				},
-				{
-					ElapsedSinceStartNS: 20,
-					StackID:             2,
-					ThreadID:            0,
-				},
-				{
-					ElapsedSinceStartNS: 30,
-					StackID:             3,
-					ThreadID:            0,
-				},
-			}, // end Samples
-		}, // end Trace
-		Transaction: transaction.Transaction{
-			ActiveThreadID: 0,
-		},
-	},
-} // end prof definition
-
-var secondSampledProfile = sample.Profile{
-	RawProfile: sample.RawProfile{
-		EventID:  "cd2",
-		Platform: platform.Cocoa,
-		Version:  "1",
-		Trace: sample.Trace{
-			Frames: []frame.Frame{
-				{
-					Function: "a",
-					Package:  "test.package",
-					InApp:    &falseValue,
-				},
-				{
-					Function: "c",
-					Package:  "test.package",
-					InApp:    &trueValue,
-				},
-				{
-					Function: "e",
-					Package:  "test.package",
-					InApp:    &falseValue,
-				},
-				{
-					Function: "b",
-					Package:  "test.package",
-					InApp:    &falseValue,
-				},
-			}, //end frames
-			Stacks: []sample.Stack{
-				{0, 1}, // a,c
-				{2},    // e
-				{3, 0}, // b,a
-			},
-			Samples: []sample.Sample{
-				{
-					ElapsedSinceStartNS: 0,
-					StackID:             0,
-					ThreadID:            0,
-				},
-				{
-					ElapsedSinceStartNS: 10,
-					StackID:             1,
-					ThreadID:            0,
-				},
-				{
-					ElapsedSinceStartNS: 20,
-					StackID:             2,
-					ThreadID:            0,
-				},
-			}, // end Samples
-		}, // end Trace
-		Transaction: transaction.Transaction{
-			ActiveThreadID: 0,
-		},
-	},
-} // end prof definition
-
-var expectedSp = speedscope.Output{
-	ActiveProfileIndex: 0,
-	AndroidClock:       "",
-	DurationNS:         0,
-	Images:             nil,
-	Measurements:       nil,
-	Metadata: speedscope.ProfileMetadata{
-		ProfileView: speedscope.ProfileView{
-			AndroidAPILevel:      0,
-			Architecture:         "",
-			DebugMeta:            debugmeta.DebugMeta{},
-			DeviceClassification: "",
-			DeviceLocale:         "",
-			DeviceManufacturer:   "",
-			DeviceModel:          "",
-			DeviceOSBuildNumber:  "",
-			DeviceOSName:         "",
-			DeviceOSVersion:      "",
-			DurationNS:           0,
-			Environment:          "",
-			Measurements:         nil,
-			OrganizationID:       0,
-			Platform:             "",
-			Profile:              nil,
-			ProfileID:            "",
-			ProjectID:            0,
-			Received:             timeutil.Time(time.Time{}),
-			RetentionDays:        0,
-			TraceID:              "",
-			TransactionID:        "",
-			VersionCode:          "",
-			VersionName:          "",
-		},
-		Timestamp: timeutil.Time(time.Time{}),
-		Version:   "",
-	},
-	Platform:  "",
-	ProfileID: "",
-	Profiles: []interface{}{
-		speedscope.SampledProfile{
-			EndValue:     7,
-			IsMainThread: true,
-			Name:         "",
-			Priority:     0,
-			Queues:       nil,
-			Samples: [][]int{
-				{0, 1},
-				{0},
-				{2, 0},
-				{2},
-				{3},
-			},
-			SamplesProfiles: [][]int{
-				{0, 1},
-				{0},
-				{1},
-				{0},
-				{1},
-			},
-			StartValue: 0,
-			State:      "",
-			ThreadID:   0,
-			Type:       "sampled",
-			Unit:       "count",
-			Weights:    []uint64{3, 1, 1, 1, 1}},
-	},
-	ProjectID: 0,
-	Shared: speedscope.SharedData{
-		Frames: []speedscope.Frame{
-			{Image: "test.package", Name: "a"}, {Image: "test.package", Name: "b"},
-			{Image: "test.package", IsApplication: true, Name: "c"},
-			{Image: "test.package", Name: "e"},
-		},
-		ProfileIDs: []string{"ab1", "cd2"},
-	},
-	TransactionName: "",
-	Version:         "",
-}
-
 func TestFlamegraphSpeedscopeGeneration(t *testing.T) {
-	var flamegraphTree []*nodetree.Node
-
-	bytes, err := json.Marshal(firstSampledProfile)
-	if err != nil {
-		t.Fatalf("cannot marshal sampleProfile: %V", err)
+	tests := []struct {
+		profiles []sample.Profile
+		output   speedscope.Output
+	}{
+		{
+			profiles: []sample.Profile{
+				{
+					RawProfile: sample.RawProfile{
+						EventID:  "ab1",
+						Platform: platform.Cocoa,
+						Version:  "1",
+						Trace: sample.Trace{
+							Frames: []frame.Frame{
+								{
+									Function: "a",
+									Package:  "test.package",
+									InApp:    &testutil.False,
+								},
+								{
+									Function: "b",
+									Package:  "test.package",
+									InApp:    &testutil.False,
+								},
+								{
+									Function: "c",
+									Package:  "test.package",
+									InApp:    &testutil.True,
+								},
+							}, // end frames
+							Stacks: []sample.Stack{
+								{1, 0}, // b,a
+								{2},    // c
+								{0},    // a
+							},
+							Samples: []sample.Sample{
+								{},
+								{
+									ElapsedSinceStartNS: 10,
+									StackID:             1,
+								},
+								{
+									ElapsedSinceStartNS: 20,
+									StackID:             0,
+								},
+								{
+									ElapsedSinceStartNS: 30,
+									StackID:             2,
+								},
+							}, // end Samples
+						}, // end Trace
+					},
+				}, // end prof definition
+				{
+					RawProfile: sample.RawProfile{
+						EventID:  "cd2",
+						Platform: platform.Cocoa,
+						Version:  "1",
+						Trace: sample.Trace{
+							Frames: []frame.Frame{
+								{
+									Function: "a",
+									Package:  "test.package",
+									InApp:    &testutil.False,
+								},
+								{
+									Function: "c",
+									Package:  "test.package",
+									InApp:    &testutil.True,
+								},
+								{
+									Function: "e",
+									Package:  "test.package",
+									InApp:    &testutil.False,
+								},
+								{
+									Function: "b",
+									Package:  "test.package",
+									InApp:    &testutil.False,
+								},
+							}, // end frames
+							Stacks: []sample.Stack{
+								{0, 1}, // a,c
+								{2},    // e
+								{3, 0}, // b,a
+							},
+							Samples: []sample.Sample{
+								{},
+								{
+									ElapsedSinceStartNS: 10,
+									StackID:             1,
+								},
+								{
+									ElapsedSinceStartNS: 20,
+									StackID:             2,
+								},
+							}, // end Samples
+						}, // end Trace
+					},
+				}, // end prof definition
+			},
+			output: speedscope.Output{
+				Profiles: []interface{}{
+					speedscope.SampledProfile{
+						EndValue:     7,
+						IsMainThread: true,
+						Samples: [][]int{
+							{0, 1},
+							{0},
+							{2, 0},
+							{2},
+							{3},
+						},
+						SamplesProfiles: [][]int{
+							{0, 1},
+							{0},
+							{1},
+							{0},
+							{1},
+						},
+						Type:    "sampled",
+						Unit:    "count",
+						Weights: []uint64{3, 1, 1, 1, 1},
+					},
+				},
+				Shared: speedscope.SharedData{
+					Frames: []speedscope.Frame{
+						{Image: "test.package", Name: "a"},
+						{Image: "test.package", Name: "b"},
+						{Image: "test.package", IsApplication: true, Name: "c"},
+						{Image: "test.package", Name: "e"},
+					},
+					ProfileIDs: []string{"ab1", "cd2"},
+				},
+			},
+		},
 	}
 
-	var pr profile.Profile
-	err = json.Unmarshal(bytes, &pr)
-	if err != nil {
-		t.Fatalf("error trying to unmarshal the profile: %V", err)
+	options := cmp.Options{
+		cmp.AllowUnexported(timeutil.Time{}),
+		cmpopts.SortSlices(func(a, b string) bool {
+			return a < b
+		}),
+		cmpopts.SortSlices(func(a, b []int) bool {
+			if len(a) == 0 {
+				return true
+			}
+			if len(b) == 0 {
+				return false
+			}
+			return a[0] < b[0]
+		}),
 	}
 
-	callTrees, err := pr.CallTrees()
-	if err != nil {
-		t.Fatalf("error trying to generate call tree: %V", err)
-	}
-	addCallTreeToFlamegraph(&flamegraphTree, callTrees[0], pr.ID())
+	for _, test := range tests {
+		var ft []*nodetree.Node
+		for _, sp := range test.profiles {
+			p := profile.New(&sp)
+			callTrees, err := p.CallTrees()
+			if err != nil {
+				t.Fatalf("error when generating calltrees: %v", err)
+			}
+			addCallTreeToFlamegraph(&ft, callTrees[0], p.ID())
+		}
 
-	// second
-	bytes, err = json.Marshal(secondSampledProfile)
-	if err != nil {
-		t.Fatalf("cannot marshal sampleProfile: %V", err)
-	}
-
-	err = json.Unmarshal(bytes, &pr)
-	if err != nil {
-		t.Fatalf("error trying to unmarshal the profile: %V", err)
-	}
-
-	callTrees, err = pr.CallTrees()
-	if err != nil {
-		t.Fatalf("error trying to generate call tree: %V", err)
-	}
-
-	addCallTreeToFlamegraph(&flamegraphTree, callTrees[0], pr.ID())
-
-	sp := toSpeedscope(flamegraphTree, 1)
-
-	if diff := testutil.Diff(expectedSp, sp, cmp.AllowUnexported(timeutil.Time{})); diff != "" {
-		t.Fatalf("expected \"%+v\" found \"%+v\"", expectedSp, sp)
+		if diff := testutil.Diff(toSpeedscope(ft, 1), test.output, options); diff != "" {
+			t.Fatalf("Result mismatch: got - want +\n%s", diff)
+		}
 	}
 }
