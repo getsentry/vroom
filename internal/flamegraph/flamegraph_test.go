@@ -158,9 +158,11 @@ func TestFlamegraphAggregation(t *testing.T) {
 
 	options := cmp.Options{
 		cmp.AllowUnexported(timeutil.Time{}),
+		// This option will order profile IDs since we only want to compare values and not order.
 		cmpopts.SortSlices(func(a, b string) bool {
 			return a < b
 		}),
+		// This option will order stacks since we only want to compare values and not order.
 		cmpopts.SortSlices(func(a, b []int) bool {
 			al, bl := len(a), len(b)
 			if al != bl {
