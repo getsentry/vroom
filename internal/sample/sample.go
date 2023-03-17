@@ -23,14 +23,14 @@ import (
 type (
 	Device struct {
 		Architecture   string `json:"architecture"`
-		Classification string `json:"classification"`
-		Locale         string `json:"locale"`
-		Manufacturer   string `json:"manufacturer"`
-		Model          string `json:"model"`
+		Classification string `json:"classification,omitempty"`
+		Locale         string `json:"locale,omitempty"`
+		Manufacturer   string `json:"manufacturer,omitempty"`
+		Model          string `json:"model,omitempty"`
 	}
 
 	OS struct {
-		BuildNumber string `json:"build_number"`
+		BuildNumber string `json:"build_number,omitempty"`
 		Name        string `json:"name"`
 		Version     string `json:"version"`
 	}
@@ -41,7 +41,7 @@ type (
 	}
 
 	Sample struct {
-		ElapsedSinceStartNS uint64 `json:"elapsed_since_start_ns"`
+		ElapsedSinceStartNS Uint64 `json:"elapsed_since_start_ns"`
 		QueueAddress        string `json:"queue_address,omitempty"`
 		StackID             int    `json:"stack_id"`
 		State               State  `json:"state,omitempty"`
@@ -133,7 +133,12 @@ func (p Profile) GetID() string {
 }
 
 func StoragePath(organizationID, projectID uint64, profileID string) string {
-	return fmt.Sprintf("%d/%d/%s", organizationID, projectID, strings.ReplaceAll(profileID, "-", ""))
+	return fmt.Sprintf(
+		"%d/%d/%s",
+		organizationID,
+		projectID,
+		strings.ReplaceAll(profileID, "-", ""),
+	)
 }
 
 func (p Profile) StoragePath() string {
@@ -164,17 +169,21 @@ func (p Profile) GetRetentionDays() int {
 	return p.RetentionDays
 }
 
+func (s Sample) GetElapsedSinceStartNS() uint64 {
+	return uint64(s.ElapsedSinceStartNS)
+}
+
 func (p Profile) GetDurationNS() uint64 {
 	maxSampleIndex := len(p.Trace.Samples) - 1
 	if maxSampleIndex < 0 {
 		return 0
 	}
-	return p.Trace.Samples[maxSampleIndex].ElapsedSinceStartNS - p.Trace.Samples[0].ElapsedSinceStartNS
+	return p.Trace.Samples[maxSampleIndex].GetElapsedSinceStartNS() - p.Trace.Samples[0].GetElapsedSinceStartNS()
 }
 
 func (p Profile) CallTrees() (map[uint64][]*nodetree.Node, error) {
 	sort.SliceStable(p.Trace.Samples, func(i, j int) bool {
-		return p.Trace.Samples[i].ElapsedSinceStartNS < p.Trace.Samples[j].ElapsedSinceStartNS
+		return p.Trace.Samples[i].GetElapsedSinceStartNS() < p.Trace.Samples[j].GetElapsedSinceStartNS()
 	})
 
 	activeThreadID := p.Transaction.ActiveThreadID
@@ -195,11 +204,12 @@ func (p Profile) CallTrees() (map[uint64][]*nodetree.Node, error) {
 			fingerprint := h.Sum64()
 			if current == nil {
 				i := len(treesByThreadID[s.ThreadID]) - 1
-				if i >= 0 && treesByThreadID[s.ThreadID][i].Fingerprint == fingerprint && treesByThreadID[s.ThreadID][i].EndNS == previousTimestamp[s.ThreadID] {
+				if i >= 0 && treesByThreadID[s.ThreadID][i].Fingerprint == fingerprint &&
+					treesByThreadID[s.ThreadID][i].EndNS == previousTimestamp[s.ThreadID] {
 					current = treesByThreadID[s.ThreadID][i]
-					current.Update(s.ElapsedSinceStartNS)
+					current.Update(s.GetElapsedSinceStartNS())
 				} else {
-					n := nodetree.NodeFromFrame(f, previousTimestamp[s.ThreadID], s.ElapsedSinceStartNS, fingerprint)
+					n := nodetree.NodeFromFrame(f, previousTimestamp[s.ThreadID], s.GetElapsedSinceStartNS(), fingerprint)
 					treesByThreadID[s.ThreadID] = append(treesByThreadID[s.ThreadID], n)
 					current = n
 				}
@@ -207,16 +217,16 @@ func (p Profile) CallTrees() (map[uint64][]*nodetree.Node, error) {
 				i := len(current.Children) - 1
 				if i >= 0 && current.Children[i].Fingerprint == fingerprint && current.Children[i].EndNS == previousTimestamp[s.ThreadID] {
 					current = current.Children[i]
-					current.Update(s.ElapsedSinceStartNS)
+					current.Update(s.GetElapsedSinceStartNS())
 				} else {
-					n := nodetree.NodeFromFrame(f, previousTimestamp[s.ThreadID], s.ElapsedSinceStartNS, fingerprint)
+					n := nodetree.NodeFromFrame(f, previousTimestamp[s.ThreadID], s.GetElapsedSinceStartNS(), fingerprint)
 					current.Children = append(current.Children, n)
 					current = n
 				}
 			}
 		}
 		h.Reset()
-		previousTimestamp[s.ThreadID] = s.ElapsedSinceStartNS
+		previousTimestamp[s.ThreadID] = s.GetElapsedSinceStartNS()
 		current = nil
 	}
 
@@ -232,7 +242,8 @@ func (t *Trace) ThreadName(threadID, queueAddress string, mainThread bool) strin
 	if m, exists := t.ThreadMetadata[threadID]; exists && m.Name != "" {
 		return m.Name
 	}
-	if m, exists := t.QueueMetadata[queueAddress]; exists && ((m.LabeledAsMainThread() && mainThread) || !m.LabeledAsMainThread()) {
+	if m, exists := t.QueueMetadata[queueAddress]; exists &&
+		((m.LabeledAsMainThread() && mainThread) || !m.LabeledAsMainThread()) {
 		return m.Label
 	}
 	return ""
@@ -240,7 +251,7 @@ func (t *Trace) ThreadName(threadID, queueAddress string, mainThread bool) strin
 
 func (p *Profile) Speedscope() (speedscope.Output, error) {
 	sort.SliceStable(p.Trace.Samples, func(i, j int) bool {
-		return p.Trace.Samples[i].ElapsedSinceStartNS < p.Trace.Samples[j].ElapsedSinceStartNS
+		return p.Trace.Samples[i].GetElapsedSinceStartNS() < p.Trace.Samples[j].GetElapsedSinceStartNS()
 	})
 
 	threadIDToProfile := make(map[uint64]*speedscope.SampledProfile)
@@ -259,7 +270,7 @@ func (p *Profile) Speedscope() (speedscope.Output, error) {
 			speedscopeProfile = &speedscope.SampledProfile{
 				IsMainThread: isMainThread,
 				Name:         p.Trace.ThreadName(threadID, sample.QueueAddress, isMainThread),
-				StartValue:   sample.ElapsedSinceStartNS,
+				StartValue:   sample.GetElapsedSinceStartNS(),
 				ThreadID:     sample.ThreadID,
 				Type:         speedscope.ProfileTypeSampled,
 				Unit:         speedscope.ValueUnitNanoseconds,
@@ -269,11 +280,11 @@ func (p *Profile) Speedscope() (speedscope.Output, error) {
 			}
 			threadIDToProfile[sample.ThreadID] = speedscopeProfile
 		} else {
-			speedscopeProfile.Weights = append(speedscopeProfile.Weights, sample.ElapsedSinceStartNS-threadIDToPreviousTimestampNS[sample.ThreadID])
+			speedscopeProfile.Weights = append(speedscopeProfile.Weights, sample.GetElapsedSinceStartNS()-threadIDToPreviousTimestampNS[sample.ThreadID])
 		}
 
-		speedscopeProfile.EndValue = sample.ElapsedSinceStartNS
-		threadIDToPreviousTimestampNS[sample.ThreadID] = sample.ElapsedSinceStartNS
+		speedscopeProfile.EndValue = sample.GetElapsedSinceStartNS()
+		threadIDToPreviousTimestampNS[sample.ThreadID] = sample.GetElapsedSinceStartNS()
 
 		samp := make([]int, 0, len(stack))
 		for i := len(stack) - 1; i >= 0; i-- {

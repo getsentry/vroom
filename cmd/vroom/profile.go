@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -217,7 +218,12 @@ func (env *environment) getRawProfile(w http.ResponseWriter, r *http.Request) {
 	s.Description = "Read profile from GCS or Snuba"
 
 	var p profile.Profile
-	err = storageutil.UnmarshalCompressed(ctx, env.profilesBucket, profile.StoragePath(organizationID, projectID, profileID), &p)
+	err = storageutil.UnmarshalCompressed(
+		ctx,
+		env.profilesBucket,
+		profile.StoragePath(organizationID, projectID, profileID),
+		&p,
+	)
 	s.Finish()
 	if err != nil {
 		if errors.Is(err, storage.ErrObjectNotExist) {
@@ -290,7 +296,12 @@ func (env *environment) getProfile(w http.ResponseWriter, r *http.Request) {
 	s.Description = "Read profile from GCS or Snuba"
 
 	var p profile.Profile
-	err = storageutil.UnmarshalCompressed(ctx, env.profilesBucket, profile.StoragePath(organizationID, projectID, profileID), &p)
+	err = storageutil.UnmarshalCompressed(
+		ctx,
+		env.profilesBucket,
+		profile.StoragePath(organizationID, projectID, profileID),
+		&p,
+	)
 	s.Finish()
 	if err != nil {
 		if errors.Is(err, storage.ErrObjectNotExist) {
@@ -306,6 +317,7 @@ func (env *environment) getProfile(w http.ResponseWriter, r *http.Request) {
 				"message": e.Message,
 			})
 		}
+		fmt.Println(err)
 		hub.CaptureException(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
