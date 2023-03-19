@@ -63,7 +63,7 @@ func (env *environment) getFlamegraph(w http.ResponseWriter, r *http.Request) {
 	s.Finish()
 
 	s = sentry.StartSpan(ctx, "processing")
-	speedscope, err := flamegraph.GetFlamegraphFromProfiles(ctx, env.profilesBucket, organizationID, projectID, profileIDs, numWorkers, timeout)
+	speedscope, err := flamegraph.GetFlamegraphFromProfiles(ctx, env.storage, organizationID, projectID, profileIDs, numWorkers, timeout)
 	if err != nil {
 		s.Finish()
 		hub.CaptureException(err)

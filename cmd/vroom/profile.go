@@ -61,7 +61,7 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 
 	s = sentry.StartSpan(ctx, "gcs.write")
 	s.Description = "Write profile to GCS"
-	err = storageutil.CompressedWrite(ctx, env.profilesBucket, p.StoragePath(), p)
+	err = storageutil.CompressedWrite(ctx, env.storage, p.StoragePath(), p)
 	s.Finish()
 	if err != nil {
 		var e *googleapi.Error
@@ -216,7 +216,7 @@ func (env *environment) getRawProfile(w http.ResponseWriter, r *http.Request) {
 	s.Description = "Read profile from GCS or Snuba"
 
 	var p profile.Profile
-	err = storageutil.UnmarshalCompressed(ctx, env.profilesBucket, profile.StoragePath(organizationID, projectID, profileID), &p)
+	err = storageutil.UnmarshalCompressed(ctx, env.storage, profile.StoragePath(organizationID, projectID, profileID), &p)
 	s.Finish()
 	if err != nil {
 		if errors.Is(err, storageutil.ErrObjectNotFound) {
@@ -289,7 +289,7 @@ func (env *environment) getProfile(w http.ResponseWriter, r *http.Request) {
 	s.Description = "Read profile from GCS or Snuba"
 
 	var p profile.Profile
-	err = storageutil.UnmarshalCompressed(ctx, env.profilesBucket, profile.StoragePath(organizationID, projectID, profileID), &p)
+	err = storageutil.UnmarshalCompressed(ctx, env.storage, profile.StoragePath(organizationID, projectID, profileID), &p)
 	s.Finish()
 	if err != nil {
 		if errors.Is(err, storageutil.ErrObjectNotFound) {

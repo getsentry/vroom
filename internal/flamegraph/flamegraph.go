@@ -15,6 +15,7 @@ import (
 	"github.com/getsentry/vroom/internal/profile"
 	"github.com/getsentry/vroom/internal/speedscope"
 	"github.com/getsentry/vroom/internal/storageutil"
+	"gocloud.dev/blob"
 )
 
 type (
@@ -32,7 +33,7 @@ var (
 
 func GetFlamegraphFromProfiles(
 	ctx context.Context,
-	profilesBucket storageutil.ObjectHandler,
+	profilesBucket *blob.Bucket,
 	organizationID uint64,
 	projectID uint64,
 	profileIDs []string,
