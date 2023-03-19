@@ -1,7 +1,6 @@
 package flamegraph
 
 import (
-	"encoding/json"
 	"testing"
 
 	"github.com/getsentry/vroom/internal/frame"
@@ -11,185 +10,191 @@ import (
 	"github.com/getsentry/vroom/internal/sample"
 	"github.com/getsentry/vroom/internal/speedscope"
 	"github.com/getsentry/vroom/internal/testutil"
-	"github.com/getsentry/vroom/internal/transaction"
+	"github.com/getsentry/vroom/internal/timeutil"
+
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 )
 
-var firstSampledProfile = sample.Profile{
-	RawProfile: sample.RawProfile{
-		EventID:  "ab1",
-		Platform: platform.Cocoa,
-		Version:  "1",
-		Trace: sample.Trace{
-			Frames: []frame.Frame{
+func TestFlamegraphAggregation(t *testing.T) {
+	tests := []struct {
+		name     string
+		profiles []sample.Profile
+		output   speedscope.Output
+	}{
+		{
+			name: "Basic profiles aggregation",
+			profiles: []sample.Profile{
 				{
-					Function: "a",
-					Package:  "test.package",
-				},
+					RawProfile: sample.RawProfile{
+						EventID:  "ab1",
+						Platform: platform.Cocoa,
+						Version:  "1",
+						Trace: sample.Trace{
+							Frames: []frame.Frame{
+								{
+									Function: "a",
+									Package:  "test.package",
+									InApp:    &testutil.False,
+								},
+								{
+									Function: "b",
+									Package:  "test.package",
+									InApp:    &testutil.False,
+								},
+								{
+									Function: "c",
+									Package:  "test.package",
+									InApp:    &testutil.True,
+								},
+							}, // end frames
+							Stacks: []sample.Stack{
+								{1, 0}, // b,a
+								{2},    // c
+								{0},    // a
+							},
+							Samples: []sample.Sample{
+								{},
+								{
+									ElapsedSinceStartNS: 10,
+									StackID:             1,
+								},
+								{
+									ElapsedSinceStartNS: 20,
+									StackID:             0,
+								},
+								{
+									ElapsedSinceStartNS: 30,
+									StackID:             2,
+								},
+							}, // end Samples
+						}, // end Trace
+					},
+				}, // end prof definition
 				{
-					Function: "b",
-					Package:  "test.package",
-				},
-				{
-					Function: "c",
-					Package:  "test.package",
-				},
-			}, //end frames
-			Stacks: []sample.Stack{
-				{1, 0}, // b,a
-				{2},    // c
-				{1, 0}, // b,a
-				{0},    // a
+					RawProfile: sample.RawProfile{
+						EventID:  "cd2",
+						Platform: platform.Cocoa,
+						Version:  "1",
+						Trace: sample.Trace{
+							Frames: []frame.Frame{
+								{
+									Function: "a",
+									Package:  "test.package",
+									InApp:    &testutil.False,
+								},
+								{
+									Function: "c",
+									Package:  "test.package",
+									InApp:    &testutil.True,
+								},
+								{
+									Function: "e",
+									Package:  "test.package",
+									InApp:    &testutil.False,
+								},
+								{
+									Function: "b",
+									Package:  "test.package",
+									InApp:    &testutil.False,
+								},
+							}, // end frames
+							Stacks: []sample.Stack{
+								{0, 1}, // a,c
+								{2},    // e
+								{3, 0}, // b,a
+							},
+							Samples: []sample.Sample{
+								{},
+								{
+									ElapsedSinceStartNS: 10,
+									StackID:             1,
+								},
+								{
+									ElapsedSinceStartNS: 20,
+									StackID:             2,
+								},
+							}, // end Samples
+						}, // end Trace
+					},
+				}, // end prof definition
 			},
-			Samples: []sample.Sample{
-				{
-					ElapsedSinceStartNS: 0,
-					StackID:             0,
-					ThreadID:            0,
+			output: speedscope.Output{
+				Profiles: []interface{}{
+					speedscope.SampledProfile{
+						EndValue:     7,
+						IsMainThread: true,
+						Samples: [][]int{
+							{0, 1},
+							{0},
+							{2, 0},
+							{2},
+							{3},
+						},
+						SamplesProfiles: [][]int{
+							{0, 1},
+							{0},
+							{1},
+							{0},
+							{1},
+						},
+						Type:    "sampled",
+						Unit:    "count",
+						Weights: []uint64{3, 1, 1, 1, 1},
+					},
 				},
-				{
-					ElapsedSinceStartNS: 10,
-					StackID:             1,
-					ThreadID:            0,
+				Shared: speedscope.SharedData{
+					Frames: []speedscope.Frame{
+						{Image: "test.package", Name: "a"},
+						{Image: "test.package", Name: "b"},
+						{Image: "test.package", IsApplication: true, Name: "c"},
+						{Image: "test.package", Name: "e"},
+					},
+					ProfileIDs: []string{"ab1", "cd2"},
 				},
-				{
-					ElapsedSinceStartNS: 20,
-					StackID:             2,
-					ThreadID:            0,
-				},
-				{
-					ElapsedSinceStartNS: 30,
-					StackID:             3,
-					ThreadID:            0,
-				},
-			}, // end Samples
-		}, // end Trace
-		Transaction: transaction.Transaction{
-			ActiveThreadID: 0,
-		},
-	},
-} // end prof definition
-
-var secondSampledProfile = sample.Profile{
-	RawProfile: sample.RawProfile{
-		EventID:  "cd2",
-		Platform: platform.Cocoa,
-		Version:  "1",
-		Trace: sample.Trace{
-			Frames: []frame.Frame{
-				{
-					Function: "a",
-					Package:  "test.package",
-				},
-				{
-					Function: "c",
-					Package:  "test.package",
-				},
-				{
-					Function: "e",
-					Package:  "test.package",
-				},
-				{
-					Function: "b",
-					Package:  "test.package",
-				},
-			}, //end frames
-			Stacks: []sample.Stack{
-				{0, 1}, // a,c
-				{2},    // e
-				{3, 0}, // b,a
 			},
-			Samples: []sample.Sample{
-				{
-					ElapsedSinceStartNS: 0,
-					StackID:             0,
-					ThreadID:            0,
-				},
-				{
-					ElapsedSinceStartNS: 10,
-					StackID:             1,
-					ThreadID:            0,
-				},
-				{
-					ElapsedSinceStartNS: 20,
-					StackID:             2,
-					ThreadID:            0,
-				},
-			}, // end Samples
-		}, // end Trace
-		Transaction: transaction.Transaction{
-			ActiveThreadID: 0,
 		},
-	},
-} // end prof definition
-
-func TestFlamegraphSpeedscopeGeneration(t *testing.T) {
-	var flamegraphTree []*nodetree.Node
-
-	bytes, err := json.Marshal(firstSampledProfile)
-	if err != nil {
-		t.Fatalf("cannot marshal sampleProfile: %V", err)
 	}
 
-	var pr profile.Profile
-	err = json.Unmarshal(bytes, &pr)
-	if err != nil {
-		t.Fatalf("error trying to unmarshal the profile: %V", err)
+	options := cmp.Options{
+		cmp.AllowUnexported(timeutil.Time{}),
+		// This option will order profile IDs since we only want to compare values and not order.
+		cmpopts.SortSlices(func(a, b string) bool {
+			return a < b
+		}),
+		// This option will order stacks since we only want to compare values and not order.
+		cmpopts.SortSlices(func(a, b []int) bool {
+			al, bl := len(a), len(b)
+			if al != bl {
+				// Smallest slice first
+				return al < bl
+			}
+			for i := 0; i < al; i++ {
+				if a[i] != b[i] {
+					// Slice with the first different smaller index first
+					return a[i] < b[i]
+				}
+			}
+			// Both slices are 0, we don't change the order
+			return false
+		}),
 	}
 
-	callTrees, err := pr.CallTrees()
-	if err != nil {
-		t.Fatalf("error trying to generate call tree: %V", err)
-	}
-	addCallTreeToFlamegraph(&flamegraphTree, callTrees[0], pr.ID())
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			var ft []*nodetree.Node
+			for _, sp := range test.profiles {
+				p := profile.New(&sp)
+				callTrees, err := p.CallTrees()
+				if err != nil {
+					t.Fatalf("error when generating calltrees: %v", err)
+				}
+				addCallTreeToFlamegraph(&ft, callTrees[0], p.ID())
+			}
 
-	// second
-	bytes, err = json.Marshal(secondSampledProfile)
-	if err != nil {
-		t.Fatalf("cannot marshal sampleProfile: %V", err)
-	}
-
-	err = json.Unmarshal(bytes, &pr)
-	if err != nil {
-		t.Fatalf("error trying to unmarshal the profile: %V", err)
-	}
-
-	callTrees, err = pr.CallTrees()
-	if err != nil {
-		t.Fatalf("error trying to generate call tree: %V", err)
-	}
-
-	addCallTreeToFlamegraph(&flamegraphTree, callTrees[0], pr.ID())
-
-	sp := toSpeedscope(flamegraphTree, 1)
-	prof := sp.Profiles[0].(speedscope.SampledProfile)
-
-	expectedSamples := [][]int{
-		{0, 1}, // [a, b]   prof_id[0, 1]
-		{0},    // [a]      prof_id[0]
-		{2, 0}, // [c, a]   prof_id[1]
-		{2},    // [c]      prof_id[0]
-		{3},    // [e]      prof_id[1]
-	}
-
-	expectedSamplesProfiles := [][]int{
-		{0, 1},
-		{0},
-		{1},
-		{0},
-		{1},
-	}
-
-	expectedWeights := []uint64{3, 1, 1, 1, 1}
-
-	if diff := testutil.Diff(expectedSamples, prof.Samples); diff != "" {
-		t.Fatalf("expected \"%v\" found \"%v\"", expectedSamples, prof.Samples)
-	}
-
-	if diff := testutil.Diff(expectedWeights, prof.Weights); diff != "" {
-		t.Fatalf("expected \"%v\" found \"%v\"", expectedWeights, prof.Weights)
-	}
-
-	if diff := testutil.Diff(expectedSamplesProfiles, prof.SamplesProfiles); diff != "" {
-		t.Fatalf("expected \"%v\" found \"%v\"", expectedSamplesProfiles, prof.SamplesProfiles)
+			if diff := testutil.Diff(toSpeedscope(ft, 1), test.output, options); diff != "" {
+				t.Fatalf("Result mismatch: got - want +\n%s", diff)
+			}
+		})
 	}
 }

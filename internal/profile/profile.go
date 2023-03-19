@@ -44,6 +44,12 @@ type (
 	}
 )
 
+func New(p profileInterface) Profile {
+	return Profile{
+		profile: p,
+	}
+}
+
 func (p *Profile) UnmarshalJSON(b []byte) error {
 	var v version
 	err := json.Unmarshal(b, &v)

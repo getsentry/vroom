@@ -15,9 +15,16 @@ In order to develop for `vroom`, you will need:
 - Snuba (via Sentry development services)
 - `pre-commit`
 
+### pre-commit
+
 In order to install `pre-commit`, you will need `python` and run:
 ```sh
 pip install --user pre-commit
+```
+
+Once `pre-commit` is installed, you'll have to set up the actual git hook scripts with:
+```sh
+pre-commit install
 ```
 
 ### Build development server
