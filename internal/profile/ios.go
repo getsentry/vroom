@@ -311,6 +311,10 @@ func (q QueueMetadata) LabeledAsMainThread() bool {
 	return q.Label == "com.apple.main-thread"
 }
 
+func (p IOS) IsSentrySampledFormat() bool {
+	return false
+}
+
 func (p IOS) Speedscope() (speedscope.Output, error) {
 	threadIDToProfile := make(map[uint64]*speedscope.SampledProfile)
 	addressToFrameIndex := make(map[string]int)

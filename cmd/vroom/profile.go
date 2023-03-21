@@ -255,6 +255,7 @@ func (env *environment) getRawProfile(w http.ResponseWriter, r *http.Request) {
 
 func (env *environment) getProfile(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+	qs := r.URL.Query()
 	hub := sentry.GetHubFromContext(ctx)
 	ps := httprouter.ParamsFromContext(ctx)
 	rawOrganizationID := ps.ByName("organization_id")
@@ -316,17 +317,30 @@ func (env *environment) getProfile(w http.ResponseWriter, r *http.Request) {
 	s = sentry.StartSpan(ctx, "json.marshal")
 	defer s.Finish()
 
-	o, err := p.Speedscope()
-	if err != nil {
-		hub.CaptureException(err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-	b, err := json.Marshal(o)
-	if err != nil {
-		hub.CaptureException(err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
+	var b []byte
+
+	if format := qs.Get("format"); format == "sampled" && p.IsSentrySampledFormat() {
+		bytes, err := json.Marshal(p)
+		if err != nil {
+			hub.CaptureException(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		b = bytes
+	} else {
+		o, err := p.Speedscope()
+		if err != nil {
+			hub.CaptureException(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		bytes, err := json.Marshal(o)
+		if err != nil {
+			hub.CaptureException(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		b = bytes
 	}
 
 	w.Header().Set("Content-Type", "application/json")
