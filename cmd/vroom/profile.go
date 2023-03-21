@@ -319,8 +319,8 @@ func (env *environment) getProfile(w http.ResponseWriter, r *http.Request) {
 
 	var i interface{}
 
-	if format := qs.Get("format"); format == "sampled" && p.IsSentrySampledFormat() {
-		hub.Scope().SetTag("format", "sampled")
+	if format := qs.Get("format"); format == "sample" && p.IsSampleFormat() {
+		hub.Scope().SetTag("format", "sample")
 		i = p
 	} else {
 		hub.Scope().SetTag("format", "speedscope")

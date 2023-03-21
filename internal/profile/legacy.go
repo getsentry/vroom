@@ -137,7 +137,7 @@ func (p LegacyProfile) CallTrees() (map[uint64][]*nodetree.Node, error) {
 	return p.Trace.CallTrees(), nil
 }
 
-func (p LegacyProfile) IsSentrySampledFormat() bool {
+func (p LegacyProfile) IsSampleFormat() bool {
 	return false
 }
 

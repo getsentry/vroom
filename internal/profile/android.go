@@ -225,10 +225,6 @@ func generateFingerprint(stack []*nodetree.Node) uint64 {
 	return h.Sum64()
 }
 
-func (p Android) IsSentrySampledFormat() bool {
-	return false
-}
-
 func (p Android) Speedscope() (speedscope.Output, error) {
 	frames := make([]speedscope.Frame, 0)
 	methodIDToFrameIndex := make(map[uint64][]int)

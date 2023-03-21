@@ -29,7 +29,7 @@ type (
 		GetTransaction() transaction.Transaction
 
 		CallTrees() (map[uint64][]*nodetree.Node, error)
-		IsSentrySampledFormat() bool
+		IsSampleFormat() bool
 		Metadata() metadata.Metadata
 		Normalize()
 		Speedscope() (speedscope.Output, error)
@@ -94,8 +94,8 @@ func (p *Profile) StoragePath() string {
 	return p.profile.StoragePath()
 }
 
-func (p *Profile) IsSentrySampledFormat() bool {
-	return p.profile.IsSentrySampledFormat()
+func (p *Profile) IsSampleFormat() bool {
+	return p.profile.IsSampleFormat()
 }
 
 func (p *Profile) Speedscope() (speedscope.Output, error) {

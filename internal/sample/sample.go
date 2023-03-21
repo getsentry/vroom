@@ -238,7 +238,7 @@ func (t *Trace) ThreadName(threadID, queueAddress string, mainThread bool) strin
 	return ""
 }
 
-func (p *Profile) IsSentrySampledFormat() bool {
+func (p *Profile) IsSampleFormat() bool {
 	return true
 }
 
