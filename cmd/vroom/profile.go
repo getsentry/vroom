@@ -320,6 +320,7 @@ func (env *environment) getProfile(w http.ResponseWriter, r *http.Request) {
 	var b []byte
 
 	if format := qs.Get("format"); format == "sampled" && p.IsSentrySampledFormat() {
+		hub.Scope().SetTag("format", "sampled")
 		bytes, err := json.Marshal(p)
 		if err != nil {
 			hub.CaptureException(err)
@@ -328,6 +329,7 @@ func (env *environment) getProfile(w http.ResponseWriter, r *http.Request) {
 		}
 		b = bytes
 	} else {
+		hub.Scope().SetTag("format", "speedscope")
 		o, err := p.Speedscope()
 		if err != nil {
 			hub.CaptureException(err)
