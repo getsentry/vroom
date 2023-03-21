@@ -317,17 +317,11 @@ func (env *environment) getProfile(w http.ResponseWriter, r *http.Request) {
 	s = sentry.StartSpan(ctx, "json.marshal")
 	defer s.Finish()
 
-	var b []byte
+	var i interface{}
 
 	if format := qs.Get("format"); format == "sampled" && p.IsSentrySampledFormat() {
 		hub.Scope().SetTag("format", "sampled")
-		bytes, err := json.Marshal(p)
-		if err != nil {
-			hub.CaptureException(err)
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-		b = bytes
+		i = p
 	} else {
 		hub.Scope().SetTag("format", "speedscope")
 		o, err := p.Speedscope()
@@ -336,13 +330,14 @@ func (env *environment) getProfile(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-		bytes, err := json.Marshal(o)
-		if err != nil {
-			hub.CaptureException(err)
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-		b = bytes
+		i = o
+	}
+
+	b, err := json.Marshal(i)
+	if err != nil {
+		hub.CaptureException(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
