@@ -581,7 +581,7 @@ func (t *Trace) trimCocoaStacks() {
 	for si, s := range t.Stacks {
 		// Find main frame index in the stack
 		msi := -1
-		for _, fi := range s {
+		for fi := len(s) - 1; fi >= 0; fi-- {
 			if fi == mfi {
 				msi = fi
 				break
