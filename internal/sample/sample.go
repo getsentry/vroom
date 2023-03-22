@@ -593,9 +593,9 @@ func (t *Trace) trimCocoaStacks() {
 		}
 		// Filter unsymbolicated frames after the main frame index
 		ci := msi + 1
-		for fi := msi + 1; fi < len(s)-1; fi++ {
+		for i := ci; i < len(s); i++ {
+			fi := s[i]
 			f := t.Frames[fi]
-			fmt.Println(f)
 			if f.Data.SymbolicatorStatus == "symbolicated" {
 				t.Stacks[si][ci] = fi
 				ci++
