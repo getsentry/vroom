@@ -33,7 +33,9 @@ func AnonymizeTransactionName(handler http.Handler) http.HandlerFunc {
 		for _, param := range params {
 			path = strings.Replace(path, param.Value, fmt.Sprintf(":%s", param.Key), 1)
 		}
-		sentry.GetHubFromContext(r.Context()).Scope().SetTransaction(fmt.Sprintf("%s %s", r.Method, path))
+		transaction := sentry.TransactionFromContext(r.Context())
+		transaction.Name = fmt.Sprintf("%s %s", r.Method, path)
+
 		handler.ServeHTTP(w, r)
 	}
 }

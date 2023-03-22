@@ -171,8 +171,7 @@ func main() {
 		Environment:   env.config.Environment,
 		Release:       release,
 		TracesSampler: func(ctx sentry.SamplingContext) float64 {
-			hub := sentry.GetHubFromContext(ctx.Span.Context())
-			if hub.Scope().Transaction() == "GET /health" {
+			if ctx.Span.Name == "GET /health" {
 				return 0
 			}
 			return 1
