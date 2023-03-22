@@ -133,7 +133,12 @@ func (p Profile) GetID() string {
 }
 
 func StoragePath(organizationID, projectID uint64, profileID string) string {
-	return fmt.Sprintf("%d/%d/%s", organizationID, projectID, strings.ReplaceAll(profileID, "-", ""))
+	return fmt.Sprintf(
+		"%d/%d/%s",
+		organizationID,
+		projectID,
+		strings.ReplaceAll(profileID, "-", ""),
+	)
 }
 
 func (p Profile) StoragePath() string {
@@ -195,7 +200,8 @@ func (p Profile) CallTrees() (map[uint64][]*nodetree.Node, error) {
 			fingerprint := h.Sum64()
 			if current == nil {
 				i := len(treesByThreadID[s.ThreadID]) - 1
-				if i >= 0 && treesByThreadID[s.ThreadID][i].Fingerprint == fingerprint && treesByThreadID[s.ThreadID][i].EndNS == previousTimestamp[s.ThreadID] {
+				if i >= 0 && treesByThreadID[s.ThreadID][i].Fingerprint == fingerprint &&
+					treesByThreadID[s.ThreadID][i].EndNS == previousTimestamp[s.ThreadID] {
 					current = treesByThreadID[s.ThreadID][i]
 					current.Update(s.ElapsedSinceStartNS)
 				} else {
@@ -232,7 +238,8 @@ func (t *Trace) ThreadName(threadID, queueAddress string, mainThread bool) strin
 	if m, exists := t.ThreadMetadata[threadID]; exists && m.Name != "" {
 		return m.Name
 	}
-	if m, exists := t.QueueMetadata[queueAddress]; exists && ((m.LabeledAsMainThread() && mainThread) || !m.LabeledAsMainThread()) {
+	if m, exists := t.QueueMetadata[queueAddress]; exists &&
+		((m.LabeledAsMainThread() && mainThread) || !m.LabeledAsMainThread()) {
 		return m.Label
 	}
 	return ""
@@ -396,6 +403,10 @@ func (p *Profile) Metadata() metadata.Metadata {
 func (p *Profile) Normalize() {
 	p.Trace.ReplaceIdleStacks()
 	p.normalizeFrames()
+
+	if p.Platform == platform.Cocoa {
+		p.Trace.trimCocoaStacks()
+	}
 }
 
 func (t Trace) SamplesByThreadD() ([]uint64, map[uint64][]*Sample) {
@@ -539,7 +550,9 @@ func (p *Profile) normalizeFrames() {
 		f.Package = f.PackageBaseName()
 
 		// Set Symbolicator status
-		f.Data.SymbolicatorStatus = f.Status
+		if f.Status != "" {
+			f.Data.SymbolicatorStatus = f.Status
+		}
 
 		p.Trace.Frames[i] = f
 	}
@@ -549,5 +562,45 @@ func (p *RawProfile) moveTransaction() {
 	if len(p.Transactions) > 0 {
 		p.Transaction = p.Transactions[0]
 		p.Transactions = nil
+	}
+}
+
+func (t *Trace) trimCocoaStacks() {
+	// Find main frame index in frames
+	mfi := -1
+	for i, f := range t.Frames {
+		if f.Function == "main" {
+			mfi = i
+			break
+		}
+	}
+	// We do nothing if we don't find it
+	if mfi == -1 {
+		return
+	}
+	for si, s := range t.Stacks {
+		// Find main frame index in the stack
+		msi := -1
+		for _, fi := range s {
+			if fi == mfi {
+				msi = fi
+				break
+			}
+		}
+		// Skip the stack if we're already at the end
+		if msi == len(s)-1 {
+			continue
+		}
+		// Filter unsymbolicated frames after the main frame index
+		ci := msi + 1
+		for fi := msi + 1; fi < len(s)-1; fi++ {
+			f := t.Frames[fi]
+			fmt.Println(f)
+			if f.Data.SymbolicatorStatus == "symbolicated" {
+				t.Stacks[si][ci] = fi
+				ci++
+			}
+		}
+		t.Stacks[si] = t.Stacks[si][:ci]
 	}
 }
