@@ -29,6 +29,7 @@ type (
 		GetTransaction() transaction.Transaction
 
 		CallTrees() (map[uint64][]*nodetree.Node, error)
+		IsSampleFormat() bool
 		Metadata() metadata.Metadata
 		Normalize()
 		Speedscope() (speedscope.Output, error)
@@ -91,6 +92,10 @@ func (p *Profile) ProjectID() uint64 {
 
 func (p *Profile) StoragePath() string {
 	return p.profile.StoragePath()
+}
+
+func (p *Profile) IsSampleFormat() bool {
+	return p.profile.IsSampleFormat()
 }
 
 func (p *Profile) Speedscope() (speedscope.Output, error) {

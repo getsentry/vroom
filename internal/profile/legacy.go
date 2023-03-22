@@ -137,6 +137,10 @@ func (p LegacyProfile) CallTrees() (map[uint64][]*nodetree.Node, error) {
 	return p.Trace.CallTrees(), nil
 }
 
+func (p LegacyProfile) IsSampleFormat() bool {
+	return false
+}
+
 func (p *LegacyProfile) Speedscope() (speedscope.Output, error) {
 	o, err := p.Trace.Speedscope()
 	if err != nil {

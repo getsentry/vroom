@@ -238,6 +238,10 @@ func (t *Trace) ThreadName(threadID, queueAddress string, mainThread bool) strin
 	return ""
 }
 
+func (p *Profile) IsSampleFormat() bool {
+	return true
+}
+
 func (p *Profile) Speedscope() (speedscope.Output, error) {
 	sort.SliceStable(p.Trace.Samples, func(i, j int) bool {
 		return p.Trace.Samples[i].ElapsedSinceStartNS < p.Trace.Samples[j].ElapsedSinceStartNS

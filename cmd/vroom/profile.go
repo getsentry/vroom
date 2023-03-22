@@ -255,6 +255,7 @@ func (env *environment) getRawProfile(w http.ResponseWriter, r *http.Request) {
 
 func (env *environment) getProfile(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+	qs := r.URL.Query()
 	hub := sentry.GetHubFromContext(ctx)
 	ps := httprouter.ParamsFromContext(ctx)
 	rawOrganizationID := ps.ByName("organization_id")
@@ -316,13 +317,23 @@ func (env *environment) getProfile(w http.ResponseWriter, r *http.Request) {
 	s = sentry.StartSpan(ctx, "json.marshal")
 	defer s.Finish()
 
-	o, err := p.Speedscope()
-	if err != nil {
-		hub.CaptureException(err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
+	var i interface{}
+
+	if format := qs.Get("format"); format == "sample" && p.IsSampleFormat() {
+		hub.Scope().SetTag("format", "sample")
+		i = p
+	} else {
+		hub.Scope().SetTag("format", "speedscope")
+		o, err := p.Speedscope()
+		if err != nil {
+			hub.CaptureException(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		i = o
 	}
-	b, err := json.Marshal(o)
+
+	b, err := json.Marshal(i)
 	if err != nil {
 		hub.CaptureException(err)
 		w.WriteHeader(http.StatusInternalServerError)
