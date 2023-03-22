@@ -120,6 +120,11 @@ func TestFlamegraphAggregation(t *testing.T) {
 				}, // end prof definition
 			},
 			output: speedscope.Output{
+				Metadata: speedscope.ProfileMetadata{
+					ProfileView: speedscope.ProfileView{
+						ProjectID: 99,
+					},
+				},
 				Profiles: []interface{}{
 					speedscope.SampledProfile{
 						EndValue:     7,
@@ -192,7 +197,7 @@ func TestFlamegraphAggregation(t *testing.T) {
 				addCallTreeToFlamegraph(&ft, callTrees[0], p.ID())
 			}
 
-			if diff := testutil.Diff(toSpeedscope(ft, 1), test.output, options); diff != "" {
+			if diff := testutil.Diff(toSpeedscope(ft, 1, 99), test.output, options); diff != "" {
 				t.Fatalf("Result mismatch: got - want +\n%s", diff)
 			}
 		})
