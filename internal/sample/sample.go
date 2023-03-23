@@ -405,12 +405,13 @@ func (p *Profile) Metadata() metadata.Metadata {
 }
 
 func (p *Profile) Normalize() {
-	p.Trace.ReplaceIdleStacks()
 	p.normalizeFrames()
 
 	if p.Platform == platform.Cocoa {
 		p.Trace.trimCocoaStacks()
 	}
+
+	p.Trace.ReplaceIdleStacks()
 }
 
 func (t Trace) SamplesByThreadD() ([]uint64, map[uint64][]*Sample) {
