@@ -113,8 +113,8 @@ type candidate struct {
 	FrameCount int
 }
 
-// MainThread returns what we believe is the main thread ID in the profile.
-func (p IOS) MainThread() uint64 {
+// ActiveThreadID returns what we believe is the main thread ID in the profile.
+func (p IOS) ActiveThreadID() uint64 {
 	// Use metadata
 	for threadID, m := range p.ThreadMetadata {
 		if m.IsMain {
@@ -181,7 +181,7 @@ func (p IOS) CallTrees() map[uint64][]*nodetree.Node {
 		return p.Samples[i].RelativeTimestampNS < p.Samples[j].RelativeTimestampNS
 	})
 
-	activeThreadID := p.MainThread()
+	activeThreadID := p.ActiveThreadID()
 
 	var current *nodetree.Node
 	trees := make(map[uint64][]*nodetree.Node)
@@ -204,7 +204,8 @@ func (p IOS) CallTrees() map[uint64][]*nodetree.Node {
 			fingerprint := h.Sum64()
 			if current == nil {
 				i := len(trees[s.ThreadID]) - 1
-				if i >= 0 && trees[s.ThreadID][i].Fingerprint == fingerprint && trees[s.ThreadID][i].EndNS == previousTimestamp[s.ThreadID] {
+				if i >= 0 && trees[s.ThreadID][i].Fingerprint == fingerprint &&
+					trees[s.ThreadID][i].EndNS == previousTimestamp[s.ThreadID] {
 					current = trees[s.ThreadID][i]
 					current.Update(s.RelativeTimestampNS)
 				} else {
@@ -318,7 +319,7 @@ func (p IOS) Speedscope() (speedscope.Output, error) {
 	frames := make([]speedscope.Frame, 0)
 	// we need to find the frame index of the main function so we can remove the frames before it
 	mainFunctionFrameIndex := -1
-	mainThreadID := p.MainThread()
+	mainThreadID := p.ActiveThreadID()
 	for _, sample := range p.Samples {
 		threadID := strconv.FormatUint(sample.ThreadID, 10)
 		sampProfile, ok := threadIDToProfile[sample.ThreadID]
@@ -326,7 +327,8 @@ func (p IOS) Speedscope() (speedscope.Output, error) {
 		if !ok {
 			threadMetadata, tmExists := p.ThreadMetadata[threadID]
 			threadName := threadMetadata.Name
-			if threadName == "" && qmExists && (!queueMetadata.LabeledAsMainThread() || sample.ThreadID != mainThreadID) {
+			if threadName == "" && qmExists &&
+				(!queueMetadata.LabeledAsMainThread() || sample.ThreadID != mainThreadID) {
 				threadName = queueMetadata.Label
 			}
 			sampProfile = &speedscope.SampledProfile{
@@ -339,7 +341,11 @@ func (p IOS) Speedscope() (speedscope.Output, error) {
 				Unit:         speedscope.ValueUnitNanoseconds,
 			}
 			if qmExists {
-				sampProfile.Queues[queueMetadata.Label] = speedscope.Queue{Label: queueMetadata.Label, StartNS: sample.RelativeTimestampNS, EndNS: sample.RelativeTimestampNS}
+				sampProfile.Queues[queueMetadata.Label] = speedscope.Queue{
+					Label:   queueMetadata.Label,
+					StartNS: sample.RelativeTimestampNS,
+					EndNS:   sample.RelativeTimestampNS,
+				}
 			}
 			if tmExists {
 				sampProfile.Priority = threadMetadata.Priority
