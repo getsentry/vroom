@@ -91,8 +91,6 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	messages := make([]kafka.Message, 0, 2)
-
 	if len(callTrees) > 0 {
 		s = sentry.StartSpan(ctx, "processing")
 		s.Description = "Find occurrences"
@@ -159,15 +157,21 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-		messages = append(messages, kafka.Message{
+		s = sentry.StartSpan(ctx, "processing")
+		s.Description = "Send call trees to Kafka"
+		err = env.profilingWriter.WriteMessages(ctx, kafka.Message{
 			Topic: env.config.CallTreesKafkaTopic,
 			Value: b,
 		})
+		s.Finish()
+		if err != nil {
+			hub.CaptureException(err)
+		}
 	}
 
 	// Prepare profile Kafka message
 	s = sentry.StartSpan(ctx, "processing")
-	s.Description = "Marshal profile Kafka message"
+	s.Description = "Marshal profile metadata Kafka message"
 	b, err := json.Marshal(buildProfileKafkaMessage(p))
 	s.Finish()
 	if err != nil {
@@ -175,23 +179,17 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	messages = append(messages, kafka.Message{
+
+	s = sentry.StartSpan(ctx, "processing")
+	s.Description = "Send profile metadata to Kafka"
+	err = env.profilingWriter.WriteMessages(ctx, kafka.Message{
 		Topic: env.config.ProfilesKafkaTopic,
 		Value: b,
 	})
-
-	// Send all messages to Kafka
-	s = sentry.StartSpan(ctx, "processing")
-	s.Description = "Send messages to Kafka"
-	err = env.profilingWriter.WriteMessages(ctx, messages...)
 	s.Finish()
 	if err != nil {
-		if errors.Is(err, kafka.MessageSizeTooLarge) {
-			w.WriteHeader(http.StatusNoContent)
-		} else {
-			hub.CaptureException(err)
-			w.WriteHeader(http.StatusInternalServerError)
-		}
+		hub.CaptureException(err)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
