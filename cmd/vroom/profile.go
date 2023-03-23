@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"io"
 	"net/http"
 	"strconv"
 
@@ -23,11 +24,24 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	hub := sentry.GetHubFromContext(ctx)
 
-	var p profile.Profile
+	s := sentry.StartSpan(ctx, "processing")
+	s.Description = "Read HTTP body"
+	body, err := io.ReadAll(r.Body)
+	s.Finish()
+	if err != nil {
+		hub.CaptureException(err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
 
-	s := sentry.StartSpan(ctx, "json.unmarshal")
+	hub.Scope().SetContext("Profile metadata", map[string]interface{}{
+		"Size": len(body),
+	})
+
+	var p profile.Profile
+	s = sentry.StartSpan(ctx, "json.unmarshal")
 	s.Description = "Unmarshal Snuba profile"
-	err := json.NewDecoder(r.Body).Decode(&p)
+	err = json.Unmarshal(body, &p)
 	s.Finish()
 	if err != nil {
 		hub.CaptureException(err)
@@ -172,8 +186,12 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 	err = env.profilingWriter.WriteMessages(ctx, messages...)
 	s.Finish()
 	if err != nil {
-		hub.CaptureException(err)
-		w.WriteHeader(http.StatusInternalServerError)
+		if errors.Is(err, kafka.MessageSizeTooLarge) {
+			w.WriteHeader(http.StatusNoContent)
+		} else {
+			hub.CaptureException(err)
+			w.WriteHeader(http.StatusInternalServerError)
+		}
 		return
 	}
 
@@ -217,7 +235,12 @@ func (env *environment) getRawProfile(w http.ResponseWriter, r *http.Request) {
 	s.Description = "Read profile from GCS or Snuba"
 
 	var p profile.Profile
-	err = storageutil.UnmarshalCompressed(ctx, env.profilesBucket, profile.StoragePath(organizationID, projectID, profileID), &p)
+	err = storageutil.UnmarshalCompressed(
+		ctx,
+		env.profilesBucket,
+		profile.StoragePath(organizationID, projectID, profileID),
+		&p,
+	)
 	s.Finish()
 	if err != nil {
 		if errors.Is(err, storage.ErrObjectNotExist) {
@@ -291,7 +314,12 @@ func (env *environment) getProfile(w http.ResponseWriter, r *http.Request) {
 	s.Description = "Read profile from GCS or Snuba"
 
 	var p profile.Profile
-	err = storageutil.UnmarshalCompressed(ctx, env.profilesBucket, profile.StoragePath(organizationID, projectID, profileID), &p)
+	err = storageutil.UnmarshalCompressed(
+		ctx,
+		env.profilesBucket,
+		profile.StoragePath(organizationID, projectID, profileID),
+		&p,
+	)
 	s.Finish()
 	if err != nil {
 		if errors.Is(err, storage.ErrObjectNotExist) {
