@@ -33,7 +33,7 @@ type (
 	Event struct {
 		Contexts       map[Context]interface{} `json:"contexts,omitempty"`
 		DebugMeta      debugmeta.DebugMeta     `json:"debug_meta"`
-		Environment    string                  `json:"environment"`
+		Environment    string                  `json:"environment,omitempty"`
 		ID             string                  `json:"event_id"`
 		OrganizationID uint64                  `json:"-"`
 		Platform       platform.Platform       `json:"platform"`
