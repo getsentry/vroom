@@ -33,7 +33,7 @@ type (
 	Event struct {
 		Contexts       map[Context]interface{} `json:"contexts,omitempty"`
 		DebugMeta      debugmeta.DebugMeta     `json:"debug_meta"`
-		Environment    string                  `json:"environment"`
+		Environment    string                  `json:"environment,omitempty"`
 		ID             string                  `json:"event_id"`
 		OrganizationID uint64                  `json:"-"`
 		Platform       platform.Platform       `json:"platform"`
@@ -83,11 +83,9 @@ const (
 	ImageDecodeType Type = 2002
 	JSONDecodeType  Type = 2003
 
-	EvidenceNameDuration          EvidenceName = "Duration"
-	EvidenceNameFunction          EvidenceName = "Suspect function"
-	EvidenceNamePackage           EvidenceName = "Package"
-	EvidenceNameProfilePercentage EvidenceName = "% of the profile"
-	EvidenceNameSampleCount       EvidenceName = "Sample count"
+	EvidenceNameDuration EvidenceName = "Duration"
+	EvidenceNameFunction EvidenceName = "Suspect function"
+	EvidenceNamePackage  EvidenceName = "Package"
 
 	ContextTrace Context = "trace"
 
@@ -106,10 +104,10 @@ var issueTitles = map[Category]CategoryMetadata{
 	FileRead:         {IssueTitle: "File I/O on Main Thread", Type: FileIOType},
 	FileWrite:        {IssueTitle: "File I/O on Main Thread", Type: FileIOType},
 	HTTP:             {IssueTitle: "Network I/O on Main Thread"},
-	ImageDecode:      {IssueTitle: "Image decoding on Main Thread", Type: ImageDecodeType},
-	ImageEncode:      {IssueTitle: "Image encoding on Main Thread"},
-	JSONDecode:       {IssueTitle: "JSON decoding on Main Thread", Type: JSONDecodeType},
-	JSONEncode:       {IssueTitle: "JSON encoding on Main Thread"},
+	ImageDecode:      {IssueTitle: "Image Decoding on Main Thread", Type: ImageDecodeType},
+	ImageEncode:      {IssueTitle: "Image Encoding on Main Thread"},
+	JSONDecode:       {IssueTitle: "JSON Decoding on Main Thread", Type: JSONDecodeType},
+	JSONEncode:       {IssueTitle: "JSON Encoding on Main Thread"},
 	MLModelInference: {IssueTitle: "Machine Learning inference on Main Thread"},
 	MLModelLoad:      {IssueTitle: "Machine Learning model load on Main Thread"},
 	Regex:            {IssueTitle: "Regex on Main Thread"},
@@ -182,19 +180,13 @@ func NewOccurrence(p profile.Profile, ni nodeInfo) *Occurrence {
 				Value: ni.Node.Package,
 			},
 			{
-				Name:  EvidenceNameDuration,
-				Value: time.Duration(ni.Node.DurationNS).String(),
-			},
-			{
-				Name: EvidenceNameProfilePercentage,
+				Name: EvidenceNameDuration,
 				Value: fmt.Sprintf(
-					"%0.2f%%",
+					"%s (%0.2f%% of the profile, found in %d samples)",
+					time.Duration(ni.Node.DurationNS),
 					float64(ni.Node.DurationNS*100)/float64(p.DurationNS()),
+					ni.Node.SampleCount,
 				),
-			},
-			{
-				Name:  EvidenceNameSampleCount,
-				Value: strconv.Itoa(ni.Node.SampleCount),
 			},
 		},
 		Fingerprint: fingerprint,

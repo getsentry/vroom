@@ -27,7 +27,7 @@ type (
 
 	nodeInfo struct {
 		Category   Category
-		Node       *nodetree.Node
+		Node       nodetree.Node
 		StackTrace []frame.Frame
 	}
 
@@ -401,14 +401,12 @@ func detectFrame(
 			return
 		}
 		for _, root := range callTrees {
-			var stackTrace []frame.Frame
-			detectFrameInCallTree(root, options, nodes, &stackTrace)
+			detectFrameInCallTree(root, options, nodes)
 		}
 	} else {
 		for _, callTrees := range callTreesPerThreadID {
 			for _, root := range callTrees {
-				var stackTrace []frame.Frame
-				detectFrameInCallTree(root, options, nodes, &stackTrace)
+				detectFrameInCallTree(root, options, nodes)
 			}
 		}
 	}
@@ -423,56 +421,72 @@ func detectFrameInCallTree(
 	n *nodetree.Node,
 	options DetectExactFrameOptions,
 	nodes map[nodeKey]nodeInfo,
-	stackTrace *[]frame.Frame,
 ) {
-	*stackTrace = append(*stackTrace, n.ToFrame())
-	detectNode(n, options, nodes, stackTrace)
-	for _, c := range n.Children {
-		newStackTrace := make([]frame.Frame, len(*stackTrace))
-		copy(newStackTrace, *stackTrace)
-		detectFrameInCallTree(c, options, nodes, &newStackTrace)
-	}
+	st := make([]frame.Frame, 0, 128)
+	detectFrameInNode(n, options, nodes, &st)
 }
 
-func detectNode(
+func detectFrameInNode(
 	n *nodetree.Node,
 	options DetectExactFrameOptions,
 	nodes map[nodeKey]nodeInfo,
-	stackTrace *[]frame.Frame,
-) {
+	st *[]frame.Frame,
+) *nodeInfo {
+	*st = append(*st, n.ToFrame())
+	defer func() {
+		*st = (*st)[:len(*st)-1]
+	}()
+	var issueDetected bool
+	for _, c := range n.Children {
+		if ni := detectFrameInNode(c, options, nodes, st); ni != nil {
+			issueDetected = true
+		}
+	}
+	if issueDetected {
+		return nil
+	}
+	ni := checkNode(n, options)
+	if ni != nil {
+		nk := nodeKey{Package: ni.Node.Package, Function: ni.Node.Name}
+		if _, exists := nodes[nk]; !exists {
+			ni.StackTrace = make([]frame.Frame, len(*st))
+			copy(ni.StackTrace, *st)
+			nodes[nk] = *ni
+		}
+	}
+	return ni
+}
+
+func checkNode(
+	n *nodetree.Node,
+	options DetectExactFrameOptions,
+) *nodeInfo {
 	// Check if we have a list of functions associated to the package.
 	functions, exists := options.FunctionsByPackage[n.Package]
 	if !exists {
-		return
+		return nil
 	}
 
 	// Check if we need to detect that function.
 	category, exists := functions[n.Name]
 	if !exists {
-		return
+		return nil
 	}
 
 	// Check if it's above the duration threshold.
 	if n.DurationNS < uint64(options.DurationThreshold) {
-		return
+		return nil
 	}
 
 	// Check if it's above the sample threshold.
 	if n.SampleCount < options.SampleThreshold {
-		return
+		return nil
 	}
 
-	// Check if we've already detected an occurrence on it.
-	nk := nodeKey{Package: n.Package, Function: n.Name}
-	_, exists = nodes[nk]
-	if exists {
-		return
+	ni := nodeInfo{
+		Category: category,
+		Node:     *n,
 	}
-
-	// Add it to the list of nodes detected.
-	nodes[nk] = nodeInfo{
-		Category:   category,
-		Node:       n,
-		StackTrace: *stackTrace,
-	}
+	ni.Node.Children = nil
+	return &ni
 }
