@@ -402,13 +402,13 @@ func detectFrame(
 		}
 		for _, root := range callTrees {
 			var stackTrace []frame.Frame
-			detectFrameInCallTree(root, options, nodes, &stackTrace)
+			_ = detectFrameInCallTree(root, options, nodes, &stackTrace)
 		}
 	} else {
 		for _, callTrees := range callTreesPerThreadID {
 			for _, root := range callTrees {
 				var stackTrace []frame.Frame
-				detectFrameInCallTree(root, options, nodes, &stackTrace)
+				_ = detectFrameInCallTree(root, options, nodes, &stackTrace)
 			}
 		}
 	}
@@ -424,14 +424,20 @@ func detectFrameInCallTree(
 	options DetectExactFrameOptions,
 	nodes map[nodeKey]nodeInfo,
 	stackTrace *[]frame.Frame,
-) {
+) bool {
 	*stackTrace = append(*stackTrace, n.ToFrame())
-	detectNode(n, options, nodes, stackTrace)
+	var issueDetected bool
 	for _, c := range n.Children {
 		newStackTrace := make([]frame.Frame, len(*stackTrace))
 		copy(newStackTrace, *stackTrace)
-		detectFrameInCallTree(c, options, nodes, &newStackTrace)
+		if detectFrameInCallTree(c, options, nodes, &newStackTrace) {
+			issueDetected = true
+		}
 	}
+	if issueDetected {
+		return true
+	}
+	return detectNode(n, options, nodes, stackTrace)
 }
 
 func detectNode(
@@ -439,34 +445,34 @@ func detectNode(
 	options DetectExactFrameOptions,
 	nodes map[nodeKey]nodeInfo,
 	stackTrace *[]frame.Frame,
-) {
+) bool {
 	// Check if we have a list of functions associated to the package.
 	functions, exists := options.FunctionsByPackage[n.Package]
 	if !exists {
-		return
+		return false
 	}
 
 	// Check if we need to detect that function.
 	category, exists := functions[n.Name]
 	if !exists {
-		return
+		return false
 	}
 
 	// Check if it's above the duration threshold.
 	if n.DurationNS < uint64(options.DurationThreshold) {
-		return
+		return false
 	}
 
 	// Check if it's above the sample threshold.
 	if n.SampleCount < options.SampleThreshold {
-		return
+		return false
 	}
 
 	// Check if we've already detected an occurrence on it.
 	nk := nodeKey{Package: n.Package, Function: n.Name}
 	_, exists = nodes[nk]
 	if exists {
-		return
+		return false
 	}
 
 	// Add it to the list of nodes detected.
@@ -475,4 +481,6 @@ func detectNode(
 		Node:       n,
 		StackTrace: *stackTrace,
 	}
+
+	return true
 }

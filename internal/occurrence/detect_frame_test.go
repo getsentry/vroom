@@ -1,17 +1,13 @@
 package occurrence
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
 	"github.com/getsentry/vroom/internal/frame"
 	"github.com/getsentry/vroom/internal/nodetree"
 	"github.com/getsentry/vroom/internal/testutil"
-)
-
-var (
-	falseValue = false
-	trueValue  = true
 )
 
 func TestDetectFrameInCallTree(t *testing.T) {
@@ -43,7 +39,7 @@ func TestDetectFrameInCallTree(t *testing.T) {
 				StartNS:       0,
 				Frame: frame.Frame{
 					Function: "root",
-					InApp:    &trueValue,
+					InApp:    &testutil.True,
 					Package:  "package",
 					Path:     "path",
 				},
@@ -60,7 +56,7 @@ func TestDetectFrameInCallTree(t *testing.T) {
 						StartNS:       0,
 						Frame: frame.Frame{
 							Function: "child1-1",
-							InApp:    &falseValue,
+							InApp:    &testutil.False,
 							Package:  "package",
 							Path:     "path",
 						},
@@ -77,7 +73,7 @@ func TestDetectFrameInCallTree(t *testing.T) {
 								StartNS:       0,
 								Frame: frame.Frame{
 									Function: "child2-1",
-									InApp:    &trueValue,
+									InApp:    &testutil.True,
 									Package:  "package",
 									Path:     "path",
 								},
@@ -95,7 +91,7 @@ func TestDetectFrameInCallTree(t *testing.T) {
 										StartNS:       0,
 										Frame: frame.Frame{
 											Function: "CFReadStreamRead",
-											InApp:    &falseValue,
+											InApp:    &testutil.False,
 											Package:  "CoreFoundation",
 											Path:     "path",
 										},
@@ -117,7 +113,7 @@ func TestDetectFrameInCallTree(t *testing.T) {
 						StartNS:       5,
 						Frame: frame.Frame{
 							Function: "child1-2",
-							InApp:    &falseValue,
+							InApp:    &testutil.False,
 							Package:  "package",
 							Path:     "path",
 						},
@@ -134,7 +130,7 @@ func TestDetectFrameInCallTree(t *testing.T) {
 								StartNS:       5,
 								Frame: frame.Frame{
 									Function: "child2-1",
-									InApp:    &trueValue,
+									InApp:    &testutil.True,
 									Package:  "package",
 									Path:     "path",
 								},
@@ -151,7 +147,7 @@ func TestDetectFrameInCallTree(t *testing.T) {
 										StartNS:       5,
 										Frame: frame.Frame{
 											Function: "child3-1",
-											InApp:    &falseValue,
+											InApp:    &testutil.False,
 											Package:  "package",
 											Path:     "path",
 										},
@@ -182,7 +178,7 @@ func TestDetectFrameInCallTree(t *testing.T) {
 						StartNS:       0,
 						Frame: frame.Frame{
 							Function: "CFReadStreamRead",
-							InApp:    &falseValue,
+							InApp:    &testutil.False,
 							Package:  "CoreFoundation",
 							Path:     "path",
 						},
@@ -191,28 +187,28 @@ func TestDetectFrameInCallTree(t *testing.T) {
 					StackTrace: []frame.Frame{
 						{
 							Function: "root",
-							InApp:    &trueValue,
+							InApp:    &testutil.True,
 							Line:     0,
 							Package:  "package",
 							Path:     "path",
 						},
 						{
 							Function: "child1-1",
-							InApp:    &falseValue,
+							InApp:    &testutil.False,
 							Line:     0,
 							Package:  "package",
 							Path:     "path",
 						},
 						{
 							Function: "child2-1",
-							InApp:    &trueValue,
+							InApp:    &testutil.True,
 							Line:     0,
 							Package:  "package",
 							Path:     "path",
 						},
 						{
 							Function: "CFReadStreamRead",
-							InApp:    &falseValue,
+							InApp:    &testutil.False,
 							Line:     0,
 							Package:  "CoreFoundation",
 							Path:     "path",
@@ -246,7 +242,7 @@ func TestDetectFrameInCallTree(t *testing.T) {
 				StartNS:       0,
 				Frame: frame.Frame{
 					Function: "root",
-					InApp:    &trueValue,
+					InApp:    &testutil.True,
 					Package:  "package",
 					Path:     "path",
 				},
@@ -263,7 +259,7 @@ func TestDetectFrameInCallTree(t *testing.T) {
 						StartNS:       0,
 						Frame: frame.Frame{
 							Function: "child1-1",
-							InApp:    &falseValue,
+							InApp:    &testutil.False,
 							Package:  "package",
 							Path:     "path",
 						},
@@ -280,7 +276,7 @@ func TestDetectFrameInCallTree(t *testing.T) {
 								StartNS:       0,
 								Frame: frame.Frame{
 									Function: "child2-1",
-									InApp:    &trueValue,
+									InApp:    &testutil.True,
 									Package:  "package",
 									Path:     "path",
 								},
@@ -297,7 +293,7 @@ func TestDetectFrameInCallTree(t *testing.T) {
 										StartNS:       0,
 										Frame: frame.Frame{
 											Function: "SuperShortFunction",
-											InApp:    &falseValue,
+											InApp:    &testutil.False,
 											Package:  "vroom",
 											Path:     "path",
 										},
@@ -335,7 +331,7 @@ func TestDetectFrameInCallTree(t *testing.T) {
 				StartNS:       0,
 				Frame: frame.Frame{
 					Function: "root",
-					InApp:    &trueValue,
+					InApp:    &testutil.True,
 					Package:  "package",
 					Path:     "path",
 				},
@@ -352,7 +348,7 @@ func TestDetectFrameInCallTree(t *testing.T) {
 						StartNS:       0,
 						Frame: frame.Frame{
 							Function: "child1-1",
-							InApp:    &falseValue,
+							InApp:    &testutil.False,
 							Package:  "package",
 							Path:     "path",
 						},
@@ -369,7 +365,7 @@ func TestDetectFrameInCallTree(t *testing.T) {
 								StartNS:       0,
 								Frame: frame.Frame{
 									Function: "child2-1",
-									InApp:    &trueValue,
+									InApp:    &testutil.True,
 									Package:  "package",
 									Path:     "path",
 								},
@@ -388,7 +384,7 @@ func TestDetectFrameInCallTree(t *testing.T) {
 										Children:      []*nodetree.Node{},
 										Frame: frame.Frame{
 											Function: "FunctionWithOneSample",
-											InApp:    &falseValue,
+											InApp:    &testutil.False,
 											Package:  "vroom",
 											Path:     "path",
 										},
@@ -405,7 +401,7 @@ func TestDetectFrameInCallTree(t *testing.T) {
 										StartNS:       0,
 										Frame: frame.Frame{
 											Function: "child3-1",
-											InApp:    &trueValue,
+											InApp:    &testutil.True,
 											Package:  "package",
 											Path:     "path",
 										},
@@ -424,7 +420,7 @@ func TestDetectFrameInCallTree(t *testing.T) {
 												Children:      []*nodetree.Node{},
 												Frame: frame.Frame{
 													Function: "FunctionWithManySamples",
-													InApp:    &falseValue,
+													InApp:    &testutil.False,
 													Package:  "vroom",
 													Path:     "path",
 												},
@@ -457,7 +453,7 @@ func TestDetectFrameInCallTree(t *testing.T) {
 						Children:      []*nodetree.Node{},
 						Frame: frame.Frame{
 							Function: "FunctionWithManySamples",
-							InApp:    &falseValue,
+							InApp:    &testutil.False,
 							Package:  "vroom",
 							Path:     "path",
 						},
@@ -465,37 +461,239 @@ func TestDetectFrameInCallTree(t *testing.T) {
 					StackTrace: []frame.Frame{
 						{
 							Function: "root",
-							InApp:    &trueValue,
+							InApp:    &testutil.True,
 							Line:     0,
 							Package:  "package",
 							Path:     "path",
 						},
 						{
 							Function: "child1-1",
-							InApp:    &falseValue,
+							InApp:    &testutil.False,
 							Line:     0,
 							Package:  "package",
 							Path:     "path",
 						},
 						{
 							Function: "child2-1",
-							InApp:    &trueValue,
+							InApp:    &testutil.True,
 							Line:     0,
 							Package:  "package",
 							Path:     "path",
 						},
 						{
 							Function: "child3-1",
-							InApp:    &trueValue,
+							InApp:    &testutil.True,
 							Line:     0,
 							Package:  "package",
 							Path:     "path",
 						},
 						{
 							Function: "FunctionWithManySamples",
-							InApp:    &falseValue,
+							InApp:    &testutil.False,
 							Line:     0,
 							Package:  "vroom",
+							Path:     "path",
+						},
+					},
+				},
+			},
+		},
+		{
+			job: DetectExactFrameOptions{
+				DurationThreshold: 16 * time.Millisecond,
+				FunctionsByPackage: map[string]map[string]Category{
+					"CoreFoundation": {
+						"AnotherLeafFunction": FileRead,
+						"LeafFunction":        FileRead,
+						"RandomFunction":      FileRead,
+					},
+				},
+			},
+			name: "Detect deeper frame in call tree",
+			node: &nodetree.Node{
+				DurationNS:    uint64(30 * time.Millisecond),
+				EndNS:         uint64(30 * time.Millisecond),
+				Fingerprint:   0,
+				IsApplication: true,
+				Line:          0,
+				Name:          "root",
+				Package:       "package",
+				Path:          "path",
+				StartNS:       0,
+				Frame: frame.Frame{
+					Function: "root",
+					InApp:    &testutil.True,
+					Package:  "package",
+					Path:     "path",
+				},
+				Children: []*nodetree.Node{
+					{
+						DurationNS:    uint64(20 * time.Millisecond),
+						EndNS:         uint64(20 * time.Millisecond),
+						Fingerprint:   0,
+						IsApplication: false,
+						Line:          0,
+						Name:          "AnotherLeafFunction",
+						Package:       "CoreFoundation",
+						Path:          "path",
+						StartNS:       0,
+						Frame: frame.Frame{
+							Function: "AnotherLeafFunction",
+							InApp:    &testutil.False,
+							Package:  "CoreFoundation",
+							Path:     "path",
+						},
+						Children: []*nodetree.Node{},
+					},
+					{
+						DurationNS:    uint64(20 * time.Millisecond),
+						EndNS:         uint64(20 * time.Millisecond),
+						Fingerprint:   0,
+						IsApplication: false,
+						Line:          0,
+						Name:          "child1-1",
+						Package:       "package",
+						Path:          "path",
+						StartNS:       0,
+						Frame: frame.Frame{
+							Function: "child1-1",
+							InApp:    &testutil.False,
+							Package:  "package",
+							Path:     "path",
+						},
+						Children: []*nodetree.Node{
+							{
+								DurationNS:    uint64(20 * time.Millisecond),
+								EndNS:         uint64(20 * time.Millisecond),
+								Fingerprint:   0,
+								IsApplication: true,
+								Line:          0,
+								Name:          "RandomFunction",
+								Package:       "CoreFoundation",
+								Path:          "path",
+								StartNS:       0,
+								Frame: frame.Frame{
+									Function: "RandomFunction",
+									InApp:    &testutil.True,
+									Package:  "CoreFoundation",
+									Path:     "path",
+								},
+								Children: []*nodetree.Node{
+									{
+										DurationNS:    uint64(20 * time.Millisecond),
+										EndNS:         uint64(20 * time.Millisecond),
+										Fingerprint:   0,
+										IsApplication: false,
+										Line:          0,
+										Name:          "LeafFunction",
+										Package:       "CoreFoundation",
+										Path:          "path",
+										StartNS:       0,
+										Frame: frame.Frame{
+											Function: "LeafFunction",
+											InApp:    &testutil.False,
+											Package:  "CoreFoundation",
+											Path:     "path",
+										},
+										Children: []*nodetree.Node{},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			want: map[nodeKey]nodeInfo{
+				{
+					Package:  "CoreFoundation",
+					Function: "AnotherLeafFunction",
+				}: {
+					Category: FileRead,
+					Node: &nodetree.Node{
+						DurationNS:    uint64(20 * time.Millisecond),
+						EndNS:         uint64(20 * time.Millisecond),
+						Fingerprint:   0,
+						IsApplication: false,
+						Line:          0,
+						Name:          "AnotherLeafFunction",
+						Package:       "CoreFoundation",
+						Path:          "path",
+						StartNS:       0,
+						Frame: frame.Frame{
+							Function: "AnotherLeafFunction",
+							InApp:    &testutil.False,
+							Package:  "CoreFoundation",
+							Path:     "path",
+						},
+						Children: []*nodetree.Node{},
+					},
+					StackTrace: []frame.Frame{
+						{
+							Function: "root",
+							InApp:    &testutil.True,
+							Line:     0,
+							Package:  "package",
+							Path:     "path",
+						},
+						{
+							Function: "AnotherLeafFunction",
+							InApp:    &testutil.False,
+							Line:     0,
+							Package:  "CoreFoundation",
+							Path:     "path",
+						},
+					},
+				},
+				{
+					Package:  "CoreFoundation",
+					Function: "LeafFunction",
+				}: {
+					Category: FileRead,
+					Node: &nodetree.Node{
+						DurationNS:    uint64(20 * time.Millisecond),
+						EndNS:         uint64(20 * time.Millisecond),
+						Fingerprint:   0,
+						IsApplication: false,
+						Line:          0,
+						Name:          "LeafFunction",
+						Package:       "CoreFoundation",
+						Path:          "path",
+						StartNS:       0,
+						Frame: frame.Frame{
+							Function: "LeafFunction",
+							InApp:    &testutil.False,
+							Package:  "CoreFoundation",
+							Path:     "path",
+						},
+						Children: []*nodetree.Node{},
+					},
+					StackTrace: []frame.Frame{
+						{
+							Function: "root",
+							InApp:    &testutil.True,
+							Line:     0,
+							Package:  "package",
+							Path:     "path",
+						},
+						{
+							Function: "child1-1",
+							InApp:    &testutil.False,
+							Line:     0,
+							Package:  "package",
+							Path:     "path",
+						},
+						{
+							Function: "RandomFunction",
+							InApp:    &testutil.True,
+							Line:     0,
+							Package:  "CoreFoundation",
+							Path:     "path",
+						},
+						{
+							Function: "LeafFunction",
+							InApp:    &testutil.False,
+							Line:     0,
+							Package:  "CoreFoundation",
 							Path:     "path",
 						},
 					},
@@ -508,6 +706,7 @@ func TestDetectFrameInCallTree(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			nodes := make(map[nodeKey]nodeInfo)
 			var stackTrace []frame.Frame
+			fmt.Println("========================")
 			detectFrameInCallTree(tt.node, tt.job, nodes, &stackTrace)
 			if diff := testutil.Diff(nodes, tt.want); diff != "" {
 				t.Fatalf("Result mismatch: got - want +\n%s", diff)
