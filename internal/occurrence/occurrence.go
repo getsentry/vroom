@@ -83,11 +83,9 @@ const (
 	ImageDecodeType Type = 2002
 	JSONDecodeType  Type = 2003
 
-	EvidenceNameDuration          EvidenceName = "Duration"
-	EvidenceNameFunction          EvidenceName = "Suspect function"
-	EvidenceNamePackage           EvidenceName = "Package"
-	EvidenceNameProfilePercentage EvidenceName = "% of the profile"
-	EvidenceNameSampleCount       EvidenceName = "Sample count"
+	EvidenceNameDuration EvidenceName = "Duration"
+	EvidenceNameFunction EvidenceName = "Suspect function"
+	EvidenceNamePackage  EvidenceName = "Package"
 
 	ContextTrace Context = "trace"
 
@@ -182,19 +180,13 @@ func NewOccurrence(p profile.Profile, ni nodeInfo) *Occurrence {
 				Value: ni.Node.Package,
 			},
 			{
-				Name:  EvidenceNameDuration,
-				Value: time.Duration(ni.Node.DurationNS).String(),
-			},
-			{
-				Name: EvidenceNameProfilePercentage,
+				Name: EvidenceNameDuration,
 				Value: fmt.Sprintf(
-					"%0.2f%%",
+					"%s (%0.2f%% of the profile, found in %d samples)",
+					time.Duration(ni.Node.DurationNS),
 					float64(ni.Node.DurationNS*100)/float64(p.DurationNS()),
+					ni.Node.SampleCount,
 				),
-			},
-			{
-				Name:  EvidenceNameSampleCount,
-				Value: strconv.Itoa(ni.Node.SampleCount),
 			},
 		},
 		Fingerprint: fingerprint,
