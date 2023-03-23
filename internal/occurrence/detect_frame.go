@@ -407,8 +407,8 @@ func detectFrame(
 	} else {
 		for _, callTrees := range callTreesPerThreadID {
 			for _, root := range callTrees {
-				var stackTrace []frame.Frame
-				_ = detectFrameInCallTree(root, options, nodes, &stackTrace)
+				st := make([]frame.Frame, 0, 128)
+				_ = detectFrameInCallTree(root, options, nodes, &st)
 			}
 		}
 	}
@@ -423,64 +423,59 @@ func detectFrameInCallTree(
 	n *nodetree.Node,
 	options DetectExactFrameOptions,
 	nodes map[nodeKey]nodeInfo,
-	stackTrace *[]frame.Frame,
-) bool {
-	*stackTrace = append(*stackTrace, n.ToFrame())
+	st *[]frame.Frame,
+) *nodeInfo {
+	*st = append(*st, n.ToFrame())
 	var issueDetected bool
 	for _, c := range n.Children {
-		newStackTrace := make([]frame.Frame, len(*stackTrace))
-		copy(newStackTrace, *stackTrace)
-		if detectFrameInCallTree(c, options, nodes, &newStackTrace) {
-			issueDetected = true
+		if ni := detectFrameInCallTree(c, options, nodes, st); ni != nil {
+			nk := nodeKey{Package: c.Package, Function: c.Name}
+			_, exists := nodes[nk]
+			if !exists {
+				ni.StackTrace = make([]frame.Frame, len(*st))
+				copy(ni.StackTrace, *st)
+				nodes[nk] = *ni
+				issueDetected = true
+			}
 		}
+		*st = (*st)[:len(*st)-1]
 	}
+
 	if issueDetected {
-		return true
+		return nil
 	}
-	return detectNode(n, options, nodes, stackTrace)
+
+	return detectNode(n, options)
 }
 
 func detectNode(
 	n *nodetree.Node,
 	options DetectExactFrameOptions,
-	nodes map[nodeKey]nodeInfo,
-	stackTrace *[]frame.Frame,
-) bool {
+) *nodeInfo {
 	// Check if we have a list of functions associated to the package.
 	functions, exists := options.FunctionsByPackage[n.Package]
 	if !exists {
-		return false
+		return nil
 	}
 
 	// Check if we need to detect that function.
 	category, exists := functions[n.Name]
 	if !exists {
-		return false
+		return nil
 	}
 
 	// Check if it's above the duration threshold.
 	if n.DurationNS < uint64(options.DurationThreshold) {
-		return false
+		return nil
 	}
 
 	// Check if it's above the sample threshold.
 	if n.SampleCount < options.SampleThreshold {
-		return false
+		return nil
 	}
 
-	// Check if we've already detected an occurrence on it.
-	nk := nodeKey{Package: n.Package, Function: n.Name}
-	_, exists = nodes[nk]
-	if exists {
-		return false
+	return &nodeInfo{
+		Category: category,
+		Node:     n,
 	}
-
-	// Add it to the list of nodes detected.
-	nodes[nk] = nodeInfo{
-		Category:   category,
-		Node:       n,
-		StackTrace: *stackTrace,
-	}
-
-	return true
 }
