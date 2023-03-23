@@ -53,7 +53,6 @@ func (m AndroidMethod) Frame() frame.Frame {
 
 func (m AndroidMethod) ExtractPackageNameAndSimpleMethodNameFromAndroidMethod() (string, string, error) {
 	fullMethodName, err := m.FullMethodNameFromAndroidMethod()
-
 	if err != nil {
 		return "", "", err
 	}
@@ -231,7 +230,10 @@ func (p Android) Speedscope() (speedscope.Output, error) {
 	for _, method := range p.Methods {
 		if len(method.InlineFrames) > 0 {
 			for _, m := range method.InlineFrames {
-				methodIDToFrameIndex[method.ID] = append(methodIDToFrameIndex[method.ID], len(frames))
+				methodIDToFrameIndex[method.ID] = append(
+					methodIDToFrameIndex[method.ID],
+					len(frames),
+				)
 				frames = append(frames, speedscope.Frame{
 					File:          m.SourceFile,
 					Image:         m.ClassName,
@@ -334,13 +336,22 @@ func (p Android) Speedscope() (speedscope.Output, error) {
 				}
 			}
 			if stack[i] != event.MethodID {
-				return speedscope.Output{}, fmt.Errorf("chrometrace: %w: ending event %v but stack for thread %v does not contain that record", errorutil.ErrDataIntegrity, event, event.ThreadID)
+				return speedscope.Output{}, fmt.Errorf(
+					"chrometrace: %w: ending event %v but stack for thread %v does not contain that record",
+					errorutil.ErrDataIntegrity,
+					event,
+					event.ThreadID,
+				)
 			}
 			// Pop the elements that we emitted end events for off the stack
 			methodStacks[event.ThreadID] = methodStacks[event.ThreadID][:i]
 
 		default:
-			return speedscope.Output{}, fmt.Errorf("chrometrace: %w: invalid method action: %v", errorutil.ErrDataIntegrity, event.Action)
+			return speedscope.Output{}, fmt.Errorf(
+				"chrometrace: %w: invalid method action: %v",
+				errorutil.ErrDataIntegrity,
+				event.Action,
+			)
 		} // end switch
 	} // end loop events
 
@@ -371,4 +382,13 @@ func (p Android) Speedscope() (speedscope.Output, error) {
 		Profiles:           allProfiles,
 		Shared:             speedscope.SharedData{Frames: frames},
 	}, nil
+}
+
+func (p Android) ActiveThreadID() uint64 {
+	for _, t := range p.Threads {
+		if t.Name == mainThread {
+			return t.ID
+		}
+	}
+	return 0
 }

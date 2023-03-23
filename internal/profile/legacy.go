@@ -18,9 +18,7 @@ import (
 	"github.com/getsentry/vroom/internal/transaction"
 )
 
-var (
-	ErrProfileHasNoTrace = errors.New("profile has no trace")
-)
+var ErrProfileHasNoTrace = errors.New("profile has no trace")
 
 type (
 	LegacyProfile struct {
@@ -75,7 +73,12 @@ func (p LegacyProfile) Version() string {
 }
 
 func StoragePath(organizationID, projectID uint64, profileID string) string {
-	return fmt.Sprintf("%d/%d/%s", organizationID, projectID, strings.ReplaceAll(profileID, "-", ""))
+	return fmt.Sprintf(
+		"%d/%d/%s",
+		organizationID,
+		projectID,
+		strings.ReplaceAll(profileID, "-", ""),
+	)
 }
 
 func (p LegacyProfile) StoragePath() string {
@@ -150,7 +153,10 @@ func (p *LegacyProfile) Speedscope() (speedscope.Output, error) {
 	version := FormatVersion(p.VersionName, p.VersionCode)
 
 	o.DurationNS = p.DurationNS
-	o.Metadata = speedscope.ProfileMetadata{ProfileView: speedscope.ProfileView(p.RawProfile), Version: version}
+	o.Metadata = speedscope.ProfileMetadata{
+		ProfileView: speedscope.ProfileView(p.RawProfile),
+		Version:     version,
+	}
 	o.Platform = p.Platform
 	o.ProfileID = p.ProfileID
 	o.ProjectID = p.ProjectID
@@ -193,10 +199,11 @@ func (p LegacyProfile) GetEnvironment() string {
 
 func (p LegacyProfile) GetTransaction() transaction.Transaction {
 	return transaction.Transaction{
-		DurationNS: p.DurationNS,
-		ID:         p.TransactionID,
-		Name:       p.TransactionName,
-		TraceID:    p.TraceID,
+		ActiveThreadID: p.Trace.ActiveThreadID(),
+		DurationNS:     p.DurationNS,
+		ID:             p.TransactionID,
+		Name:           p.TransactionName,
+		TraceID:        p.TraceID,
 	}
 }
 

@@ -7,6 +7,7 @@ import (
 
 type (
 	Trace interface {
+		ActiveThreadID() uint64
 		CallTrees() map[uint64][]*nodetree.Node
 		Speedscope() (speedscope.Output, error)
 	}
