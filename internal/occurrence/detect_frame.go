@@ -423,9 +423,7 @@ func detectFrameInCallTree(
 	nodes map[nodeKey]nodeInfo,
 ) {
 	st := make([]frame.Frame, 0, 128)
-	if ni := detectFrameInNode(n, options, nodes, &st); ni != nil {
-		addNode(ni, nodes, &st)
-	}
+	detectFrameInNode(n, options, nodes, &st)
 }
 
 func detectFrameInNode(
@@ -435,18 +433,24 @@ func detectFrameInNode(
 	st *[]frame.Frame,
 ) *nodeInfo {
 	*st = append(*st, n.ToFrame())
+	defer func() {
+		*st = (*st)[:len(*st)-1]
+	}()
 	var issueDetected bool
 	for _, c := range n.Children {
 		if ni := detectFrameInNode(c, options, nodes, st); ni != nil {
 			addNode(ni, nodes, st)
 			issueDetected = true
 		}
-		*st = (*st)[:len(*st)-1]
 	}
 	if issueDetected {
 		return nil
 	}
-	return checkNode(n, options)
+	ni := checkNode(n, options)
+	if ni != nil {
+		addNode(ni, nodes, st)
+	}
+	return ni
 }
 
 func addNode(ni *nodeInfo, nodes map[nodeKey]nodeInfo, st *[]frame.Frame) {
