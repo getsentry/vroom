@@ -439,7 +439,6 @@ func detectFrameInNode(
 	var issueDetected bool
 	for _, c := range n.Children {
 		if ni := detectFrameInNode(c, options, nodes, st); ni != nil {
-			addNode(ni, nodes, st)
 			issueDetected = true
 		}
 	}
@@ -448,20 +447,14 @@ func detectFrameInNode(
 	}
 	ni := checkNode(n, options)
 	if ni != nil {
-		addNode(ni, nodes, st)
+		nk := nodeKey{Package: ni.Node.Package, Function: ni.Node.Name}
+		if _, exists := nodes[nk]; !exists {
+			ni.StackTrace = make([]frame.Frame, len(*st))
+			copy(ni.StackTrace, *st)
+			nodes[nk] = *ni
+		}
 	}
 	return ni
-}
-
-func addNode(ni *nodeInfo, nodes map[nodeKey]nodeInfo, st *[]frame.Frame) {
-	nk := nodeKey{Package: ni.Node.Package, Function: ni.Node.Name}
-	_, exists := nodes[nk]
-	if exists {
-		return
-	}
-	ni.StackTrace = make([]frame.Frame, len(*st))
-	copy(ni.StackTrace, *st)
-	nodes[nk] = *ni
 }
 
 func checkNode(
