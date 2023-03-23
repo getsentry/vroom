@@ -584,9 +584,13 @@ func (t *Trace) trimCocoaStacks() {
 	}
 	for si, s := range t.Stacks {
 		// Find main frame index in the stack
-		// Stop searching after 10 frames, it's not there
 		msi := len(s)
-		for i := len(s) - 1; i >= len(s)-10; i-- {
+		// Stop searching after 10 frames, it's not there
+		var until int
+		if len(s) > 10 {
+			until = len(s) - 10
+		}
+		for i := len(s) - 1; i >= until; i-- {
 			fi := s[i]
 			if fi == mfi {
 				msi = i
