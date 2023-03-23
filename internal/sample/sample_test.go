@@ -5,6 +5,7 @@ import (
 
 	"github.com/getsentry/vroom/internal/frame"
 	"github.com/getsentry/vroom/internal/nodetree"
+	"github.com/getsentry/vroom/internal/platform"
 	"github.com/getsentry/vroom/internal/testutil"
 	"github.com/getsentry/vroom/internal/transaction"
 )
@@ -545,6 +546,236 @@ func TestCallTrees(t *testing.T) {
 				t.Fatalf("error while generating call trees: %+v\n", err)
 			}
 			if diff := testutil.Diff(callTrees, test.want); diff != "" {
+				t.Fatalf("Result mismatch: got - want +\n%s", diff)
+			}
+		})
+	}
+}
+
+func TestTrimCocoaStacks(t *testing.T) {
+	tests := []struct {
+		name   string
+		input  Profile
+		output Profile
+	}{
+		{
+			name: "Remove frames leading to main",
+			input: Profile{
+				RawProfile: RawProfile{
+					Platform: platform.Cocoa,
+					Trace: Trace{
+						Frames: []frame.Frame{
+							{
+								Data:     frame.Data{SymbolicatorStatus: "symbolicated"},
+								Function: "function1",
+								InApp:    &testutil.True,
+							},
+							{
+								Data:     frame.Data{SymbolicatorStatus: "symbolicated"},
+								Function: "function2",
+								InApp:    &testutil.True,
+							},
+							{
+								Data:     frame.Data{SymbolicatorStatus: "symbolicated"},
+								Function: "main",
+								InApp:    &testutil.True,
+							},
+							{
+								Data: frame.Data{SymbolicatorStatus: "missing"},
+							},
+						},
+						Stacks: []Stack{
+							{1, 0, 2, 3, 3},
+						},
+					},
+				},
+			},
+			output: Profile{
+				RawProfile: RawProfile{
+					Platform: platform.Cocoa,
+					Trace: Trace{
+						Frames: []frame.Frame{
+							{
+								Data:     frame.Data{SymbolicatorStatus: "symbolicated"},
+								Function: "function1",
+								InApp:    &testutil.True,
+							},
+							{
+								Data:     frame.Data{SymbolicatorStatus: "symbolicated"},
+								Function: "function2",
+								InApp:    &testutil.True,
+							},
+							{
+								Data:     frame.Data{SymbolicatorStatus: "symbolicated"},
+								Function: "main",
+								InApp:    &testutil.True,
+							},
+							{
+								Data:  frame.Data{SymbolicatorStatus: "missing"},
+								InApp: &testutil.False,
+							},
+						},
+						Stacks: []Stack{
+							{1, 0, 2},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "Remove frames in-between main and a symbolicated frame",
+			input: Profile{
+				RawProfile: RawProfile{
+					Platform: platform.Cocoa,
+					Trace: Trace{
+						Frames: []frame.Frame{
+							{
+								Data:     frame.Data{SymbolicatorStatus: "symbolicated"},
+								Function: "function1",
+								InApp:    &testutil.True,
+							},
+							{
+								Data:     frame.Data{SymbolicatorStatus: "symbolicated"},
+								Function: "function2",
+								InApp:    &testutil.True,
+							},
+							{
+								Data:     frame.Data{SymbolicatorStatus: "symbolicated"},
+								Function: "main",
+								InApp:    &testutil.True,
+							},
+							{
+								Data: frame.Data{SymbolicatorStatus: "missing"},
+							},
+							{
+								Data:     frame.Data{SymbolicatorStatus: "symbolicated"},
+								Function: "start_sim",
+								InApp:    &testutil.True,
+							},
+						},
+						Stacks: []Stack{
+							{1, 0, 2, 3, 3, 4},
+						},
+					},
+				},
+			},
+			output: Profile{
+				RawProfile: RawProfile{
+					Platform: platform.Cocoa,
+					Trace: Trace{
+						Frames: []frame.Frame{
+							{
+								Data:     frame.Data{SymbolicatorStatus: "symbolicated"},
+								Function: "function1",
+								InApp:    &testutil.True,
+							},
+							{
+								Data:     frame.Data{SymbolicatorStatus: "symbolicated"},
+								Function: "function2",
+								InApp:    &testutil.True,
+							},
+							{
+								Data:     frame.Data{SymbolicatorStatus: "symbolicated"},
+								Function: "main",
+								InApp:    &testutil.True,
+							},
+							{
+								Data:  frame.Data{SymbolicatorStatus: "missing"},
+								InApp: &testutil.False,
+							},
+							{
+								Data:     frame.Data{SymbolicatorStatus: "symbolicated"},
+								Function: "start_sim",
+								InApp:    &testutil.True,
+							},
+						},
+						Stacks: []Stack{
+							{1, 0, 2, 4},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "Remove nothing since we couldn't find main",
+			input: Profile{
+				RawProfile: RawProfile{
+					Platform: platform.Cocoa,
+					Trace: Trace{
+						Frames: []frame.Frame{
+							{
+								Data:     frame.Data{SymbolicatorStatus: "symbolicated"},
+								Function: "function1",
+								InApp:    &testutil.True,
+							},
+							{
+								Data:     frame.Data{SymbolicatorStatus: "symbolicated"},
+								Function: "function2",
+								InApp:    &testutil.True,
+							},
+							{
+								Data:     frame.Data{SymbolicatorStatus: "missing"},
+								Function: "unsymbolicated_main",
+								InApp:    &testutil.True,
+							},
+							{
+								Data: frame.Data{SymbolicatorStatus: "missing"},
+							},
+							{
+								Data:     frame.Data{SymbolicatorStatus: "symbolicated"},
+								Function: "start_sim",
+								InApp:    &testutil.True,
+							},
+						},
+						Stacks: []Stack{
+							{1, 0, 2, 3, 3, 4},
+						},
+					},
+				},
+			},
+			output: Profile{
+				RawProfile: RawProfile{
+					Platform: platform.Cocoa,
+					Trace: Trace{
+						Frames: []frame.Frame{
+							{
+								Data:     frame.Data{SymbolicatorStatus: "symbolicated"},
+								Function: "function1",
+								InApp:    &testutil.True,
+							},
+							{
+								Data:     frame.Data{SymbolicatorStatus: "symbolicated"},
+								Function: "function2",
+								InApp:    &testutil.True,
+							},
+							{
+								Data:     frame.Data{SymbolicatorStatus: "missing"},
+								Function: "unsymbolicated_main",
+								InApp:    &testutil.True,
+							},
+							{
+								Data:  frame.Data{SymbolicatorStatus: "missing"},
+								InApp: &testutil.False,
+							},
+							{
+								Data:     frame.Data{SymbolicatorStatus: "symbolicated"},
+								Function: "start_sim",
+								InApp:    &testutil.True,
+							},
+						},
+						Stacks: []Stack{
+							{1, 0, 2, 3, 3, 4},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			test.input.Normalize()
+			if diff := testutil.Diff(test.input, test.output); diff != "" {
 				t.Fatalf("Result mismatch: got - want +\n%s", diff)
 			}
 		})

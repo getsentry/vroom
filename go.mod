@@ -23,7 +23,6 @@ require (
 	github.com/rs/zerolog v1.26.1
 	github.com/segmentio/kafka-go v0.4.38
 	google.golang.org/api v0.108.0
-	google.golang.org/protobuf v1.28.1
 )
 
 require (
@@ -73,6 +72,7 @@ require (
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20230123190316-2c411cf9d197 // indirect
 	google.golang.org/grpc v1.51.0 // indirect
+	google.golang.org/protobuf v1.28.1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	olympos.io/encoding/edn v0.0.0-20201019073823-d3554ca0b0a3 // indirect
 )
