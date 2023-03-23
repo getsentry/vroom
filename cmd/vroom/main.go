@@ -41,6 +41,11 @@ type environment struct {
 
 var release string
 
+const (
+	KiB int64 = 1024
+	MiB       = 1024 * KiB
+)
+
 func newEnvironment() (*environment, error) {
 	var e environment
 	err := cleanenv.ReadEnv(&e.config)
@@ -77,6 +82,7 @@ func newEnvironment() (*environment, error) {
 		Addr:         kafka.TCP(e.config.ProfilingKafkaBrokers...),
 		Async:        true,
 		Balancer:     kafka.CRC32Balancer{},
+		BatchBytes:   20 * MiB,
 		BatchSize:    10,
 		Compression:  kafka.Lz4,
 		ReadTimeout:  3 * time.Second,
@@ -114,11 +120,31 @@ func (e *environment) newRouter() (*httprouter.Router, error) {
 		handler http.HandlerFunc
 	}{
 		{http.MethodGet, "/organizations/:organization_id/filters", e.getFilters},
-		{http.MethodGet, "/organizations/:organization_id/projects/:project_id/functions", e.getFunctions},
-		{http.MethodGet, "/organizations/:organization_id/projects/:project_id/profiles/:profile_id", e.getProfile},
-		{http.MethodGet, "/organizations/:organization_id/projects/:project_id/raw_profiles/:profile_id", e.getRawProfile},
-		{http.MethodGet, "/organizations/:organization_id/projects/:project_id/transactions/:transaction_id", e.getProfileIDByTransactionID},
-		{http.MethodGet, "/organizations/:organization_id/projects/:project_id/flamegraph", e.getFlamegraph},
+		{
+			http.MethodGet,
+			"/organizations/:organization_id/projects/:project_id/functions",
+			e.getFunctions,
+		},
+		{
+			http.MethodGet,
+			"/organizations/:organization_id/projects/:project_id/profiles/:profile_id",
+			e.getProfile,
+		},
+		{
+			http.MethodGet,
+			"/organizations/:organization_id/projects/:project_id/raw_profiles/:profile_id",
+			e.getRawProfile,
+		},
+		{
+			http.MethodGet,
+			"/organizations/:organization_id/projects/:project_id/transactions/:transaction_id",
+			e.getProfileIDByTransactionID,
+		},
+		{
+			http.MethodGet,
+			"/organizations/:organization_id/projects/:project_id/flamegraph",
+			e.getFlamegraph,
+		},
 		{http.MethodGet, "/health", e.getHealth},
 		{http.MethodPost, "/profile", e.postProfile},
 	}
@@ -233,7 +259,10 @@ func (e *environment) getFilters(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sqb.WhereConditions = append(sqb.WhereConditions, fmt.Sprintf("organization_id = %d", organizationID))
+	sqb.WhereConditions = append(
+		sqb.WhereConditions,
+		fmt.Sprintf("organization_id = %d", organizationID),
+	)
 
 	filters, err := snubautil.GetFilters(sqb)
 	if err != nil {
