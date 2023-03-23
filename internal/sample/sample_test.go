@@ -770,6 +770,88 @@ func TestTrimCocoaStacks(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "Remove frames on many stacks",
+			input: Profile{
+				RawProfile: RawProfile{
+					Platform: platform.Cocoa,
+					Trace: Trace{
+						Frames: []frame.Frame{
+							{
+								Data:     frame.Data{SymbolicatorStatus: "symbolicated"},
+								Function: "function1",
+								InApp:    &testutil.True,
+							},
+							{
+								Data:     frame.Data{SymbolicatorStatus: "symbolicated"},
+								Function: "function2",
+								InApp:    &testutil.True,
+							},
+							{
+								Data:     frame.Data{SymbolicatorStatus: "symbolicated"},
+								Function: "main",
+								InApp:    &testutil.True,
+							},
+							{
+								Data: frame.Data{SymbolicatorStatus: "missing"},
+							},
+							{
+								Data:     frame.Data{SymbolicatorStatus: "symbolicated"},
+								Function: "start_sim",
+								InApp:    &testutil.True,
+							},
+						},
+						Stacks: []Stack{
+							{0, 2, 3, 4, 3},
+							{1, 0, 2, 3, 4, 3},
+							{0, 2, 3, 4, 3},
+							{1, 0, 2, 3, 4, 3},
+							{0, 2, 3, 4, 3},
+						},
+					},
+				},
+			},
+			output: Profile{
+				RawProfile: RawProfile{
+					Platform: platform.Cocoa,
+					Trace: Trace{
+						Frames: []frame.Frame{
+							{
+								Data:     frame.Data{SymbolicatorStatus: "symbolicated"},
+								Function: "function1",
+								InApp:    &testutil.True,
+							},
+							{
+								Data:     frame.Data{SymbolicatorStatus: "symbolicated"},
+								Function: "function2",
+								InApp:    &testutil.True,
+							},
+							{
+								Data:     frame.Data{SymbolicatorStatus: "symbolicated"},
+								Function: "main",
+								InApp:    &testutil.True,
+							},
+							{
+								Data:  frame.Data{SymbolicatorStatus: "missing"},
+								InApp: &testutil.False,
+							},
+							{
+								Data:     frame.Data{SymbolicatorStatus: "symbolicated"},
+								Function: "start_sim",
+								InApp:    &testutil.True,
+							},
+						},
+						Stacks: []Stack{
+							{0, 2, 4},
+							{1, 0, 2, 4},
+							{0, 2, 4},
+							{1, 0, 2, 4},
+							{0, 2, 4},
+						},
+					},
+				},
+			},
+		},
 	}
 
 	for _, test := range tests {

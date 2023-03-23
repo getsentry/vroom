@@ -405,12 +405,13 @@ func (p *Profile) Metadata() metadata.Metadata {
 }
 
 func (p *Profile) Normalize() {
-	p.Trace.ReplaceIdleStacks()
 	p.normalizeFrames()
 
 	if p.Platform == platform.Cocoa {
 		p.Trace.trimCocoaStacks()
 	}
+
+	p.Trace.ReplaceIdleStacks()
 }
 
 func (t Trace) SamplesByThreadD() ([]uint64, map[uint64][]*Sample) {
@@ -584,15 +585,21 @@ func (t *Trace) trimCocoaStacks() {
 	}
 	for si, s := range t.Stacks {
 		// Find main frame index in the stack
-		msi := -1
-		for fi := len(s) - 1; fi >= 0; fi-- {
+		msi := len(s)
+		// Stop searching after 10 frames, it's not there
+		var until int
+		if len(s) > 10 {
+			until = len(s) - 10
+		}
+		for i := len(s) - 1; i >= until; i-- {
+			fi := s[i]
 			if fi == mfi {
-				msi = fi
+				msi = i
 				break
 			}
 		}
-		// Skip the stack if we're already at the end
-		if msi == len(s)-1 {
+		// Skip the stack if we're already at the end or we didn't find it
+		if msi >= len(s)-1 {
 			continue
 		}
 		// Filter unsymbolicated frames after the main frame index
