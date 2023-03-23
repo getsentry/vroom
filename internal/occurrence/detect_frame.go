@@ -428,7 +428,8 @@ func detectFrameInCallTree(
 	*stackTrace = append(*stackTrace, n.ToFrame())
 	detectNode(n, options, nodes, stackTrace)
 	for _, c := range n.Children {
-		newStackTrace := *stackTrace
+		newStackTrace := make([]frame.Frame, len(*stackTrace))
+		copy(newStackTrace, *stackTrace)
 		detectFrameInCallTree(c, options, nodes, &newStackTrace)
 	}
 }
