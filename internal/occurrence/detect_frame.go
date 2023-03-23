@@ -27,7 +27,7 @@ type (
 
 	nodeInfo struct {
 		Category   Category
-		Node       *nodetree.Node
+		Node       nodetree.Node
 		StackTrace []frame.Frame
 	}
 
@@ -401,14 +401,12 @@ func detectFrame(
 			return
 		}
 		for _, root := range callTrees {
-			var stackTrace []frame.Frame
-			_ = detectFrameInCallTree(root, options, nodes, &stackTrace)
+			detectFrameInCallTree(root, options, nodes)
 		}
 	} else {
 		for _, callTrees := range callTreesPerThreadID {
 			for _, root := range callTrees {
-				st := make([]frame.Frame, 0, 128)
-				_ = detectFrameInCallTree(root, options, nodes, &st)
+				detectFrameInCallTree(root, options, nodes)
 			}
 		}
 	}
@@ -423,32 +421,46 @@ func detectFrameInCallTree(
 	n *nodetree.Node,
 	options DetectExactFrameOptions,
 	nodes map[nodeKey]nodeInfo,
+) {
+	st := make([]frame.Frame, 0, 128)
+	if ni := detectFrameInNode(n, options, nodes, &st); ni != nil {
+		addNode(ni, nodes, &st)
+	}
+}
+
+func detectFrameInNode(
+	n *nodetree.Node,
+	options DetectExactFrameOptions,
+	nodes map[nodeKey]nodeInfo,
 	st *[]frame.Frame,
 ) *nodeInfo {
 	*st = append(*st, n.ToFrame())
 	var issueDetected bool
 	for _, c := range n.Children {
-		if ni := detectFrameInCallTree(c, options, nodes, st); ni != nil {
-			nk := nodeKey{Package: c.Package, Function: c.Name}
-			_, exists := nodes[nk]
-			if !exists {
-				ni.StackTrace = make([]frame.Frame, len(*st))
-				copy(ni.StackTrace, *st)
-				nodes[nk] = *ni
-				issueDetected = true
-			}
+		if ni := detectFrameInNode(c, options, nodes, st); ni != nil {
+			addNode(ni, nodes, st)
+			issueDetected = true
 		}
 		*st = (*st)[:len(*st)-1]
 	}
-
 	if issueDetected {
 		return nil
 	}
-
-	return detectNode(n, options)
+	return checkNode(n, options)
 }
 
-func detectNode(
+func addNode(ni *nodeInfo, nodes map[nodeKey]nodeInfo, st *[]frame.Frame) {
+	nk := nodeKey{Package: ni.Node.Package, Function: ni.Node.Name}
+	_, exists := nodes[nk]
+	if exists {
+		return
+	}
+	ni.StackTrace = make([]frame.Frame, len(*st))
+	copy(ni.StackTrace, *st)
+	nodes[nk] = *ni
+}
+
+func checkNode(
 	n *nodetree.Node,
 	options DetectExactFrameOptions,
 ) *nodeInfo {
@@ -474,8 +486,10 @@ func detectNode(
 		return nil
 	}
 
-	return &nodeInfo{
+	ni := nodeInfo{
 		Category: category,
-		Node:     n,
+		Node:     *n,
 	}
+	ni.Node.Children = nil
+	return &ni
 }

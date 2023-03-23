@@ -1,7 +1,6 @@
 package occurrence
 
 import (
-	"fmt"
 	"testing"
 	"time"
 
@@ -165,7 +164,7 @@ func TestDetectFrameInCallTree(t *testing.T) {
 					Function: "CFReadStreamRead",
 				}: {
 					Category: FileRead,
-					Node: &nodetree.Node{
+					Node: nodetree.Node{
 						DurationNS:    uint64(20 * time.Millisecond),
 						EndNS:         uint64(20 * time.Millisecond),
 						Fingerprint:   0,
@@ -182,7 +181,6 @@ func TestDetectFrameInCallTree(t *testing.T) {
 							Package:  "CoreFoundation",
 							Path:     "path",
 						},
-						Children: []*nodetree.Node{},
 					},
 					StackTrace: []frame.Frame{
 						{
@@ -439,7 +437,7 @@ func TestDetectFrameInCallTree(t *testing.T) {
 					Function: "FunctionWithManySamples",
 				}: {
 					Category: FileRead,
-					Node: &nodetree.Node{
+					Node: nodetree.Node{
 						DurationNS:    uint64(20 * time.Millisecond),
 						EndNS:         uint64(20 * time.Millisecond),
 						Fingerprint:   0,
@@ -450,7 +448,6 @@ func TestDetectFrameInCallTree(t *testing.T) {
 						Path:          "path",
 						SampleCount:   4,
 						StartNS:       0,
-						Children:      []*nodetree.Node{},
 						Frame: frame.Frame{
 							Function: "FunctionWithManySamples",
 							InApp:    &testutil.False,
@@ -609,7 +606,7 @@ func TestDetectFrameInCallTree(t *testing.T) {
 					Function: "AnotherLeafFunction",
 				}: {
 					Category: FileRead,
-					Node: &nodetree.Node{
+					Node: nodetree.Node{
 						DurationNS:    uint64(20 * time.Millisecond),
 						EndNS:         uint64(20 * time.Millisecond),
 						Fingerprint:   0,
@@ -625,7 +622,6 @@ func TestDetectFrameInCallTree(t *testing.T) {
 							Package:  "CoreFoundation",
 							Path:     "path",
 						},
-						Children: []*nodetree.Node{},
 					},
 					StackTrace: []frame.Frame{
 						{
@@ -649,7 +645,7 @@ func TestDetectFrameInCallTree(t *testing.T) {
 					Function: "LeafFunction",
 				}: {
 					Category: FileRead,
-					Node: &nodetree.Node{
+					Node: nodetree.Node{
 						DurationNS:    uint64(20 * time.Millisecond),
 						EndNS:         uint64(20 * time.Millisecond),
 						Fingerprint:   0,
@@ -665,7 +661,6 @@ func TestDetectFrameInCallTree(t *testing.T) {
 							Package:  "CoreFoundation",
 							Path:     "path",
 						},
-						Children: []*nodetree.Node{},
 					},
 					StackTrace: []frame.Frame{
 						{
@@ -700,14 +695,110 @@ func TestDetectFrameInCallTree(t *testing.T) {
 				},
 			},
 		},
+		{
+			job: DetectExactFrameOptions{
+				DurationThreshold: 16 * time.Millisecond,
+				FunctionsByPackage: map[string]map[string]Category{
+					"CoreFoundation": {
+						"RandomFunction": FileRead,
+					},
+				},
+			},
+			name: "Detect first frame",
+			node: &nodetree.Node{
+				DurationNS:    uint64(30 * time.Millisecond),
+				EndNS:         uint64(30 * time.Millisecond),
+				Fingerprint:   0,
+				IsApplication: true,
+				Line:          0,
+				Name:          "RandomFunction",
+				Package:       "CoreFoundation",
+				Path:          "path",
+				StartNS:       0,
+				Frame: frame.Frame{
+					Function: "RandomFunction",
+					InApp:    &testutil.True,
+					Package:  "CoreFoundation",
+					Path:     "path",
+				},
+				Children: []*nodetree.Node{
+					{
+						DurationNS:    uint64(20 * time.Millisecond),
+						EndNS:         uint64(20 * time.Millisecond),
+						Fingerprint:   0,
+						IsApplication: false,
+						Line:          0,
+						Name:          "child1-1",
+						Package:       "package",
+						Path:          "path",
+						StartNS:       0,
+						Frame: frame.Frame{
+							Function: "child1-1",
+							InApp:    &testutil.False,
+							Package:  "package",
+							Path:     "path",
+						},
+					},
+					{
+						DurationNS:    uint64(20 * time.Millisecond),
+						EndNS:         uint64(20 * time.Millisecond),
+						Fingerprint:   0,
+						IsApplication: false,
+						Line:          0,
+						Name:          "child1-2",
+						Package:       "package",
+						Path:          "path",
+						StartNS:       0,
+						Frame: frame.Frame{
+							Function: "child1-2",
+							InApp:    &testutil.False,
+							Package:  "package",
+							Path:     "path",
+						},
+					},
+				},
+			},
+			want: map[nodeKey]nodeInfo{
+				{
+					Package:  "CoreFoundation",
+					Function: "RandomFunction",
+				}: {
+					Category: FileRead,
+					Node: nodetree.Node{
+						DurationNS:    uint64(30 * time.Millisecond),
+						EndNS:         uint64(30 * time.Millisecond),
+						Fingerprint:   0,
+						IsApplication: true,
+						Line:          0,
+						Name:          "RandomFunction",
+						Package:       "CoreFoundation",
+						Path:          "path",
+						StartNS:       0,
+						Frame: frame.Frame{
+							Function: "RandomFunction",
+							InApp:    &testutil.True,
+							Package:  "CoreFoundation",
+							Path:     "path",
+						},
+					},
+					StackTrace: []frame.Frame{
+						{
+							Function: "RandomFunction",
+							InApp:    &testutil.True,
+							Line:     0,
+							Package:  "CoreFoundation",
+							Path:     "path",
+						},
+					},
+				},
+			},
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			nodes := make(map[nodeKey]nodeInfo)
-			var stackTrace []frame.Frame
-			fmt.Println("========================")
-			detectFrameInCallTree(tt.node, tt.job, nodes, &stackTrace)
+			detectFrameInCallTree(tt.node, tt.job, nodes)
 			if diff := testutil.Diff(nodes, tt.want); diff != "" {
 				t.Fatalf("Result mismatch: got - want +\n%s", diff)
 			}
