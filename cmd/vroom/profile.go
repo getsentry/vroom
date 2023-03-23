@@ -164,6 +164,9 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 			Value: b,
 		})
 		s.Finish()
+		hub.Scope().SetContext("Call trees Kakfa payload", map[string]interface{}{
+			"Size": len(b),
+		})
 		if err != nil {
 			hub.CaptureException(err)
 		}
@@ -187,6 +190,9 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 		Value: b,
 	})
 	s.Finish()
+	hub.Scope().SetContext("Profile metadata Kafka payload", map[string]interface{}{
+		"Size": len(b),
+	})
 	if err != nil {
 		hub.CaptureException(err)
 		w.WriteHeader(http.StatusInternalServerError)
