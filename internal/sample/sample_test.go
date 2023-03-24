@@ -897,7 +897,7 @@ func TestNormalizeFramesPerPlatform(t *testing.T) {
 							{
 								Data:     frame.Data{SymbolicatorStatus: "symbolicated"},
 								Function: "main",
-								Package:  "foo", // the package gets normalize to just the basename
+								Package:  "/private/var/containers/foo",
 								InApp:    &testutil.True,
 							},
 						},
@@ -935,7 +935,7 @@ func TestNormalizeFramesPerPlatform(t *testing.T) {
 							{
 								Data:     frame.Data{SymbolicatorStatus: "symbolicated"},
 								Function: "main",
-								Package:  "foo", // the package gets normalize to just the basename
+								Package:  "/usr/local/foo",
 								InApp:    &testutil.True,
 							},
 						},
@@ -1036,13 +1036,13 @@ func TestCallTreesFingerprintPerPlatform(t *testing.T) {
 						Fingerprint:   1628006971372193492,
 						IsApplication: true,
 						Name:          "main",
-						Package:       "foo",
+						Package:       "/private/var/containers/foo",
 						SampleCount:   1,
 						ProfileIDs:    map[string]struct{}{},
 						Frame: frame.Frame{
 							Data:     frame.Data{SymbolicatorStatus: "symbolicated"},
 							Function: "main",
-							Package:  "foo",
+							Package:  "/private/var/containers/foo",
 							InApp:    &testutil.True,
 						},
 					},
@@ -1081,13 +1081,13 @@ func TestCallTreesFingerprintPerPlatform(t *testing.T) {
 						Fingerprint:   1628006971372193492,
 						IsApplication: true,
 						Name:          "main",
-						Package:       "foo",
+						Package:       "/usr/local/foo",
 						SampleCount:   1,
 						ProfileIDs:    map[string]struct{}{},
 						Frame: frame.Frame{
 							Data:     frame.Data{SymbolicatorStatus: "symbolicated"},
 							Function: "main",
-							Package:  "foo",
+							Package:  "/usr/local/foo",
 							InApp:    &testutil.True,
 						},
 					},

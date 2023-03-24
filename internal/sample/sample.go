@@ -308,7 +308,7 @@ func (p *Profile) Speedscope() (speedscope.Output, error) {
 					// image exists for legacy reasons as a field coalesced from module and package
 					// the speedscope transform on the sampled format is being removed, so leave
 					// it alone for now
-					Image:         fr.PackageBaseName(),
+					Image:         fr.ModuleOrPackage(),
 					Inline:        fr.IsInline(),
 					IsApplication: p.IsApplicationFrame(fr),
 					Line:          fr.Line,
@@ -553,16 +553,6 @@ func (p *Profile) normalizeFrames() {
 		// Set if frame is in application
 		inApp := p.IsApplicationFrame(f)
 		f.InApp = &inApp
-
-		// Transform package path into a name
-		switch p.Platform {
-		case platform.Cocoa:
-			f.Package = f.PackageBaseName()
-		case platform.Rust:
-			f.Package = f.PackageBaseName()
-		default:
-			// do nothing since the other platforms do not use package
-		}
 
 		// Set Symbolicator status
 		if f.Status != "" {

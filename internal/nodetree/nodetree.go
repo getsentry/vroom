@@ -37,7 +37,7 @@ func NodeFromFrame(f frame.Frame, start, end, fingerprint uint64) *Node {
 		IsApplication: inApp,
 		Line:          f.Line,
 		Name:          f.Function,
-		Package:       f.PackageBaseName(),
+		Package:       f.ModuleOrPackage(),
 		Path:          f.Path,
 		SampleCount:   1,
 		StartNS:       start,
@@ -56,7 +56,7 @@ func (n *Node) Update(timestamp uint64) {
 
 func (n *Node) ToFrame() frame.Frame {
 	n.Frame.Data.SymbolicatorStatus = n.Frame.Status
-	n.Frame.Package = n.Frame.PackageBaseName()
+	n.Frame.Package = n.Frame.ModuleOrPackage()
 	return n.Frame
 }
 
