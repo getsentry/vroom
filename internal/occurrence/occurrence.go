@@ -143,9 +143,34 @@ func NewOccurrence(p profile.Profile, ni nodeInfo) *Occurrence {
 	fingerprint := fmt.Sprintf("%x", h.Sum(nil))
 	tags := buildOccurrenceTags(p)
 	pf := p.Platform()
+	nodeDuration := time.Duration(ni.Node.DurationNS)
+	profilePercentage := float64(ni.Node.DurationNS*100) / float64(p.DurationNS())
+	evidenceData := map[string]interface{}{
+		"frame_duration_ns":   ni.Node.DurationNS,
+		"frame_name":          ni.Node.Name,
+		"frame_package":       ni.Node.Package,
+		"profile_duration_ns": p.DurationNS(),
+		ProfileID:             p.ID(),
+		"transaction_id":      t.ID,
+		"transaction_name":    t.Name,
+	}
+	var duration string
 	switch pf {
 	case platform.Android:
+		duration = fmt.Sprintf(
+			"%s (%0.2f%% of the profile)",
+			nodeDuration,
+			profilePercentage,
+		)
 		pf = platform.Java
+	default:
+		duration = fmt.Sprintf(
+			"%s (%0.2f%% of the profile, found in %d samples)",
+			nodeDuration,
+			profilePercentage,
+			ni.Node.SampleCount,
+		)
+		evidenceData["sample_count"] = ni.Node.SampleCount
 	}
 	return &Occurrence{
 		Culprit:       t.Name,
@@ -163,16 +188,7 @@ func NewOccurrence(p profile.Profile, ni nodeInfo) *Occurrence {
 			Tags:           tags,
 			Timestamp:      p.Timestamp(),
 		},
-		EvidenceData: map[string]interface{}{
-			"frame_duration_ns":   ni.Node.DurationNS,
-			"frame_name":          ni.Node.Name,
-			"frame_package":       ni.Node.Package,
-			"profile_duration_ns": p.DurationNS(),
-			ProfileID:             p.ID(),
-			"sample_count":        ni.Node.SampleCount,
-			"transaction_id":      t.ID,
-			"transaction_name":    t.Name,
-		},
+		EvidenceData: evidenceData,
 		EvidenceDisplay: []Evidence{
 			{
 				Important: true,
@@ -185,13 +201,8 @@ func NewOccurrence(p profile.Profile, ni nodeInfo) *Occurrence {
 				Value: ni.Node.Package,
 			},
 			{
-				Name: EvidenceNameDuration,
-				Value: fmt.Sprintf(
-					"%s (%0.2f%% of the profile, found in %d samples)",
-					time.Duration(ni.Node.DurationNS),
-					float64(ni.Node.DurationNS*100)/float64(p.DurationNS()),
-					ni.Node.SampleCount,
-				),
+				Name:  EvidenceNameDuration,
+				Value: duration,
 			},
 		},
 		Fingerprint: fingerprint,
