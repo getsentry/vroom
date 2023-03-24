@@ -142,6 +142,11 @@ func NewOccurrence(p profile.Profile, ni nodeInfo) *Occurrence {
 	_, _ = io.WriteString(h, ni.Node.Name)
 	fingerprint := fmt.Sprintf("%x", h.Sum(nil))
 	tags := buildOccurrenceTags(p)
+	pf := p.Platform()
+	switch pf {
+	case platform.Android:
+		pf = platform.Java
+	}
 	return &Occurrence{
 		Culprit:       t.Name,
 		DetectionTime: time.Now().UTC(),
@@ -150,7 +155,7 @@ func NewOccurrence(p profile.Profile, ni nodeInfo) *Occurrence {
 			Environment:    p.Environment(),
 			ID:             eventID(),
 			OrganizationID: p.OrganizationID(),
-			Platform:       p.Platform(),
+			Platform:       pf,
 			ProjectID:      p.ProjectID(),
 			Received:       p.Received(),
 			Release:        p.Release(),
