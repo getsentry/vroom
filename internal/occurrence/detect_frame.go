@@ -463,7 +463,7 @@ func checkNode(
 	options DetectExactFrameOptions,
 ) *nodeInfo {
 	// Check if we have a list of functions associated to the package.
-	functions, exists := options.FunctionsByPackage[path.Base(n.Package)]
+	functions, exists := options.FunctionsByPackage[path.Base(n.Frame.ModuleOrPackage())]
 	if !exists {
 		return nil
 	}
