@@ -77,8 +77,10 @@ func (f Frame) ID() string {
 func (f Frame) ModuleOrPackage() string {
 	if f.Module != "" {
 		return f.Module
+	} else if f.Package != "" {
+		return path.Base(f.Package)
 	}
-	return path.Base(f.Package)
+	return ""
 }
 
 func (f Frame) WriteToHash(h hash.Hash) {
