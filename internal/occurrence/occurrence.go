@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/url"
+	"path"
 	"strconv"
 	"strings"
 	"time"
@@ -174,7 +175,7 @@ func NewOccurrence(p profile.Profile, ni nodeInfo) *Occurrence {
 	_, _ = io.WriteString(h, strconv.FormatUint(p.ProjectID(), 10))
 	_, _ = io.WriteString(h, string(title))
 	_, _ = io.WriteString(h, strconv.Itoa(int(issueType)))
-	_, _ = io.WriteString(h, ni.Node.Package)
+	_, _ = io.WriteString(h, path.Base(ni.Node.Frame.ModuleOrPackage()))
 	_, _ = io.WriteString(h, ni.Node.Name)
 	fingerprint := fmt.Sprintf("%x", h.Sum(nil))
 	tags := buildOccurrenceTags(p)
