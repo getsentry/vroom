@@ -103,8 +103,9 @@ type (
 	}
 
 	ProfileView struct {
-		AndroidAPILevel      uint32                              `json:"androidAPILevel,omitempty"`     //nolint:unused
-		Architecture         string                              `json:"architecture,omitempty"`        //nolint:unused
+		AndroidAPILevel      uint32                              `json:"androidAPILevel,omitempty"` //nolint:unused
+		Architecture         string                              `json:"architecture,omitempty"`    //nolint:unused
+		BuildID              string                              `json:"-"`
 		DebugMeta            debugmeta.DebugMeta                 `json:"-"`                             //nolint:unused
 		DeviceClassification string                              `json:"deviceClassification"`          //nolint:unused
 		DeviceLocale         string                              `json:"deviceLocale"`                  //nolint:unused

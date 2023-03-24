@@ -30,6 +30,7 @@ type (
 	RawProfile struct {
 		AndroidAPILevel      uint32                              `json:"android_api_level,omitempty"`
 		Architecture         string                              `json:"architecture,omitempty"`
+		BuildID              string                              `json:"build_id,omitempty"`
 		DebugMeta            debugmeta.DebugMeta                 `json:"debug_meta,omitempty"`
 		DeviceClassification string                              `json:"device_classification"`
 		DeviceLocale         string                              `json:"device_locale"`
@@ -223,6 +224,13 @@ func (p *LegacyProfile) Normalize() {
 	switch t := p.Trace.(type) {
 	case *IOS:
 		t.ReplaceIdleStacks()
+	}
+
+	if p.BuildID != "" {
+		p.DebugMeta.Images = append(p.DebugMeta.Images, debugmeta.Image{
+			Type: "proguard",
+			UUID: p.BuildID,
+		})
 	}
 }
 
