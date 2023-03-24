@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"cloud.google.com/go/bigquery"
+	"github.com/getsentry/vroom/internal/android"
 	"github.com/getsentry/vroom/internal/debugmeta"
 	"github.com/getsentry/vroom/internal/frame"
 	"github.com/getsentry/vroom/internal/platform"
@@ -163,6 +164,7 @@ func NewOccurrence(p profile.Profile, ni nodeInfo) *Occurrence {
 			profilePercentage,
 		)
 		pf = platform.Java
+		normalizeAndroidStackTrace(ni.StackTrace)
 	default:
 		duration = fmt.Sprintf(
 			"%s (%0.2f%% of the profile, found in %d samples)",
@@ -274,4 +276,10 @@ func (o *Occurrence) Save() (map[string]bigquery.Value, string, error) {
 
 func eventID() string {
 	return strings.ReplaceAll(uuid.New().String(), "-", "")
+}
+
+func normalizeAndroidStackTrace(st []frame.Frame) {
+	for i := range st {
+		st[i].Function = android.StripPackageNameFromFullMethodName(st[i].Function, st[i].Package)
+	}
 }
