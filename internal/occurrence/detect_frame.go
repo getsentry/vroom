@@ -264,7 +264,7 @@ var detectFrameJobs = map[platform.Platform][]DetectExactFrameOptions{
 	platform.Android: {
 		{
 			ActiveThreadOnly:  true,
-			DurationThreshold: 16 * time.Millisecond,
+			DurationThreshold: 40 * time.Millisecond,
 			FunctionsByPackage: map[string]map[string]Category{
 				"com.google.gson": {
 					"com.google.gson.Gson.fromJson(JsonElement, Class): Object":    JSONDecode,
