@@ -231,6 +231,7 @@ func (p *LegacyProfile) Normalize() {
 			Type: "proguard",
 			UUID: p.BuildID,
 		})
+		p.BuildID = ""
 	}
 }
 
