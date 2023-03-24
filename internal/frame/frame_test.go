@@ -1,6 +1,7 @@
 package frame
 
 import (
+	"hash/fnv"
 	"testing"
 )
 
@@ -163,6 +164,68 @@ func TestIsPHPApplicationFrame(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if isApplication := tt.frame.IsPHPApplicationFrame(); isApplication != tt.isApplication {
 				t.Fatalf("Expected %s frame but got %s frame", frameType(tt.isApplication), frameType(isApplication))
+			}
+		})
+	}
+}
+
+func TestWriteToHash(t *testing.T) {
+	tests := []struct {
+		name  string
+		bytes []byte
+		frame Frame
+	}{
+		{
+			name:  "empty frame",
+			bytes: []byte("--"),
+			frame: Frame{},
+		},
+		{
+			name:  "prefers function module over package",
+			bytes: []byte("foo-"),
+			frame: Frame{
+				Module:  "foo",
+				Package: "/bar/bar",
+				File:    "baz",
+			},
+		},
+		{
+			name:  "prefers package over file",
+			bytes: []byte("bar-"),
+			frame: Frame{
+				Package: "/bar/bar",
+				File:    "baz",
+			},
+		},
+		{
+			name:  "prefers file over nothing",
+			bytes: []byte("baz-"),
+			frame: Frame{
+				File: "baz",
+			},
+		},
+		{
+			name:  "uses function name",
+			bytes: []byte("-qux"),
+			frame: Frame{
+				Function: "qux",
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			h1 := fnv.New64()
+			h1.Write(tt.bytes)
+
+			h2 := fnv.New64()
+			tt.frame.WriteToHash(h2)
+
+			s1 := h1.Sum64()
+			s2 := h2.Sum64()
+
+			if s1 != s2 {
+				t.Fatalf("Expected hash %d frame but got %d", s1, s2)
 			}
 		})
 	}

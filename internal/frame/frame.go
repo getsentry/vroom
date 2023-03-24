@@ -72,19 +72,19 @@ func (f Frame) ID() string {
 	return hex.EncodeToString(hash[:])
 }
 
-func (f Frame) PackageBaseName() string {
+func (f Frame) ModuleOrPackage() string {
 	if f.Module != "" {
 		return f.Module
-	} else if f.Package != "" {
-		return path.Base(f.Package)
 	}
-	return ""
+	return f.Package
 }
 
 func (f Frame) WriteToHash(h hash.Hash) {
 	var s string
-	if f.Package != "" {
-		s = f.PackageBaseName()
+	if f.Module != "" {
+		s = f.Module
+	} else if f.Package != "" {
+		s = path.Base(f.Package)
 	} else if f.File != "" {
 		s = f.File
 	} else {

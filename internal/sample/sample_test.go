@@ -863,3 +863,297 @@ func TestTrimCocoaStacks(t *testing.T) {
 		})
 	}
 }
+
+func TestNormalizeFramesPerPlatform(t *testing.T) {
+	tests := []struct {
+		name   string
+		input  Profile
+		output Profile
+	}{
+		{
+			name: "cocoa",
+			input: Profile{
+				RawProfile: RawProfile{
+					Platform: platform.Cocoa,
+					Trace: Trace{
+						Frames: []frame.Frame{
+							{
+								Data:     frame.Data{SymbolicatorStatus: "symbolicated"},
+								Function: "main",
+								Package:  "/private/var/containers/foo",
+							},
+						},
+						Stacks: []Stack{
+							{0},
+						},
+					},
+				},
+			},
+			output: Profile{
+				RawProfile: RawProfile{
+					Platform: platform.Cocoa,
+					Trace: Trace{
+						Frames: []frame.Frame{
+							{
+								Data:     frame.Data{SymbolicatorStatus: "symbolicated"},
+								Function: "main",
+								Package:  "/private/var/containers/foo",
+								InApp:    &testutil.True,
+							},
+						},
+						Stacks: []Stack{
+							{0},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "rust",
+			input: Profile{
+				RawProfile: RawProfile{
+					Platform: platform.Rust,
+					Trace: Trace{
+						Frames: []frame.Frame{
+							{
+								Data:     frame.Data{SymbolicatorStatus: "symbolicated"},
+								Function: "main",
+								Package:  "/usr/local/foo",
+							},
+						},
+						Stacks: []Stack{
+							{0},
+						},
+					},
+				},
+			},
+			output: Profile{
+				RawProfile: RawProfile{
+					Platform: platform.Rust,
+					Trace: Trace{
+						Frames: []frame.Frame{
+							{
+								Data:     frame.Data{SymbolicatorStatus: "symbolicated"},
+								Function: "main",
+								Package:  "/usr/local/foo",
+								InApp:    &testutil.True,
+							},
+						},
+						Stacks: []Stack{
+							{0},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "python",
+			input: Profile{
+				RawProfile: RawProfile{
+					Platform: platform.Python,
+					Trace: Trace{
+						Frames: []frame.Frame{
+							{
+								Function: "Threading.run",
+								File:     "threading.py",
+								Module:   "threading",
+								Path:     "/usr/local/lib/python3.8/threading.py",
+							},
+						},
+						Stacks: []Stack{
+							{0},
+						},
+					},
+				},
+			},
+			output: Profile{
+				RawProfile: RawProfile{
+					Platform: platform.Python,
+					Trace: Trace{
+						Frames: []frame.Frame{
+							{
+								Function: "Threading.run",
+								File:     "threading.py",
+								Module:   "threading",
+								Path:     "/usr/local/lib/python3.8/threading.py",
+								InApp:    &testutil.False,
+							},
+						},
+						Stacks: []Stack{
+							{0},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			test.input.Normalize()
+			if diff := testutil.Diff(test.input, test.output); diff != "" {
+				t.Fatalf("Result mismatch: got - want +\n%s", diff)
+			}
+		})
+	}
+}
+
+func TestCallTreesFingerprintPerPlatform(t *testing.T) {
+	tests := []struct {
+		name   string
+		input  Profile
+		output map[uint64][]*nodetree.Node
+	}{
+		{
+			name: "cocoa",
+			input: Profile{
+				RawProfile: RawProfile{
+					Platform: platform.Cocoa,
+					Trace: Trace{
+						Frames: []frame.Frame{
+							{
+								Data:     frame.Data{SymbolicatorStatus: "symbolicated"},
+								Function: "main",
+								Package:  "/private/var/containers/foo",
+							},
+						},
+						Stacks: []Stack{
+							{0},
+						},
+						Samples: []Sample{
+							{
+								ElapsedSinceStartNS: 0,
+								StackID:             0,
+								ThreadID:            0,
+							},
+						},
+					},
+				},
+			},
+			output: map[uint64][]*nodetree.Node{
+				0: {
+					{
+						Fingerprint:   1628006971372193492,
+						IsApplication: true,
+						Name:          "main",
+						Package:       "/private/var/containers/foo",
+						SampleCount:   1,
+						ProfileIDs:    map[string]struct{}{},
+						Frame: frame.Frame{
+							Data:     frame.Data{SymbolicatorStatus: "symbolicated"},
+							Function: "main",
+							Package:  "/private/var/containers/foo",
+							InApp:    &testutil.True,
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "rust",
+			input: Profile{
+				RawProfile: RawProfile{
+					Platform: platform.Rust,
+					Trace: Trace{
+						Frames: []frame.Frame{
+							{
+								Data:     frame.Data{SymbolicatorStatus: "symbolicated"},
+								Function: "main",
+								Package:  "/usr/local/foo",
+							},
+						},
+						Stacks: []Stack{
+							{0},
+						},
+						Samples: []Sample{
+							{
+								ElapsedSinceStartNS: 0,
+								StackID:             0,
+								ThreadID:            0,
+							},
+						},
+					},
+				},
+			},
+			output: map[uint64][]*nodetree.Node{
+				0: {
+					{
+						Fingerprint:   1628006971372193492,
+						IsApplication: true,
+						Name:          "main",
+						Package:       "/usr/local/foo",
+						SampleCount:   1,
+						ProfileIDs:    map[string]struct{}{},
+						Frame: frame.Frame{
+							Data:     frame.Data{SymbolicatorStatus: "symbolicated"},
+							Function: "main",
+							Package:  "/usr/local/foo",
+							InApp:    &testutil.True,
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "python",
+			input: Profile{
+				RawProfile: RawProfile{
+					Platform: platform.Python,
+					Trace: Trace{
+						Frames: []frame.Frame{
+							{
+								Function: "Threading.run",
+								File:     "threading.py",
+								Module:   "threading",
+								Path:     "/usr/local/lib/python3.8/threading.py",
+							},
+						},
+						Stacks: []Stack{
+							{0},
+						},
+						Samples: []Sample{
+							{
+								ElapsedSinceStartNS: 0,
+								StackID:             0,
+								ThreadID:            0,
+							},
+						},
+					},
+				},
+			},
+			output: map[uint64][]*nodetree.Node{
+				0: {
+					{
+						Fingerprint:   12857020554704472368,
+						IsApplication: false,
+						Name:          "Threading.run",
+						Package:       "threading",
+						Path:          "/usr/local/lib/python3.8/threading.py",
+						SampleCount:   1,
+						ProfileIDs:    map[string]struct{}{},
+						Frame: frame.Frame{
+							Function: "Threading.run",
+							File:     "threading.py",
+							Module:   "threading",
+							InApp:    &testutil.False,
+							Path:     "/usr/local/lib/python3.8/threading.py",
+						},
+					},
+				},
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			test.input.Normalize()
+			callTrees, err := test.input.CallTrees()
+			if err != nil {
+				t.Fatal(err)
+			}
+			if diff := testutil.Diff(callTrees, test.output); diff != "" {
+				t.Fatalf("Result mismatch: got - want +\n%s", diff)
+			}
+		})
+	}
+}
