@@ -1,6 +1,7 @@
 package occurrence
 
 import (
+	"path"
 	"time"
 
 	"github.com/getsentry/vroom/internal/frame"
@@ -462,7 +463,7 @@ func checkNode(
 	options DetectExactFrameOptions,
 ) *nodeInfo {
 	// Check if we have a list of functions associated to the package.
-	functions, exists := options.FunctionsByPackage[n.Package]
+	functions, exists := options.FunctionsByPackage[path.Base(n.Package)]
 	if !exists {
 		return nil
 	}
