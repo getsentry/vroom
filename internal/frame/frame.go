@@ -83,7 +83,9 @@ func (f Frame) PackageBaseName() string {
 
 func (f Frame) WriteToHash(h hash.Hash) {
 	var s string
-	if f.Package != "" {
+	if f.Module != "" {
+		s = f.Module
+	} else if f.Package != "" {
 		s = f.PackageBaseName()
 	} else if f.File != "" {
 		s = f.File

@@ -238,7 +238,7 @@ func (f *flamegraph) visitCalltree(node *nodetree.Node, currentStack *[]int) {
 		frame := node.ToFrame()
 		sfr := speedscope.Frame{
 			Name:          frame.Function,
-			Image:         frame.Package,
+			Image:         frame.PackageBaseName(),
 			Path:          frame.Path,
 			IsApplication: *frame.InApp,
 			Col:           frame.Column,

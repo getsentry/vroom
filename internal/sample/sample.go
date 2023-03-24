@@ -303,8 +303,11 @@ func (p *Profile) Speedscope() (speedscope.Output, error) {
 				}
 				addressToFrameIndex[address] = frameIndex
 				frames = append(frames, speedscope.Frame{
-					Col:           fr.Column,
-					File:          fr.File,
+					Col:  fr.Column,
+					File: fr.File,
+					// image exists for legacy reasons as a field coalesced from module and package
+					// the speedscope transform on the sampled format is being removed, so leave
+					// it alone for now
 					Image:         fr.PackageBaseName(),
 					Inline:        fr.IsInline(),
 					IsApplication: p.IsApplicationFrame(fr),
@@ -552,7 +555,14 @@ func (p *Profile) normalizeFrames() {
 		f.InApp = &inApp
 
 		// Transform package path into a name
-		f.Package = f.PackageBaseName()
+		switch p.Platform {
+		case platform.Cocoa:
+			f.Package = f.PackageBaseName()
+		case platform.Rust:
+			f.Package = f.PackageBaseName()
+		default:
+			// do nothing since the other platforms do not use package
+		}
 
 		// Set Symbolicator status
 		if f.Status != "" {
