@@ -1036,7 +1036,7 @@ func TestCallTreesFingerprintPerPlatform(t *testing.T) {
 						Fingerprint:   1628006971372193492,
 						IsApplication: true,
 						Name:          "main",
-						Package:       "/private/var/containers/foo",
+						Package:       "foo",
 						SampleCount:   1,
 						ProfileIDs:    map[string]struct{}{},
 						Frame: frame.Frame{
@@ -1081,7 +1081,7 @@ func TestCallTreesFingerprintPerPlatform(t *testing.T) {
 						Fingerprint:   1628006971372193492,
 						IsApplication: true,
 						Name:          "main",
-						Package:       "/usr/local/foo",
+						Package:       "foo",
 						SampleCount:   1,
 						ProfileIDs:    map[string]struct{}{},
 						Frame: frame.Frame{
