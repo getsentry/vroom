@@ -56,7 +56,6 @@ func (n *Node) Update(timestamp uint64) {
 
 func (n *Node) ToFrame() frame.Frame {
 	n.Frame.Data.SymbolicatorStatus = n.Frame.Status
-	n.Frame.Package = n.Frame.ModuleOrPackage()
 	return n.Frame
 }
 
