@@ -135,14 +135,6 @@ func NewOccurrence(p profile.Profile, ni nodeInfo) *Occurrence {
 		issueType = NoneType
 		title = IssueTitle(fmt.Sprintf("%v issue detected", ni.Category))
 	}
-	h := md5.New()
-	_, _ = io.WriteString(h, strconv.FormatUint(p.ProjectID(), 10))
-	_, _ = io.WriteString(h, string(title))
-	_, _ = io.WriteString(h, strconv.Itoa(int(issueType)))
-	_, _ = io.WriteString(h, ni.Node.Package)
-	_, _ = io.WriteString(h, ni.Node.Name)
-	fingerprint := fmt.Sprintf("%x", h.Sum(nil))
-	tags := buildOccurrenceTags(p)
 	pf := p.Platform()
 	nodeDuration := time.Duration(ni.Node.DurationNS)
 	profilePercentage := float64(ni.Node.DurationNS*100) / float64(p.DurationNS())
@@ -165,6 +157,10 @@ func NewOccurrence(p profile.Profile, ni nodeInfo) *Occurrence {
 		)
 		pf = platform.Java
 		normalizeAndroidStackTrace(ni.StackTrace)
+		ni.Node.Name = android.StripPackageNameFromFullMethodName(
+			ni.Node.Name,
+			ni.Node.Package,
+		)
 	default:
 		duration = fmt.Sprintf(
 			"%s (%0.2f%% of the profile, found in %d samples)",
@@ -174,6 +170,14 @@ func NewOccurrence(p profile.Profile, ni nodeInfo) *Occurrence {
 		)
 		evidenceData["sample_count"] = ni.Node.SampleCount
 	}
+	h := md5.New()
+	_, _ = io.WriteString(h, strconv.FormatUint(p.ProjectID(), 10))
+	_, _ = io.WriteString(h, string(title))
+	_, _ = io.WriteString(h, strconv.Itoa(int(issueType)))
+	_, _ = io.WriteString(h, ni.Node.Package)
+	_, _ = io.WriteString(h, ni.Node.Name)
+	fingerprint := fmt.Sprintf("%x", h.Sum(nil))
+	tags := buildOccurrenceTags(p)
 	return &Occurrence{
 		Culprit:       t.Name,
 		DetectionTime: time.Now().UTC(),
