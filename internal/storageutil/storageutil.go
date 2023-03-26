@@ -4,10 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/pierrec/lz4/v4"
 	"gocloud.dev/blob"
+	"gocloud.dev/gcerrors"
 )
 
 // ErrObjectNotFound indicates an object was not found.
@@ -47,6 +49,10 @@ func UnmarshalCompressed(ctx context.Context, b *blob.Bucket, objectName string,
 
 	or, err := b.NewReader(ctx, objectName, &blob.ReaderOptions{})
 	if err != nil {
+		if gcerrors.Code(err) == gcerrors.NotFound {
+			return fmt.Errorf("%w: %s", ErrObjectNotFound, objectName)
+		}
+
 		return err
 	}
 	defer or.Close()

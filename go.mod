@@ -24,7 +24,6 @@ require (
 	github.com/segmentio/kafka-go v0.4.38
 	gocloud.dev v0.29.0
 	google.golang.org/api v0.110.0
-	google.golang.org/protobuf v1.28.1
 )
 
 require (

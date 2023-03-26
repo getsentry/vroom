@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -194,9 +195,6 @@ func TestDownloadProfile(t *testing.T) {
 		if err != nil {
 			t.Fatalf("we should write an object: %s", err.Error())
 		}
-		defer func() {
-
-		}()
 
 		_, err = wr.Write(compressedData.Bytes())
 		if err != nil {
@@ -220,6 +218,35 @@ func TestDownloadProfile(t *testing.T) {
 		}
 		if !bytes.Equal(originalData, uncompressedData) {
 			t.Fatalf("data should be identical: %v %v", string(originalData), string(uncompressedData))
+		}
+	})
+}
+
+func TestDownloadProfile_NotFound(t *testing.T) {
+	ctx := context.Background()
+	objectName := uuid.NewString()
+
+	t.Run("GCS", func(t *testing.T) {
+		var profile Profile
+		err := UnmarshalCompressed(ctx, gcsBlobBucket, objectName, &profile)
+		if err == nil {
+			t.Error("expecting an error, got nil")
+		}
+
+		if !errors.Is(err, ErrObjectNotFound) {
+			t.Errorf("expecting an error of ErrObjectNotFound, instead got %s", err.Error())
+		}
+	})
+
+	t.Run("Filesystem", func(t *testing.T) {
+		var profile Profile
+		err := UnmarshalCompressed(ctx, fileBlobBucket, objectName, &profile)
+		if err == nil {
+			t.Error("expecting an error, got nil")
+		}
+
+		if !errors.Is(err, ErrObjectNotFound) {
+			t.Errorf("expecting an error of ErrObjectNotFound, instead got %s", err.Error())
 		}
 	})
 }
