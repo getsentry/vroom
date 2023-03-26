@@ -68,11 +68,13 @@ func (f Frame) ID() string {
 	//
 	// As a solution here we use the following hash function that guarantees uniqueness
 	// when all the information required is available
-	hash := md5.Sum([]byte(fmt.Sprintf("%s:%s:%d:%s", f.File, f.Function, f.Line, f.InstructionAddr)))
+	hash := md5.Sum(
+		[]byte(fmt.Sprintf("%s:%s:%d:%s", f.File, f.Function, f.Line, f.InstructionAddr)),
+	)
 	return hex.EncodeToString(hash[:])
 }
 
-func (f Frame) PackageBaseName() string {
+func (f Frame) ModuleOrPackage() string {
 	if f.Module != "" {
 		return f.Module
 	} else if f.Package != "" {
@@ -83,8 +85,10 @@ func (f Frame) PackageBaseName() string {
 
 func (f Frame) WriteToHash(h hash.Hash) {
 	var s string
-	if f.Package != "" {
-		s = f.PackageBaseName()
+	if f.Module != "" {
+		s = f.Module
+	} else if f.Package != "" {
+		s = path.Base(f.Package)
 	} else if f.File != "" {
 		s = f.File
 	} else {

@@ -18,6 +18,7 @@ type (
 		ImageSize   uint64    `json:"image_size,omitempty"`
 		ImageVMAddr string    `json:"image_vmaddr,omitempty"`
 		Type        string    `json:"type,omitempty"`
+		UUID        string    `json:"uuid,omitempty"`
 	}
 
 	DebugMeta struct {

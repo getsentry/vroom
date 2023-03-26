@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"cloud.google.com/go/bigquery"
+	"github.com/getsentry/vroom/internal/android"
 	"github.com/getsentry/vroom/internal/debugmeta"
 	"github.com/getsentry/vroom/internal/frame"
 	"github.com/getsentry/vroom/internal/platform"
@@ -33,7 +34,7 @@ type (
 	Event struct {
 		Contexts       map[Context]interface{} `json:"contexts,omitempty"`
 		DebugMeta      debugmeta.DebugMeta     `json:"debug_meta"`
-		Environment    string                  `json:"environment"`
+		Environment    string                  `json:"environment,omitempty"`
 		ID             string                  `json:"event_id"`
 		OrganizationID uint64                  `json:"-"`
 		Platform       platform.Platform       `json:"platform"`
@@ -83,11 +84,9 @@ const (
 	ImageDecodeType Type = 2002
 	JSONDecodeType  Type = 2003
 
-	EvidenceNameDuration          EvidenceName = "Duration"
-	EvidenceNameFunction          EvidenceName = "Suspect function"
-	EvidenceNamePackage           EvidenceName = "Package"
-	EvidenceNameProfilePercentage EvidenceName = "% of the profile"
-	EvidenceNameSampleCount       EvidenceName = "Sample count"
+	EvidenceNameDuration EvidenceName = "Duration"
+	EvidenceNameFunction EvidenceName = "Suspect function"
+	EvidenceNamePackage  EvidenceName = "Package"
 
 	ContextTrace Context = "trace"
 
@@ -103,13 +102,13 @@ var issueTitles = map[Category]CategoryMetadata{
 	CoreDataRead:     {IssueTitle: "Object Context operation on Main Thread"},
 	CoreDataWrite:    {IssueTitle: "Object Context operation on Main Thread"},
 	Decompression:    {IssueTitle: "Decompression on Main Thread"},
-	FileRead:         {IssueTitle: "File I/O on Main Thread", Type: FileIOType},
-	FileWrite:        {IssueTitle: "File I/O on Main Thread", Type: FileIOType},
+	FileRead:         {IssueTitle: "File I/O on Main Thread"},
+	FileWrite:        {IssueTitle: "File I/O on Main Thread"},
 	HTTP:             {IssueTitle: "Network I/O on Main Thread"},
-	ImageDecode:      {IssueTitle: "Image decoding on Main Thread", Type: ImageDecodeType},
-	ImageEncode:      {IssueTitle: "Image encoding on Main Thread"},
-	JSONDecode:       {IssueTitle: "JSON decoding on Main Thread", Type: JSONDecodeType},
-	JSONEncode:       {IssueTitle: "JSON encoding on Main Thread"},
+	ImageDecode:      {IssueTitle: "Image Decoding on Main Thread", Type: ImageDecodeType},
+	ImageEncode:      {IssueTitle: "Image Encoding on Main Thread"},
+	JSONDecode:       {IssueTitle: "JSON Decoding on Main Thread", Type: JSONDecodeType},
+	JSONEncode:       {IssueTitle: "JSON Encoding on Main Thread"},
 	MLModelInference: {IssueTitle: "Machine Learning inference on Main Thread"},
 	MLModelLoad:      {IssueTitle: "Machine Learning model load on Main Thread"},
 	Regex:            {IssueTitle: "Regex on Main Thread"},
@@ -136,6 +135,41 @@ func NewOccurrence(p profile.Profile, ni nodeInfo) *Occurrence {
 		issueType = NoneType
 		title = IssueTitle(fmt.Sprintf("%v issue detected", ni.Category))
 	}
+	pf := p.Platform()
+	nodeDuration := time.Duration(ni.Node.DurationNS)
+	profilePercentage := float64(ni.Node.DurationNS*100) / float64(p.DurationNS())
+	evidenceData := map[string]interface{}{
+		"frame_duration_ns":   ni.Node.DurationNS,
+		"frame_name":          ni.Node.Name,
+		"frame_package":       ni.Node.Package,
+		"profile_duration_ns": p.DurationNS(),
+		ProfileID:             p.ID(),
+		"transaction_id":      t.ID,
+		"transaction_name":    t.Name,
+	}
+	var duration string
+	switch pf {
+	case platform.Android:
+		duration = fmt.Sprintf(
+			"%s (%0.2f%% of the profile)",
+			nodeDuration,
+			profilePercentage,
+		)
+		pf = platform.Java
+		normalizeAndroidStackTrace(ni.StackTrace)
+		ni.Node.Name = android.StripPackageNameFromFullMethodName(
+			ni.Node.Name,
+			ni.Node.Package,
+		)
+	default:
+		duration = fmt.Sprintf(
+			"%s (%0.2f%% of the profile, found in %d samples)",
+			nodeDuration,
+			profilePercentage,
+			ni.Node.SampleCount,
+		)
+		evidenceData["sample_count"] = ni.Node.SampleCount
+	}
 	h := md5.New()
 	_, _ = io.WriteString(h, strconv.FormatUint(p.ProjectID(), 10))
 	_, _ = io.WriteString(h, string(title))
@@ -152,7 +186,7 @@ func NewOccurrence(p profile.Profile, ni nodeInfo) *Occurrence {
 			Environment:    p.Environment(),
 			ID:             eventID(),
 			OrganizationID: p.OrganizationID(),
-			Platform:       p.Platform(),
+			Platform:       pf,
 			ProjectID:      p.ProjectID(),
 			Received:       p.Received(),
 			Release:        p.Release(),
@@ -160,16 +194,7 @@ func NewOccurrence(p profile.Profile, ni nodeInfo) *Occurrence {
 			Tags:           tags,
 			Timestamp:      p.Timestamp(),
 		},
-		EvidenceData: map[string]interface{}{
-			"frame_duration_ns":   ni.Node.DurationNS,
-			"frame_name":          ni.Node.Name,
-			"frame_package":       ni.Node.Package,
-			"profile_duration_ns": p.DurationNS(),
-			ProfileID:             p.ID(),
-			"sample_count":        ni.Node.SampleCount,
-			"transaction_id":      t.ID,
-			"transaction_name":    t.Name,
-		},
+		EvidenceData: evidenceData,
 		EvidenceDisplay: []Evidence{
 			{
 				Important: true,
@@ -183,18 +208,7 @@ func NewOccurrence(p profile.Profile, ni nodeInfo) *Occurrence {
 			},
 			{
 				Name:  EvidenceNameDuration,
-				Value: time.Duration(ni.Node.DurationNS).String(),
-			},
-			{
-				Name: EvidenceNameProfilePercentage,
-				Value: fmt.Sprintf(
-					"%0.2f%%",
-					float64(ni.Node.DurationNS*100)/float64(p.DurationNS()),
-				),
-			},
-			{
-				Name:  EvidenceNameSampleCount,
-				Value: strconv.Itoa(ni.Node.SampleCount),
+				Value: duration,
 			},
 		},
 		Fingerprint: fingerprint,
@@ -266,4 +280,10 @@ func (o *Occurrence) Save() (map[string]bigquery.Value, string, error) {
 
 func eventID() string {
 	return strings.ReplaceAll(uuid.New().String(), "-", "")
+}
+
+func normalizeAndroidStackTrace(st []frame.Frame) {
+	for i := range st {
+		st[i].Function = android.StripPackageNameFromFullMethodName(st[i].Function, st[i].Package)
+	}
 }

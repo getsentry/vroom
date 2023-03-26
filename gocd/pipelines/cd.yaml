@@ -69,6 +69,9 @@ pipelines:
                                       --label-selector="service=vroom,component=default,environment=${ENVIRONMENT},env=canary" \
                                       --image="us.gcr.io/${GCP_PROJECT}/vroom:${GO_REVISION_VROOM_REPO}" \
                                       --container-name="vroom"
+                              - script: |
+                                   /devinfra/scripts/canary/canarychecks.py \
+                                     --wait-minutes=5
             - deploy-primary:
                   approval:
                       type: success

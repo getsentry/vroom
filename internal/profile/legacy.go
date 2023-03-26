@@ -18,9 +18,7 @@ import (
 	"github.com/getsentry/vroom/internal/transaction"
 )
 
-var (
-	ErrProfileHasNoTrace = errors.New("profile has no trace")
-)
+var ErrProfileHasNoTrace = errors.New("profile has no trace")
 
 type (
 	LegacyProfile struct {
@@ -32,6 +30,7 @@ type (
 	RawProfile struct {
 		AndroidAPILevel      uint32                              `json:"android_api_level,omitempty"`
 		Architecture         string                              `json:"architecture,omitempty"`
+		BuildID              string                              `json:"build_id,omitempty"`
 		DebugMeta            debugmeta.DebugMeta                 `json:"debug_meta,omitempty"`
 		DeviceClassification string                              `json:"device_classification"`
 		DeviceLocale         string                              `json:"device_locale"`
@@ -75,7 +74,12 @@ func (p LegacyProfile) Version() string {
 }
 
 func StoragePath(organizationID, projectID uint64, profileID string) string {
-	return fmt.Sprintf("%d/%d/%s", organizationID, projectID, strings.ReplaceAll(profileID, "-", ""))
+	return fmt.Sprintf(
+		"%d/%d/%s",
+		organizationID,
+		projectID,
+		strings.ReplaceAll(profileID, "-", ""),
+	)
 }
 
 func (p LegacyProfile) StoragePath() string {
@@ -137,6 +141,10 @@ func (p LegacyProfile) CallTrees() (map[uint64][]*nodetree.Node, error) {
 	return p.Trace.CallTrees(), nil
 }
 
+func (p LegacyProfile) IsSampleFormat() bool {
+	return false
+}
+
 func (p *LegacyProfile) Speedscope() (speedscope.Output, error) {
 	o, err := p.Trace.Speedscope()
 	if err != nil {
@@ -146,7 +154,10 @@ func (p *LegacyProfile) Speedscope() (speedscope.Output, error) {
 	version := FormatVersion(p.VersionName, p.VersionCode)
 
 	o.DurationNS = p.DurationNS
-	o.Metadata = speedscope.ProfileMetadata{ProfileView: speedscope.ProfileView(p.RawProfile), Version: version}
+	o.Metadata = speedscope.ProfileMetadata{
+		ProfileView: speedscope.ProfileView(p.RawProfile),
+		Version:     version,
+	}
 	o.Platform = p.Platform
 	o.ProfileID = p.ProfileID
 	o.ProjectID = p.ProjectID
@@ -189,10 +200,11 @@ func (p LegacyProfile) GetEnvironment() string {
 
 func (p LegacyProfile) GetTransaction() transaction.Transaction {
 	return transaction.Transaction{
-		DurationNS: p.DurationNS,
-		ID:         p.TransactionID,
-		Name:       p.TransactionName,
-		TraceID:    p.TraceID,
+		ActiveThreadID: p.Trace.ActiveThreadID(),
+		DurationNS:     p.DurationNS,
+		ID:             p.TransactionID,
+		Name:           p.TransactionName,
+		TraceID:        p.TraceID,
 	}
 }
 
@@ -212,6 +224,14 @@ func (p *LegacyProfile) Normalize() {
 	switch t := p.Trace.(type) {
 	case *IOS:
 		t.ReplaceIdleStacks()
+	}
+
+	if p.BuildID != "" {
+		p.DebugMeta.Images = append(p.DebugMeta.Images, debugmeta.Image{
+			Type: "proguard",
+			UUID: p.BuildID,
+		})
+		p.BuildID = ""
 	}
 }
 

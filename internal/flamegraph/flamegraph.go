@@ -108,7 +108,7 @@ func GetFlamegraphFromProfiles(
 		countProfAggregated++
 	}
 
-	sp := toSpeedscope(flamegraphTree, 4)
+	sp := toSpeedscope(flamegraphTree, 4, projectID)
 	hub.Scope().SetTag("processed_profiles", strconv.Itoa(countProfAggregated))
 	return sp, nil
 }
@@ -182,7 +182,7 @@ type flamegraph struct {
 	minFreq           int
 }
 
-func toSpeedscope(trees []*nodetree.Node, minFreq int) speedscope.Output {
+func toSpeedscope(trees []*nodetree.Node, minFreq int, projectID uint64) speedscope.Output {
 	fd := &flamegraph{
 		frames:           make([]speedscope.Frame, 0),
 		framesIndex:      make(map[string]int),
@@ -208,6 +208,11 @@ func toSpeedscope(trees []*nodetree.Node, minFreq int) speedscope.Output {
 	}
 
 	return speedscope.Output{
+		Metadata: speedscope.ProfileMetadata{
+			ProfileView: speedscope.ProfileView{
+				ProjectID: projectID,
+			},
+		},
 		Shared: speedscope.SharedData{
 			Frames:     fd.frames,
 			ProfileIDs: fd.profilesIDs,
@@ -233,7 +238,7 @@ func (f *flamegraph) visitCalltree(node *nodetree.Node, currentStack *[]int) {
 		frame := node.ToFrame()
 		sfr := speedscope.Frame{
 			Name:          frame.Function,
-			Image:         frame.Package,
+			Image:         frame.ModuleOrPackage(),
 			Path:          frame.Path,
 			IsApplication: *frame.InApp,
 			Col:           frame.Column,

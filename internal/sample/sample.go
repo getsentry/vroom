@@ -133,7 +133,12 @@ func (p Profile) GetID() string {
 }
 
 func StoragePath(organizationID, projectID uint64, profileID string) string {
-	return fmt.Sprintf("%d/%d/%s", organizationID, projectID, strings.ReplaceAll(profileID, "-", ""))
+	return fmt.Sprintf(
+		"%d/%d/%s",
+		organizationID,
+		projectID,
+		strings.ReplaceAll(profileID, "-", ""),
+	)
 }
 
 func (p Profile) StoragePath() string {
@@ -195,7 +200,8 @@ func (p Profile) CallTrees() (map[uint64][]*nodetree.Node, error) {
 			fingerprint := h.Sum64()
 			if current == nil {
 				i := len(treesByThreadID[s.ThreadID]) - 1
-				if i >= 0 && treesByThreadID[s.ThreadID][i].Fingerprint == fingerprint && treesByThreadID[s.ThreadID][i].EndNS == previousTimestamp[s.ThreadID] {
+				if i >= 0 && treesByThreadID[s.ThreadID][i].Fingerprint == fingerprint &&
+					treesByThreadID[s.ThreadID][i].EndNS == previousTimestamp[s.ThreadID] {
 					current = treesByThreadID[s.ThreadID][i]
 					current.Update(s.ElapsedSinceStartNS)
 				} else {
@@ -232,10 +238,15 @@ func (t *Trace) ThreadName(threadID, queueAddress string, mainThread bool) strin
 	if m, exists := t.ThreadMetadata[threadID]; exists && m.Name != "" {
 		return m.Name
 	}
-	if m, exists := t.QueueMetadata[queueAddress]; exists && ((m.LabeledAsMainThread() && mainThread) || !m.LabeledAsMainThread()) {
+	if m, exists := t.QueueMetadata[queueAddress]; exists &&
+		((m.LabeledAsMainThread() && mainThread) || !m.LabeledAsMainThread()) {
 		return m.Label
 	}
 	return ""
+}
+
+func (p *Profile) IsSampleFormat() bool {
+	return true
 }
 
 func (p *Profile) Speedscope() (speedscope.Output, error) {
@@ -292,9 +303,12 @@ func (p *Profile) Speedscope() (speedscope.Output, error) {
 				}
 				addressToFrameIndex[address] = frameIndex
 				frames = append(frames, speedscope.Frame{
-					Col:           fr.Column,
-					File:          fr.File,
-					Image:         fr.PackageBaseName(),
+					Col:  fr.Column,
+					File: fr.File,
+					// image exists for legacy reasons as a field coalesced from module and package
+					// the speedscope transform on the sampled format is being removed, so leave
+					// it alone for now
+					Image:         fr.ModuleOrPackage(),
 					Inline:        fr.IsInline(),
 					IsApplication: p.IsApplicationFrame(fr),
 					Line:          fr.Line,
@@ -394,8 +408,13 @@ func (p *Profile) Metadata() metadata.Metadata {
 }
 
 func (p *Profile) Normalize() {
-	p.Trace.ReplaceIdleStacks()
 	p.normalizeFrames()
+
+	if p.Platform == platform.Cocoa {
+		p.Trace.trimCocoaStacks()
+	}
+
+	p.Trace.ReplaceIdleStacks()
 }
 
 func (t Trace) SamplesByThreadD() ([]uint64, map[uint64][]*Sample) {
@@ -535,11 +554,10 @@ func (p *Profile) normalizeFrames() {
 		inApp := p.IsApplicationFrame(f)
 		f.InApp = &inApp
 
-		// Transform package path into a name
-		f.Package = f.PackageBaseName()
-
 		// Set Symbolicator status
-		f.Data.SymbolicatorStatus = f.Status
+		if f.Status != "" {
+			f.Data.SymbolicatorStatus = f.Status
+		}
 
 		p.Trace.Frames[i] = f
 	}
@@ -549,5 +567,51 @@ func (p *RawProfile) moveTransaction() {
 	if len(p.Transactions) > 0 {
 		p.Transaction = p.Transactions[0]
 		p.Transactions = nil
+	}
+}
+
+func (t *Trace) trimCocoaStacks() {
+	// Find main frame index in frames
+	mfi := -1
+	for i, f := range t.Frames {
+		if f.Function == "main" {
+			mfi = i
+			break
+		}
+	}
+	// We do nothing if we don't find it
+	if mfi == -1 {
+		return
+	}
+	for si, s := range t.Stacks {
+		// Find main frame index in the stack
+		msi := len(s)
+		// Stop searching after 10 frames, it's not there
+		var until int
+		if len(s) > 10 {
+			until = len(s) - 10
+		}
+		for i := len(s) - 1; i >= until; i-- {
+			fi := s[i]
+			if fi == mfi {
+				msi = i
+				break
+			}
+		}
+		// Skip the stack if we're already at the end or we didn't find it
+		if msi >= len(s)-1 {
+			continue
+		}
+		// Filter unsymbolicated frames after the main frame index
+		ci := msi + 1
+		for i := ci; i < len(s); i++ {
+			fi := s[i]
+			f := t.Frames[fi]
+			if f.Data.SymbolicatorStatus == "symbolicated" {
+				t.Stacks[si][ci] = fi
+				ci++
+			}
+		}
+		t.Stacks[si] = t.Stacks[si][:ci]
 	}
 }
