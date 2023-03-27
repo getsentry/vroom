@@ -60,7 +60,7 @@ type (
 	}
 )
 
-func NewClient(host, dataset string, hub *sentry.Hub) (Client, error) {
+func NewClient(host, dataset string) (Client, error) {
 	if host == "" {
 		return Client{}, errors.New("host must be set")
 	}
@@ -151,7 +151,12 @@ func (q *QueryBuilder) Do(r *sentry.Span) (io.ReadCloser, error) {
 	if resp.StatusCode >= 400 && resp.StatusCode <= 599 {
 		var errResponse ErrorResponse
 		_ = json.NewDecoder(resp.Body).Decode(&errResponse)
-		return nil, fmt.Errorf("error while trying to query snuba. http status: %d, type: %s, message: %s", resp.StatusCode, errResponse.Error.Type, errResponse.Error.Message)
+		return nil, fmt.Errorf(
+			"error while trying to query snuba. http status: %d, type: %s, message: %s",
+			resp.StatusCode,
+			errResponse.Error.Type,
+			errResponse.Error.Message,
+		)
 	}
 
 	return resp.Body, nil

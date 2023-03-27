@@ -21,6 +21,6 @@ func ConfigureLogger() {
 
 type ErrorHook struct{}
 
-func (h ErrorHook) Run(e *zerolog.Event, level zerolog.Level, msg string) {
+func (h ErrorHook) Run(e *zerolog.Event, level zerolog.Level, _ string) {
 	e.Str("severity", level.String())
 }
