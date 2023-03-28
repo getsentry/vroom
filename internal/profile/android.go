@@ -167,6 +167,7 @@ func (p Android) CallTrees() map[uint64][]*nodetree.Node {
 	for _, thread := range p.Threads {
 		if thread.Name == mainThread {
 			activeThreadID = thread.ID
+			break
 		}
 	}
 
@@ -177,9 +178,22 @@ func (p Android) CallTrees() map[uint64][]*nodetree.Node {
 	for _, m := range p.Methods {
 		methods[m.ID] = m
 	}
+	closeFrame := func(threadID uint64, ts uint64) {
+		i := len(stacks[threadID]) - 1
+		n := stacks[threadID][i]
+		n.Update(ts)
+		n.SampleCount = int(math.Ceil(float64(n.DurationNS) / float64((10 * time.Millisecond))))
+		stacks[threadID] = stacks[threadID][:i]
+	}
+	var maxTimestampNs uint64
 	for _, e := range p.Events {
 		if e.ThreadID != activeThreadID {
 			continue
+		}
+
+		ts := buildTimestamp(e.Time)
+		if ts > maxTimestampNs {
+			maxTimestampNs = ts
 		}
 
 		switch e.Action {
@@ -192,7 +206,7 @@ func (p Android) CallTrees() map[uint64][]*nodetree.Node {
 					Name:      "unknown",
 				}
 			}
-			n := nodetree.NodeFromFrame(m.Frame(), buildTimestamp(e.Time), 0, 0)
+			n := nodetree.NodeFromFrame(m.Frame(), ts, 0, 0)
 			if len(stacks[e.ThreadID]) == 0 {
 				trees[e.ThreadID] = append(trees[e.ThreadID], n)
 			} else {
@@ -205,15 +219,28 @@ func (p Android) CallTrees() map[uint64][]*nodetree.Node {
 			if len(stacks[e.ThreadID]) == 0 {
 				continue
 			}
-			i := len(stacks[e.ThreadID]) - 1
-			n := stacks[e.ThreadID][i]
-			n.Update(buildTimestamp(e.Time))
-			n.SampleCount = int(math.Ceil(float64(n.DurationNS) / float64((10 * time.Millisecond))))
-			stacks[e.ThreadID] = stacks[e.ThreadID][:i]
+			closeFrame(e.ThreadID, ts)
+		}
+	}
+
+	// Close remaining open frames.
+	for threadID, stack := range stacks {
+		for i := len(stack) - 1; i >= 0; i-- {
+			closeFrame(threadID, maxTimestampNs)
 		}
 	}
 
 	return trees
+}
+
+func (p Android) DurationNS() uint64 {
+	if len(p.Events) == 0 {
+		return 0
+	}
+	buildTimestamp := p.TimestampGetter()
+	startTS := buildTimestamp(p.Events[0].Time)
+	endTS := buildTimestamp(p.Events[len(p.Events)-1].Time)
+	return endTS - startTS
 }
 
 func generateFingerprint(stack []*nodetree.Node) uint64 {

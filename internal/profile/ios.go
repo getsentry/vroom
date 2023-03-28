@@ -421,3 +421,10 @@ func (p IOS) Speedscope() (speedscope.Output, error) {
 		Shared:             speedscope.SharedData{Frames: frames},
 	}, nil
 }
+
+func (p IOS) DurationNS() uint64 {
+	if len(p.Samples) == 0 {
+		return 0
+	}
+	return p.Samples[len(p.Samples)-1].RelativeTimestampNS - p.Samples[0].RelativeTimestampNS
+}
