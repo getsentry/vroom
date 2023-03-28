@@ -9,6 +9,7 @@ type (
 	Trace interface {
 		ActiveThreadID() uint64
 		CallTrees() map[uint64][]*nodetree.Node
+		DurationNS() uint64
 		Speedscope() (speedscope.Output, error)
 	}
 )
