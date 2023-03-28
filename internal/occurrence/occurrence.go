@@ -136,7 +136,7 @@ func NewOccurrence(p profile.Profile, ni nodeInfo) *Occurrence {
 		title = IssueTitle(fmt.Sprintf("%v issue detected", ni.Category))
 	}
 	pf := p.Platform()
-	nodeDuration := time.Duration(ni.Node.DurationNS)
+	nodeDuration := time.Duration(ni.Node.DurationNS).Round(10 * time.Microsecond)
 	profilePercentage := float64(ni.Node.DurationNS*100) / float64(p.DurationNS())
 	evidenceData := map[string]interface{}{
 		"frame_duration_ns":   ni.Node.DurationNS,
