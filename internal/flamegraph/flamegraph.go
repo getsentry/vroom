@@ -240,7 +240,7 @@ func (f *flamegraph) visitCalltree(node *nodetree.Node, currentStack *[]int) {
 			Name:          frame.Function,
 			Image:         frame.ModuleOrPackage(),
 			Path:          frame.Path,
-			IsApplication: *frame.InApp,
+			IsApplication: node.IsApplication,
 			Col:           frame.Column,
 			File:          frame.File,
 			Inline:        frame.IsInline(),
