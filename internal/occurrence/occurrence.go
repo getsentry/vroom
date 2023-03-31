@@ -142,7 +142,7 @@ func NewOccurrence(p profile.Profile, ni nodeInfo) *Occurrence {
 		"frame_duration_ns":   ni.Node.DurationNS,
 		"frame_module":        ni.Node.Frame.Module,
 		"frame_name":          ni.Node.Name,
-		"frame_package":       ni.Node.Frame.Package,
+		"frame_package":       ni.Node.Frame.ModuleOrPackage(),
 		"profile_duration_ns": p.DurationNS(),
 		"transaction_id":      t.ID,
 		"transaction_name":    t.Name,

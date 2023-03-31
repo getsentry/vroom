@@ -621,11 +621,15 @@ func (t *Trace) trimCocoaStacks() {
 }
 
 func (t *Trace) setNodePackages() {
+	packageInfo := make(map[string]packageutil.PackageInfo)
 	for i := 0; i < len(t.Frames); i++ {
 		f := t.Frames[i]
-		var inApp bool
-		f.Package, inApp = packageutil.ParseNodePackageFromPath(f.Path)
-		f.InApp = &inApp
+		pi, exists := packageInfo[f.Path]
+		if !exists {
+			pi = packageutil.ParseNodePackageFromPath(f.Path)
+		}
+		f.Module = pi.Package
+		f.InApp = pi.InApp
 		t.Frames[i] = f
 	}
 }

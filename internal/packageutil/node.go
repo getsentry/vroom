@@ -6,22 +6,49 @@ import (
 	"strings"
 )
 
-var packageRegex = regexp.MustCompile(
-	`[/\\](.*?)[/\\](.*?)[/\\].*`,
+var (
+	packageRegex = regexp.MustCompile(
+		`[/\\]([^/\\].+?)[/\\]([^/\\].+?)[/\\].*`,
+	)
+	t = true
+	f = false
 )
 
-func ParseNodePackageFromPath(p string) (string, bool) {
+func ParseNodePackageFromPath(p string) PackageInfo {
+	// if it's a official node package
 	if strings.HasPrefix(p, "node:") {
-		return strings.Split(p, "/")[0], false
+		return PackageInfo{
+			Package: strings.Split(p, "/")[0],
+			InApp:   &f,
+		}
 	}
+
 	splits := strings.Split(p, "node_modules")
-	p = splits[len(splits)-1]
-	results := packageRegex.FindStringSubmatch(p)
+
+	// if there's no node_modules, user package
+	if len(splits) == 1 {
+		return PackageInfo{
+			InApp: &t,
+		}
+	}
+
+	results := packageRegex.FindStringSubmatch(splits[len(splits)-1])
+
+	// if it's a third party package
 	if len(results) > 2 {
 		if results[1][0] == '@' {
-			return fmt.Sprintf("%s/%s", results[1], results[2]), false
+			return PackageInfo{
+				Package: fmt.Sprintf("%s/%s", results[1], results[2]),
+				InApp:   &f,
+			}
 		}
-		return results[1], false
+		return PackageInfo{
+			Package: results[1],
+			InApp:   &f,
+		}
 	}
-	return "", true
+
+	return PackageInfo{
+		InApp: &t,
+	}
 }
