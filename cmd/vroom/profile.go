@@ -136,40 +136,43 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
-		// Prepare call trees Kafka message
-		s = sentry.StartSpan(ctx, "processing")
-		s.Description = "Collapse call trees"
-		for threadID, callTreesForThread := range callTrees {
-			collapsedCallTrees := make([]*nodetree.Node, 0, len(callTreesForThread))
-			for _, callTree := range callTreesForThread {
-				collapsedCallTrees = append(collapsedCallTrees, callTree.Collapse()...)
+		extractFunctionsFromCallTrees(callTrees)
+		/*
+			// Prepare call trees Kafka message
+			s = sentry.StartSpan(ctx, "processing")
+			s.Description = "Collapse call trees"
+			for threadID, callTreesForThread := range callTrees {
+				collapsedCallTrees := make([]*nodetree.Node, 0, len(callTreesForThread))
+				for _, callTree := range callTreesForThread {
+					collapsedCallTrees = append(collapsedCallTrees, callTree.Collapse()...)
+				}
+				callTrees[threadID] = collapsedCallTrees
 			}
-			callTrees[threadID] = collapsedCallTrees
-		}
-		s.Finish()
+			s.Finish()
 
-		s = sentry.StartSpan(ctx, "json.marshal")
-		s.Description = "Marshal call trees Kafka message"
-		b, err := json.Marshal(buildCallTreesKafkaMessage(p, callTrees))
-		s.Finish()
-		if err != nil {
-			hub.CaptureException(err)
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-		s = sentry.StartSpan(ctx, "processing")
-		s.Description = "Send call trees to Kafka"
-		err = env.profilingWriter.WriteMessages(ctx, kafka.Message{
-			Topic: env.config.CallTreesKafkaTopic,
-			Value: b,
-		})
-		s.Finish()
-		hub.Scope().SetContext("Call trees Kakfa payload", map[string]interface{}{
-			"Size": len(b),
-		})
-		if err != nil {
-			hub.CaptureException(err)
-		}
+			s = sentry.StartSpan(ctx, "json.marshal")
+			s.Description = "Marshal call trees Kafka message"
+			b, err := json.Marshal(buildCallTreesKafkaMessage(p, callTrees))
+			s.Finish()
+			if err != nil {
+				hub.CaptureException(err)
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
+			s = sentry.StartSpan(ctx, "processing")
+			s.Description = "Send call trees to Kafka"
+			err = env.profilingWriter.WriteMessages(ctx, kafka.Message{
+				Topic: env.config.CallTreesKafkaTopic,
+				Value: b,
+			})
+			s.Finish()
+			hub.Scope().SetContext("Call trees Kakfa payload", map[string]interface{}{
+				"Size": len(b),
+			})
+			if err != nil {
+				hub.CaptureException(err)
+			}
+		*/
 	}
 
 	// Prepare profile Kafka message
@@ -200,6 +203,18 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusNoContent)
+}
+
+func extractFunctionsFromCallTrees(callTrees map[uint64][]*nodetree.Node) map[uint64]nodetree.CallTreeFunction {
+	functions := make(map[uint64]nodetree.CallTreeFunction, 0)
+
+	for _, callTreesForThread := range callTrees {
+		for _, callTree := range callTreesForThread {
+			callTree.CollectFunctions(functions)
+		}
+	}
+
+	return functions
 }
 
 func (env *environment) getRawProfile(w http.ResponseWriter, r *http.Request) {

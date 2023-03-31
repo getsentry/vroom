@@ -73,6 +73,67 @@ func (n *Node) WriteToHash(h hash.Hash) {
 	}
 }
 
+type CallTreeFunction struct {
+	Function    string   `json:"function"`
+	Package     string   `json:"package"`
+	Module      string   `json:"module"`
+	Path        string   `json:"abs_path"`
+	InApp       bool     `json:"in_app"`
+	SelfTimesNS []uint64 `json:"self_times_ns"`
+}
+
+func (n *Node) CollectFunctions(results map[uint64]CallTreeFunction) (uint64, uint64) {
+	var childrenApplicationDurationNS uint64
+	var childrenSystemDurationNS uint64
+
+	for _, child := range n.Children {
+		applicationDurationNS, systemDurationNS := child.CollectFunctions(results)
+		childrenApplicationDurationNS += applicationDurationNS
+		childrenSystemDurationNS += systemDurationNS
+	}
+
+	var selfTimeNS uint64
+	applicationDurationNS := childrenApplicationDurationNS
+	if applicationDurationNS > n.DurationNS {
+		applicationDurationNS = n.DurationNS
+	}
+
+	if n.IsApplication {
+		// cannot use `n.DurationNS - childrenApplicationDurationNS > 0` in case it underflows
+		if n.DurationNS > childrenApplicationDurationNS {
+			selfTimeNS = n.DurationNS - childrenApplicationDurationNS
+			applicationDurationNS += selfTimeNS
+		}
+	} else {
+		// cannot use `n.DurationNS - childrenApplicationDurationNS - childrenSystemDurationNS` in case it underflows
+		if n.DurationNS > childrenApplicationDurationNS+childrenSystemDurationNS {
+			selfTimeNS = n.DurationNS - childrenApplicationDurationNS - childrenSystemDurationNS
+		}
+	}
+
+	if selfTimeNS > 0 {
+		// TODO: should we use a different fingerprint?
+		key := n.Fingerprint
+
+		function, exists := results[key]
+		if !exists {
+			results[key] = CallTreeFunction{
+				Function:    n.Frame.Function,
+				Package:     n.Frame.Package,
+				Module:      n.Frame.Module,
+				Path:        n.Frame.Path,
+				InApp:       n.IsApplication,
+				SelfTimesNS: []uint64{selfTimeNS},
+			}
+		} else {
+			function.SelfTimesNS = append(function.SelfTimesNS, selfTimeNS)
+			results[key] = function
+		}
+	}
+
+	return applicationDurationNS, n.DurationNS - applicationDurationNS
+}
+
 func (n Node) Collapse() []*Node {
 	// If a node has insufficient sample count, it likely isn't interesting to
 	// surface as a suspect function because we only saw it for a moment. So
