@@ -14,6 +14,7 @@ import (
 	"github.com/getsentry/vroom/internal/measurements"
 	"github.com/getsentry/vroom/internal/metadata"
 	"github.com/getsentry/vroom/internal/nodetree"
+	"github.com/getsentry/vroom/internal/packageutil"
 	"github.com/getsentry/vroom/internal/platform"
 	"github.com/getsentry/vroom/internal/speedscope"
 	"github.com/getsentry/vroom/internal/timeutil"
@@ -410,8 +411,11 @@ func (p *Profile) Metadata() metadata.Metadata {
 func (p *Profile) Normalize() {
 	p.normalizeFrames()
 
-	if p.Platform == platform.Cocoa {
+	switch p.Platform {
+	case platform.Cocoa:
 		p.Trace.trimCocoaStacks()
+	case platform.Node:
+		p.Trace.setNodePackages()
 	}
 
 	p.Trace.ReplaceIdleStacks()
@@ -613,5 +617,15 @@ func (t *Trace) trimCocoaStacks() {
 			}
 		}
 		t.Stacks[si] = t.Stacks[si][:ci]
+	}
+}
+
+func (t *Trace) setNodePackages() {
+	for i := 0; i < len(t.Frames); i++ {
+		f := t.Frames[i]
+		var inApp bool
+		f.Package, inApp = packageutil.ParseNodePackageFromPath(f.Path)
+		f.InApp = &inApp
+		t.Frames[i] = f
 	}
 }
