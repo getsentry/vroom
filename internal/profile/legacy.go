@@ -244,5 +244,5 @@ func (p LegacyProfile) GetRetentionDays() int {
 }
 
 func (p LegacyProfile) GetDurationNS() uint64 {
-	return p.DurationNS
+	return p.Trace.DurationNS()
 }

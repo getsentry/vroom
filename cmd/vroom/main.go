@@ -56,7 +56,7 @@ func newEnvironment() (*environment, error) {
 		return nil, err
 	}
 
-	e.snuba, err = snubautil.NewClient(e.config.SnubaHost, "profiles", sentry.CurrentHub())
+	e.snuba, err = snubautil.NewClient(e.config.SnubaHost, "profiles")
 	if err != nil {
 		return nil, err
 	}
@@ -232,7 +232,7 @@ func main() {
 	env.shutdown()
 }
 
-func (e *environment) getHealth(w http.ResponseWriter, r *http.Request) {
+func (e *environment) getHealth(w http.ResponseWriter, _ *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 

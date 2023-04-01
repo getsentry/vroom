@@ -136,16 +136,17 @@ func NewOccurrence(p profile.Profile, ni nodeInfo) *Occurrence {
 		title = IssueTitle(fmt.Sprintf("%v issue detected", ni.Category))
 	}
 	pf := p.Platform()
-	nodeDuration := time.Duration(ni.Node.DurationNS)
+	nodeDuration := time.Duration(ni.Node.DurationNS).Round(10 * time.Microsecond)
 	profilePercentage := float64(ni.Node.DurationNS*100) / float64(p.DurationNS())
 	evidenceData := map[string]interface{}{
 		"frame_duration_ns":   ni.Node.DurationNS,
+		"frame_module":        ni.Node.Frame.Module,
 		"frame_name":          ni.Node.Name,
-		"frame_package":       ni.Node.Package,
+		"frame_package":       ni.Node.Frame.Package,
 		"profile_duration_ns": p.DurationNS(),
-		ProfileID:             p.ID(),
 		"transaction_id":      t.ID,
 		"transaction_name":    t.Name,
+		ProfileID:             p.ID(),
 	}
 	var duration string
 	switch pf {
@@ -174,7 +175,7 @@ func NewOccurrence(p profile.Profile, ni nodeInfo) *Occurrence {
 	_, _ = io.WriteString(h, strconv.FormatUint(p.ProjectID(), 10))
 	_, _ = io.WriteString(h, string(title))
 	_, _ = io.WriteString(h, strconv.Itoa(int(issueType)))
-	_, _ = io.WriteString(h, ni.Node.Package)
+	_, _ = io.WriteString(h, ni.Node.Frame.ModuleOrPackage())
 	_, _ = io.WriteString(h, ni.Node.Name)
 	fingerprint := fmt.Sprintf("%x", h.Sum(nil))
 	tags := buildOccurrenceTags(p)
