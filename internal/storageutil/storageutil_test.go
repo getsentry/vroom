@@ -98,59 +98,52 @@ func TestUploadProfile(t *testing.T) {
 		Frames:  []uint64{1, 2, 3, 4},
 	}
 
-	t.Run("GCS", func(t *testing.T) {
-		err := CompressedWrite(ctx, gcsBlobBucket, objectName, originalData)
-		if err != nil {
-			t.Fatalf("we should be able to write: %v", err)
-		}
-		object, err := gcsServer.GetObject(bucketName, objectName)
-		if err != nil {
-			t.Fatalf("we should be able to read the object: %v", err)
-		}
-		r := lz4.NewReader(bytes.NewBuffer(object.Content))
-		uncompressedData, err := io.ReadAll(r)
-		if err != nil {
-			t.Fatalf("we should be able to uncompress the data: %v", err)
-		}
-		b, err := json.Marshal(originalData)
-		if err != nil {
-			t.Fatalf("we should be able to marshal this: %v", err)
-		}
-		if !bytes.Equal(b, bytes.TrimSpace(uncompressedData)) {
-			t.Fatal("data should be identical")
-		}
-	})
+	tests := []struct {
+		name       string
+		blobBucket *blob.Bucket
+	}{
+		{
+			name:       "GCS",
+			blobBucket: gcsBlobBucket,
+		},
+		{
+			name:       "Filesystem",
+			blobBucket: fileBlobBucket,
+		},
+	}
 
-	t.Run("Filesystem", func(t *testing.T) {
-		err := CompressedWrite(ctx, fileBlobBucket, objectName, originalData)
-		if err != nil {
-			t.Fatalf("we should be able to write: %s", err.Error())
-		}
-
-		fileReader, err := fileBlobBucket.NewReader(ctx, objectName, nil)
-		if err != nil {
-			t.Fatalf("we should be able to read the object: %s", err.Error())
-		}
-		defer func() {
-			err := fileReader.Close()
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			err := CompressedWrite(ctx, test.blobBucket, objectName, originalData)
 			if err != nil {
-				t.Logf("closing the filereader: %s", err.Error())
+				t.Fatalf("we should be able to write: %s", err.Error())
 			}
-		}()
 
-		r := lz4.NewReader(fileReader)
-		uncompressedData, err := io.ReadAll(r)
-		if err != nil {
-			t.Fatalf("we should be able to uncompress the data: %v", err)
-		}
-		b, err := json.Marshal(originalData)
-		if err != nil {
-			t.Fatalf("we should be able to marshal this: %v", err)
-		}
-		if !bytes.Equal(b, bytes.TrimSpace(uncompressedData)) {
-			t.Fatal("data should be identical")
-		}
-	})
+			objectReader, err := test.blobBucket.NewReader(ctx, objectName, nil)
+			if err != nil {
+				t.Fatalf("we should be able to read the object: %s", err.Error())
+			}
+			defer func() {
+				err := objectReader.Close()
+				if err != nil {
+					t.Logf("closing the filereader: %s", err.Error())
+				}
+			}()
+
+			r := lz4.NewReader(objectReader)
+			uncompressedData, err := io.ReadAll(r)
+			if err != nil {
+				t.Fatalf("we should be able to uncompress the data: %v", err)
+			}
+			b, err := json.Marshal(originalData)
+			if err != nil {
+				t.Fatalf("we should be able to marshal this: %v", err)
+			}
+			if !bytes.Equal(b, bytes.TrimSpace(uncompressedData)) {
+				t.Fatal("data should be identical")
+			}
+		})
+	}
 }
 
 func TestDownloadProfile(t *testing.T) {
@@ -166,89 +159,85 @@ func TestDownloadProfile(t *testing.T) {
 		t.Fatalf("we should be able to close the writer: %v", err)
 	}
 
-	t.Run("GCS", func(t *testing.T) {
-		gcsServer.CreateObject(fakestorage.Object{
-			ObjectAttrs: fakestorage.ObjectAttrs{
-				BucketName: bucketName,
-				Name:       objectName,
-			},
-			Content: compressedData.Bytes(),
+	tests := []struct {
+		name       string
+		blobBucket *blob.Bucket
+	}{
+		{
+			name:       "GCS",
+			blobBucket: gcsBlobBucket,
+		},
+		{
+			name:       "Filesystem",
+			blobBucket: fileBlobBucket,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			wr, err := fileBlobBucket.NewWriter(ctx, objectName, nil)
+			if err != nil {
+				t.Fatalf("we should write an object: %s", err.Error())
+			}
+
+			_, err = wr.Write(compressedData.Bytes())
+			if err != nil {
+				t.Fatalf("we should write an object: %s", err.Error())
+			}
+
+			err = wr.Close()
+			if err != nil {
+				t.Fatalf("closing the filewriter: %s", err.Error())
+			}
+
+			var profile Profile
+			err = UnmarshalCompressed(ctx, fileBlobBucket, objectName, &profile)
+			if err != nil {
+				t.Fatalf("we should be able to read the object: %v", err)
+			}
+
+			uncompressedData, err := json.Marshal(profile)
+			if err != nil {
+				t.Fatalf("we should be able to marshal back to JSON: %v", err)
+			}
+			if !bytes.Equal(originalData, uncompressedData) {
+				t.Fatalf("data should be identical: %v %v", string(originalData), string(uncompressedData))
+			}
 		})
-
-		var profile Profile
-		err = UnmarshalCompressed(ctx, gcsBlobBucket, objectName, &profile)
-		if err != nil {
-			t.Fatalf("we should be able to read the object: %v", err)
-		}
-
-		uncompressedData, err := json.Marshal(profile)
-		if err != nil {
-			t.Fatalf("we should be able to marshal back to JSON: %v", err)
-		}
-		if !bytes.Equal(originalData, uncompressedData) {
-			t.Fatalf("data should be identical: %v %v", string(originalData), string(uncompressedData))
-		}
-	})
-
-	t.Run("Filesystem", func(t *testing.T) {
-		wr, err := fileBlobBucket.NewWriter(ctx, objectName, nil)
-		if err != nil {
-			t.Fatalf("we should write an object: %s", err.Error())
-		}
-
-		_, err = wr.Write(compressedData.Bytes())
-		if err != nil {
-			t.Fatalf("we should write an object: %s", err.Error())
-		}
-
-		err = wr.Close()
-		if err != nil {
-			t.Fatalf("closing the filewriter: %s", err.Error())
-		}
-
-		var profile Profile
-		err = UnmarshalCompressed(ctx, fileBlobBucket, objectName, &profile)
-		if err != nil {
-			t.Fatalf("we should be able to read the object: %v", err)
-		}
-
-		uncompressedData, err := json.Marshal(profile)
-		if err != nil {
-			t.Fatalf("we should be able to marshal back to JSON: %v", err)
-		}
-		if !bytes.Equal(originalData, uncompressedData) {
-			t.Fatalf("data should be identical: %v %v", string(originalData), string(uncompressedData))
-		}
-	})
+	}
 }
 
-func TestDownloadProfile_NotFound(t *testing.T) {
+func TestDownloadProfileNotFound(t *testing.T) {
 	ctx := context.Background()
 	objectName := uuid.NewString()
 
-	t.Run("GCS", func(t *testing.T) {
-		var profile Profile
-		err := UnmarshalCompressed(ctx, gcsBlobBucket, objectName, &profile)
-		if err == nil {
-			t.Error("expecting an error, got nil")
-		}
+	tests := []struct {
+		name       string
+		blobBucket *blob.Bucket
+	}{
+		{
+			name:       "GCS",
+			blobBucket: gcsBlobBucket,
+		},
+		{
+			name:       "Filesystem",
+			blobBucket: fileBlobBucket,
+		},
+	}
 
-		if !errors.Is(err, ErrObjectNotFound) {
-			t.Errorf("expecting an error of ErrObjectNotFound, instead got %s", err.Error())
-		}
-	})
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			var profile Profile
+			err := UnmarshalCompressed(ctx, test.blobBucket, objectName, &profile)
+			if err == nil {
+				t.Error("expecting an error, got nil")
+			}
 
-	t.Run("Filesystem", func(t *testing.T) {
-		var profile Profile
-		err := UnmarshalCompressed(ctx, fileBlobBucket, objectName, &profile)
-		if err == nil {
-			t.Error("expecting an error, got nil")
-		}
-
-		if !errors.Is(err, ErrObjectNotFound) {
-			t.Errorf("expecting an error of ErrObjectNotFound, instead got %s", err.Error())
-		}
-	})
+			if !errors.Is(err, ErrObjectNotFound) {
+				t.Errorf("expecting an error of ErrObjectNotFound, instead got %s", err.Error())
+			}
+		})
+	}
 }
 
 func BenchmarkGoJSON(b *testing.B) {

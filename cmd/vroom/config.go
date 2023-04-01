@@ -16,6 +16,6 @@ type (
 
 		SnubaHost string `env:"SENTRY_SNUBA_HOST" env-default:"http://localhost:1218"`
 
-		BucketURLString string `env:"SENTRY_BUCKET_PROFILES" env-default:"file://localhost/var/lib/sentry-profiles"`
+		BucketURL string `env:"SENTRY_BUCKET_PROFILES" env-default:"file://localhost/var/lib/sentry-profiles"`
 	}
 )

@@ -20,7 +20,7 @@ func CompressedWrite(ctx context.Context, b *blob.Bucket, objectName string, d i
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	ow, err := b.NewWriter(ctx, objectName, &blob.WriterOptions{})
+	ow, err := b.NewWriter(ctx, objectName, nil)
 	if err != nil {
 		return err
 	}
@@ -47,7 +47,7 @@ func UnmarshalCompressed(ctx context.Context, b *blob.Bucket, objectName string,
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	or, err := b.NewReader(ctx, objectName, &blob.ReaderOptions{})
+	or, err := b.NewReader(ctx, objectName, nil)
 	if err != nil {
 		if gcerrors.Code(err) == gcerrors.NotFound {
 			return fmt.Errorf("%w: %s", ErrObjectNotFound, objectName)

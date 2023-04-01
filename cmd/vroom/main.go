@@ -62,7 +62,7 @@ func newEnvironment() (*environment, error) {
 	}
 	ctx := context.Background()
 
-	e.storage, err = blob.OpenBucket(context.Background(), e.config.BucketURLString)
+	e.storage, err = blob.OpenBucket(ctx, e.config.BucketURL)
 	if err != nil {
 		return nil, err
 	}
