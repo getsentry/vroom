@@ -1,6 +1,7 @@
 package packageutil
 
 type PackageInfo struct {
-	Package string
 	InApp   *bool
+	Module  string
+	Package string
 }
