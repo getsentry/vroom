@@ -93,7 +93,7 @@ type CallTreeFunction struct {
 // between the duration of the function, and the sum of the duration of it's children.
 // e.g. if `foo` is a system function with a duration of 100ms, and it has 3 children
 // with durations 20ms, 30ms and 40ms respectively, the self-time of `foo` will be 10ms
-// because 100ms - 20ms - 30ms - 40ms = 10ms
+// because 100ms - 20ms - 30ms - 40ms = 10ms.
 //
 // For application functions, the self-time only looks at the time spent by it's
 // descendents that are also application functions. That is, system functions do not
@@ -101,7 +101,7 @@ type CallTreeFunction struct {
 // e.g. if `bar` is an application function with a duration of 100ms, and it has 3
 // children with durations 20ms, 30ms, and 40ms, and they are system, application, system
 // functions respectively, the self-time of `bar` will be 70ms because
-// 100ms - 30ms = 70ms
+// 100ms - 30ms = 70ms.
 func (n *Node) CollectFunctions(results map[uint64]CallTreeFunction) (uint64, uint64) {
 	var childrenApplicationDurationNS uint64
 	var childrenSystemDurationNS uint64
