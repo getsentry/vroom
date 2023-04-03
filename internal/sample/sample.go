@@ -624,6 +624,7 @@ func (t *Trace) normalizeNodeFrames() {
 		pi, exists := packageInfo[f.Path]
 		if !exists {
 			pi = packageutil.ParseNodeModuleFromPath(f.Path)
+			packageInfo[f.Path] = pi
 		}
 		f.InApp = pi.InApp
 		f.Module = pi.Module
