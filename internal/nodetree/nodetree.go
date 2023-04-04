@@ -78,10 +78,26 @@ type CallTreeFunction struct {
 	Fingerprint   uint64   `json:"fingerprint"`
 	Function      string   `json:"function"`
 	Package       string   `json:"package"`
-	Module        string   `json:"module"`
 	InApp         bool     `json:"in_app"`
 	SelfTimesNS   []uint64 `json:"self_times_ns"`
 	SumSelfTimeNS uint64   `json:"-"`
+}
+
+func (f CallTreeFunction) ToNodes() []*Node {
+	nodes := make([]*Node, 0, len(f.SelfTimesNS))
+
+	for _, selfTime := range f.SelfTimesNS {
+		nodes = append(nodes, &Node{
+			DurationNS:    selfTime,
+			Fingerprint:   f.Fingerprint,
+			Name:          f.Function,
+			Package:       f.Package,
+			Path:          "",
+			IsApplication: f.InApp,
+		})
+	}
+
+	return nodes
 }
 
 // `CollectionFunctions` walks the node tree, collects any function with a non zero
@@ -145,8 +161,9 @@ func (n *Node) CollectFunctions(results map[uint64]CallTreeFunction) (uint64, ui
 	}
 
 	if selfTimeNS > 0 {
+		framePackage := n.Frame.ModuleOrPackage()
 		h := fnv.New64()
-		h.Write([]byte(n.Frame.ModuleOrPackage()))
+		h.Write([]byte(framePackage))
 		h.Write([]byte{':'})
 		h.Write([]byte(n.Frame.Function))
 		fingerprint := h.Sum64()
@@ -156,8 +173,7 @@ func (n *Node) CollectFunctions(results map[uint64]CallTreeFunction) (uint64, ui
 			results[fingerprint] = CallTreeFunction{
 				Fingerprint:   fingerprint,
 				Function:      n.Frame.Function,
-				Package:       n.Frame.Package,
-				Module:        n.Frame.Module,
+				Package:       framePackage,
 				InApp:         n.IsApplication,
 				SelfTimesNS:   []uint64{selfTimeNS},
 				SumSelfTimeNS: selfTimeNS,

@@ -8,8 +8,8 @@ import (
 
 type (
 	// CallTreesKafkaMessage is representing the struct we send to Kafka to insert call trees in ClickHouse.
-	FunctionsKafkaMessage struct {
-		Functions       []nodetree.CallTreeFunction `json:"functions"`
+	CallTreesKafkaMessage struct {
+		CallTrees       map[uint64][]*nodetree.Node `json:"call_trees"`
 		Environment     string                      `json:"environment,omitempty"`
 		ID              string                      `json:"profile_id"`
 		OSName          string                      `json:"os_name"`
@@ -50,10 +50,10 @@ type (
 	}
 )
 
-func buildFunctionsKafkaMessage(p profile.Profile, functions []nodetree.CallTreeFunction) FunctionsKafkaMessage {
+func buildCallTreesKafkaMessage(p profile.Profile, callTrees map[uint64][]*nodetree.Node) CallTreesKafkaMessage {
 	m := p.Metadata()
-	return FunctionsKafkaMessage{
-		Functions:       functions,
+	return CallTreesKafkaMessage{
+		CallTrees:       callTrees,
 		Environment:     p.Environment(),
 		ID:              p.ID(),
 		OSName:          m.DeviceOSName,
