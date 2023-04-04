@@ -81,6 +81,7 @@ type CallTreeFunction struct {
 	InApp         bool     `json:"in_app"`
 	SelfTimesNS   []uint64 `json:"self_times_ns"`
 	SumSelfTimeNS uint64   `json:"-"`
+	SampleCount   int      `json:"-"`
 }
 
 func (f CallTreeFunction) ToNodes() []*Node {
@@ -177,10 +178,12 @@ func (n *Node) CollectFunctions(results map[uint64]CallTreeFunction) (uint64, ui
 				InApp:         n.IsApplication,
 				SelfTimesNS:   []uint64{selfTimeNS},
 				SumSelfTimeNS: selfTimeNS,
+				SampleCount:   n.SampleCount,
 			}
 		} else {
 			function.SelfTimesNS = append(function.SelfTimesNS, selfTimeNS)
 			function.SumSelfTimeNS += selfTimeNS
+			function.SampleCount += n.SampleCount
 			results[fingerprint] = function
 		}
 	}

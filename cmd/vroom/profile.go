@@ -210,6 +210,11 @@ func extractFunctionsFromCallTrees(callTrees map[uint64][]*nodetree.Node) map[ui
 
 	functionsList := make([]nodetree.CallTreeFunction, 0, len(functions))
 	for _, function := range functions {
+		if function.SampleCount <= 1 {
+			// if there's only ever a single sample for this function in
+			// the profile, we skip over it to reduce the amount of data
+			continue
+		}
 		functionsList = append(functionsList, function)
 	}
 
