@@ -147,7 +147,7 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 
 		s = sentry.StartSpan(ctx, "json.marshal")
 		s.Description = "Marshal functions Kafka message"
-		b, err := json.Marshal(buildCallTreesKafkaMessage(p, functions))
+		b, err := json.Marshal(buildFunctionsKafkaMessage(p, functions))
 		s.Finish()
 		if err != nil {
 			hub.CaptureException(err)
@@ -199,7 +199,7 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func extractFunctionsFromCallTrees(callTrees map[uint64][]*nodetree.Node) map[uint64][]*nodetree.Node {
+func extractFunctionsFromCallTrees(callTrees map[uint64][]*nodetree.Node) map[uint64]nodetree.CallTreeFunction {
 	functions := make(map[uint64]nodetree.CallTreeFunction, 0)
 
 	for _, callTreesForThread := range callTrees {
@@ -226,17 +226,7 @@ func extractFunctionsFromCallTrees(callTrees map[uint64][]*nodetree.Node) map[ui
 		functionsList = functionsList[:maxUniqueFunctionsPerProfile]
 	}
 
-	// now we transform the results back into a manually constructed
-	// node tree so it's compatible with snuba
-	nodes := make([]*nodetree.Node, 0, len(functions))
-	for _, function := range functions {
-		nodes = append(nodes, function.ToNodes()...)
-	}
-
-	return map[uint64][]*nodetree.Node{
-		// the tid can be anything since we dont use it anywhere
-		0: nodes,
-	}
+	return functions
 }
 
 func (env *environment) getRawProfile(w http.ResponseWriter, r *http.Request) {
