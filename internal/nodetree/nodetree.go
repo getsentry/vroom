@@ -2,6 +2,7 @@ package nodetree
 
 import (
 	"hash"
+	"hash/fnv"
 
 	"github.com/getsentry/vroom/internal/frame"
 )
@@ -73,53 +74,121 @@ func (n *Node) WriteToHash(h hash.Hash) {
 	}
 }
 
-func (n Node) Collapse() []*Node {
-	// If a node has insufficient sample count, it likely isn't interesting to
-	// surface as a suspect function because we only saw it for a moment. So
-	// we only consider nodes that appear for more than 1 consecutive samples.
-	if n.SampleCount <= 1 {
-		return []*Node{}
+type CallTreeFunction struct {
+	Fingerprint   uint64   `json:"fingerprint"`
+	Function      string   `json:"function"`
+	Package       string   `json:"package"`
+	InApp         bool     `json:"in_app"`
+	SelfTimesNS   []uint64 `json:"self_times_ns"`
+	SumSelfTimeNS uint64   `json:"-"`
+	SampleCount   int      `json:"-"`
+}
+
+func (f CallTreeFunction) ToNodes() []*Node {
+	nodes := make([]*Node, 0, len(f.SelfTimesNS))
+
+	for _, selfTime := range f.SelfTimesNS {
+		nodes = append(nodes, &Node{
+			DurationNS:    selfTime,
+			Fingerprint:   f.Fingerprint,
+			Name:          f.Function,
+			Package:       f.Package,
+			Path:          "",
+			IsApplication: f.InApp,
+		})
 	}
 
-	// always collapse the children first, since pruning may reduce
-	// the number of children
-	children := make([]*Node, 0, len(n.Children))
+	return nodes
+}
+
+// `CollectionFunctions` walks the node tree, collects any function with a non zero
+// self-time and writes them into the `results` parameter.
+//
+// The meaning of self-time is slightly modified here to adapt better for our use case.
+//
+// For system functions, the self-time is what you would expect, it's the difference
+// between the duration of the function, and the sum of the duration of it's children.
+// e.g. if `foo` is a system function with a duration of 100ms, and it has 3 children
+// with durations 20ms, 30ms and 40ms respectively, the self-time of `foo` will be 10ms
+// because 100ms - 20ms - 30ms - 40ms = 10ms.
+//
+// For application functions, the self-time only looks at the time spent by it's
+// descendents that are also application functions. That is, system functions do not
+// affect the self-time of application functions.
+// e.g. if `bar` is an application function with a duration of 100ms, and it has 3
+// children with durations 20ms, 30ms, and 40ms, and they are system, application, system
+// functions respectively, the self-time of `bar` will be 70ms because
+// 100ms - 30ms = 70ms.
+func (n *Node) CollectFunctions(results map[uint64]CallTreeFunction) (uint64, uint64) {
+	var childrenApplicationDurationNS uint64
+	var childrenSystemDurationNS uint64
+
+	// determine the amount of time spent in application vs system functions in the children
 	for _, child := range n.Children {
-		children = append(children, child.Collapse()...)
-	}
-	n.Children = children
-
-	// If the current node is an unknown frame, we just return
-	// its children. The children are guaranteed not to be
-	// unknown nodes since they made it through a `.Collapse`
-	// call earlier already
-	if n.Name == "" {
-		return n.Children
+		applicationDurationNS, systemDurationNS := child.CollectFunctions(results)
+		childrenApplicationDurationNS += applicationDurationNS
+		childrenSystemDurationNS += systemDurationNS
 	}
 
-	// If the only child runs for the entirety of the parent,
-	// we want to collapse them by taking the inner most application frame.
-	// If neither are application frames, we take the inner most frame
-	if len(n.Children) == 1 {
-		child := n.Children[0]
-		if n.StartNS == child.StartNS && n.DurationNS == child.DurationNS {
-			if n.IsApplication {
-				if child.IsApplication {
-					// if the node and it's child are both application frames,
-					// we only want the inner one
-					n = *child
-				} else {
-					// if the node is an application frame but the child is not,
-					// we want to skip the child frame
-					n.Children = child.Children
-				}
-			} else {
-				// if the node is not an application frame,
-				// we want to skip it and favour it's child
-				n = *child
+	// calculate the time spent in application functions in this function
+	applicationDurationNS := childrenApplicationDurationNS
+	// in the event that the time spent in application functions in the descendents exceed
+	// the frame duration, we cap it at the frame duration
+	if applicationDurationNS > n.DurationNS {
+		applicationDurationNS = n.DurationNS
+	}
+
+	var selfTimeNS uint64
+
+	if n.Frame.Function != "" { // skip over unknown frames as they are not valuable to show
+		if n.IsApplication {
+			// cannot use `n.DurationNS - childrenApplicationDurationNS > 0` in case it underflows
+			if n.DurationNS > childrenApplicationDurationNS {
+				// application function's self time only looks at the time
+				// spent in application function in its descendents
+				selfTimeNS = n.DurationNS - childrenApplicationDurationNS
+
+				// credit the self time of this application function
+				// to the total time spent in application functions
+				applicationDurationNS += selfTimeNS
+			}
+		} else {
+			// cannot use `n.DurationNS - childrenApplicationDurationNS - childrenSystemDurationNS` in case it underflows
+			if n.DurationNS > childrenApplicationDurationNS+childrenSystemDurationNS {
+				// system function's self time looks at all descendents of its descendents
+				selfTimeNS = n.DurationNS - childrenApplicationDurationNS - childrenSystemDurationNS
 			}
 		}
 	}
 
-	return []*Node{&n}
+	if selfTimeNS > 0 {
+		framePackage := n.Frame.ModuleOrPackage()
+		h := fnv.New64()
+		h.Write([]byte(framePackage))
+		h.Write([]byte{':'})
+		h.Write([]byte(n.Frame.Function))
+		fingerprint := h.Sum64()
+
+		function, exists := results[fingerprint]
+		if !exists {
+			results[fingerprint] = CallTreeFunction{
+				Fingerprint:   fingerprint,
+				Function:      n.Frame.Function,
+				Package:       framePackage,
+				InApp:         n.IsApplication,
+				SelfTimesNS:   []uint64{selfTimeNS},
+				SumSelfTimeNS: selfTimeNS,
+				SampleCount:   n.SampleCount,
+			}
+		} else {
+			function.SelfTimesNS = append(function.SelfTimesNS, selfTimeNS)
+			function.SumSelfTimeNS += selfTimeNS
+			function.SampleCount += n.SampleCount
+			results[fingerprint] = function
+		}
+	}
+
+	// this pair represents the time spent in application functions vs
+	// time spent in system functions by this function and all of its descendents
+	return applicationDurationNS, n.DurationNS - applicationDurationNS
 }

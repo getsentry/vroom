@@ -7,8 +7,8 @@ import (
 )
 
 type (
-	// CallTreesKafkaMessage is representing the struct we send to Kafka to insert call trees in ClickHouse.
-	CallTreesKafkaMessage struct {
+	// FunctionsKafkaMessage is representing the struct we send to Kafka to insert functions in ClickHouse.
+	FunctionsKafkaMessage struct {
 		CallTrees       map[uint64][]*nodetree.Node `json:"call_trees"`
 		Environment     string                      `json:"environment,omitempty"`
 		ID              string                      `json:"profile_id"`
@@ -50,9 +50,22 @@ type (
 	}
 )
 
-func buildCallTreesKafkaMessage(p profile.Profile, callTrees map[uint64][]*nodetree.Node) CallTreesKafkaMessage {
+func buildFunctionsKafkaMessage(p profile.Profile, functions map[uint64]nodetree.CallTreeFunction) FunctionsKafkaMessage {
+	// now we transform the results back into a manually constructed
+	// node tree so it's compatible with snuba
+	nodes := make([]*nodetree.Node, 0, len(functions))
+
+	for _, function := range functions {
+		nodes = append(nodes, function.ToNodes()...)
+	}
+
+	callTrees := map[uint64][]*nodetree.Node{
+		// the tid can be anything since we dont use it anywhere
+		0: nodes,
+	}
+
 	m := p.Metadata()
-	return CallTreesKafkaMessage{
+	return FunctionsKafkaMessage{
 		CallTrees:       callTrees,
 		Environment:     p.Environment(),
 		ID:              p.ID(),
