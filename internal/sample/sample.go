@@ -14,6 +14,7 @@ import (
 	"github.com/getsentry/vroom/internal/measurements"
 	"github.com/getsentry/vroom/internal/metadata"
 	"github.com/getsentry/vroom/internal/nodetree"
+	"github.com/getsentry/vroom/internal/packageutil"
 	"github.com/getsentry/vroom/internal/platform"
 	"github.com/getsentry/vroom/internal/speedscope"
 	"github.com/getsentry/vroom/internal/timeutil"
@@ -373,8 +374,6 @@ func (p *Profile) IsApplicationFrame(f frame.Frame) bool {
 		return *f.InApp
 	}
 	switch p.Platform {
-	case platform.Node:
-		return f.IsNodeApplicationFrame()
 	case platform.Cocoa:
 		return f.IsCocoaApplicationFrame()
 	case platform.Rust:
@@ -408,12 +407,14 @@ func (p *Profile) Metadata() metadata.Metadata {
 }
 
 func (p *Profile) Normalize() {
-	p.normalizeFrames()
-
-	if p.Platform == platform.Cocoa {
+	switch p.Platform {
+	case platform.Cocoa:
 		p.Trace.trimCocoaStacks()
+	case platform.Node:
+		p.Trace.normalizeNodeFrames()
 	}
 
+	p.normalizeFrames()
 	p.Trace.ReplaceIdleStacks()
 }
 
@@ -613,5 +614,20 @@ func (t *Trace) trimCocoaStacks() {
 			}
 		}
 		t.Stacks[si] = t.Stacks[si][:ci]
+	}
+}
+
+func (t *Trace) normalizeNodeFrames() {
+	packageInfo := make(map[string]packageutil.PackageInfo)
+	for i := 0; i < len(t.Frames); i++ {
+		f := t.Frames[i]
+		pi, exists := packageInfo[f.Path]
+		if !exists {
+			pi = packageutil.ParseNodeModuleFromPath(f.Path)
+			packageInfo[f.Path] = pi
+		}
+		f.InApp = pi.InApp
+		f.Module = pi.Module
+		t.Frames[i] = f
 	}
 }
