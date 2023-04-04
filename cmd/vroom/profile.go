@@ -199,7 +199,7 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func extractFunctionsFromCallTrees(callTrees map[uint64][]*nodetree.Node) map[uint64]nodetree.CallTreeFunction {
+func extractFunctionsFromCallTrees(callTrees map[uint64][]*nodetree.Node) []nodetree.CallTreeFunction {
 	functions := make(map[uint64]nodetree.CallTreeFunction, 0)
 
 	for _, callTreesForThread := range callTrees {
@@ -226,7 +226,7 @@ func extractFunctionsFromCallTrees(callTrees map[uint64][]*nodetree.Node) map[ui
 		functionsList = functionsList[:maxUniqueFunctionsPerProfile]
 	}
 
-	return functions
+	return functionsList
 }
 
 func (env *environment) getRawProfile(w http.ResponseWriter, r *http.Request) {

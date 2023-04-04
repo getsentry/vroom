@@ -50,7 +50,7 @@ type (
 	}
 )
 
-func buildFunctionsKafkaMessage(p profile.Profile, functions map[uint64]nodetree.CallTreeFunction) FunctionsKafkaMessage {
+func buildFunctionsKafkaMessage(p profile.Profile, functions []nodetree.CallTreeFunction) FunctionsKafkaMessage {
 	// now we transform the results back into a manually constructed
 	// node tree so it's compatible with snuba
 	nodes := make([]*nodetree.Node, 0, len(functions))
