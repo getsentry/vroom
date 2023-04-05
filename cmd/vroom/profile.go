@@ -6,6 +6,7 @@ import (
 	"errors"
 	"io"
 	"net/http"
+	"sort"
 	"strconv"
 
 	"github.com/getsentry/sentry-go"
@@ -18,6 +19,8 @@ import (
 	"github.com/segmentio/kafka-go"
 	"google.golang.org/api/googleapi"
 )
+
+const maxUniqueFunctionsPerProfile = 100
 
 func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
@@ -137,19 +140,13 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 
 		// Prepare call trees Kafka message
 		s = sentry.StartSpan(ctx, "processing")
-		s.Description = "Collapse call trees"
-		for threadID, callTreesForThread := range callTrees {
-			collapsedCallTrees := make([]*nodetree.Node, 0, len(callTreesForThread))
-			for _, callTree := range callTreesForThread {
-				collapsedCallTrees = append(collapsedCallTrees, callTree.Collapse()...)
-			}
-			callTrees[threadID] = collapsedCallTrees
-		}
+		s.Description = "Extract functions"
+		functions := extractFunctionsFromCallTrees(callTrees)
 		s.Finish()
 
 		s = sentry.StartSpan(ctx, "json.marshal")
-		s.Description = "Marshal call trees Kafka message"
-		b, err := json.Marshal(buildCallTreesKafkaMessage(p, callTrees))
+		s.Description = "Marshal functions Kafka message"
+		b, err := json.Marshal(buildFunctionsKafkaMessage(p, functions))
 		s.Finish()
 		if err != nil {
 			hub.CaptureException(err)
@@ -157,13 +154,13 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		s = sentry.StartSpan(ctx, "processing")
-		s.Description = "Send call trees to Kafka"
+		s.Description = "Send functions to Kafka"
 		err = env.profilingWriter.WriteMessages(ctx, kafka.Message{
 			Topic: env.config.CallTreesKafkaTopic,
 			Value: b,
 		})
 		s.Finish()
-		hub.Scope().SetContext("Call trees Kakfa payload", map[string]interface{}{
+		hub.Scope().SetContext("Call functions payload", map[string]interface{}{
 			"Size": len(b),
 		})
 		if err != nil {
@@ -199,6 +196,36 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusNoContent)
+}
+
+func extractFunctionsFromCallTrees(callTrees map[uint64][]*nodetree.Node) []nodetree.CallTreeFunction {
+	functions := make(map[uint64]nodetree.CallTreeFunction, 0)
+
+	for _, callTreesForThread := range callTrees {
+		for _, callTree := range callTreesForThread {
+			callTree.CollectFunctions(functions)
+		}
+	}
+
+	functionsList := make([]nodetree.CallTreeFunction, 0, len(functions))
+	for _, function := range functions {
+		if function.SampleCount <= 1 {
+			// if there's only ever a single sample for this function in
+			// the profile, we skip over it to reduce the amount of data
+			continue
+		}
+		functionsList = append(functionsList, function)
+	}
+
+	// sort the list in descending order, and take the top N results
+	sort.SliceStable(functionsList, func(i, j int) bool {
+		return functionsList[i].SumSelfTimeNS > functionsList[j].SumSelfTimeNS
+	})
+	if len(functionsList) > maxUniqueFunctionsPerProfile {
+		functionsList = functionsList[:maxUniqueFunctionsPerProfile]
+	}
+
+	return functionsList
 }
 
 func (env *environment) getRawProfile(w http.ResponseWriter, r *http.Request) {

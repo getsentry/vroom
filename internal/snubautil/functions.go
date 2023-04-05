@@ -33,7 +33,6 @@ func GetFunctions(sqb QueryBuilder) ([]Function, error) {
 	sqb.SelectCols = []string{
 		"name",
 		"package",
-		"path",
 		"fingerprint",
 		"arrayElement(quantilesMerge(0.75)(percentiles), 1) AS p75",
 		"arrayElement(quantilesMerge(0.95)(percentiles), 1) AS p95",
@@ -42,7 +41,7 @@ func GetFunctions(sqb QueryBuilder) ([]Function, error) {
 		"argMaxMerge(worst) AS worst",
 		"groupUniqArrayMerge(5)(examples) AS examples",
 	}
-	sqb.GroupBy = "name, package, path, fingerprint"
+	sqb.GroupBy = "name, package, fingerprint"
 
 	rb, err := sqb.Do(rs)
 	if err != nil {
