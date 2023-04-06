@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"cloud.google.com/go/bigquery"
-	"cloud.google.com/go/storage"
 	"github.com/CAFxX/httpcompression"
 	"github.com/getsentry/sentry-go"
 	sentryhttp "github.com/getsentry/sentry-go/http"
@@ -20,6 +19,11 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"github.com/rs/zerolog/log"
 	"github.com/segmentio/kafka-go"
+	"gocloud.dev/blob"
+	_ "gocloud.dev/blob/azureblob"
+	_ "gocloud.dev/blob/fileblob"
+	_ "gocloud.dev/blob/gcsblob"
+	_ "gocloud.dev/blob/s3blob"
 
 	"github.com/getsentry/vroom/internal/httputil"
 	"github.com/getsentry/vroom/internal/logutil"
@@ -35,8 +39,7 @@ type environment struct {
 	profilingWriter     *kafka.Writer
 	occurrencesInserter *bigquery.Inserter
 
-	storage        *storage.Client
-	profilesBucket *storage.BucketHandle
+	storage *blob.Bucket
 }
 
 var release string
@@ -58,10 +61,12 @@ func newEnvironment() (*environment, error) {
 		return nil, err
 	}
 	ctx := context.Background()
-	e.storage, err = storage.NewClient(ctx)
+
+	e.storage, err = blob.OpenBucket(ctx, e.config.BucketURL)
 	if err != nil {
 		return nil, err
 	}
+
 	if e.config.Environment == "production" {
 		bqClient, err := bigquery.NewClient(ctx, "specto-dev")
 		if err != nil {
@@ -88,7 +93,6 @@ func newEnvironment() (*environment, error) {
 		ReadTimeout:  3 * time.Second,
 		WriteTimeout: 3 * time.Second,
 	}
-	e.profilesBucket = e.storage.Bucket(e.config.ProfilesBucket)
 	return &e, nil
 }
 

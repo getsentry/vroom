@@ -10,12 +10,12 @@ import (
 	"sync"
 	"time"
 
-	"cloud.google.com/go/storage"
 	"github.com/getsentry/sentry-go"
 	"github.com/getsentry/vroom/internal/nodetree"
 	"github.com/getsentry/vroom/internal/profile"
 	"github.com/getsentry/vroom/internal/speedscope"
 	"github.com/getsentry/vroom/internal/storageutil"
+	"gocloud.dev/blob"
 )
 
 type (
@@ -33,7 +33,7 @@ var (
 
 func GetFlamegraphFromProfiles(
 	ctx context.Context,
-	profilesBucket *storage.BucketHandle,
+	profilesBucket *blob.Bucket,
 	organizationID uint64,
 	projectID uint64,
 	profileIDs []string,
@@ -62,7 +62,7 @@ func GetFlamegraphFromProfiles(
 				var p profile.Profile
 				err := storageutil.UnmarshalCompressed(ctx, profilesBucket, profile.StoragePath(organizationID, projectID, profileID), &p)
 				if err != nil {
-					if errors.Is(err, storage.ErrObjectNotExist) {
+					if errors.Is(err, storageutil.ErrObjectNotFound) {
 						continue
 					}
 					if errors.Is(err, context.DeadlineExceeded) {
