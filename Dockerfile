@@ -10,7 +10,11 @@ FROM alpine
 
 EXPOSE 8080
 
-RUN apk add --no-cache ca-certificates tzdata && mkdir -p /var/lib/sentry-profiles
+ARG PROFILES_DIR=/var/lib/sentry-profiles
+
+RUN apk add --no-cache ca-certificates tzdata && mkdir -p $PROFILES_DIR
+
+ENV SENTRY_BUCKET_PROFILES=file://localhost/$PROFILES_DIR
 
 COPY --from=builder /src/vroom /bin/vroom
 
