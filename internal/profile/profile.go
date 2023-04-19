@@ -27,6 +27,8 @@ type (
 		GetRetentionDays() int
 		GetTimestamp() time.Time
 		GetTransaction() transaction.Transaction
+		GetTransactionMetadata() transaction.Metadata
+		GetTransactionTags() map[string]string
 
 		CallTrees() (map[uint64][]*nodetree.Node, error)
 		IsSampleFormat() bool
@@ -140,4 +142,12 @@ func (p *Profile) RetentionDays() int {
 
 func (p *Profile) DurationNS() uint64 {
 	return p.profile.GetDurationNS()
+}
+
+func (p *Profile) TransactionMetadata() transaction.Metadata {
+	return p.profile.GetTransactionMetadata()
+}
+
+func (p *Profile) TransactionTags() map[string]string {
+	return p.profile.GetTransactionTags()
 }
