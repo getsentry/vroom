@@ -11,7 +11,6 @@ import (
 	"syscall"
 	"time"
 
-	"cloud.google.com/go/bigquery"
 	"github.com/CAFxX/httpcompression"
 	"github.com/getsentry/sentry-go"
 	sentryhttp "github.com/getsentry/sentry-go/http"
@@ -35,9 +34,8 @@ type environment struct {
 
 	snuba snubautil.Client
 
-	occurrencesWriter   *kafka.Writer
-	profilingWriter     *kafka.Writer
-	occurrencesInserter *bigquery.Inserter
+	occurrencesWriter *kafka.Writer
+	profilingWriter   *kafka.Writer
 
 	storage *blob.Bucket
 }
@@ -67,13 +65,6 @@ func newEnvironment() (*environment, error) {
 		return nil, err
 	}
 
-	if e.config.Environment == "production" {
-		bqClient, err := bigquery.NewClient(ctx, "specto-dev")
-		if err != nil {
-			return nil, err
-		}
-		e.occurrencesInserter = bqClient.Dataset("issues").Table("occurrences").Inserter()
-	}
 	e.occurrencesWriter = &kafka.Writer{
 		Addr:         kafka.TCP(e.config.OccurrencesKafkaBrokers...),
 		Async:        true,
