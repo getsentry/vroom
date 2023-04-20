@@ -51,7 +51,9 @@ type (
 		RetentionDays        int                                 `json:"retention_days"`
 		TraceID              string                              `json:"trace_id"`
 		TransactionID        string                              `json:"transaction_id"`
+		TransactionMetadata  transaction.Metadata                `json:"transaction_metadata"`
 		TransactionName      string                              `json:"transaction_name"`
+		TransactionTags      map[string]string                   `json:"transaction_tags,omitempty"`
 		VersionCode          string                              `json:"version_code"`
 		VersionName          string                              `json:"version_name"`
 	}
@@ -245,4 +247,12 @@ func (p LegacyProfile) GetRetentionDays() int {
 
 func (p LegacyProfile) GetDurationNS() uint64 {
 	return p.Trace.DurationNS()
+}
+
+func (p LegacyProfile) GetTransactionMetadata() transaction.Metadata {
+	return p.TransactionMetadata
+}
+
+func (p LegacyProfile) GetTransactionTags() map[string]string {
+	return p.TransactionTags
 }

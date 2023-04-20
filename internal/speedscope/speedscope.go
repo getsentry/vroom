@@ -7,6 +7,7 @@ import (
 	"github.com/getsentry/vroom/internal/measurements"
 	"github.com/getsentry/vroom/internal/platform"
 	"github.com/getsentry/vroom/internal/timeutil"
+	"github.com/getsentry/vroom/internal/transaction"
 )
 
 const (
@@ -126,7 +127,9 @@ type (
 		RetentionDays        int                                 `json:"-"`                             //nolint:unused
 		TraceID              string                              `json:"traceID"`                       //nolint:unused
 		TransactionID        string                              `json:"transactionID"`                 //nolint:unused
+		TransactionMetadata  transaction.Metadata                `json:"-"`                             //nolint:unused
 		TransactionName      string                              `json:"transactionName"`               //nolint:unused
+		TransactionTags      map[string]string                   `json:"-"`                             //nolint:unused
 		VersionCode          string                              `json:"-"`                             //nolint:unused
 		VersionName          string                              `json:"-"`                             //nolint:unused
 	}

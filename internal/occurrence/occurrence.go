@@ -176,7 +176,6 @@ func NewOccurrence(p profile.Profile, ni nodeInfo) *Occurrence {
 	_, _ = io.WriteString(h, ni.Node.Frame.ModuleOrPackage())
 	_, _ = io.WriteString(h, ni.Node.Name)
 	fingerprint := fmt.Sprintf("%x", h.Sum(nil))
-	tags := buildOccurrenceTags(p)
 	return &Occurrence{
 		Culprit:       t.Name,
 		DetectionTime: time.Now().UTC(),
@@ -190,7 +189,7 @@ func NewOccurrence(p profile.Profile, ni nodeInfo) *Occurrence {
 			Received:       p.Received(),
 			Release:        p.Release(),
 			StackTrace:     StackTrace{Frames: ni.StackTrace},
-			Tags:           tags,
+			Tags:           p.TransactionTags(),
 			Timestamp:      p.Timestamp(),
 		},
 		EvidenceData: evidenceData,
@@ -221,24 +220,6 @@ func NewOccurrence(p profile.Profile, ni nodeInfo) *Occurrence {
 		durationNS:  ni.Node.DurationNS,
 		sampleCount: ni.Node.SampleCount,
 	}
-}
-
-func buildOccurrenceTags(p profile.Profile) map[string]string {
-	pm := p.Metadata()
-	tags := map[string]string{
-		"device_classification": pm.DeviceClassification,
-		"device_locale":         pm.DeviceLocale,
-		"device_manufacturer":   pm.DeviceManufacturer,
-		"device_model":          pm.DeviceModel,
-		"device_os_name":        pm.DeviceOSName,
-		"device_os_version":     pm.DeviceOSVersion,
-	}
-
-	if pm.DeviceOSBuildNumber != "" {
-		tags["device_os_build_number"] = pm.DeviceOSBuildNumber
-	}
-
-	return tags
 }
 
 func eventID() string {
