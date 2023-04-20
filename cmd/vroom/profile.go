@@ -99,18 +99,6 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 		occurrences := occurrence.Find(p, callTrees)
 		s.Finish()
 
-		if env.occurrencesInserter != nil {
-			// Log occurrences with a link to access to corresponding profiles
-			// It will be removed when the issue platform UI is functional
-			s = sentry.StartSpan(ctx, "bq.write")
-			s.Description = "Write occurrences to BigQuery"
-			err := env.occurrencesInserter.Put(ctx, occurrences)
-			s.Finish()
-			if err != nil {
-				hub.CaptureException(err)
-			}
-		}
-
 		// Filter in-place occurrences without a type.
 		var i int
 		for _, o := range occurrences {
@@ -198,7 +186,9 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func extractFunctionsFromCallTrees(callTrees map[uint64][]*nodetree.Node) []nodetree.CallTreeFunction {
+func extractFunctionsFromCallTrees(
+	callTrees map[uint64][]*nodetree.Node,
+) []nodetree.CallTreeFunction {
 	functions := make(map[uint64]nodetree.CallTreeFunction, 0)
 
 	for _, callTreesForThread := range callTrees {
@@ -265,7 +255,12 @@ func (env *environment) getRawProfile(w http.ResponseWriter, r *http.Request) {
 	s.Description = "Read profile from GCS or Snuba"
 
 	var p profile.Profile
-	err = storageutil.UnmarshalCompressed(ctx, env.storage, profile.StoragePath(organizationID, projectID, profileID), &p)
+	err = storageutil.UnmarshalCompressed(
+		ctx,
+		env.storage,
+		profile.StoragePath(organizationID, projectID, profileID),
+		&p,
+	)
 	s.Finish()
 	if err != nil {
 		if errors.Is(err, storageutil.ErrObjectNotFound) {
@@ -339,7 +334,12 @@ func (env *environment) getProfile(w http.ResponseWriter, r *http.Request) {
 	s.Description = "Read profile from GCS or Snuba"
 
 	var p profile.Profile
-	err = storageutil.UnmarshalCompressed(ctx, env.storage, profile.StoragePath(organizationID, projectID, profileID), &p)
+	err = storageutil.UnmarshalCompressed(
+		ctx,
+		env.storage,
+		profile.StoragePath(organizationID, projectID, profileID),
+		&p,
+	)
 	s.Finish()
 	if err != nil {
 		if errors.Is(err, storageutil.ErrObjectNotFound) {
