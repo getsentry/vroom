@@ -28,12 +28,17 @@ func GetRequiredQueryParameters(w http.ResponseWriter, r *http.Request, keys ...
 
 func AnonymizeTransactionName(handler http.Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		params := httprouter.ParamsFromContext(r.Context())
-		path := r.URL.Path
-		for _, param := range params {
-			path = strings.Replace(path, param.Value, fmt.Sprintf(":%s", param.Key), 1)
+		transaction := sentry.TransactionFromContext(r.Context())
+		if transaction != nil {
+			params := httprouter.ParamsFromContext(r.Context())
+			path := r.URL.Path
+			for _, param := range params {
+				path = strings.Replace(path, param.Value, fmt.Sprintf(":%s", param.Key), 1)
+			}
+
+			transaction.Name = fmt.Sprintf("%s %s", r.Method, path)
 		}
-		sentry.GetHubFromContext(r.Context()).Scope().SetTransaction(fmt.Sprintf("%s %s", r.Method, path))
+
 		handler.ServeHTTP(w, r)
 	}
 }
