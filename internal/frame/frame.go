@@ -5,10 +5,15 @@ import (
 	"encoding/hex"
 	"fmt"
 	"hash"
-	"path"
+	"regexp"
 	"strings"
 
 	"github.com/getsentry/vroom/internal/packageutil"
+)
+
+var (
+	windowsPathRegex      = regexp.MustCompile(`(?i)^([a-z]:\\|\\\\)`)
+	packageExtensionRegex = regexp.MustCompile(`\.(dylib|so|a|dll|exe)$`)
 )
 
 type (
@@ -74,11 +79,40 @@ func (f Frame) ID() string {
 	return hex.EncodeToString(hash[:])
 }
 
+// Taken from https://github.com/getsentry/sentry/blob/1c9cf8bd92f65e933a407d8ee37fb90997c1c76c/static/app/components/events/interfaces/frame/utils.tsx#L8-L12
+// This takes a frame's package and formats it in such a way that is suitable for displaying/aggregation.
+func trimPackage(pkg string) string {
+	separator := "/"
+	if windowsPathRegex.Match([]byte(pkg)) {
+		separator = "\\"
+	}
+
+	pieces := strings.Split(pkg, separator)
+
+	filename := pkg
+
+	if len(pieces) >= 1 {
+		filename = pieces[len(pieces)-1]
+	}
+
+	if len(pieces) >= 2 && filename == "" {
+		filename = pieces[len(pieces)-2]
+	}
+
+	if filename == "" {
+		filename = pkg
+	}
+
+	filename = packageExtensionRegex.ReplaceAllString(filename, "")
+
+	return filename
+}
+
 func (f Frame) ModuleOrPackage() string {
 	if f.Module != "" {
 		return f.Module
 	} else if f.Package != "" {
-		return path.Base(f.Package)
+		return trimPackage(f.Package)
 	}
 	return ""
 }
@@ -88,7 +122,7 @@ func (f Frame) WriteToHash(h hash.Hash) {
 	if f.Module != "" {
 		s = f.Module
 	} else if f.Package != "" {
-		s = path.Base(f.Package)
+		s = trimPackage(f.Package)
 	} else if f.File != "" {
 		s = f.File
 	} else {

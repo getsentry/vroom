@@ -14,6 +14,8 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
+var legalOrderBys = map[string]struct{}{"p75": {}, "p95": {}, "p99": {}, "count": {}, "sum": {}}
+
 type (
 	GetFunctionsResponse struct {
 		Functions []snubautil.Function `json:"functions"`
@@ -73,7 +75,7 @@ func (env *environment) getFunctions(w http.ResponseWriter, r *http.Request) {
 		direction = "DESC"
 		rawOrderBy = strings.TrimPrefix(rawOrderBy, "-")
 	}
-	if rawOrderBy != "p75" && rawOrderBy != "p99" && rawOrderBy != "p95" && rawOrderBy != "count" {
+	if _, exists := legalOrderBys[rawOrderBy]; !exists {
 		hub.CaptureException(fmt.Errorf("unknown sort: %s", rawOrderBy))
 		w.WriteHeader(http.StatusBadRequest)
 		return

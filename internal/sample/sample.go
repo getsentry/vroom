@@ -72,24 +72,26 @@ type (
 	}
 
 	RawProfile struct {
-		DebugMeta      debugmeta.DebugMeta                 `json:"debug_meta"`
-		Device         Device                              `json:"device"`
-		Environment    string                              `json:"environment,omitempty"`
-		EventID        string                              `json:"event_id"`
-		Measurements   map[string]measurements.Measurement `json:"measurements,omitempty"`
-		OS             OS                                  `json:"os"`
-		OrganizationID uint64                              `json:"organization_id"`
-		Platform       platform.Platform                   `json:"platform"`
-		ProjectID      uint64                              `json:"project_id"`
-		Received       timeutil.Time                       `json:"received"`
-		Release        string                              `json:"release"`
-		RetentionDays  int                                 `json:"retention_days"`
-		Runtime        Runtime                             `json:"runtime"`
-		Timestamp      time.Time                           `json:"timestamp"`
-		Trace          Trace                               `json:"profile"`
-		Transaction    transaction.Transaction             `json:"transaction"`
-		Transactions   []transaction.Transaction           `json:"transactions,omitempty"`
-		Version        string                              `json:"version"`
+		DebugMeta           debugmeta.DebugMeta                 `json:"debug_meta"`
+		Device              Device                              `json:"device"`
+		Environment         string                              `json:"environment,omitempty"`
+		EventID             string                              `json:"event_id"`
+		Measurements        map[string]measurements.Measurement `json:"measurements,omitempty"`
+		OS                  OS                                  `json:"os"`
+		OrganizationID      uint64                              `json:"organization_id"`
+		Platform            platform.Platform                   `json:"platform"`
+		ProjectID           uint64                              `json:"project_id"`
+		Received            timeutil.Time                       `json:"received"`
+		Release             string                              `json:"release"`
+		RetentionDays       int                                 `json:"retention_days"`
+		Runtime             Runtime                             `json:"runtime"`
+		Timestamp           time.Time                           `json:"timestamp"`
+		Trace               Trace                               `json:"profile"`
+		Transaction         transaction.Transaction             `json:"transaction"`
+		TransactionMetadata transaction.Metadata                `json:"transaction_metadata,omitempty"`
+		TransactionTags     map[string]string                   `json:"transaction_tags,omitempty"`
+		Transactions        []transaction.Transaction           `json:"transactions,omitempty"`
+		Version             string                              `json:"version"`
 	}
 
 	State string
@@ -614,4 +616,12 @@ func (t *Trace) trimCocoaStacks() {
 		}
 		t.Stacks[si] = t.Stacks[si][:ci]
 	}
+}
+
+func (p RawProfile) GetTransactionMetadata() transaction.Metadata {
+	return p.TransactionMetadata
+}
+
+func (p RawProfile) GetTransactionTags() map[string]string {
+	return p.TransactionTags
 }

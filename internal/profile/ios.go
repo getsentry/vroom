@@ -289,11 +289,12 @@ func (p *IOS) ReplaceIdleStacks() {
 
 		// replace all idle stacks until next active sample
 		for j := i; j < len(p.Samples); j++ {
-			if p.Samples[j].ThreadID == s.ThreadID && len(p.Samples[j].Frames) == 0 {
+			if p.Samples[j].ThreadID == s.ThreadID {
+				if len(p.Samples[j].Frames) != 0 {
+					break
+				}
 				p.Samples[j].Frames = common
-				continue
 			}
-			break
 		}
 	}
 }

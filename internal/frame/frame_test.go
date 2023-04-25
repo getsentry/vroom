@@ -230,3 +230,56 @@ func TestWriteToHash(t *testing.T) {
 		})
 	}
 }
+
+func TestTrimPackage(t *testing.T) {
+	tests := []struct {
+		name     string
+		pkg      string
+		expected string
+	}{
+		{
+			pkg:      "/System/Library/PrivateFrameworks/UIKitCore.framework/UIKitCore",
+			expected: "UIKitCore",
+		},
+		{
+			// strips the .dylib
+			pkg:      "/usr/lib/system/libsystem_pthread.dylib",
+			expected: "libsystem_pthread",
+		},
+		{
+			pkg:      "/lib/x86_64-linux-gnu/libc.so.6",
+			expected: "libc.so.6",
+		},
+		{
+			pkg:      "/foo",
+			expected: "foo",
+		},
+		{
+			// ignore single trailing slash
+			pkg:      "/foo/",
+			expected: "foo",
+		},
+		{
+			// does not ignore multiple trailing slash
+			pkg:      "/foo//",
+			expected: "/foo//",
+		},
+		{
+			pkg:      "C:\\WINDOWS\\SYSTEM32\\ntdll.dll",
+			expected: "ntdll",
+		},
+		{
+			pkg:      "C:\\Program Files\\Foo 2023.3\\bin\\foo.exe",
+			expected: "foo",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.expected, func(t *testing.T) {
+			result := trimPackage(tt.pkg)
+			if result != tt.expected {
+				t.Fatalf("Expected %s but got %s", tt.expected, result)
+			}
+		})
+	}
+}

@@ -4,12 +4,10 @@ import (
 	"crypto/md5"
 	"fmt"
 	"io"
-	"net/url"
 	"strconv"
 	"strings"
 	"time"
 
-	"cloud.google.com/go/bigquery"
 	"github.com/getsentry/vroom/internal/android"
 	"github.com/getsentry/vroom/internal/debugmeta"
 	"github.com/getsentry/vroom/internal/frame"
@@ -178,7 +176,6 @@ func NewOccurrence(p profile.Profile, ni nodeInfo) *Occurrence {
 	_, _ = io.WriteString(h, ni.Node.Frame.ModuleOrPackage())
 	_, _ = io.WriteString(h, ni.Node.Name)
 	fingerprint := fmt.Sprintf("%x", h.Sum(nil))
-	tags := buildOccurrenceTags(p)
 	return &Occurrence{
 		Culprit:       t.Name,
 		DetectionTime: time.Now().UTC(),
@@ -192,7 +189,7 @@ func NewOccurrence(p profile.Profile, ni nodeInfo) *Occurrence {
 			Received:       p.Received(),
 			Release:        p.Release(),
 			StackTrace:     StackTrace{Frames: ni.StackTrace},
-			Tags:           tags,
+			Tags:           p.TransactionTags(),
 			Timestamp:      p.Timestamp(),
 		},
 		EvidenceData: evidenceData,
@@ -223,60 +220,6 @@ func NewOccurrence(p profile.Profile, ni nodeInfo) *Occurrence {
 		durationNS:  ni.Node.DurationNS,
 		sampleCount: ni.Node.SampleCount,
 	}
-}
-
-func buildOccurrenceTags(p profile.Profile) map[string]string {
-	pm := p.Metadata()
-	tags := map[string]string{
-		"device_classification": pm.DeviceClassification,
-		"device_locale":         pm.DeviceLocale,
-		"device_manufacturer":   pm.DeviceManufacturer,
-		"device_model":          pm.DeviceModel,
-		"device_os_name":        pm.DeviceOSName,
-		"device_os_version":     pm.DeviceOSVersion,
-	}
-
-	if pm.DeviceOSBuildNumber != "" {
-		tags["device_os_build_number"] = pm.DeviceOSBuildNumber
-	}
-
-	return tags
-}
-
-func (o *Occurrence) Link() (string, error) {
-	link, err := url.Parse(
-		fmt.Sprintf(
-			"https://sentry.io/api/0/profiling/projects/%d/profile/%s/",
-			o.Event.ProjectID,
-			o.EvidenceData[ProfileID],
-		),
-	)
-	if err != nil {
-		return "", err
-	}
-	params := make(url.Values)
-	params.Add("package", o.EvidenceDisplay[1].Value)
-	params.Add("name", o.EvidenceDisplay[0].Value)
-	link.RawQuery = params.Encode()
-	return link.String(), nil
-}
-
-func (o *Occurrence) Save() (map[string]bigquery.Value, string, error) {
-	link, err := o.Link()
-	if err != nil {
-		return nil, "", err
-	}
-	return map[string]bigquery.Value{
-		"category":        o.category,
-		"detected_at":     o.DetectionTime,
-		"duration_ns":     int(o.durationNS),
-		"link":            link,
-		"organization_id": strconv.FormatUint(o.Event.OrganizationID, 10),
-		"platform":        o.Event.Platform,
-		"profile_id":      o.EvidenceData[ProfileID],
-		"project_id":      strconv.FormatUint(o.Event.ProjectID, 10),
-		"sample_count":    o.sampleCount,
-	}, bigquery.NoDedupeID, nil
 }
 
 func eventID() string {
