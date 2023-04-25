@@ -34,7 +34,9 @@ func AnonymizeTransactionName(handler http.Handler) http.HandlerFunc {
 			path = strings.Replace(path, param.Value, fmt.Sprintf(":%s", param.Key), 1)
 		}
 		transaction := sentry.TransactionFromContext(r.Context())
-		transaction.Name = fmt.Sprintf("%s %s", r.Method, path)
+		if transaction != nil {
+			transaction.Name = fmt.Sprintf("%s %s", r.Method, path)
+		}
 
 		handler.ServeHTTP(w, r)
 	}
