@@ -176,6 +176,10 @@ func NewOccurrence(p profile.Profile, ni nodeInfo) *Occurrence {
 	_, _ = io.WriteString(h, ni.Node.Frame.ModuleOrPackage())
 	_, _ = io.WriteString(h, ni.Node.Name)
 	fingerprint := fmt.Sprintf("%x", h.Sum(nil))
+	tags := p.TransactionTags()
+	if tags == nil {
+		tags = make(map[string]string)
+	}
 	return &Occurrence{
 		Culprit:       t.Name,
 		DetectionTime: time.Now().UTC(),
@@ -189,7 +193,7 @@ func NewOccurrence(p profile.Profile, ni nodeInfo) *Occurrence {
 			Received:       p.Received(),
 			Release:        p.Release(),
 			StackTrace:     StackTrace{Frames: ni.StackTrace},
-			Tags:           p.TransactionTags(),
+			Tags:           tags,
 			Timestamp:      p.Timestamp(),
 		},
 		EvidenceData: evidenceData,
