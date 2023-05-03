@@ -18,6 +18,8 @@ In order to download the profiles it's necessary to first create a list of `gs` 
 
 ## Download the profiles
 
+### How To
+
 1. obtain credentials and put them in a well known location for *Application Default Credential*: `gcloud auth application-default login`
 2. create a folder where the profiles will be stored: `mkdir profiles`
 3. build the downloader: `make downloader`
