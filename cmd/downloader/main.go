@@ -17,7 +17,7 @@ import (
 func download(client *storage.Client, root string, objects chan string, errorsChan chan error, wg *sync.WaitGroup) {
 	defer wg.Done()
 
-	b := client.Bucket("sentry-profiles")
+	b := client.Bucket("sentryio-profiles")
 	for objectName := range objects {
 		parts := strings.Split(objectName, "/")
 		count := len(parts)
