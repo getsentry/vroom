@@ -26,7 +26,7 @@ type (
 		TransactionStatus string                      `json:"transaction_status"`
 		HTTPMethod        string                      `json:"http_method,omitempty"`
 		BrowserName       string                      `json:"browser_name,omitempty"`
-		DeviceClass       uint8                       `json:"device_class,omitempty"`
+		DeviceClass       uint64                      `json:"device_class,omitempty"`
 	}
 
 	// ProfileKafkaMessage is representing the struct we send to Kafka to insert a profile in ClickHouse.
@@ -81,7 +81,7 @@ func buildFunctionsKafkaMessage(p profile.Profile, functions []nodetree.CallTree
 		TransactionStatus: tm.TransactionStatus,
 		HTTPMethod:        tm.HTTPMethod,
 		BrowserName:       tt["browser.name"],
-		DeviceClass:       uint8(deviceClass),
+		DeviceClass:       deviceClass,
 	}
 }
 
