@@ -1,8 +1,6 @@
 package main
 
 import (
-	"strconv"
-
 	"github.com/getsentry/vroom/internal/nodetree"
 	"github.com/getsentry/vroom/internal/platform"
 	"github.com/getsentry/vroom/internal/profile"
@@ -11,22 +9,18 @@ import (
 type (
 	// FunctionsKafkaMessage is representing the struct we send to Kafka to insert functions in ClickHouse.
 	FunctionsKafkaMessage struct {
-		Functions         []nodetree.CallTreeFunction `json:"functions"`
-		Environment       string                      `json:"environment,omitempty"`
-		ID                string                      `json:"profile_id"`
-		Platform          platform.Platform           `json:"platform"`
-		ProjectID         uint64                      `json:"project_id"`
-		Received          int64                       `json:"received"`
-		Release           string                      `json:"release,omitempty"`
-		Dist              string                      `json:"dist,omitempty"`
-		RetentionDays     int                         `json:"retention_days"`
-		Timestamp         int64                       `json:"timestamp"`
-		TransactionName   string                      `json:"transaction_name"`
-		TransactionOp     string                      `json:"transaction_op"`
-		TransactionStatus string                      `json:"transaction_status"`
-		HTTPMethod        string                      `json:"http_method,omitempty"`
-		BrowserName       string                      `json:"browser_name,omitempty"`
-		DeviceClass       uint64                      `json:"device_class,omitempty"`
+		CallTrees       map[uint64][]*nodetree.Node `json:"call_trees"`
+		Environment     string                      `json:"environment,omitempty"`
+		ID              string                      `json:"profile_id"`
+		OSName          string                      `json:"os_name"`
+		OSVersion       string                      `json:"os_version"`
+		Platform        platform.Platform           `json:"platform"`
+		ProjectID       uint64                      `json:"project_id"`
+		Received        int64                       `json:"received"`
+		Release         string                      `json:"release"`
+		RetentionDays   int                         `json:"retention_days"`
+		Timestamp       int64                       `json:"timestamp"`
+		TransactionName string                      `json:"transaction_name"`
 	}
 
 	// ProfileKafkaMessage is representing the struct we send to Kafka to insert a profile in ClickHouse.
@@ -57,31 +51,33 @@ type (
 )
 
 func buildFunctionsKafkaMessage(p profile.Profile, functions []nodetree.CallTreeFunction) FunctionsKafkaMessage {
-	tm := p.TransactionMetadata()
-	tt := p.TransactionTags()
+	// now we transform the results back into a manually constructed
+	// node tree so it's compatible with snuba
+	nodes := make([]*nodetree.Node, 0, len(functions))
 
-	deviceClass, err := strconv.ParseUint(tt["device.class"], 10, 8)
-	if err != nil {
-		deviceClass = 0
+	for _, function := range functions {
+		nodes = append(nodes, function.ToNodes()...)
 	}
 
+	callTrees := map[uint64][]*nodetree.Node{
+		// the tid can be anything since we dont use it anywhere
+		0: nodes,
+	}
+
+	m := p.Metadata()
 	return FunctionsKafkaMessage{
-		Functions:         functions,
-		Environment:       p.Environment(),
-		ID:                p.ID(),
-		Platform:          p.Platform(),
-		ProjectID:         p.ProjectID(),
-		Received:          p.Received().Unix(),
-		Release:           p.Release(),
-		Dist:              tm.Dist,
-		RetentionDays:     p.RetentionDays(),
-		Timestamp:         p.Timestamp().Unix(),
-		TransactionName:   p.Transaction().Name,
-		TransactionOp:     tm.TransactionOp,
-		TransactionStatus: tm.TransactionStatus,
-		HTTPMethod:        tm.HTTPMethod,
-		BrowserName:       tt["browser.name"],
-		DeviceClass:       deviceClass,
+		CallTrees:       callTrees,
+		Environment:     p.Environment(),
+		ID:              p.ID(),
+		OSName:          m.DeviceOSName,
+		OSVersion:       m.DeviceOSVersion,
+		Platform:        p.Platform(),
+		ProjectID:       p.ProjectID(),
+		Received:        p.Received().Unix(),
+		Release:         p.Release(),
+		RetentionDays:   p.RetentionDays(),
+		Timestamp:       p.Timestamp().Unix(),
+		TransactionName: p.Transaction().Name,
 	}
 }
 
