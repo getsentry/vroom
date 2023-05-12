@@ -84,6 +84,23 @@ type CallTreeFunction struct {
 	SampleCount   int      `json:"-"`
 }
 
+func (f CallTreeFunction) ToNodes() []*Node {
+	nodes := make([]*Node, 0, len(f.SelfTimesNS))
+
+	for _, selfTime := range f.SelfTimesNS {
+		nodes = append(nodes, &Node{
+			DurationNS:    selfTime,
+			Fingerprint:   f.Fingerprint,
+			Name:          f.Function,
+			Package:       f.Package,
+			Path:          "",
+			IsApplication: f.InApp,
+		})
+	}
+
+	return nodes
+}
+
 // `CollectionFunctions` walks the node tree, collects any function with a non zero
 // self-time and writes them into the `results` parameter.
 //
