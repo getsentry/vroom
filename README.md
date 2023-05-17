@@ -1,8 +1,6 @@
-# Vroom
+# vroom
 
-Vroom is the profiling service returning profiles and aggregated data about your profiles. It's written in Go.
-
-The service is currently hosted on Google Cloud Run and requires access to Google Cloud Storage.
+`vroom` is the profiling service processing profiles and deriving data about your profiles. It's written in Go.
 
 The name was inspired by this [video](https://www.youtube.com/watch?v=t_rzYnXEQlE).
 
@@ -11,7 +9,6 @@ The name was inspired by this [video](https://www.youtube.com/watch?v=t_rzYnXEQl
 In order to develop for `vroom`, you will need:
 - `golang` >= 1.18
 - `make`
-- Docker and Docker Compose
 - Snuba (via Sentry development services)
 - `pre-commit`
 
@@ -39,9 +36,6 @@ make dev
 make test
 ```
 
-## Deploy
+## Release Management
 
-A deploy will be automatic when your PR gets merged to `main`. Otherwise, you could build the Docker image and deploy manually with:
-```sh
-make docker deploy
-```
+We use GitHub actions to release new versions. `vroom` is automatically released using Calendar Versioning on a monthly basis together with sentry (see https://develop.sentry.dev/self-hosted/releases/), so there should be no reason to create a release manually. That said, manual releases are possible with the "Release" action.
