@@ -1,3 +1,6 @@
 minVersion: 1.0.0
 targets:
 - name: github
+- name: docker
+    source: us.gcr.io/sentryio/vroom
+    target: getsentry/vroom
