@@ -1,6 +1,11 @@
 minVersion: 1.0.0
 artifactProvider:
   name: none
+statusProvider:
+  name: github
+  config:
+    contexts:
+      - 'vroom-build-docker-image-commit (sentryio)'
 targets:
   - name: github
   - name: docker
