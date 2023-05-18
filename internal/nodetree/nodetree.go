@@ -3,8 +3,17 @@ package nodetree
 import (
 	"hash"
 	"hash/fnv"
+	"strings"
 
 	"github.com/getsentry/vroom/internal/frame"
+	"github.com/getsentry/vroom/internal/platform"
+)
+
+var (
+	obfuscationSupportedPlatforms = map[platform.Platform]struct{}{
+		platform.Android: {},
+		platform.Java:    {},
+	}
 )
 
 type (
@@ -102,13 +111,13 @@ type CallTreeFunction struct {
 // children with durations 20ms, 30ms, and 40ms, and they are system, application, system
 // functions respectively, the self-time of `bar` will be 70ms because
 // 100ms - 30ms = 70ms.
-func (n *Node) CollectFunctions(results map[uint64]CallTreeFunction) (uint64, uint64) {
+func (n *Node) CollectFunctions(profilePlatform platform.Platform, results map[uint64]CallTreeFunction) (uint64, uint64) {
 	var childrenApplicationDurationNS uint64
 	var childrenSystemDurationNS uint64
 
 	// determine the amount of time spent in application vs system functions in the children
 	for _, child := range n.Children {
-		applicationDurationNS, systemDurationNS := child.CollectFunctions(results)
+		applicationDurationNS, systemDurationNS := child.CollectFunctions(profilePlatform, results)
 		childrenApplicationDurationNS += applicationDurationNS
 		childrenSystemDurationNS += systemDurationNS
 	}
@@ -121,9 +130,12 @@ func (n *Node) CollectFunctions(results map[uint64]CallTreeFunction) (uint64, ui
 		applicationDurationNS = n.DurationNS
 	}
 
+	frameFunction := n.Frame.Function
+	framePackage := n.Frame.ModuleOrPackage()
+
 	var selfTimeNS uint64
 
-	if n.Frame.Function != "" { // skip over unknown frames as they are not valuable to show
+	if shouldAggregateFrame(profilePlatform, frameFunction, framePackage) {
 		if n.IsApplication {
 			// cannot use `n.DurationNS - childrenApplicationDurationNS > 0` in case it underflows
 			if n.DurationNS > childrenApplicationDurationNS {
@@ -142,36 +154,51 @@ func (n *Node) CollectFunctions(results map[uint64]CallTreeFunction) (uint64, ui
 				selfTimeNS = n.DurationNS - childrenApplicationDurationNS - childrenSystemDurationNS
 			}
 		}
-	}
 
-	if selfTimeNS > 0 {
-		framePackage := n.Frame.ModuleOrPackage()
-		h := fnv.New64()
-		h.Write([]byte(framePackage))
-		h.Write([]byte{':'})
-		h.Write([]byte(n.Frame.Function))
-		fingerprint := h.Sum64()
+		if selfTimeNS > 0 {
+			h := fnv.New64()
+			h.Write([]byte(framePackage))
+			h.Write([]byte{':'})
+			h.Write([]byte(frameFunction))
+			fingerprint := h.Sum64()
 
-		function, exists := results[fingerprint]
-		if !exists {
-			results[fingerprint] = CallTreeFunction{
-				Fingerprint:   fingerprint,
-				Function:      n.Frame.Function,
-				Package:       framePackage,
-				InApp:         n.IsApplication,
-				SelfTimesNS:   []uint64{selfTimeNS},
-				SumSelfTimeNS: selfTimeNS,
-				SampleCount:   n.SampleCount,
+			function, exists := results[fingerprint]
+			if !exists {
+				results[fingerprint] = CallTreeFunction{
+					Fingerprint:   fingerprint,
+					Function:      n.Frame.Function,
+					Package:       framePackage,
+					InApp:         n.IsApplication,
+					SelfTimesNS:   []uint64{selfTimeNS},
+					SumSelfTimeNS: selfTimeNS,
+					SampleCount:   n.SampleCount,
+				}
+			} else {
+				function.SelfTimesNS = append(function.SelfTimesNS, selfTimeNS)
+				function.SumSelfTimeNS += selfTimeNS
+				function.SampleCount += n.SampleCount
+				results[fingerprint] = function
 			}
-		} else {
-			function.SelfTimesNS = append(function.SelfTimesNS, selfTimeNS)
-			function.SumSelfTimeNS += selfTimeNS
-			function.SampleCount += n.SampleCount
-			results[fingerprint] = function
 		}
 	}
 
 	// this pair represents the time spent in application functions vs
 	// time spent in system functions by this function and all of its descendents
 	return applicationDurationNS, n.DurationNS - applicationDurationNS
+}
+
+func shouldAggregateFrame(profilePlatform platform.Platform, frameFunction string, framePackage string) bool {
+	// frames with no name are not valuable for aggregation
+	if frameFunction == "" {
+		return false
+	}
+
+	// platforms where obfuscation is not supported are safe to aggregate
+	_, obfuscationSupported := obfuscationSupportedPlatforms[profilePlatform]
+	if !obfuscationSupported {
+		return true
+	}
+
+	// obfuscated frames tend to be missing `.` in the package
+	return strings.Contains(framePackage, ".")
 }
