@@ -193,12 +193,14 @@ func shouldAggregateFrame(profilePlatform platform.Platform, frameFunction strin
 		return false
 	}
 
-	// platforms where obfuscation is not supported are safe to aggregate
 	_, obfuscationSupported := obfuscationSupportedPlatforms[profilePlatform]
-	if !obfuscationSupported {
-		return true
+	if obfuscationSupported {
+		// obfuscated package names often don't contain a dot (`.`)
+		if !strings.Contains(framePackage, ".") {
+			return false
+		}
 	}
 
-	// obfuscated frames tend to be missing `.` in the package
-	return strings.Contains(framePackage, ".")
+	// all other frames are safe to aggregate
+	return true
 }
