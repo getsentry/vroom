@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/getsentry/vroom/internal/frame"
+	"github.com/getsentry/vroom/internal/platform"
 	"github.com/getsentry/vroom/internal/testutil"
 )
 
@@ -17,12 +18,14 @@ const (
 
 func TestNodeTreeCollectFunctions(t *testing.T) {
 	tests := []struct {
-		name string
-		node Node
-		want map[uint64]CallTreeFunction
+		name     string
+		platform platform.Platform
+		node     Node
+		want     map[uint64]CallTreeFunction
 	}{
 		{
-			name: "single application node",
+			name:     "single application node",
+			platform: platform.Python,
 			node: Node{
 				DurationNS:    10,
 				IsApplication: true,
@@ -43,7 +46,8 @@ func TestNodeTreeCollectFunctions(t *testing.T) {
 			},
 		},
 		{
-			name: "single system node",
+			name:     "single system node",
+			platform: platform.Python,
 			node: Node{
 				DurationNS:    10,
 				IsApplication: false,
@@ -64,7 +68,8 @@ func TestNodeTreeCollectFunctions(t *testing.T) {
 			},
 		},
 		{
-			name: "non leaf node with non zero self time",
+			name:     "non leaf node with non zero self time",
+			platform: platform.Python,
 			node: Node{
 				DurationNS:    20,
 				IsApplication: true,
@@ -103,7 +108,8 @@ func TestNodeTreeCollectFunctions(t *testing.T) {
 			},
 		},
 		{
-			name: "application node wrapping system nodes of same duration",
+			name:     "application node wrapping system nodes of same duration",
+			platform: platform.Python,
 			node: Node{
 				DurationNS:    10,
 				IsApplication: true,
@@ -162,7 +168,8 @@ func TestNodeTreeCollectFunctions(t *testing.T) {
 			},
 		},
 		{
-			name: "mutitple occurrences of same functions",
+			name:     "mutitple occurrences of same functions",
+			platform: platform.Python,
 			node: Node{
 				DurationNS:    40,
 				IsApplication: true,
@@ -272,12 +279,76 @@ func TestNodeTreeCollectFunctions(t *testing.T) {
 				},
 			},
 		},
+		{
+			name:     "obfuscated android frames",
+			platform: platform.Android,
+			node: Node{
+				DurationNS:    20,
+				IsApplication: true,
+				Frame: frame.Frame{
+					Function: "a.B()",
+					Package:  "a",
+				},
+				Children: []*Node{
+					{
+						DurationNS:    10,
+						IsApplication: true,
+						Frame: frame.Frame{
+							Function: "com.example.Thing.doStuff()",
+							Package:  "com.example",
+						},
+					},
+				},
+			},
+			want: map[uint64]CallTreeFunction{
+				414680583044130407: {
+					Fingerprint:   414680583044130407,
+					Function:      "com.example.Thing.doStuff()",
+					Package:       "com.example",
+					InApp:         true,
+					SelfTimesNS:   []uint64{10},
+					SumSelfTimeNS: 10,
+				},
+			},
+		},
+		{
+			name:     "obfuscated java frames",
+			platform: platform.Java,
+			node: Node{
+				DurationNS:    20,
+				IsApplication: true,
+				Frame: frame.Frame{
+					Function: "a.B()",
+					Package:  "a",
+				},
+				Children: []*Node{
+					{
+						DurationNS:    10,
+						IsApplication: true,
+						Frame: frame.Frame{
+							Function: "com.example.Thing.doStuff()",
+							Package:  "com.example",
+						},
+					},
+				},
+			},
+			want: map[uint64]CallTreeFunction{
+				414680583044130407: {
+					Fingerprint:   414680583044130407,
+					Function:      "com.example.Thing.doStuff()",
+					Package:       "com.example",
+					InApp:         true,
+					SelfTimesNS:   []uint64{10},
+					SumSelfTimeNS: 10,
+				},
+			},
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			results := make(map[uint64]CallTreeFunction)
-			tt.node.CollectFunctions(results)
+			tt.node.CollectFunctions(tt.platform, results)
 			if diff := testutil.Diff(results, tt.want); diff != "" {
 				t.Fatalf("Result mismatch: got - want +\n%s", diff)
 			}

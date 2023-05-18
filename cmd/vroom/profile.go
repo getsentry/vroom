@@ -12,6 +12,7 @@ import (
 	"github.com/getsentry/sentry-go"
 	"github.com/getsentry/vroom/internal/nodetree"
 	"github.com/getsentry/vroom/internal/occurrence"
+	"github.com/getsentry/vroom/internal/platform"
 	"github.com/getsentry/vroom/internal/profile"
 	"github.com/getsentry/vroom/internal/storageutil"
 	"github.com/google/uuid"
@@ -54,9 +55,11 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 
 	orgID := p.OrganizationID()
 
+	profilePlatform := p.Platform()
+
 	hub.Scope().SetTags(map[string]string{
 		"organization_id": strconv.FormatUint(orgID, 10),
-		"platform":        string(p.Platform()),
+		"platform":        string(profilePlatform),
 		"profile_id":      p.ID(),
 		"project_id":      strconv.FormatUint(p.ProjectID(), 10),
 	})
@@ -129,7 +132,7 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 		// Prepare call trees Kafka message
 		s = sentry.StartSpan(ctx, "processing")
 		s.Description = "Extract functions"
-		functions := extractFunctionsFromCallTrees(callTrees)
+		functions := extractFunctionsFromCallTrees(profilePlatform, callTrees)
 		s.Finish()
 
 		s = sentry.StartSpan(ctx, "json.marshal")
@@ -187,13 +190,14 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 }
 
 func extractFunctionsFromCallTrees(
+	profilePlatform platform.Platform,
 	callTrees map[uint64][]*nodetree.Node,
 ) []nodetree.CallTreeFunction {
 	functions := make(map[uint64]nodetree.CallTreeFunction, 0)
 
 	for _, callTreesForThread := range callTrees {
 		for _, callTree := range callTreesForThread {
-			callTree.CollectFunctions(functions)
+			callTree.CollectFunctions(profilePlatform, functions)
 		}
 	}
 
