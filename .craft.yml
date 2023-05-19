@@ -8,6 +8,12 @@ statusProvider:
       - 'vroom-build-docker-image-commit (sentryio)'
 targets:
   - name: github
-  - name: docker
+  - id: release
+    name: docker
     source: us.gcr.io/sentryio/vroom
     target: getsentry/vroom
+  - id: latest
+    name: docker
+    source: us.gcr.io/sentryio/vroom
+    target: getsentry/vroom
+    targetFormat: '{{{target}}}:latest'
