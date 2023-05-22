@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"io"
 	"net/http"
 	"strconv"
 	"time"
@@ -87,11 +86,11 @@ func (env *environment) getFlamegraph(w http.ResponseWriter, r *http.Request) {
 	_, _ = w.Write(b)
 }
 
-type getFlamegraphFromProfileIDs struct {
-	ProfilesID []string `json:"profiles_id"`
+type postFlamegraphFromProfileIDs struct {
+	ProfileIDs []string `json:"profile_ids"`
 }
 
-func (env *environment) getFlamegraphFromProfileIDs(w http.ResponseWriter, r *http.Request) {
+func (env *environment) postFlamegraphFromProfileIDs(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	hub := sentry.GetHubFromContext(ctx)
 	ps := httprouter.ParamsFromContext(ctx)
@@ -114,18 +113,10 @@ func (env *environment) getFlamegraphFromProfileIDs(w http.ResponseWriter, r *ht
 	}
 	hub.Scope().SetTag("project_id", rawProjectID)
 
-	body, err := io.ReadAll(r.Body)
-	defer r.Body.Close()
-	if err != nil {
-		hub.CaptureException(err)
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-
-	var profiles getFlamegraphFromProfileIDs
-	s := sentry.StartSpan(ctx, "json.unmarshal")
-	s.Description = "Unmarshal list of profiles"
-	err = json.Unmarshal(body, &profiles)
+	var profiles postFlamegraphFromProfileIDs
+	s := sentry.StartSpan(ctx, "processing")
+	s.Description = "Decoding data"
+	err = json.NewDecoder(r.Body).Decode(&profiles)
 	s.Finish()
 	if err != nil {
 		hub.CaptureException(err)
@@ -133,10 +124,8 @@ func (env *environment) getFlamegraphFromProfileIDs(w http.ResponseWriter, r *ht
 		return
 	}
 
-	hub.Scope().SetTag("fetched_profiles", strconv.Itoa(len(profiles.ProfilesID)))
-
 	s = sentry.StartSpan(ctx, "processing")
-	speedscope, err := flamegraph.GetFlamegraphFromProfiles(ctx, env.storage, organizationID, projectID, profiles.ProfilesID, numWorkers, timeout)
+	speedscope, err := flamegraph.GetFlamegraphFromProfiles(ctx, env.storage, organizationID, projectID, profiles.ProfileIDs, numWorkers, timeout)
 	if err != nil {
 		s.Finish()
 		hub.CaptureException(err)
@@ -144,6 +133,8 @@ func (env *environment) getFlamegraphFromProfileIDs(w http.ResponseWriter, r *ht
 		return
 	}
 	s.Finish()
+
+	hub.Scope().SetTag("sent_profiles", strconv.Itoa(len(profiles.ProfileIDs)))
 
 	s = sentry.StartSpan(ctx, "json.marshal")
 	defer s.Finish()
