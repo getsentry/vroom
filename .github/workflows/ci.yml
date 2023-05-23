@@ -51,7 +51,7 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           push: false
-          tags: vroom
+          tags: vroom:latest
       - name: Run Sentry self-hosted e2e CI
         # Skip for dependabot or if it's a fork as the image cannot be uploaded to ghcr since this test attempts to pull
         # the image from ghcr
@@ -59,6 +59,6 @@ jobs:
         uses: getsentry/action-self-hosted-e2e-tests@f45ef07793b2cc805a9a9401819f486da449a90a
         with:
           project_name: vroom
-          image_url: vroom
+          image_url: vroom:latest
           docker_repo: getsentry/vroom
           docker_password: ${{ secrets.DOCKER_HUB_RW_TOKEN }}
