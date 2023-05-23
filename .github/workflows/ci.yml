@@ -40,3 +40,21 @@ jobs:
         base: ${{ github.event.repository.default_branch }}
         head: HEAD
         extra_args: --debug --only-verified
+
+  self-hosted-end-to-end:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: build
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+      - name: Run Sentry self-hosted e2e CI
+        # Skip for dependabot or if it's a fork as the image cannot be uploaded to ghcr since this test attempts to pull
+        # the image from ghcr
+        if: "!github.event.pull_request.head.repo.fork && github.actor != 'dependabot[bot]'"
+        uses: getsentry/action-self-hosted-e2e-tests@f45ef07793b2cc805a9a9401819f486da449a90a
+        with:
+          project_name: vroom
+          image_url: us.gcr.io/sentryio/vroom:${{ github.event.pull_request.head.sha || github.sha }}
+          docker_repo: getsentry/vroom
+          docker_password: ${{ secrets.DOCKER_HUB_RW_TOKEN }}
