@@ -65,15 +65,7 @@ func (env *environment) getFlamegraph(w http.ResponseWriter, r *http.Request) {
 	s.Finish()
 
 	s = sentry.StartSpan(ctx, "processing")
-	speedscope, err := flamegraph.GetFlamegraphFromProfiles(
-		ctx,
-		env.storage,
-		organizationID,
-		projectID,
-		profileIDs,
-		numWorkers,
-		timeout,
-	)
+	speedscope, err := flamegraph.GetFlamegraphFromProfiles(ctx, env.storage, organizationID, projectID, profileIDs, nil, numWorkers, timeout)
 	if err != nil {
 		s.Finish()
 		hub.CaptureException(err)
@@ -97,7 +89,8 @@ func (env *environment) getFlamegraph(w http.ResponseWriter, r *http.Request) {
 }
 
 type postFlamegraphFromProfileIDs struct {
-	ProfileIDs []string `json:"profile_ids"`
+	ProfileIDs []string                     `json:"profile_ids"`
+	Spans      *[][]flamegraph.SpanInterval `json:"spans,omitempty"`
 }
 
 func (env *environment) postFlamegraphFromProfileIDs(w http.ResponseWriter, r *http.Request) {
@@ -135,15 +128,7 @@ func (env *environment) postFlamegraphFromProfileIDs(w http.ResponseWriter, r *h
 	}
 
 	s = sentry.StartSpan(ctx, "processing")
-	speedscope, err := flamegraph.GetFlamegraphFromProfiles(
-		ctx,
-		env.storage,
-		organizationID,
-		projectID,
-		profiles.ProfileIDs,
-		numWorkers,
-		timeout,
-	)
+	speedscope, err := flamegraph.GetFlamegraphFromProfiles(ctx, env.storage, organizationID, projectID, profiles.ProfileIDs, profiles.Spans, numWorkers, timeout)
 	if err != nil {
 		s.Finish()
 		hub.CaptureException(err)

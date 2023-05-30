@@ -37,6 +37,7 @@ func GetFlamegraphFromProfiles(
 	organizationID uint64,
 	projectID uint64,
 	profileIDs []string,
+	spans *[][]SpanInterval,
 	numWorkers int,
 	timeout time.Duration) (speedscope.Output, error) {
 	if numWorkers < 1 {
@@ -45,7 +46,7 @@ func GetFlamegraphFromProfiles(
 	var wg sync.WaitGroup
 	var flamegraphTree []*nodetree.Node
 	callTreesQueue := make(chan Pair[string, CallTrees], numWorkers)
-	profileIDsChan := make(chan string, numWorkers)
+	profileIDsChan := make(chan Pair[string, []SpanInterval], numWorkers)
 	hub := sentry.GetHubFromContext(ctx)
 	timeoutContext, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
@@ -53,12 +54,14 @@ func GetFlamegraphFromProfiles(
 	for i := 0; i < numWorkers; i++ {
 		wg.Add(1)
 		go func(
-			profIDsChan chan string,
+			profIDsChan chan Pair[string, []SpanInterval],
 			callTreesQueue chan Pair[string, CallTrees],
 			ctx context.Context) {
 			defer wg.Done()
 
-			for profileID := range profIDsChan {
+			for profilePair := range profIDsChan {
+				profileID := profilePair.First
+				spans := profilePair.Second
 				var p profile.Profile
 				err := storageutil.UnmarshalCompressed(ctx, profilesBucket, profile.StoragePath(organizationID, projectID, profileID), &p)
 				if err != nil {
@@ -76,19 +79,29 @@ func GetFlamegraphFromProfiles(
 					hub.CaptureException(err)
 					continue
 				}
+				if spans != nil {
+					sortedSpans := mergeIntervals(&spans)
+					for tid, callTree := range callTrees {
+						callTrees[tid] = sliceCallTree(&callTree, &sortedSpans)
+					}
+				}
 				callTreesQueue <- Pair[string, CallTrees]{profileID, callTrees}
 			}
 		}(profileIDsChan, callTreesQueue, timeoutContext)
 	}
 
-	go func(profIDsChan chan string, profileIDs []string, ctx context.Context) {
-		for _, profileID := range profileIDs {
+	go func(profIDsChan chan Pair[string, []SpanInterval], profileIDs []string, ctx context.Context) {
+		for i, profileID := range profileIDs {
 			select {
 			case <-ctx.Done():
 				close(profIDsChan)
 				return
 			default:
-				profIDsChan <- profileID
+				profilePair := Pair[string, []SpanInterval]{First: profileID, Second: nil}
+				if spans != nil {
+					profilePair.Second = (*spans)[i]
+				}
+				profIDsChan <- profilePair
 			}
 		}
 		close(profIDsChan)
