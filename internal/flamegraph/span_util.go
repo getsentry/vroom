@@ -59,8 +59,6 @@ func sliceCallTree(callTree *[]*nodetree.Node, intervals *[]SpanInterval) []*nod
 				node.Children = nil
 			}
 			slicedTree = append(slicedTree, node)
-		} else {
-			continue
 		}
 	} // end range callTree
 	return slicedTree
