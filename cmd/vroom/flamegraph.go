@@ -89,8 +89,12 @@ func (env *environment) getFlamegraph(w http.ResponseWriter, r *http.Request) {
 }
 
 type postFlamegraphFromProfileIDs struct {
-	ProfileIDs []string                     `json:"profile_ids"`
-	Spans      *[][]flamegraph.SpanInterval `json:"spans,omitempty"`
+	ProfileIDs []string `json:"profile_ids"`
+	// Spans is optional. If not nil,
+	// then at Span[i] we'll find a
+	// list of span intervals for the
+	// profile ProfileIDs[i]
+	Spans *[][]flamegraph.SpanInterval `json:"spans,omitempty"`
 }
 
 func (env *environment) postFlamegraphFromProfileIDs(w http.ResponseWriter, r *http.Request) {
