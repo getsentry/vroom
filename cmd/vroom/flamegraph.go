@@ -13,8 +13,10 @@ import (
 	"github.com/getsentry/vroom/internal/snubautil"
 )
 
-const numWorkers int = 5
-const timeout time.Duration = time.Second * 5
+const (
+	numWorkers int           = 5
+	timeout    time.Duration = time.Second * 5
+)
 
 func (env *environment) getFlamegraph(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
@@ -44,7 +46,7 @@ func (env *environment) getFlamegraph(w http.ResponseWriter, r *http.Request) {
 
 	hub.Scope().SetTag("project_id", rawProjectID)
 
-	sqb, err := env.profilesQueryBuilderFromRequest(ctx, r.URL.Query())
+	sqb, err := env.profilesQueryBuilderFromRequest(ctx, r.URL.Query(), organizationID)
 	if err != nil {
 		hub.CaptureException(err)
 		w.WriteHeader(http.StatusBadRequest)
@@ -63,7 +65,15 @@ func (env *environment) getFlamegraph(w http.ResponseWriter, r *http.Request) {
 	s.Finish()
 
 	s = sentry.StartSpan(ctx, "processing")
-	speedscope, err := flamegraph.GetFlamegraphFromProfiles(ctx, env.storage, organizationID, projectID, profileIDs, numWorkers, timeout)
+	speedscope, err := flamegraph.GetFlamegraphFromProfiles(
+		ctx,
+		env.storage,
+		organizationID,
+		projectID,
+		profileIDs,
+		numWorkers,
+		timeout,
+	)
 	if err != nil {
 		s.Finish()
 		hub.CaptureException(err)
@@ -125,7 +135,15 @@ func (env *environment) postFlamegraphFromProfileIDs(w http.ResponseWriter, r *h
 	}
 
 	s = sentry.StartSpan(ctx, "processing")
-	speedscope, err := flamegraph.GetFlamegraphFromProfiles(ctx, env.storage, organizationID, projectID, profiles.ProfileIDs, numWorkers, timeout)
+	speedscope, err := flamegraph.GetFlamegraphFromProfiles(
+		ctx,
+		env.storage,
+		organizationID,
+		projectID,
+		profiles.ProfileIDs,
+		numWorkers,
+		timeout,
+	)
 	if err != nil {
 		s.Finish()
 		hub.CaptureException(err)

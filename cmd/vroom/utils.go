@@ -88,8 +88,12 @@ func setExtrasFromRequest(sqb *snubautil.QueryBuilder, p url.Values) error {
 	return nil
 }
 
-func (e *environment) profilesQueryBuilderFromRequest(ctx context.Context, p url.Values) (snubautil.QueryBuilder, error) {
-	sqb, err := e.snuba.NewQuery(ctx, "profiles")
+func (e *environment) profilesQueryBuilderFromRequest(
+	ctx context.Context,
+	p url.Values,
+	orgID uint64,
+) (snubautil.QueryBuilder, error) {
+	sqb, err := e.snuba.NewQuery(ctx, "profiles", orgID)
 	if err != nil {
 		return snubautil.QueryBuilder{}, err
 	}
@@ -111,8 +115,12 @@ func (e *environment) profilesQueryBuilderFromRequest(ctx context.Context, p url
 	return sqb, nil
 }
 
-func (e *environment) functionsQueryBuilderFromRequest(ctx context.Context, p url.Values) (snubautil.QueryBuilder, error) {
-	sqb, err := e.snuba.NewQuery(ctx, "functions")
+func (e *environment) functionsQueryBuilderFromRequest(
+	ctx context.Context,
+	p url.Values,
+	orgID uint64,
+) (snubautil.QueryBuilder, error) {
+	sqb, err := e.snuba.NewQuery(ctx, "functions", orgID)
 	if err != nil {
 		return snubautil.QueryBuilder{}, err
 	}

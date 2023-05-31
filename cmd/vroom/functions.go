@@ -9,9 +9,10 @@ import (
 	"strings"
 
 	"github.com/getsentry/sentry-go"
+	"github.com/julienschmidt/httprouter"
+
 	"github.com/getsentry/vroom/internal/httputil"
 	"github.com/getsentry/vroom/internal/snubautil"
-	"github.com/julienschmidt/httprouter"
 )
 
 var legalOrderBys = map[string]struct{}{"p75": {}, "p95": {}, "p99": {}, "count": {}, "sum": {}}
@@ -25,7 +26,14 @@ type (
 func (env *environment) getFunctions(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	hub := sentry.GetHubFromContext(ctx)
-	p, ok := httputil.GetRequiredQueryParameters(w, r, "project_id", "start", "end", "transaction_name")
+	p, ok := httputil.GetRequiredQueryParameters(
+		w,
+		r,
+		"project_id",
+		"start",
+		"end",
+		"transaction_name",
+	)
 	if !ok {
 		return
 	}
@@ -34,7 +42,7 @@ func (env *environment) getFunctions(w http.ResponseWriter, r *http.Request) {
 
 	ps := httprouter.ParamsFromContext(ctx)
 	rawOrganizationID := ps.ByName("organization_id")
-	_, err := strconv.ParseUint(rawOrganizationID, 10, 64)
+	organizationID, err := strconv.ParseUint(rawOrganizationID, 10, 64)
 	if err != nil {
 		hub.CaptureException(err)
 		w.WriteHeader(http.StatusBadRequest)
@@ -54,7 +62,7 @@ func (env *environment) getFunctions(w http.ResponseWriter, r *http.Request) {
 	hub.Scope().SetTag("project_id", rawProjectID)
 
 	queryParams := r.URL.Query()
-	sqb, err := env.functionsQueryBuilderFromRequest(ctx, queryParams)
+	sqb, err := env.functionsQueryBuilderFromRequest(ctx, queryParams, organizationID)
 	if err != nil {
 		hub.CaptureException(err)
 		w.WriteHeader(http.StatusBadRequest)
