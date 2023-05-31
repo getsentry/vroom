@@ -14,6 +14,9 @@ type SpanInterval struct {
 }
 
 func mergeIntervals(intervals *[]SpanInterval) []SpanInterval {
+	if len(*intervals) == 0 {
+		return *intervals
+	}
 	sort.SliceStable((*intervals), func(i, j int) bool {
 		if (*intervals)[i].Start == (*intervals)[j].Start {
 			return (*intervals)[i].End < (*intervals)[j].End
