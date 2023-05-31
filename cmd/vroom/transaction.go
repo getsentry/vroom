@@ -51,13 +51,18 @@ func (env *environment) getProfileIDByTransactionID(w http.ResponseWriter, r *ht
 
 	hub.Scope().SetTag("transaction_id", transactionID)
 
-	sqb, err := env.snuba.NewQuery(ctx, "profiles")
+	sqb, err := env.snuba.NewQuery(ctx, "profiles", organizationID)
 	if err != nil {
 		hub.CaptureException(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	profileID, err := snubautil.GetProfileIDByTransactionID(organizationID, projectID, transactionID, sqb)
+	profileID, err := snubautil.GetProfileIDByTransactionID(
+		organizationID,
+		projectID,
+		transactionID,
+		sqb,
+	)
 	if err != nil {
 		if errors.Is(err, snubautil.ErrProfileNotFound) {
 			w.WriteHeader(http.StatusNotFound)

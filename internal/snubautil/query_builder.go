@@ -31,13 +31,19 @@ type (
 		entity string
 		ctx    context.Context
 
+		Granularity     uint64
 		GroupBy         string
 		Limit           uint64
 		Offset          uint64
 		OrderBy         string
+		OrganizationID  uint64
 		SelectCols      []string
 		WhereConditions []string
-		Granularity     uint64
+	}
+
+	Tenant struct {
+		OrganizationID uint64 `json:"organization_id"`
+		Referrer       string `json:"referrer"`
 	}
 
 	body struct {
@@ -45,6 +51,8 @@ type (
 		Dataset    string `json:"dataset"`
 		Turbo      bool   `json:"turbo"`
 		Consistent bool   `json:"consistent"`
+		AppID      string `json:"app_id"`
+		Tenant     Tenant `json:"tenant_ids"`
 		Debug      bool   `json:"debug"`
 		DryRun     bool   `json:"dry_run"`
 		Legacy     bool   `json:"legacy"`
@@ -73,14 +81,18 @@ func NewClient(host, dataset string) (Client, error) {
 	}, nil
 }
 
-func (c *Client) NewQuery(ctx context.Context, entity string) (QueryBuilder, error) {
+func (c *Client) NewQuery(ctx context.Context, entity string, orgID uint64) (QueryBuilder, error) {
 	if entity == "" {
 		return QueryBuilder{}, errors.New("no entity selected")
 	}
+	if orgID == 0 {
+		return QueryBuilder{}, errors.New("no org ID")
+	}
 	return QueryBuilder{
-		client: c,
-		entity: entity,
-		ctx:    ctx,
+		OrganizationID: orgID,
+		client:         c,
+		ctx:            ctx,
+		entity:         entity,
 	}, nil
 }
 
@@ -174,6 +186,7 @@ func (q *QueryBuilder) body(s *sentry.Span) (io.Reader, error) {
 	sqb := body{
 		Query:      query,
 		Turbo:      q.client.turbo,
+		Tenant:     Tenant{Referrer: "vroom", OrganizationID: q.OrganizationID},
 		Consistent: q.client.consistent,
 		Debug:      q.client.debug,
 		DryRun:     q.client.dryRun,

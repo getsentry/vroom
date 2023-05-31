@@ -251,7 +251,7 @@ func (e *environment) getFilters(w http.ResponseWriter, r *http.Request) {
 
 	hub.Scope().SetTag("organization_id", rawOrganizationID)
 
-	sqb, err := e.profilesQueryBuilderFromRequest(ctx, r.URL.Query())
+	sqb, err := e.profilesQueryBuilderFromRequest(ctx, r.URL.Query(), organizationID)
 	if err != nil {
 		hub.CaptureException(err)
 		w.WriteHeader(http.StatusBadRequest)
