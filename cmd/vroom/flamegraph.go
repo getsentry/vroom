@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strconv"
 	"time"
@@ -65,15 +66,7 @@ func (env *environment) getFlamegraph(w http.ResponseWriter, r *http.Request) {
 	s.Finish()
 
 	s = sentry.StartSpan(ctx, "processing")
-	speedscope, err := flamegraph.GetFlamegraphFromProfiles(
-		ctx,
-		env.storage,
-		organizationID,
-		projectID,
-		profileIDs,
-		numWorkers,
-		timeout,
-	)
+	speedscope, err := flamegraph.GetFlamegraphFromProfiles(ctx, env.storage, organizationID, projectID, profileIDs, nil, numWorkers, timeout)
 	if err != nil {
 		s.Finish()
 		hub.CaptureException(err)
@@ -98,6 +91,11 @@ func (env *environment) getFlamegraph(w http.ResponseWriter, r *http.Request) {
 
 type postFlamegraphFromProfileIDs struct {
 	ProfileIDs []string `json:"profile_ids"`
+	// Spans is optional. If not nil,
+	// then at Span[i] we'll find a
+	// list of span intervals for the
+	// profile ProfileIDs[i]
+	Spans *[][]flamegraph.SpanInterval `json:"spans,omitempty"`
 }
 
 func (env *environment) postFlamegraphFromProfileIDs(w http.ResponseWriter, r *http.Request) {
@@ -134,16 +132,14 @@ func (env *environment) postFlamegraphFromProfileIDs(w http.ResponseWriter, r *h
 		return
 	}
 
+	if profiles.Spans != nil && (len(*profiles.Spans) != len(profiles.ProfileIDs)) {
+		hub.CaptureException(errors.New("flamegraph: lengths of profile_ids and spans don't match"))
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
 	s = sentry.StartSpan(ctx, "processing")
-	speedscope, err := flamegraph.GetFlamegraphFromProfiles(
-		ctx,
-		env.storage,
-		organizationID,
-		projectID,
-		profiles.ProfileIDs,
-		numWorkers,
-		timeout,
-	)
+	speedscope, err := flamegraph.GetFlamegraphFromProfiles(ctx, env.storage, organizationID, projectID, profiles.ProfileIDs, profiles.Spans, numWorkers, timeout)
 	if err != nil {
 		s.Finish()
 		hub.CaptureException(err)
