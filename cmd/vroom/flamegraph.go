@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strconv"
 	"time"
@@ -127,6 +128,12 @@ func (env *environment) postFlamegraphFromProfileIDs(w http.ResponseWriter, r *h
 	s.Finish()
 	if err != nil {
 		hub.CaptureException(err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	if profiles.Spans != nil && (len(*profiles.Spans) != len(profiles.ProfileIDs)) {
+		hub.CaptureException(errors.New("flamegraph: lengths of profile_ids and spans don't match"))
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
