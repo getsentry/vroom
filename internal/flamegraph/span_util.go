@@ -87,5 +87,8 @@ func overlappingDuration(node *nodetree.Node, interval *SpanInterval) uint64 {
 	end := min(node.EndNS, interval.End)
 	start := max(node.StartNS, interval.Start)
 
-	return max(0, (end - start))
+	if end <= start {
+		return 0
+	}
+	return end - start
 }
