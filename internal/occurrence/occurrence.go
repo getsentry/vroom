@@ -79,9 +79,12 @@ type (
 
 const (
 	NoneType        Type = 0
+	CoreDataType    Type = 2004
 	FileIOType      Type = 2001
 	ImageDecodeType Type = 2002
 	JSONDecodeType  Type = 2003
+	RegexType       Type = 2005
+	ViewType        Type = 2006
 
 	EvidenceNameDuration EvidenceName = "Duration"
 	EvidenceNameFunction EvidenceName = "Suspect function"
@@ -96,10 +99,10 @@ var issueTitles = map[Category]CategoryMetadata{
 	Base64Decode:     {IssueTitle: "Base64 Decode on Main Thread"},
 	Base64Encode:     {IssueTitle: "Base64 Encode on Main Thread"},
 	Compression:      {IssueTitle: "Compression on Main Thread"},
-	CoreDataBlock:    {IssueTitle: "Object Context operation on Main Thread"},
-	CoreDataMerge:    {IssueTitle: "Object Context operation on Main Thread"},
-	CoreDataRead:     {IssueTitle: "Object Context operation on Main Thread"},
-	CoreDataWrite:    {IssueTitle: "Object Context operation on Main Thread"},
+	CoreDataBlock:    {IssueTitle: "Object Context operation on Main Thread", Type: CoreDataType},
+	CoreDataMerge:    {IssueTitle: "Object Context operation on Main Thread", Type: CoreDataType},
+	CoreDataRead:     {IssueTitle: "Object Context operation on Main Thread", Type: CoreDataType},
+	CoreDataWrite:    {IssueTitle: "Object Context operation on Main Thread", Type: CoreDataType},
 	Decompression:    {IssueTitle: "Decompression on Main Thread"},
 	FileRead:         {IssueTitle: "File I/O on Main Thread"},
 	FileWrite:        {IssueTitle: "File I/O on Main Thread"},
@@ -110,14 +113,14 @@ var issueTitles = map[Category]CategoryMetadata{
 	JSONEncode:       {IssueTitle: "JSON Encoding on Main Thread"},
 	MLModelInference: {IssueTitle: "Machine Learning inference on Main Thread"},
 	MLModelLoad:      {IssueTitle: "Machine Learning model load on Main Thread"},
-	Regex:            {IssueTitle: "Regex on Main Thread"},
+	Regex:            {IssueTitle: "Regex on Main Thread", Type: RegexType},
 	SQL:              {IssueTitle: "SQL operation on Main Thread"},
 	SourceContext:    {IssueTitle: "Adding Source Context is slow"},
 	ThreadWait:       {IssueTitle: "Thread Wait on Main Thread"},
-	ViewInflation:    {IssueTitle: "SwiftUI View inflation on Main Thread"},
-	ViewLayout:       {IssueTitle: "SwiftUI View layout on Main Thread"},
-	ViewRender:       {IssueTitle: "SwiftUI View render on Main Thread"},
-	ViewUpdate:       {IssueTitle: "SwiftUI View update on Main Thread"},
+	ViewInflation:    {IssueTitle: "SwiftUI View Inflation is slow"},
+	ViewLayout:       {IssueTitle: "SwiftUI View Layout is slow", Type: ViewType},
+	ViewRender:       {IssueTitle: "SwiftUI View Render is slow", Type: ViewType},
+	ViewUpdate:       {IssueTitle: "SwiftUI View Update is slow", Type: ViewType},
 	XPC:              {IssueTitle: "XPC operation on Main Thread"},
 }
 
