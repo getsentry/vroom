@@ -67,10 +67,6 @@ func sliceCallTree(callTree *[]*nodetree.Node, intervals *[]SpanInterval) []*nod
 	return slicedTree
 }
 
-func overlap(node *nodetree.Node, interval *SpanInterval) bool {
-	return max(node.StartNS, interval.Start) <= min(node.EndNS, interval.End)
-}
-
 func getTotalOverlappingDuration(node *nodetree.Node, intervals *[]SpanInterval) uint64 {
 	var duration uint64
 	for _, interval := range *intervals {
@@ -80,8 +76,8 @@ func getTotalOverlappingDuration(node *nodetree.Node, intervals *[]SpanInterval)
 			// therefeore we can bail out early
 			break
 		}
-		if overlap(node, &interval) {
-			duration += overlappingDuration(node, &interval)
+		if d := overlappingDuration(node, &interval); d > 0 {
+			duration += d
 		}
 	}
 	return duration
@@ -91,5 +87,5 @@ func overlappingDuration(node *nodetree.Node, interval *SpanInterval) uint64 {
 	end := min(node.EndNS, interval.End)
 	start := max(node.StartNS, interval.Start)
 
-	return (end - start)
+	return max(0, (end - start))
 }
