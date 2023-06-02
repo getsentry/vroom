@@ -123,6 +123,15 @@ func (p *LegacyProfile) UnmarshalJSON(b []byte) error {
 		if err != nil {
 			return err
 		}
+
+		// if the app identifier is present, then make sure to set it
+		// on the android profile as it will be used when classifying
+		// frames as application vs system
+		metadata := p.GetTransactionMetadata()
+		if metadata.AppIdentifier != "" {
+			t.AppIdentifier = &metadata.AppIdentifier
+		}
+
 		p.Trace = &t
 		p.Profile = nil
 	default:

@@ -45,7 +45,11 @@ var (
 )
 
 // IsAndroidApplicationPackage checks if a symbol belongs to an Android system package.
-func IsAndroidApplicationPackage(packageName string) bool {
+func IsAndroidApplicationPackage(packageName string, appIdentifier *string) bool {
+	if appIdentifier != nil {
+		return strings.HasPrefix(packageName, *appIdentifier+".")
+	}
+
 	for _, p := range androidPackagePrefixes {
 		if strings.HasPrefix(packageName, p) {
 			return false

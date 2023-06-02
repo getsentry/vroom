@@ -31,7 +31,7 @@ type AndroidMethod struct {
 	SourceLine   uint32          `json:"source_line,omitempty"`
 }
 
-func (m AndroidMethod) Frame() frame.Frame {
+func (m AndroidMethod) Frame(appIdentifier *string) frame.Frame {
 	className, _, err := m.ExtractPackageNameAndSimpleMethodNameFromAndroidMethod()
 	if err != nil {
 		className = m.ClassName
@@ -40,7 +40,7 @@ func (m AndroidMethod) Frame() frame.Frame {
 	if err != nil {
 		methodName = m.Name
 	}
-	inApp := packageutil.IsAndroidApplicationPackage(className)
+	inApp := packageutil.IsAndroidApplicationPackage(className, appIdentifier)
 	return frame.Frame{
 		Function: methodName,
 		Package:  className,
@@ -123,11 +123,12 @@ type AndroidEvent struct {
 
 type (
 	Android struct {
-		Clock     Clock           `json:"clock"`
-		Events    []AndroidEvent  `json:"events,omitempty"`
-		Methods   []AndroidMethod `json:"methods,omitempty"`
-		StartTime uint64          `json:"start_time,omitempty"`
-		Threads   []AndroidThread `json:"threads,omitempty"`
+		AppIdentifier *string         `json:"-"`
+		Clock         Clock           `json:"clock"`
+		Events        []AndroidEvent  `json:"events,omitempty"`
+		Methods       []AndroidMethod `json:"methods,omitempty"`
+		StartTime     uint64          `json:"start_time,omitempty"`
+		Threads       []AndroidThread `json:"threads,omitempty"`
 	}
 
 	Clock string
@@ -206,7 +207,7 @@ func (p Android) CallTrees() map[uint64][]*nodetree.Node {
 					Name:      "unknown",
 				}
 			}
-			n := nodetree.NodeFromFrame(m.Frame(), ts, 0, 0)
+			n := nodetree.NodeFromFrame(m.Frame(p.AppIdentifier), ts, 0, 0)
 			if len(stacks[e.ThreadID]) == 0 {
 				trees[e.ThreadID] = append(trees[e.ThreadID], n)
 			} else {
@@ -265,7 +266,7 @@ func (p Android) Speedscope() (speedscope.Output, error) {
 					File:          m.SourceFile,
 					Image:         m.ClassName,
 					Inline:        true,
-					IsApplication: packageutil.IsAndroidApplicationPackage(m.ClassName),
+					IsApplication: packageutil.IsAndroidApplicationPackage(m.ClassName, p.AppIdentifier),
 					Line:          m.SourceLine,
 					Name:          m.Name,
 				})
@@ -284,7 +285,7 @@ func (p Android) Speedscope() (speedscope.Output, error) {
 				Name:          fullMethodName,
 				File:          method.SourceFile,
 				Line:          method.SourceLine,
-				IsApplication: packageutil.IsAndroidApplicationPackage(packageName),
+				IsApplication: packageutil.IsAndroidApplicationPackage(packageName, p.AppIdentifier),
 				Image:         packageName,
 			})
 		}
