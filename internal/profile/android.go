@@ -1,6 +1,7 @@
 package profile
 
 import (
+	"encoding/json"
 	"fmt"
 	"hash/fnv"
 	"math"
@@ -9,12 +10,90 @@ import (
 	"time"
 
 	"github.com/getsentry/vroom/internal/android"
+	"github.com/getsentry/vroom/internal/debugmeta"
 	"github.com/getsentry/vroom/internal/errorutil"
 	"github.com/getsentry/vroom/internal/frame"
 	"github.com/getsentry/vroom/internal/nodetree"
 	"github.com/getsentry/vroom/internal/packageutil"
 	"github.com/getsentry/vroom/internal/speedscope"
+	"github.com/getsentry/vroom/internal/transaction"
 )
+
+type (
+	AndroidProfile struct {
+		LegacyProfile
+
+		Trace Android `json:"profile"`
+	}
+)
+
+func (p *AndroidProfile) UnmarshalJSON(b []byte) error {
+	err := json.Unmarshal(b, &p.LegacyProfile)
+	if err != nil {
+		return err
+	}
+	// when reading a profile from Snuba, there's no profile attached
+	if len(p.Profile) == 0 {
+		return nil
+	}
+	var raw []byte
+	if p.Profile[0] == '"' {
+		var s string
+		err := json.Unmarshal(p.Profile, &s)
+		if err != nil {
+			return err
+		}
+		raw = []byte(s)
+	} else {
+		raw = p.Profile
+	}
+
+	err = json.Unmarshal(raw, &p.Trace)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (p AndroidProfile) GetDurationNS() uint64 {
+	events := p.Trace.Events
+	if len(events) == 0 {
+		return 0
+	}
+	buildTimestamp := p.Trace.TimestampGetter()
+	startTS := buildTimestamp(events[0].Time)
+	endTS := buildTimestamp(events[len(events)-1].Time)
+	return endTS - startTS
+}
+
+func (p AndroidProfile) CallTrees() (map[uint64][]*nodetree.Node, error) {
+	return p.Trace.CallTrees(), nil
+}
+
+func (p *AndroidProfile) Speedscope() (speedscope.Output, error) {
+	return p.Trace.Speedscope()
+}
+
+func (p *AndroidProfile) Normalize() {
+	if p.BuildID != "" {
+		p.DebugMeta.Images = append(p.DebugMeta.Images, debugmeta.Image{
+			Type: "proguard",
+			UUID: p.BuildID,
+		})
+		p.BuildID = ""
+	}
+}
+
+func (p AndroidProfile) GetTransaction() transaction.Transaction {
+	return transaction.Transaction{
+		ActiveThreadID: p.Trace.ActiveThreadID(),
+		DurationNS:     p.DurationNS,
+		ID:             p.TransactionID,
+		Name:           p.TransactionName,
+		TraceID:        p.TraceID,
+	}
+}
 
 type AndroidThread struct {
 	ID   uint64 `json:"id,omitempty"`

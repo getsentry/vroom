@@ -2,6 +2,7 @@ package profile
 
 import (
 	"encoding/json"
+	"errors"
 	"time"
 
 	"github.com/getsentry/vroom/internal/debugmeta"
@@ -42,8 +43,9 @@ type (
 		profile profileInterface
 	}
 
-	version struct {
-		Version string `json:"version"`
+	format struct {
+		Version  string            `json:"version"`
+		Platform platform.Platform `json:"platform"`
 	}
 )
 
@@ -54,14 +56,21 @@ func New(p profileInterface) Profile {
 }
 
 func (p *Profile) UnmarshalJSON(b []byte) error {
-	var v version
-	err := json.Unmarshal(b, &v)
+	var f format
+	err := json.Unmarshal(b, &f)
 	if err != nil {
 		return err
 	}
-	switch v.Version {
+	switch f.Version {
 	case "":
-		p.profile = new(LegacyProfile)
+		switch f.Platform {
+		case platform.Cocoa:
+			p.profile = new(IosProfile)
+		case platform.Android:
+			p.profile = new(AndroidProfile)
+		default:
+			return errors.New("unknown platform")
+		}
 	default:
 		p.profile = new(sample.Profile)
 	}

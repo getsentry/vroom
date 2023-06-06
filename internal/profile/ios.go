@@ -1,6 +1,7 @@
 package profile
 
 import (
+	"encoding/json"
 	"fmt"
 	"hash"
 	"hash/fnv"
@@ -12,7 +13,76 @@ import (
 	"github.com/getsentry/vroom/internal/nodetree"
 	"github.com/getsentry/vroom/internal/packageutil"
 	"github.com/getsentry/vroom/internal/speedscope"
+	"github.com/getsentry/vroom/internal/transaction"
 )
+
+type (
+	IosProfile struct {
+		LegacyProfile
+
+		Trace IOS `json:"profile"`
+	}
+)
+
+func (p *IosProfile) UnmarshalJSON(b []byte) error {
+	err := json.Unmarshal(b, &p.LegacyProfile)
+	if err != nil {
+		return err
+	}
+
+	// when reading a profile from Snuba, there's no profile attached
+	if len(p.Profile) == 0 {
+		return nil
+	}
+	var raw []byte
+	if p.Profile[0] == '"' {
+		var s string
+		err := json.Unmarshal(p.Profile, &s)
+		if err != nil {
+			return err
+		}
+		raw = []byte(s)
+	} else {
+		raw = p.Profile
+	}
+
+	err = json.Unmarshal(raw, &p.Trace)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (p IosProfile) GetDurationNS() uint64 {
+	samples := p.Trace.Samples
+	if len(samples) == 0 {
+		return 0
+	}
+	return samples[len(samples)-1].RelativeTimestampNS - samples[0].RelativeTimestampNS
+}
+
+func (p IosProfile) CallTrees() (map[uint64][]*nodetree.Node, error) {
+	return p.Trace.CallTrees(), nil
+}
+
+func (p *IosProfile) Speedscope() (speedscope.Output, error) {
+	return p.Trace.Speedscope()
+}
+
+func (p *IosProfile) Normalize() {
+	p.Trace.ReplaceIdleStacks()
+}
+
+func (p IosProfile) GetTransaction() transaction.Transaction {
+	return transaction.Transaction{
+		ActiveThreadID: p.Trace.ActiveThreadID(),
+		DurationNS:     p.DurationNS,
+		ID:             p.TransactionID,
+		Name:           p.TransactionName,
+		TraceID:        p.TraceID,
+	}
+}
 
 type IosFrame struct {
 	AbsPath         string `json:"abs_path,omitempty"`
@@ -421,11 +491,4 @@ func (p IOS) Speedscope() (speedscope.Output, error) {
 		Profiles:           allProfiles,
 		Shared:             speedscope.SharedData{Frames: frames},
 	}, nil
-}
-
-func (p IOS) DurationNS() uint64 {
-	if len(p.Samples) == 0 {
-		return 0
-	}
-	return p.Samples[len(p.Samples)-1].RelativeTimestampNS - p.Samples[0].RelativeTimestampNS
 }
