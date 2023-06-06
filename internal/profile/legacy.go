@@ -128,9 +128,7 @@ func (p *LegacyProfile) UnmarshalJSON(b []byte) error {
 		// on the android profile as it will be used when classifying
 		// frames as application vs system
 		metadata := p.GetTransactionMetadata()
-		if metadata.AppIdentifier != "" {
-			t.AppIdentifier = &metadata.AppIdentifier
-		}
+		t.AppIdentifier = metadata.AppIdentifier
 
 		p.Trace = &t
 		p.Profile = nil

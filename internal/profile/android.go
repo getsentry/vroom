@@ -31,7 +31,7 @@ type AndroidMethod struct {
 	SourceLine   uint32          `json:"source_line,omitempty"`
 }
 
-func (m AndroidMethod) Frame(appIdentifier *string) frame.Frame {
+func (m AndroidMethod) Frame(appIdentifier string) frame.Frame {
 	className, _, err := m.ExtractPackageNameAndSimpleMethodNameFromAndroidMethod()
 	if err != nil {
 		className = m.ClassName
@@ -123,7 +123,7 @@ type AndroidEvent struct {
 
 type (
 	Android struct {
-		AppIdentifier *string         `json:"-"`
+		AppIdentifier string          `json:"-"`
 		Clock         Clock           `json:"clock"`
 		Events        []AndroidEvent  `json:"events,omitempty"`
 		Methods       []AndroidMethod `json:"methods,omitempty"`

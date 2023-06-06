@@ -15,31 +15,31 @@ func TestIsAndroidApplicationPackage(t *testing.T) {
 	tests := []struct {
 		name          string
 		pkg           string
-		identifier    *string
+		identifier    string
 		isApplication bool
 	}{
 		{
 			name:          "android system package",
 			pkg:           "android.app",
-			identifier:    nil,
+			identifier:    "",
 			isApplication: false,
 		},
 		{
 			name:          "androidx system package",
 			pkg:           "androidx.lifecycle",
-			identifier:    nil,
+			identifier:    "",
 			isApplication: false,
 		},
 		{
 			name:          "io.sentry.samples.android application package",
 			pkg:           appIdentifier + ".foo",
-			identifier:    &appIdentifier,
+			identifier:    appIdentifier,
 			isApplication: true,
 		},
 		{
 			name:          "io.sentry.samples.android package must be prefix",
 			pkg:           appIdentifier,
-			identifier:    &appIdentifier,
+			identifier:    appIdentifier,
 			isApplication: false,
 		},
 	}
