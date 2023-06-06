@@ -55,7 +55,7 @@ func sliceCallTree(callTree *[]*nodetree.Node, intervals *[]SpanInterval) []*nod
 	for _, node := range *callTree {
 		if duration := getTotalOverlappingDuration(node, intervals); duration > 0 {
 			sampleCount := math.Ceil(float64(duration) / float64(time.Millisecond*10))
-			node.SampleCount = int(sampleCount)
+			node.SampleCount = int(min(uint64(sampleCount), uint64(node.SampleCount)))
 			if children := sliceCallTree(&node.Children, intervals); len(children) > 0 {
 				node.Children = children
 			} else {
