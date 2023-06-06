@@ -343,6 +343,19 @@ func TestNodeTreeCollectFunctions(t *testing.T) {
 				},
 			},
 		},
+		{
+			name:     "cocoa main frame",
+			platform: platform.Cocoa,
+			node: Node{
+				DurationNS:    10,
+				IsApplication: true,
+				Frame: frame.Frame{
+					Function: "main",
+					Package:  "iOS-Swift",
+				},
+			},
+			want: map[uint64]CallTreeFunction{},
+		},
 	}
 
 	for _, tt := range tests {

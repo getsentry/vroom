@@ -14,6 +14,12 @@ var (
 		platform.Android: {},
 		platform.Java:    {},
 	}
+
+	functionDenyListByPlatform = map[platform.Platform]map[string]struct{}{
+		platform.Cocoa: {
+			"main": {},
+		},
+	}
 )
 
 type (
@@ -193,8 +199,14 @@ func shouldAggregateFrame(profilePlatform platform.Platform, frameFunction strin
 		return false
 	}
 
-	_, obfuscationSupported := obfuscationSupportedPlatforms[profilePlatform]
-	if obfuscationSupported {
+	// hard coded list of functions that we should not aggregate by
+	if functionDenyList, exists := functionDenyListByPlatform[profilePlatform]; exists {
+		if _, exists = functionDenyList[frameFunction]; exists {
+			return false
+		}
+	}
+
+	if _, obfuscationSupported := obfuscationSupportedPlatforms[profilePlatform]; obfuscationSupported {
 		// obfuscated package names often don't contain a dot (`.`)
 		if !strings.Contains(framePackage, ".") {
 			return false
