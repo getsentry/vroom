@@ -52,7 +52,7 @@ type (
 		Event           Event                  `json:"event"`
 		EvidenceData    map[string]interface{} `json:"evidence_data,omitempty"`
 		EvidenceDisplay []Evidence             `json:"evidence_display,omitempty"`
-		Fingerprint     string                 `json:"fingerprint"`
+		Fingerprint     []string               `json:"fingerprint"`
 		ID              string                 `json:"id"`
 		IssueTitle      IssueTitle             `json:"issue_title"`
 		Level           string                 `json:"level,omitempty"`
@@ -218,7 +218,7 @@ func NewOccurrence(p profile.Profile, ni nodeInfo) *Occurrence {
 				Value: duration,
 			},
 		},
-		Fingerprint: fingerprint,
+		Fingerprint: []string{fingerprint},
 		ID:          eventID(),
 		IssueTitle:  title,
 		Level:       "info",
