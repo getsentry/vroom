@@ -240,6 +240,33 @@ func TestSliceCallTree(t *testing.T) {
 				},
 			},
 		},
+		{ // this simulate the scenario where the sampling frequency
+			// could not be respected (Python native code holding the GIL,
+			// php, etc.)
+			/*
+				|---------------- NODE ----------------|
+
+						 |------ SPAN 1 ------|
+			*/
+			name: "defective sampling",
+			callTree: []*nodetree.Node{
+				{
+					StartNS:     0,
+					EndNS:       uint64(1000 * time.Millisecond),
+					SampleCount: 2,
+				},
+			},
+			intervals: []SpanInterval{
+				{Start: uint64(250 * time.Millisecond), End: uint64(750 * time.Millisecond)},
+			},
+			output: []*nodetree.Node{
+				{
+					StartNS:     0,
+					EndNS:       uint64(1000 * time.Millisecond),
+					SampleCount: 2,
+				},
+			},
+		},
 	} // end test list
 
 	for _, test := range tests {
