@@ -32,6 +32,13 @@ type AndroidMethod struct {
 	InApp        *bool           `json:"in_app"`
 }
 
+func (m AndroidMethod) isApplicationFrame(appIdentifier string) bool {
+	if appIdentifier != "" {
+		return strings.HasPrefix(m.ClassName, appIdentifier+".")
+	}
+	return packageutil.IsAndroidApplicationPackage(m.ClassName)
+}
+
 func (m AndroidMethod) Frame() frame.Frame {
 	className, _, err := m.ExtractPackageNameAndSimpleMethodNameFromAndroidMethod()
 	if err != nil {
@@ -264,12 +271,16 @@ func (p *Android) NormalizeMethods(pi profileInterface) {
 	for i := range p.Methods {
 		method := p.Methods[i]
 
-		var inApp bool
-		if appIdentifier != "" {
-			inApp = strings.HasPrefix(method.ClassName, appIdentifier+".")
-		} else {
-			inApp = packageutil.IsAndroidApplicationPackage(method.ClassName)
+		for j := range method.InlineFrames {
+			inlineMethod := method.InlineFrames[j]
+
+			inApp := inlineMethod.isApplicationFrame(appIdentifier)
+			inlineMethod.InApp = &inApp
+
+			method.InlineFrames[j] = inlineMethod
 		}
+
+		inApp := method.isApplicationFrame(appIdentifier)
 		method.InApp = &inApp
 
 		p.Methods[i] = method
