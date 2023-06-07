@@ -45,7 +45,7 @@ func (m AndroidMethod) Frame() frame.Frame {
 	if m.InApp != nil {
 		inApp = *m.InApp
 	} else {
-		inApp = packageutil.IsAndroidApplicationPackage(className, "")
+		inApp = packageutil.IsAndroidApplicationPackage(m.ClassName)
 	}
 	return frame.Frame{
 		Function: methodName,
@@ -264,7 +264,12 @@ func (p *Android) NormalizeMethods(pi profileInterface) {
 	for i := range p.Methods {
 		method := p.Methods[i]
 
-		inApp := packageutil.IsAndroidApplicationPackage(method.ClassName, appIdentifier)
+		var inApp bool
+		if appIdentifier != "" {
+			inApp = strings.HasPrefix(method.ClassName, appIdentifier+".")
+		} else {
+			inApp = packageutil.IsAndroidApplicationPackage(method.ClassName)
+		}
 		method.InApp = &inApp
 
 		p.Methods[i] = method
@@ -277,16 +282,16 @@ func (p Android) Speedscope() (speedscope.Output, error) {
 	for _, method := range p.Methods {
 		if len(method.InlineFrames) > 0 {
 			for _, m := range method.InlineFrames {
-				methodIDToFrameIndex[method.ID] = append(
-					methodIDToFrameIndex[method.ID],
-					len(frames),
-				)
 				var inApp bool
 				if m.InApp != nil {
 					inApp = *m.InApp
 				} else {
-					inApp = packageutil.IsAndroidApplicationPackage(m.ClassName, "")
+					inApp = packageutil.IsAndroidApplicationPackage(m.ClassName)
 				}
+				methodIDToFrameIndex[method.ID] = append(
+					methodIDToFrameIndex[method.ID],
+					len(frames),
+				)
 				frames = append(frames, speedscope.Frame{
 					File:          m.SourceFile,
 					Image:         m.ClassName,
@@ -305,13 +310,13 @@ func (p Android) Speedscope() (speedscope.Output, error) {
 			if err != nil {
 				return speedscope.Output{}, err
 			}
-			methodIDToFrameIndex[method.ID] = append(methodIDToFrameIndex[method.ID], len(frames))
 			var inApp bool
 			if method.InApp != nil {
 				inApp = *method.InApp
 			} else {
-				inApp = packageutil.IsAndroidApplicationPackage(packageName, "")
+				inApp = packageutil.IsAndroidApplicationPackage(method.ClassName)
 			}
+			methodIDToFrameIndex[method.ID] = append(methodIDToFrameIndex[method.ID], len(frames))
 			frames = append(frames, speedscope.Frame{
 				Name:          fullMethodName,
 				File:          method.SourceFile,
