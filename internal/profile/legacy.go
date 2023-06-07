@@ -226,6 +226,8 @@ func (p *LegacyProfile) Normalize() {
 	switch t := p.Trace.(type) {
 	case *IOS:
 		t.ReplaceIdleStacks()
+	case *Android:
+		t.NormalizeMethods(p)
 	}
 
 	if p.BuildID != "" {
