@@ -112,6 +112,13 @@ func TestIsNodeApplicationFrame(t *testing.T) {
 			},
 			isApplication: false,
 		},
+		{
+			name: "internal",
+			frame: Frame{
+				Path: "node:internal/process/task_queues",
+			},
+			isApplication: false,
+		},
 	}
 
 	for _, tt := range tests {
