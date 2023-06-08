@@ -142,7 +142,7 @@ func (f Frame) IsInline() bool {
 }
 
 func (f Frame) IsNodeApplicationFrame() bool {
-	return !strings.Contains(f.Path, "node_modules")
+	return !strings.HasPrefix(f.Path, "node:internal") && !strings.Contains(f.Path, "node_modules")
 }
 
 func (f Frame) IsCocoaApplicationFrame() bool {
