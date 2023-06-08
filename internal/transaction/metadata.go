@@ -4,6 +4,7 @@ import "time"
 
 type (
 	Metadata struct {
+		AppIdentifier     string    `json:"app.identifier,omitempty"`
 		Dist              string    `json:"dist,omitempty"`
 		Environment       string    `json:"environment,omitempty"`
 		HTTPMethod        string    `json:"http.method,omitempty"`

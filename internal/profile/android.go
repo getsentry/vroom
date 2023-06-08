@@ -29,6 +29,14 @@ type AndroidMethod struct {
 	Signature    string          `json:"signature,omitempty"`
 	SourceFile   string          `json:"source_file,omitempty"`
 	SourceLine   uint32          `json:"source_line,omitempty"`
+	InApp        *bool           `json:"in_app"`
+}
+
+func (m AndroidMethod) isApplicationFrame(appIdentifier string) bool {
+	if appIdentifier != "" {
+		return strings.HasPrefix(m.ClassName, appIdentifier+".")
+	}
+	return packageutil.IsAndroidApplicationPackage(m.ClassName)
 }
 
 func (m AndroidMethod) Frame() frame.Frame {
@@ -40,7 +48,12 @@ func (m AndroidMethod) Frame() frame.Frame {
 	if err != nil {
 		methodName = m.Name
 	}
-	inApp := packageutil.IsAndroidApplicationPackage(className)
+	var inApp bool
+	if m.InApp != nil {
+		inApp = *m.InApp
+	} else {
+		inApp = packageutil.IsAndroidApplicationPackage(m.ClassName)
+	}
 	return frame.Frame{
 		Function: methodName,
 		Package:  className,
@@ -251,12 +264,41 @@ func generateFingerprint(stack []*nodetree.Node) uint64 {
 	return h.Sum64()
 }
 
+func (p *Android) NormalizeMethods(pi profileInterface) {
+	metadata := pi.GetTransactionMetadata()
+	appIdentifier := metadata.AppIdentifier
+
+	for i := range p.Methods {
+		method := p.Methods[i]
+
+		for j := range method.InlineFrames {
+			inlineMethod := method.InlineFrames[j]
+
+			inApp := inlineMethod.isApplicationFrame(appIdentifier)
+			inlineMethod.InApp = &inApp
+
+			method.InlineFrames[j] = inlineMethod
+		}
+
+		inApp := method.isApplicationFrame(appIdentifier)
+		method.InApp = &inApp
+
+		p.Methods[i] = method
+	}
+}
+
 func (p Android) Speedscope() (speedscope.Output, error) {
 	frames := make([]speedscope.Frame, 0)
 	methodIDToFrameIndex := make(map[uint64][]int)
 	for _, method := range p.Methods {
 		if len(method.InlineFrames) > 0 {
 			for _, m := range method.InlineFrames {
+				var inApp bool
+				if m.InApp != nil {
+					inApp = *m.InApp
+				} else {
+					inApp = packageutil.IsAndroidApplicationPackage(m.ClassName)
+				}
 				methodIDToFrameIndex[method.ID] = append(
 					methodIDToFrameIndex[method.ID],
 					len(frames),
@@ -265,7 +307,7 @@ func (p Android) Speedscope() (speedscope.Output, error) {
 					File:          m.SourceFile,
 					Image:         m.ClassName,
 					Inline:        true,
-					IsApplication: packageutil.IsAndroidApplicationPackage(m.ClassName),
+					IsApplication: inApp,
 					Line:          m.SourceLine,
 					Name:          m.Name,
 				})
@@ -279,12 +321,18 @@ func (p Android) Speedscope() (speedscope.Output, error) {
 			if err != nil {
 				return speedscope.Output{}, err
 			}
+			var inApp bool
+			if method.InApp != nil {
+				inApp = *method.InApp
+			} else {
+				inApp = packageutil.IsAndroidApplicationPackage(method.ClassName)
+			}
 			methodIDToFrameIndex[method.ID] = append(methodIDToFrameIndex[method.ID], len(frames))
 			frames = append(frames, speedscope.Frame{
 				Name:          fullMethodName,
 				File:          method.SourceFile,
 				Line:          method.SourceLine,
-				IsApplication: packageutil.IsAndroidApplicationPackage(packageName),
+				IsApplication: inApp,
 				Image:         packageName,
 			})
 		}
