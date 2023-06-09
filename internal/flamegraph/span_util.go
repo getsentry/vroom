@@ -60,6 +60,7 @@ func sliceCallTree(callTree *[]*nodetree.Node, intervals *[]SpanInterval) []*nod
 			// to sampling frequency not being respected. (Python native code holding
 			// the GIL, php, etc.)
 			node.SampleCount = int(min(uint64(sampleCount), uint64(node.SampleCount)))
+			node.DurationNS = duration
 			if children := sliceCallTree(&node.Children, intervals); len(children) > 0 {
 				node.Children = children
 			} else {
