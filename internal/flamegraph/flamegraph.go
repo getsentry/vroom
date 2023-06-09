@@ -147,10 +147,11 @@ func addCallTreeToFlamegraph(flamegraphTree *[]*nodetree.Node, callTree []*nodet
 	for _, node := range callTree {
 		if existingNode := getMatchingNode(flamegraphTree, node); existingNode != nil {
 			existingNode.SampleCount += node.SampleCount
+			existingNode.DurationNS += node.DurationNS
+			addCallTreeToFlamegraph(&existingNode.Children, node.Children, profileID)
 			if node.SampleCount > sumNodesSampleCount(node.Children) {
 				existingNode.ProfileIDs[profileID] = void
 			}
-			addCallTreeToFlamegraph(&existingNode.Children, node.Children, profileID)
 		} else {
 			*flamegraphTree = append(*flamegraphTree, node)
 			// in this case since we append the whole branch
@@ -186,7 +187,8 @@ func expandCallTreeWithProfileID(node *nodetree.Node, profileID string) {
 type flamegraph struct {
 	samples           [][]int
 	samplesProfileIDs [][]int
-	weights           []uint64
+	sampleCounts      []uint64
+	sampleDurationsNs []uint64
 	frames            []speedscope.Frame
 	framesIndex       map[string]int
 	profilesIDsIndex  map[string]int
@@ -202,7 +204,7 @@ func toSpeedscope(trees []*nodetree.Node, minFreq int, projectID uint64) speedsc
 		minFreq:          minFreq,
 		profilesIDsIndex: make(map[string]int),
 		samples:          make([][]int, 0),
-		weights:          make([]uint64, 0),
+		sampleCounts:     make([]uint64, 0),
 	}
 	for _, tree := range trees {
 		stack := make([]int, 0, 128)
@@ -211,13 +213,15 @@ func toSpeedscope(trees []*nodetree.Node, minFreq int, projectID uint64) speedsc
 
 	aggProfiles := make([]interface{}, 1)
 	aggProfiles[0] = speedscope.SampledProfile{
-		Samples:         fd.samples,
-		SamplesProfiles: fd.samplesProfileIDs,
-		Weights:         fd.weights,
-		IsMainThread:    true,
-		Type:            speedscope.ProfileTypeSampled,
-		Unit:            speedscope.ValueUnitCount,
-		EndValue:        fd.endValue,
+		Samples:           fd.samples,
+		SamplesProfiles:   fd.samplesProfileIDs,
+		Weights:           fd.sampleCounts,
+		SampleCount:       fd.sampleCounts,
+		SampleDurationsNs: fd.sampleDurationsNs,
+		IsMainThread:      true,
+		Type:              speedscope.ProfileTypeSampled,
+		Unit:              speedscope.ValueUnitCount,
+		EndValue:          fd.endValue,
 	}
 
 	return speedscope.Output{
@@ -266,32 +270,36 @@ func (f *flamegraph) visitCalltree(node *nodetree.Node, currentStack *[]int) {
 
 	// base case (when we reach leaf frames)
 	if node.Children == nil {
-		f.addSample(currentStack, uint64(node.SampleCount), node.ProfileIDs)
+		f.addSample(currentStack, uint64(node.SampleCount), node.DurationNS, node.ProfileIDs)
 	} else {
 		totChildrenSampleCount := 0
+		var totChildrenDuration uint64
 		// else we call visitTree recursively on the children
 		for _, childNode := range node.Children {
 			totChildrenSampleCount += childNode.SampleCount
+			totChildrenDuration += childNode.DurationNS
 			f.visitCalltree(childNode, currentStack)
 		}
 
 		// If the children's sample count is less than the current
 		// nodes sample count, it means there are some samples
 		// ending at the current node.
-		diff := node.SampleCount - totChildrenSampleCount
-		if diff >= f.minFreq {
-			f.addSample(currentStack, uint64(diff), node.ProfileIDs)
+		diffCount := node.SampleCount - totChildrenSampleCount
+		diffDuration := node.DurationNS - totChildrenDuration
+		if diffCount >= f.minFreq {
+			f.addSample(currentStack, uint64(diffCount), diffDuration, node.ProfileIDs)
 		}
 	}
 	// pop last element before returning
 	*currentStack = (*currentStack)[:len(*currentStack)-1]
 }
 
-func (f *flamegraph) addSample(stack *[]int, count uint64, profileIDs map[string]struct{}) {
+func (f *flamegraph) addSample(stack *[]int, count uint64, duration uint64, profileIDs map[string]struct{}) {
 	cp := make([]int, len(*stack))
 	copy(cp, *stack)
 	f.samples = append(f.samples, cp)
-	f.weights = append(f.weights, count)
+	f.sampleCounts = append(f.sampleCounts, count)
+	f.sampleDurationsNs = append(f.sampleDurationsNs, duration)
 	f.samplesProfileIDs = append(f.samplesProfileIDs, f.getProfileIDsIndices(profileIDs))
 	f.endValue += count
 }
