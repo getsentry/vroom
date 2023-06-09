@@ -70,7 +70,7 @@ type (
 		Unit              ValueUnit        `json:"unit"`
 		Weights           []uint64         `json:"weights"`
 		SampleDurationsNs []uint64         `json:"sample_durations_ns"`
-		SampleCount       []uint64         `json:"sample_count,omitempty"`
+		SampleCounts      []uint64         `json:"sample_counts,omitempty"`
 	}
 
 	SharedData struct {

@@ -216,7 +216,7 @@ func toSpeedscope(trees []*nodetree.Node, minFreq int, projectID uint64) speedsc
 		Samples:           fd.samples,
 		SamplesProfiles:   fd.samplesProfileIDs,
 		Weights:           fd.sampleCounts,
-		SampleCount:       fd.sampleCounts,
+		SampleCounts:      fd.sampleCounts,
 		SampleDurationsNs: fd.sampleDurationsNs,
 		IsMainThread:      true,
 		Type:              speedscope.ProfileTypeSampled,

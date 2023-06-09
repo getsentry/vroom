@@ -146,7 +146,7 @@ func TestFlamegraphAggregation(t *testing.T) {
 						Type:              "sampled",
 						Unit:              "count",
 						Weights:           []uint64{3, 1, 1, 1, 1},
-						SampleCount:       []uint64{3, 1, 1, 1, 1},
+						SampleCounts:      []uint64{3, 1, 1, 1, 1},
 						SampleDurationsNs: []uint64{20, 10, 0, 10, 10},
 					},
 				},
