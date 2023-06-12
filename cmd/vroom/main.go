@@ -171,10 +171,11 @@ func main() {
 	}
 
 	err = sentry.Init(sentry.ClientOptions{
-		Dsn:           env.config.SentryDSN,
-		EnableTracing: true,
-		Environment:   env.config.Environment,
-		Release:       release,
+		Dsn:                   env.config.SentryDSN,
+		EnableTracing:         true,
+		Environment:           env.config.Environment,
+		Release:               release,
+		BeforeSendTransaction: httputil.SetHTTPStatusCodeTag,
 		TracesSampler: func(ctx sentry.SamplingContext) float64 {
 			if ctx.Span.Name == "GET /health" {
 				return 0
