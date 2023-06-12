@@ -146,6 +146,12 @@ func (f Frame) IsNodeApplicationFrame() bool {
 }
 
 func (f Frame) IsCocoaApplicationFrame() bool {
+	isMain, _ := f.IsMain()
+	if isMain {
+		// the main frame is found in the user package but should be treated
+		// as a system frame as it does not contain any user code
+		return false
+	}
 	return packageutil.IsCocoaApplicationPackage(f.Package)
 }
 

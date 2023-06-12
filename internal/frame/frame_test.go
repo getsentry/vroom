@@ -12,6 +12,50 @@ func frameType(isApplication bool) string {
 	return "system"
 }
 
+const mockUUID = "00000000-0000-0000-0000-000000000000"
+
+func TestIsCocoaApplicationFrame(t *testing.T) {
+	tests := []struct {
+		name          string
+		frame         Frame
+		isApplication bool
+	}{
+		{
+			name: "main",
+			frame: Frame{
+				Function: "main",
+				Status:   "symbolicated",
+				Package:  "/Users/runner/Library/Developer/CoreSimulator/Devices/" + mockUUID + "/data/Containers/Bundle/Application/" + mockUUID + "/iOS-Swift.app/Frameworks/libclang_rt.asan_iossim_dynamic.dylib",
+			},
+			isApplication: false,
+		},
+		{
+			name: "main must be symbolicated",
+			frame: Frame{
+				Function: "main",
+				Package:  "/Users/runner/Library/Developer/CoreSimulator/Devices/" + mockUUID + "/data/Containers/Bundle/Application/" + mockUUID + "/iOS-Swift.app/Frameworks/libclang_rt.asan_iossim_dynamic.dylib",
+			},
+			isApplication: true,
+		},
+		{
+			name: "__sanitizer::StackDepotNode::store(unsigned int, __sanitizer::StackTrace const&, unsigned long long)",
+			frame: Frame{
+				Function: "__sanitizer::StackDepotNode::store(unsigned int, __sanitizer::StackTrace const&, unsigned long long)",
+				Package:  "/Users/runner/Library/Developer/CoreSimulator/Devices/" + mockUUID + "/data/Containers/Bundle/Application/" + mockUUID + "/iOS-Swift.app/Frameworks/libclang_rt.asan_iossim_dynamic.dylib",
+			},
+			isApplication: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if isApplication := tt.frame.IsCocoaApplicationFrame(); isApplication != tt.isApplication {
+				t.Fatalf("Expected %s frame but got %s frame", frameType(tt.isApplication), frameType(isApplication))
+			}
+		})
+	}
+}
+
 func TestIsPythonApplicationFrame(t *testing.T) {
 	tests := []struct {
 		name          string
