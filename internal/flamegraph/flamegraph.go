@@ -80,6 +80,10 @@ func GetFlamegraphFromProfiles(
 					continue
 				}
 				if spans != nil {
+					// span intervals here contains Unix epoch timestamp (in ns).
+					// here we replace their value with the ns elapsed since
+					// the profile.timestamps to be consistent with the sample/node
+					// 'start' and 'end'
 					relativeIntervalsFromAbsoluteTimestamp(&spans, uint64(p.Timestamp().UnixNano()))
 					sortedSpans := mergeIntervals(&spans)
 					for tid, callTree := range callTrees {
