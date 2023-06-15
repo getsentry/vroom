@@ -80,6 +80,7 @@ func GetFlamegraphFromProfiles(
 					continue
 				}
 				if spans != nil {
+					relativeIntervalsFromAbsoluteTimestamp(&spans, uint64(p.Timestamp().UnixNano()))
 					sortedSpans := mergeIntervals(&spans)
 					for tid, callTree := range callTrees {
 						callTrees[tid] = sliceCallTree(&callTree, &sortedSpans)

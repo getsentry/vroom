@@ -9,8 +9,8 @@ import (
 )
 
 type SpanInterval struct {
-	Start uint64 `json:"start"`
-	End   uint64 `json:"end"`
+	Start uint64 `json:"start,string"`
+	End   uint64 `json:"end,string"`
 }
 
 func mergeIntervals(intervals *[]SpanInterval) []SpanInterval {
@@ -34,6 +34,24 @@ func mergeIntervals(intervals *[]SpanInterval) []SpanInterval {
 	}
 
 	return newIntervals
+}
+
+func relativeIntervalsFromAbsoluteTimestamp(intervals *[]SpanInterval, t uint64) {
+	for i := range *intervals {
+		if (*intervals)[i].Start > t {
+			(*intervals)[i].Start = (*intervals)[i].Start - t
+		} else {
+			(*intervals)[i].Start = 0
+		}
+
+		// for the end, this safety check, probably, is not necessary
+		// but better to check anyway
+		if (*intervals)[i].End > t {
+			(*intervals)[i].End = (*intervals)[i].End - t
+		} else {
+			(*intervals)[i].End = 0
+		}
+	}
 }
 
 func max(a, b uint64) uint64 {
