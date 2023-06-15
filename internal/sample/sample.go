@@ -2,6 +2,7 @@ package sample
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"hash/fnv"
 	"sort"
@@ -18,6 +19,11 @@ import (
 	"github.com/getsentry/vroom/internal/speedscope"
 	"github.com/getsentry/vroom/internal/timeutil"
 	"github.com/getsentry/vroom/internal/transaction"
+)
+
+var (
+	ErrInvalidStackID = errors.New("profile contains invalid stack id")
+	ErrInvalidFrameID = errors.New("profile contains invalid frame id")
 )
 
 type (
@@ -195,7 +201,18 @@ func (p Profile) CallTrees() (map[uint64][]*nodetree.Node, error) {
 			continue
 		}
 
+		if len(p.Trace.Stacks) <= s.StackID {
+			return nil, ErrInvalidStackID
+		}
+
 		stack := p.Trace.Stacks[s.StackID]
+
+		for i := len(stack) - 1; i >= 0; i-- {
+			if len(p.Trace.Frames) <= stack[i] {
+				return nil, ErrInvalidFrameID
+			}
+		}
+
 		for i := len(stack) - 1; i >= 0; i-- {
 			f := p.Trace.Frames[stack[i]]
 			f.WriteToHash(h)
