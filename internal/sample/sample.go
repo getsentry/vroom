@@ -21,8 +21,10 @@ import (
 	"github.com/getsentry/vroom/internal/transaction"
 )
 
-var ErrInvalidStackID = errors.New("profile contains invalid stack id")
-var ErrInvalidFrameID = errors.New("profile contains invalid frame id")
+var (
+	ErrInvalidStackID = errors.New("profile contains invalid stack id")
+	ErrInvalidFrameID = errors.New("profile contains invalid frame id")
+)
 
 type (
 	Device struct {
