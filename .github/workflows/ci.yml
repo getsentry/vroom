@@ -20,6 +20,24 @@ defaults:
     shell: bash
 
 jobs:
+  changelog:
+    name: Changelogs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Check out relay
+        uses: actions/checkout@v3
+        with:
+          repository: getsentry/relay
+          path: ./.relay
+      - uses: actions/github-script@d556feaca394842dc55e4734bf3bb9f685482fa0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          script: |
+            const changelog = require('./.relay/.github/actions/changelog/index.js')
+            await changelog({github, context, core})
+
   test-vroom:
     runs-on: ubuntu-latest
     steps:
