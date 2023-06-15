@@ -195,7 +195,24 @@ func (p Profile) CallTrees() (map[uint64][]*nodetree.Node, error) {
 			continue
 		}
 
+		if len(p.Trace.Stacks) <= s.StackID {
+			continue
+		}
+
 		stack := p.Trace.Stacks[s.StackID]
+
+		allFramesExist := true
+		for i := len(stack) - 1; i >= 0; i-- {
+			if len(p.Trace.Frames) <= stack[i] {
+				allFramesExist = false
+				break
+			}
+		}
+
+		if !allFramesExist {
+			continue
+		}
+
 		for i := len(stack) - 1; i >= 0; i-- {
 			f := p.Trace.Frames[stack[i]]
 			f.WriteToHash(h)
