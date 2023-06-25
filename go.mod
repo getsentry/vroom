@@ -19,6 +19,7 @@ require (
 	github.com/phayes/freeport v0.0.0-20220201140144-74d24b5ae9f5
 	github.com/pierrec/lz4 v2.6.1+incompatible
 	github.com/pierrec/lz4/v4 v4.1.15
+	github.com/robfig/cron/v3 v3.0.1
 	github.com/rs/zerolog v1.26.1
 	github.com/segmentio/kafka-go v0.4.38
 	gocloud.dev v0.29.0
