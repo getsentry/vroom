@@ -1,6 +1,7 @@
 **
 !/.git
 !/cmd/vroom
+!/cmd/cleanup
 !/internal
 !/pkg
 !/vendor
