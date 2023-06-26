@@ -37,20 +37,11 @@ func mergeIntervals(intervals *[]SpanInterval) []SpanInterval {
 }
 
 func relativeIntervalsFromAbsoluteTimestamp(intervals *[]SpanInterval, t uint64) {
-	for i := range *intervals {
-		if (*intervals)[i].Start > t {
-			(*intervals)[i].Start = (*intervals)[i].Start - t
-		} else {
-			(*intervals)[i].Start = 0
-		}
-
-		// for the end, this safety check, probably, is not necessary
-		// but better to check anyway
-		if (*intervals)[i].End > t {
-			(*intervals)[i].End = (*intervals)[i].End - t
-		} else {
-			(*intervals)[i].End = 0
-		}
+	for i, v := range *intervals {
+		// safety check: in case the start/end should be
+		// earlier than the profile start
+		(*intervals)[i].Start = max(t, v.Start) - t
+		(*intervals)[i].End = max(t, v.End) - t
 	}
 }
 
