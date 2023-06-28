@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+**Internal**
+
+- Enforce changelog modification. ([#282](https://github.com/getsentry/vroom/pull/282))
+
+## 23.6.0
+
 **Features**
 
 - Add support for PHP application frame detection [(#186)](https://github.com/getsentry/vroom/pull/186)
