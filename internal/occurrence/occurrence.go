@@ -83,7 +83,7 @@ const (
 	FileIOType      Type = 2001
 	ImageDecodeType Type = 2002
 	JSONDecodeType  Type = 2003
-	RegexType       Type = 2005
+	RegexType       Type = 2007
 	ViewType        Type = 2006
 
 	EvidenceNameDuration EvidenceName = "Duration"
