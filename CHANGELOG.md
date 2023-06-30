@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+**Features**
+
+- Release the Regex issue type detection. ([#286](https://github.com/getsentry/vroom/pull/286))
+
 **Internal**
 
 - Enforce changelog modification. ([#282](https://github.com/getsentry/vroom/pull/282))
