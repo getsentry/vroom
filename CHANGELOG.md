@@ -9,6 +9,7 @@
 
 **Internal**
 
+- Run changelog CI action only on pull requests. ([#287](https://github.com/getsentry/vroom/pull/287))
 - Enforce changelog modification. ([#282](https://github.com/getsentry/vroom/pull/282))
 
 ## 23.6.0
