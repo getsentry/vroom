@@ -298,6 +298,28 @@ func TestNodeTreeCollectFunctions(t *testing.T) {
 							Package:  "com.example",
 						},
 					},
+					{
+						DurationNS:    10,
+						IsApplication: true,
+						Frame: frame.Frame{
+							Data: frame.Data{
+								DeobfuscationStatus: "missing",
+							},
+							Function: "com.example.Thing.doStuff()",
+							Package:  "com.example",
+						},
+					},
+					{
+						DurationNS:    10,
+						IsApplication: true,
+						Frame: frame.Frame{
+							Data: frame.Data{
+								DeobfuscationStatus: "partial",
+							},
+							Function: "com.example.Thing.doStuff()",
+							Package:  "com.example",
+						},
+					},
 				},
 			},
 			want: map[uint64]CallTreeFunction{

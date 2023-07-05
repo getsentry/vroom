@@ -16,21 +16,28 @@ import (
 	"github.com/getsentry/vroom/internal/speedscope"
 )
 
-type AndroidThread struct {
-	ID   uint64 `json:"id,omitempty"`
-	Name string `json:"name,omitempty"`
-}
+type (
+	AndroidThread struct {
+		ID   uint64 `json:"id,omitempty"`
+		Name string `json:"name,omitempty"`
+	}
 
-type AndroidMethod struct {
-	ClassName    string          `json:"class_name,omitempty"`
-	ID           uint64          `json:"id,omitempty"`
-	InlineFrames []AndroidMethod `json:"inline_frames,omitempty"`
-	Name         string          `json:"name,omitempty"`
-	Signature    string          `json:"signature,omitempty"`
-	SourceFile   string          `json:"source_file,omitempty"`
-	SourceLine   uint32          `json:"source_line,omitempty"`
-	InApp        *bool           `json:"in_app"`
-}
+	AndroidMethod struct {
+		ClassName    string          `json:"class_name,omitempty"`
+		Data         Data            `json:"data"`
+		ID           uint64          `json:"id,omitempty"`
+		InlineFrames []AndroidMethod `json:"inline_frames,omitempty"`
+		Name         string          `json:"name,omitempty"`
+		Signature    string          `json:"signature,omitempty"`
+		SourceFile   string          `json:"source_file,omitempty"`
+		SourceLine   uint32          `json:"source_line,omitempty"`
+		InApp        *bool           `json:"in_app"`
+	}
+
+	Data struct {
+		DeobfuscationStatus string `json:"deobfuscation_status,omitempty"`
+	}
+)
 
 func (m AndroidMethod) isApplicationFrame(appIdentifier string) bool {
 	if appIdentifier != "" {
@@ -61,6 +68,9 @@ func (m AndroidMethod) Frame() frame.Frame {
 		Path:     m.SourceFile,
 		Line:     m.SourceLine,
 		InApp:    &inApp,
+		Data: frame.Data{
+			DeobfuscationStatus: m.Data.DeobfuscationStatus,
+		},
 	}
 }
 

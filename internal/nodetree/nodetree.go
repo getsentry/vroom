@@ -141,7 +141,7 @@ func (n *Node) CollectFunctions(profilePlatform platform.Platform, results map[u
 
 	var selfTimeNS uint64
 
-	if shouldAggregateFrame(profilePlatform, frameFunction, framePackage) {
+	if shouldAggregateFrame(profilePlatform, n.Frame) {
 		if n.IsApplication {
 			// cannot use `n.DurationNS - childrenApplicationDurationNS > 0` in case it underflows
 			if n.DurationNS > childrenApplicationDurationNS {
@@ -193,7 +193,9 @@ func (n *Node) CollectFunctions(profilePlatform platform.Platform, results map[u
 	return applicationDurationNS, n.DurationNS - applicationDurationNS
 }
 
-func shouldAggregateFrame(profilePlatform platform.Platform, frameFunction string, framePackage string) bool {
+func shouldAggregateFrame(profilePlatform platform.Platform, frame frame.Frame) bool {
+	frameFunction := frame.Function
+
 	// frames with no name are not valuable for aggregation
 	if frameFunction == "" {
 		return false
@@ -207,7 +209,12 @@ func shouldAggregateFrame(profilePlatform platform.Platform, frameFunction strin
 	}
 
 	if _, obfuscationSupported := obfuscationSupportedPlatforms[profilePlatform]; obfuscationSupported {
+		if frame.Data.DeobfuscationStatus == "missing" || frame.Data.DeobfuscationStatus == "partial" {
+			return false
+		}
+
 		// obfuscated package names often don't contain a dot (`.`)
+		framePackage := frame.ModuleOrPackage()
 		if !strings.Contains(framePackage, ".") {
 			return false
 		}
