@@ -1,12 +1,4 @@
 steps:
 - name: 'gcr.io/cloud-builders/docker'
-  args: [
-    'build',
-    '-t', 'us.gcr.io/internal-sentry/vroom:$COMMIT_SHA',
-    '-t', 'us.gcr.io/internal-sentry/vroom:latest',
-    '.'
-    ]
-images: [
-  'us.gcr.io/internal-sentry/vroom:$COMMIT_SHA',
-  'us.gcr.io/internal-sentry/vroom:latest',
-  ]
+  args: ['build', '-t', 'us.gcr.io/internal-sentry/vroom:$COMMIT_SHA', '.']
+images: ['us.gcr.io/internal-sentry/vroom:$COMMIT_SHA']
