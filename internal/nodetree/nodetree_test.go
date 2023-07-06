@@ -303,20 +303,9 @@ func TestNodeTreeCollectFunctions(t *testing.T) {
 						IsApplication: true,
 						Frame: frame.Frame{
 							Data: frame.Data{
-								DeobfuscationStatus: "missing",
-							},
-							Function: "com.example.Thing.doStuff()",
-							Package:  "com.example",
-						},
-					},
-					{
-						DurationNS:    10,
-						IsApplication: true,
-						Frame: frame.Frame{
-							Data: frame.Data{
 								DeobfuscationStatus: "partial",
 							},
-							Function: "com.example.Thing.doStuff()",
+							Function: "com.example.Thing.a()",
 							Package:  "com.example",
 						},
 					},
