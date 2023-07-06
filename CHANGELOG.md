@@ -5,8 +5,7 @@
 **Features**
 
 - Release the Regex issue type detection. ([#286](https://github.com/getsentry/vroom/pull/286))
-- Skip obfuscated frames from aggregation. ([#285](https://github.com/getsentry/vroom/pull/285))
-- Put back frames with missing obfuscation status for aggregation. ([#289](https://github.com/getsentry/vroom/pull/289))
+- Skip obfuscated frames from aggregation. ([#285](https://github.com/getsentry/vroom/pull/285)), ([#289](https://github.com/getsentry/vroom/pull/289))
 
 **Internal**
 
