@@ -35,7 +35,8 @@ type (
 	}
 
 	Data struct {
-		SymbolicatorStatus string `json:"symbolicator_status,omitempty"`
+		DeobfuscationStatus string `json:"deobfuscation_status,omitempty"`
+		SymbolicatorStatus  string `json:"symbolicator_status,omitempty"`
 	}
 )
 
