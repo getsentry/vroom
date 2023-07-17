@@ -12,7 +12,8 @@ EXPOSE 8080
 
 ARG PROFILES_DIR=/var/lib/sentry-profiles
 
-RUN apk add --no-cache ca-certificates tzdata && mkdir -p $PROFILES_DIR
+RUN apt-get install ca-certificates tzdata && mkdir -p $PROFILES_DIR && \
+    rm -r /var/lib/apt/lists/*
 
 ENV SENTRY_BUCKET_PROFILES=file://localhost/$PROFILES_DIR
 
