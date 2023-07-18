@@ -17,8 +17,6 @@ RUN apt-get update \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
     && mkdir -p $PROFILES_DIR
-    mkdir -p $PROFILES_DIR && \
-    rm -r /var/lib/apt/lists/*
 
 ENV SENTRY_BUCKET_PROFILES=file://localhost/$PROFILES_DIR
 
