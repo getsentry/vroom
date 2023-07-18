@@ -12,7 +12,11 @@ EXPOSE 8080
 
 ARG PROFILES_DIR=/var/lib/sentry-profiles
 
-RUN apt-get update && apt-get install -y ca-certificates tzdata && \
+RUN apt-get update \
+    && apt-get install -y ca-certificates tzdata --no-install-recommends \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p $PROFILES_DIR
     mkdir -p $PROFILES_DIR && \
     rm -r /var/lib/apt/lists/*
 
