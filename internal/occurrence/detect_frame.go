@@ -378,6 +378,11 @@ var detectFrameJobs = map[platform.Platform][]DetectExactFrameOptions{
 					"java.util.Base64$Decoder.decode(byte[]): byte[]":                 Base64Decode,
 					"java.util.Base64$Decoder.decode0(byte[], int, int, byte[]): int": Base64Decode,
 				},
+				"java.util.regex": {
+					"java.util.regex.Matcher.matches(): boolean":   Regex,
+					"java.util.regex.Matcher.find(): boolean":      Regex,
+					"java.util.regex.Matcher.lookingAt(): boolean": Regex,
+				},
 				"kotlinx.coroutines": {
 					"kotlinx.coroutines.AwaitAll.await(d): Object":                    ThreadWait,
 					"kotlinx.coroutines.AwaitKt.awaitAll(Collection, d): Object":      ThreadWait,

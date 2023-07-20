@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+**Features**
+
+- Add Android Regex symbols. ([#292](https://github.com/getsentry/vroom/pull/292))
+
 ## 23.7.0
 
 - No documented changes.
