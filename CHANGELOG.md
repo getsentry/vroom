@@ -6,6 +6,10 @@
 
 - Add Android Regex symbols. ([#292](https://github.com/getsentry/vroom/pull/292))
 
+**Internal**
+
+- Remove Android method signature conversion. ([#294](https://github.com/getsentry/vroom/pull/294))
+
 ## 23.7.0
 
 - No documented changes.
