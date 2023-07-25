@@ -117,7 +117,7 @@ type CallTreeFunction struct {
 // children with durations 20ms, 30ms, and 40ms, and they are system, application, system
 // functions respectively, the self-time of `bar` will be 70ms because
 // 100ms - 30ms = 70ms.
-func (n *Node) CollectFunctions(profilePlatform platform.Platform, results map[uint64]CallTreeFunction) (uint64, uint64) {
+func (n *Node) CollectFunctions(profilePlatform platform.Platform, results map[uint32]CallTreeFunction) (uint64, uint64) {
 	var childrenApplicationDurationNS uint64
 	var childrenSystemDurationNS uint64
 
@@ -167,11 +167,12 @@ func (n *Node) CollectFunctions(profilePlatform platform.Platform, results map[u
 			h.Write([]byte{':'})
 			h.Write([]byte(frameFunction))
 			fingerprint := h.Sum64()
+			fingerprint32 := uint32(fingerprint)
 
-			function, exists := results[fingerprint]
+			function, exists := results[fingerprint32]
 			if !exists {
-				results[fingerprint] = CallTreeFunction{
-					Fingerprint:   uint32(fingerprint),
+				results[fingerprint32] = CallTreeFunction{
+					Fingerprint:   uint32(fingerprint32),
 					Function:      n.Frame.Function,
 					Package:       framePackage,
 					InApp:         n.IsApplication,
@@ -183,7 +184,7 @@ func (n *Node) CollectFunctions(profilePlatform platform.Platform, results map[u
 				function.SelfTimesNS = append(function.SelfTimesNS, selfTimeNS)
 				function.SumSelfTimeNS += selfTimeNS
 				function.SampleCount += n.SampleCount
-				results[fingerprint] = function
+				results[fingerprint32] = function
 			}
 		}
 	}

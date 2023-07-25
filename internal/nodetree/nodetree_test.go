@@ -9,11 +9,11 @@ import (
 )
 
 const (
-	fingerprintFoo  = 7819648313903568793
-	fingerprintBar  = 7981615219744620909
-	fingerprintBaz  = 14780661156850099245
-	fingerprintQux  = 14955844843120965
-	fingerprintMain = 6027741833354933075
+	fingerprintFoo  = 313808793
+	fingerprintBar  = 45793645
+	fingerprintBaz  = 3346457645
+	fingerprintQux  = 4214270277
+	fingerprintMain = 3605132115
 )
 
 func TestNodeTreeCollectFunctions(t *testing.T) {
@@ -21,7 +21,7 @@ func TestNodeTreeCollectFunctions(t *testing.T) {
 		name     string
 		platform platform.Platform
 		node     Node
-		want     map[uint64]CallTreeFunction
+		want     map[uint32]CallTreeFunction
 	}{
 		{
 			name:     "single application node",
@@ -34,7 +34,7 @@ func TestNodeTreeCollectFunctions(t *testing.T) {
 					Package:  "foo",
 				},
 			},
-			want: map[uint64]CallTreeFunction{
+			want: map[uint32]CallTreeFunction{
 				fingerprintFoo: {
 					Fingerprint:   fingerprintFoo,
 					InApp:         true,
@@ -56,7 +56,7 @@ func TestNodeTreeCollectFunctions(t *testing.T) {
 					Package:  "foo",
 				},
 			},
-			want: map[uint64]CallTreeFunction{
+			want: map[uint32]CallTreeFunction{
 				fingerprintFoo: {
 					Fingerprint:   fingerprintFoo,
 					InApp:         false,
@@ -88,7 +88,7 @@ func TestNodeTreeCollectFunctions(t *testing.T) {
 					},
 				},
 			},
-			want: map[uint64]CallTreeFunction{
+			want: map[uint32]CallTreeFunction{
 				fingerprintFoo: {
 					Fingerprint:   fingerprintFoo,
 					InApp:         true,
@@ -148,7 +148,7 @@ func TestNodeTreeCollectFunctions(t *testing.T) {
 					},
 				},
 			},
-			want: map[uint64]CallTreeFunction{
+			want: map[uint32]CallTreeFunction{
 				fingerprintFoo: {
 					Fingerprint:   fingerprintFoo,
 					InApp:         true,
@@ -244,7 +244,7 @@ func TestNodeTreeCollectFunctions(t *testing.T) {
 					},
 				},
 			},
-			want: map[uint64]CallTreeFunction{
+			want: map[uint32]CallTreeFunction{
 				fingerprintFoo: {
 					Fingerprint:   fingerprintFoo,
 					InApp:         true,
@@ -311,9 +311,9 @@ func TestNodeTreeCollectFunctions(t *testing.T) {
 					},
 				},
 			},
-			want: map[uint64]CallTreeFunction{
-				414680583044130407: {
-					Fingerprint:   414680583044130407,
+			want: map[uint32]CallTreeFunction{
+				261678695: {
+					Fingerprint:   261678695,
 					Function:      "com.example.Thing.doStuff()",
 					Package:       "com.example",
 					InApp:         true,
@@ -343,9 +343,9 @@ func TestNodeTreeCollectFunctions(t *testing.T) {
 					},
 				},
 			},
-			want: map[uint64]CallTreeFunction{
-				414680583044130407: {
-					Fingerprint:   414680583044130407,
+			want: map[uint32]CallTreeFunction{
+				261678695: {
+					Fingerprint:   261678695,
 					Function:      "com.example.Thing.doStuff()",
 					Package:       "com.example",
 					InApp:         true,
@@ -365,13 +365,13 @@ func TestNodeTreeCollectFunctions(t *testing.T) {
 					Package:  "iOS-Swift",
 				},
 			},
-			want: map[uint64]CallTreeFunction{},
+			want: map[uint32]CallTreeFunction{},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			results := make(map[uint64]CallTreeFunction)
+			results := make(map[uint32]CallTreeFunction)
 			tt.node.CollectFunctions(tt.platform, results)
 			if diff := testutil.Diff(results, tt.want); diff != "" {
 				t.Fatalf("Result mismatch: got - want +\n%s", diff)
