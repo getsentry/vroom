@@ -166,13 +166,17 @@ func (n *Node) CollectFunctions(profilePlatform platform.Platform, results map[u
 			h.Write([]byte(framePackage))
 			h.Write([]byte{':'})
 			h.Write([]byte(frameFunction))
-			fingerprint := h.Sum64()
-			fingerprint32 := uint32(fingerprint)
 
-			function, exists := results[fingerprint32]
+			// casting to an uint32 here because snuba does not handle uint64 values
+			// well as it is converted to a float somewhere
+			// not changing to the 32 bit hash function here to preserve backwards
+			// compatibility with existing fingerprints that we can cast
+			fingerprint := uint32(h.Sum64())
+
+			function, exists := results[fingerprint]
 			if !exists {
-				results[fingerprint32] = CallTreeFunction{
-					Fingerprint:   uint32(fingerprint32),
+				results[fingerprint] = CallTreeFunction{
+					Fingerprint:   uint32(fingerprint),
 					Function:      n.Frame.Function,
 					Package:       framePackage,
 					InApp:         n.IsApplication,
@@ -184,7 +188,7 @@ func (n *Node) CollectFunctions(profilePlatform platform.Platform, results map[u
 				function.SelfTimesNS = append(function.SelfTimesNS, selfTimeNS)
 				function.SumSelfTimeNS += selfTimeNS
 				function.SampleCount += n.SampleCount
-				results[fingerprint32] = function
+				results[fingerprint] = function
 			}
 		}
 	}
