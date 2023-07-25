@@ -176,7 +176,7 @@ func (n *Node) CollectFunctions(profilePlatform platform.Platform, results map[u
 			function, exists := results[fingerprint]
 			if !exists {
 				results[fingerprint] = CallTreeFunction{
-					Fingerprint:   uint32(fingerprint),
+					Fingerprint:   fingerprint,
 					Function:      n.Frame.Function,
 					Package:       framePackage,
 					InApp:         n.IsApplication,
