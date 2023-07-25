@@ -90,7 +90,7 @@ func (n *Node) WriteToHash(h hash.Hash) {
 }
 
 type CallTreeFunction struct {
-	Fingerprint   uint64   `json:"fingerprint"`
+	Fingerprint   uint32   `json:"fingerprint"`
 	Function      string   `json:"function"`
 	Package       string   `json:"package"`
 	InApp         bool     `json:"in_app"`
@@ -171,7 +171,7 @@ func (n *Node) CollectFunctions(profilePlatform platform.Platform, results map[u
 			function, exists := results[fingerprint]
 			if !exists {
 				results[fingerprint] = CallTreeFunction{
-					Fingerprint:   uint64(uint32(fingerprint)),
+					Fingerprint:   uint32(fingerprint),
 					Function:      n.Frame.Function,
 					Package:       framePackage,
 					InApp:         n.IsApplication,
