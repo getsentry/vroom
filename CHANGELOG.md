@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+**Internal**
+
+- Change function fingerprints to uint32. ([#295](https://github.com/getsentry/vroom/pull/295))
+
 ## 23.7.1
 
 **Features**
