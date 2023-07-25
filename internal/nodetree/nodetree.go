@@ -209,7 +209,19 @@ func shouldAggregateFrame(profilePlatform platform.Platform, frame frame.Frame) 
 	}
 
 	if _, obfuscationSupported := obfuscationSupportedPlatforms[profilePlatform]; obfuscationSupported {
-		if frame.Data.DeobfuscationStatus == "missing" || frame.Data.DeobfuscationStatus == "partial" {
+		/*
+			There are 4 possible deobfuscation statuses
+			1. deobfuscated	- The frame was successfully deobfuscated.
+			2. partial			- The frame was only partially deobfuscated.
+												(likely just the class name and not the method name)
+			3. missing			- The frame could not be deobfuscated, not found in the mapping file.
+												(likely to be a system library that should not be obfuscated)
+			4. <no status>	- The frame did not go through deobfuscation. No mapping file specified.
+
+			Only the `partial` status should not be aggregated because only having a deobfuscated
+			class names makes grouping ineffective.
+		*/
+		if frame.Data.DeobfuscationStatus == "partial" {
 			return false
 		}
 

@@ -6,13 +6,17 @@ COPY . .
 
 RUN GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o . -ldflags="-s -w -X main.release=$(git rev-parse HEAD)" ./cmd/vroom
 
-FROM alpine
+FROM debian:bullseye-slim
 
 EXPOSE 8080
 
 ARG PROFILES_DIR=/var/lib/sentry-profiles
 
-RUN apk add --no-cache ca-certificates tzdata && mkdir -p $PROFILES_DIR
+RUN apt-get update \
+    && apt-get install -y ca-certificates tzdata --no-install-recommends \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p $PROFILES_DIR
 
 ENV SENTRY_BUCKET_PROFILES=file://localhost/$PROFILES_DIR
 

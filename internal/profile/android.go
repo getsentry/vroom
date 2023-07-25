@@ -86,11 +86,6 @@ func (m AndroidMethod) ExtractPackageNameAndSimpleMethodNameFromAndroidMethod() 
 }
 
 func (m AndroidMethod) FullMethodNameFromAndroidMethod() (string, error) {
-	convertedSignature, err := android.ConvertedSignatureFromBytecodeSignature(m.Signature)
-	if err != nil {
-		return "", err
-	}
-
 	var builder strings.Builder
 	builder.WriteString(m.ClassName)
 	// "<init>" refers to the constructor in which case it's more readable to omit the method name. Note the method name
@@ -99,7 +94,7 @@ func (m AndroidMethod) FullMethodNameFromAndroidMethod() (string, error) {
 		builder.WriteRune('.')
 		builder.WriteString(m.Name)
 	}
-	builder.WriteString(convertedSignature)
+	builder.WriteString(m.Signature)
 
 	return builder.String(), nil
 }

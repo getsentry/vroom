@@ -1,11 +1,25 @@
 # Changelog
 
-## Unreleased
+## 23.7.1
+
+**Features**
+
+- Add Android Regex symbols. ([#292](https://github.com/getsentry/vroom/pull/292))
+
+**Internal**
+
+- Remove Android method signature conversion. ([#294](https://github.com/getsentry/vroom/pull/294))
+
+## 23.7.0
+
+- No documented changes.
+
+## 23.6.2
 
 **Features**
 
 - Release the Regex issue type detection. ([#286](https://github.com/getsentry/vroom/pull/286))
-- Skip obfuscated frames from aggregation. ([#285](https://github.com/getsentry/vroom/pull/285))
+- Skip obfuscated frames from aggregation. ([#285](https://github.com/getsentry/vroom/pull/285)), ([#289](https://github.com/getsentry/vroom/pull/289))
 
 **Internal**
 
