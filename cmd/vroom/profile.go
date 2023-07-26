@@ -193,7 +193,7 @@ func extractFunctionsFromCallTrees(
 	profilePlatform platform.Platform,
 	callTrees map[uint64][]*nodetree.Node,
 ) []nodetree.CallTreeFunction {
-	functions := make(map[uint64]nodetree.CallTreeFunction, 0)
+	functions := make(map[uint32]nodetree.CallTreeFunction, 0)
 
 	for _, callTreesForThread := range callTrees {
 		for _, callTree := range callTreesForThread {

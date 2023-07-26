@@ -90,7 +90,7 @@ func (n *Node) WriteToHash(h hash.Hash) {
 }
 
 type CallTreeFunction struct {
-	Fingerprint   uint64   `json:"fingerprint"`
+	Fingerprint   uint32   `json:"fingerprint"`
 	Function      string   `json:"function"`
 	Package       string   `json:"package"`
 	InApp         bool     `json:"in_app"`
@@ -117,7 +117,7 @@ type CallTreeFunction struct {
 // children with durations 20ms, 30ms, and 40ms, and they are system, application, system
 // functions respectively, the self-time of `bar` will be 70ms because
 // 100ms - 30ms = 70ms.
-func (n *Node) CollectFunctions(profilePlatform platform.Platform, results map[uint64]CallTreeFunction) (uint64, uint64) {
+func (n *Node) CollectFunctions(profilePlatform platform.Platform, results map[uint32]CallTreeFunction) (uint64, uint64) {
 	var childrenApplicationDurationNS uint64
 	var childrenSystemDurationNS uint64
 
@@ -166,7 +166,12 @@ func (n *Node) CollectFunctions(profilePlatform platform.Platform, results map[u
 			h.Write([]byte(framePackage))
 			h.Write([]byte{':'})
 			h.Write([]byte(frameFunction))
-			fingerprint := h.Sum64()
+
+			// casting to an uint32 here because snuba does not handle uint64 values
+			// well as it is converted to a float somewhere
+			// not changing to the 32 bit hash function here to preserve backwards
+			// compatibility with existing fingerprints that we can cast
+			fingerprint := uint32(h.Sum64())
 
 			function, exists := results[fingerprint]
 			if !exists {
