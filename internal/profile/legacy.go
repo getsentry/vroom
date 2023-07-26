@@ -113,14 +113,6 @@ func (p *LegacyProfile) UnmarshalJSON(b []byte) error {
 		raw = p.Profile
 	}
 	switch p.Platform {
-	case platform.Cocoa:
-		var t IOS
-		err := json.Unmarshal(raw, &t)
-		if err != nil {
-			return err
-		}
-		p.Trace = &t
-		p.Profile = nil
 	case platform.Android:
 		var t Android
 		err := json.Unmarshal(raw, &t)
@@ -235,8 +227,6 @@ func (p LegacyProfile) GetReceived() time.Time {
 
 func (p *LegacyProfile) Normalize() {
 	switch t := p.Trace.(type) {
-	case *IOS:
-		t.ReplaceIdleStacks()
 	case *Android:
 		t.NormalizeMethods(p)
 	}
