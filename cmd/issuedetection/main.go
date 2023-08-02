@@ -4,14 +4,17 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"log"
 	"os"
+	"path/filepath"
 	"sync"
+
+	gojson "github.com/goccy/go-json"
+	"github.com/pierrec/lz4"
 
 	"github.com/getsentry/vroom/internal/occurrence"
 	"github.com/getsentry/vroom/internal/profile"
-	gojson "github.com/goccy/go-json"
-	"github.com/pierrec/lz4"
 )
 
 const (
@@ -48,65 +51,18 @@ func main() {
 		go AnalyzeProfile(pathChannel, errChannel, &wg)
 	}
 
-	for {
-		orgPaths, err := f.Readdir(1024)
+	err = filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
-			if errors.Is(err, io.EOF) {
-				break
-			}
-			log.Fatal(err)
+			return err
 		}
-		for _, orgPath := range orgPaths {
-			if !orgPath.IsDir() {
-				continue
-			}
-			path := fmt.Sprintf("%s/%s", root, orgPath.Name())
-			orgDir, err := os.Open(path)
-			if err != nil {
-				if errors.Is(err, io.EOF) {
-					break
-				}
-				log.Fatal(err)
-			}
-
-			projectPaths, err := orgDir.Readdir(1024)
-			if err != nil {
-				if errors.Is(err, io.EOF) {
-					break
-				}
-				log.Fatal(err)
-			}
-			for _, projectPath := range projectPaths {
-				if !projectPath.IsDir() {
-					continue
-				}
-				path := fmt.Sprintf("%s/%s/%s", root, orgPath.Name(), projectPath.Name())
-				projectDir, err := os.Open(path)
-				if err != nil {
-					if errors.Is(err, io.EOF) {
-						break
-					}
-					log.Fatal(err)
-				}
-				for {
-					profilePaths, err := projectDir.Readdir(1024)
-					if err != nil {
-						if errors.Is(err, io.EOF) {
-							break
-						}
-						log.Fatal(err)
-					}
-					for _, profilePath := range profilePaths {
-						path := fmt.Sprintf("%s/%s", projectDir.Name(), profilePath.Name())
-						pathChannel <- path
-					}
-				}
-
-				projectDir.Close()
-			}
-
-			orgDir.Close()
+		if d.IsDir() {
+			return nil
 		}
+		pathChannel <- path
+		return nil
+	})
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	close(pathChannel)
@@ -129,7 +85,9 @@ func AnalyzeProfile(pathChannel chan string, errChan chan error, wg *sync.WaitGr
 		var p profile.Profile
 		err = gojson.NewDecoder(zr).Decode(&p)
 		if err != nil {
-			errChan <- err
+			if !errors.Is(err, io.EOF) {
+				errChan <- err
+			}
 			continue
 		}
 		callTrees, err := p.CallTrees()
@@ -138,7 +96,13 @@ func AnalyzeProfile(pathChannel chan string, errChan chan error, wg *sync.WaitGr
 			continue
 		}
 		for _, o := range occurrence.Find(p, callTrees) {
-			fmt.Println(o.Event.Platform, o.Event.ProjectID, o.Event.ID, o.IssueTitle, o.Subtitle)
+			fmt.Println(
+				o.Event.Platform,
+				o.Event.ProjectID,
+				o.EvidenceData["profile_id"],
+				o.IssueTitle,
+				o.Subtitle,
+			)
 		}
 	}
 }
