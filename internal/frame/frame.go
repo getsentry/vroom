@@ -136,6 +136,10 @@ func (f Frame) WriteToHash(h hash.Hash) {
 		s = "-"
 	}
 	h.Write([]byte(s))
+	// Important for native platforms to distinguish unknown frames
+	if f.InstructionAddr != "" {
+		h.Write([]byte(f.InstructionAddr))
+	}
 }
 
 func (f Frame) IsInline() bool {
