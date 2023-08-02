@@ -377,33 +377,35 @@ func TestCallTrees(t *testing.T) {
 			want: map[uint64][]*nodetree.Node{
 				1: {
 					{
-						DurationNS:    50,
+						DurationNS:    40,
 						EndNS:         50,
 						Fingerprint:   15444731332182868858,
 						IsApplication: true,
 						Name:          "function0",
-						SampleCount:   3,
+						SampleCount:   2,
+						StartNS:       10,
 						Frame:         frame.Frame{Function: "function0"},
 						ProfileIDs:    make(map[string]struct{}),
 						Children: []*nodetree.Node{
 							{
-								DurationNS:    50,
+								DurationNS:    40,
 								EndNS:         50,
+								StartNS:       10,
 								Fingerprint:   14164357600995800812,
 								IsApplication: true,
 								Name:          "function1",
-								SampleCount:   3,
+								SampleCount:   2,
 								Frame:         frame.Frame{Function: "function1"},
 								ProfileIDs:    make(map[string]struct{}),
 								Children: []*nodetree.Node{
 									{
-										DurationNS:    40,
+										DurationNS:    10,
 										EndNS:         50,
 										Fingerprint:   9531802423075301657,
 										IsApplication: true,
 										Name:          "function2",
-										SampleCount:   2,
-										StartNS:       10,
+										SampleCount:   1,
+										StartNS:       40,
 										Frame:         frame.Frame{Function: "function2"},
 										ProfileIDs:    make(map[string]struct{}),
 									},
@@ -439,37 +441,26 @@ func TestCallTrees(t *testing.T) {
 			want: map[uint64][]*nodetree.Node{
 				1: {
 					{
-						DurationNS:    40,
+						DurationNS:    30,
 						EndNS:         40,
 						Fingerprint:   15444731332182868858,
 						IsApplication: true,
 						Name:          "function0",
-						SampleCount:   2,
+						SampleCount:   1,
+						StartNS:       10,
 						Frame:         frame.Frame{Function: "function0"},
 						ProfileIDs:    make(map[string]struct{}),
 						Children: []*nodetree.Node{
 							{
-								DurationNS:    40,
+								DurationNS:    30,
 								EndNS:         40,
 								Fingerprint:   14164357600995800812,
 								IsApplication: true,
 								Name:          "function1",
-								SampleCount:   2,
+								SampleCount:   1,
+								StartNS:       10,
 								Frame:         frame.Frame{Function: "function1"},
 								ProfileIDs:    make(map[string]struct{}),
-								Children: []*nodetree.Node{
-									{
-										DurationNS:    30,
-										EndNS:         40,
-										Fingerprint:   9531802423075301657,
-										IsApplication: true,
-										Name:          "function2",
-										SampleCount:   1,
-										StartNS:       10,
-										Frame:         frame.Frame{Function: "function2"},
-										ProfileIDs:    make(map[string]struct{}),
-									},
-								},
 							},
 						},
 					},
@@ -504,34 +495,24 @@ func TestCallTrees(t *testing.T) {
 				1: {
 					{
 						DurationNS:    10,
-						EndNS:         10,
+						EndNS:         20,
 						Fingerprint:   15444731332182868858,
 						IsApplication: true,
 						Name:          "function0",
 						SampleCount:   1,
+						StartNS:       10,
 						Frame:         frame.Frame{Function: "function0"},
 						ProfileIDs:    make(map[string]struct{}),
 					},
 					{
 						DurationNS:    10,
-						EndNS:         20,
+						EndNS:         30,
 						Fingerprint:   15444731332182868859,
 						IsApplication: true,
 						Name:          "function1",
 						SampleCount:   1,
-						StartNS:       10,
-						Frame:         frame.Frame{Function: "function1"},
-						ProfileIDs:    make(map[string]struct{}),
-					},
-					{
-						DurationNS:    10,
-						EndNS:         30,
-						Fingerprint:   15444731332182868856,
-						IsApplication: true,
-						Name:          "function2",
-						SampleCount:   1,
 						StartNS:       20,
-						Frame:         frame.Frame{Function: "function2"},
+						Frame:         frame.Frame{Function: "function1"},
 						ProfileIDs:    make(map[string]struct{}),
 					},
 				},
@@ -1026,6 +1007,11 @@ func TestCallTreesFingerprintPerPlatform(t *testing.T) {
 								StackID:             0,
 								ThreadID:            0,
 							},
+							{
+								ElapsedSinceStartNS: 10,
+								StackID:             0,
+								ThreadID:            0,
+							},
 						},
 					},
 				},
@@ -1033,6 +1019,8 @@ func TestCallTreesFingerprintPerPlatform(t *testing.T) {
 			output: map[uint64][]*nodetree.Node{
 				0: {
 					{
+						DurationNS:    10,
+						EndNS:         10,
 						Fingerprint:   1628006971372193492,
 						IsApplication: true,
 						Name:          "main",
@@ -1071,6 +1059,11 @@ func TestCallTreesFingerprintPerPlatform(t *testing.T) {
 								StackID:             0,
 								ThreadID:            0,
 							},
+							{
+								ElapsedSinceStartNS: 10,
+								StackID:             0,
+								ThreadID:            0,
+							},
 						},
 					},
 				},
@@ -1078,6 +1071,8 @@ func TestCallTreesFingerprintPerPlatform(t *testing.T) {
 			output: map[uint64][]*nodetree.Node{
 				0: {
 					{
+						DurationNS:    10,
+						EndNS:         10,
 						Fingerprint:   1628006971372193492,
 						IsApplication: true,
 						Name:          "main",
@@ -1117,6 +1112,11 @@ func TestCallTreesFingerprintPerPlatform(t *testing.T) {
 								StackID:             0,
 								ThreadID:            0,
 							},
+							{
+								ElapsedSinceStartNS: 10,
+								StackID:             0,
+								ThreadID:            0,
+							},
 						},
 					},
 				},
@@ -1124,6 +1124,8 @@ func TestCallTreesFingerprintPerPlatform(t *testing.T) {
 			output: map[uint64][]*nodetree.Node{
 				0: {
 					{
+						DurationNS:    10,
+						EndNS:         10,
 						Fingerprint:   12857020554704472368,
 						IsApplication: false,
 						Name:          "Threading.run",
