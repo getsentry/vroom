@@ -8,6 +8,22 @@ import (
 	"github.com/getsentry/vroom/internal/profile"
 )
 
+type (
+	indexDuration struct {
+		durationNS uint64
+		index      int
+	}
+
+	frameDropInfo struct {
+		Node       nodetree.Node
+		StackTrace []*nodetree.Node
+	}
+)
+
+const (
+	FrameDrop Category = "frame_drop"
+)
+
 func findFrameDropCause(
 	p profile.Profile,
 	callTreesPerThreadID map[uint64][]*nodetree.Node,
@@ -38,25 +54,16 @@ func findFrameDropCause(
 				}
 				*occurrences = append(
 					*occurrences,
-					NewOccurrence(p, nodeInfo{Node: frameDropInfo.Node, StackTrace: stackTrace}),
+					NewOccurrence(p, nodeInfo{
+						Category: FrameDrop,
+						Node:     frameDropInfo.Node, StackTrace: stackTrace,
+					}),
 				)
 				break
 			}
 		}
 	}
 }
-
-type (
-	indexDuration struct {
-		durationNS uint64
-		index      int
-	}
-
-	frameDropInfo struct {
-		Node       nodetree.Node
-		StackTrace []*nodetree.Node
-	}
-)
 
 func findFrameDropFrame(
 	n *nodetree.Node,

@@ -85,6 +85,7 @@ const (
 	JSONDecodeType  Type = 2003
 	RegexType       Type = 2007
 	ViewType        Type = 2006
+	FrameDropType   Type = 2008
 
 	EvidenceNameDuration EvidenceName = "Duration"
 	EvidenceNameFunction EvidenceName = "Suspect function"
@@ -122,6 +123,7 @@ var issueTitles = map[Category]CategoryMetadata{
 	ViewRender:       {IssueTitle: "SwiftUI View Render is slow", Type: ViewType},
 	ViewUpdate:       {IssueTitle: "SwiftUI View Update is slow", Type: ViewType},
 	XPC:              {IssueTitle: "XPC operation on Main Thread"},
+	FrameDrop:        {IssueTitle: "Frame Drop", Type: FrameDropType},
 }
 
 // NewOccurrence returns an Occurrence struct populated with info.
