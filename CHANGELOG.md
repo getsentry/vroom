@@ -5,6 +5,7 @@
 **Internal**
 
 - Change function fingerprints to uint32. ([#295](https://github.com/getsentry/vroom/pull/295))
+- Look forward instead of backwards when generating a call tree. ([#299](https://github.com/getsentry/vroom/pull/299))
 
 ## 23.7.1
 
