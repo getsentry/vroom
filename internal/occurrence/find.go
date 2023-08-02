@@ -12,5 +12,6 @@ func Find(p profile.Profile, callTrees map[uint64][]*nodetree.Node) []*Occurrenc
 			detectFrame(p, callTrees, metadata, &occurrences)
 		}
 	}
+	findFrameDropCause(p, callTrees, &occurrences)
 	return occurrences
 }
