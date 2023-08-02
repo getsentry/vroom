@@ -32,7 +32,6 @@ func findFrameDropCause(
 			)
 			// We found a potential stacktrace responsible for this frozen frame
 			if frameDropInfo != nil {
-				// Create occurrences.
 				stackTrace := make([]frame.Frame, 0, len(frameDropInfo.StackTrace))
 				for _, f := range frameDropInfo.StackTrace {
 					stackTrace = append(stackTrace, f.ToFrame())
@@ -79,19 +78,26 @@ func findFrameDropFrame(
 				break
 			}
 		}
-		// We didn't find an in app frame in the stack, occurrence is discarded
+		// We didn't find an in app frame in the stack, occurrence is discarded.
 		if inAppIndex == -1 {
 			return nil
 		}
-		// We truncate to focus on the last in app frame
+		// We truncate to focus on the last in app frame.
 		stackTrace = stackTrace[:inAppIndex]
-		ni := frameDropInfo{
-			Node: *stackTrace[len(stackTrace)-1],
+		// This is the new node we're going to report.
+		node := stackTrace[len(stackTrace)-1]
+		// If the function we'd like to return is unknown, the issue is not
+		// actionable and we drop it.
+		if node.Frame.Function == "" {
+			return nil
 		}
-		ni.Node.Children = nil
-		ni.StackTrace = make([]*nodetree.Node, len(stackTrace))
-		copy(ni.StackTrace, stackTrace)
-		return &ni
+		fdi := frameDropInfo{
+			Node:       *node,
+			StackTrace: make([]*nodetree.Node, len(stackTrace)),
+		}
+		fdi.Node.Children = nil
+		copy(fdi.StackTrace, stackTrace)
+		return &fdi
 	} else if len(n.Children) == 1 {
 		return findFrameDropFrame(n.Children[0], frozenFrameStartNS, frozenFrameEndNS, st)
 	}
