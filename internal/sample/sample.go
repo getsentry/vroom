@@ -185,6 +185,7 @@ func (p Profile) GetDurationNS() uint64 {
 	return p.Trace.Samples[maxSampleIndex].ElapsedSinceStartNS - p.Trace.Samples[0].ElapsedSinceStartNS
 }
 
+// CallTrees generates call trees from samples.
 func (p Profile) CallTrees() (map[uint64][]*nodetree.Node, error) {
 	sort.SliceStable(p.Trace.Samples, func(i, j int) bool {
 		return p.Trace.Samples[i].ElapsedSinceStartNS < p.Trace.Samples[j].ElapsedSinceStartNS
@@ -192,57 +193,65 @@ func (p Profile) CallTrees() (map[uint64][]*nodetree.Node, error) {
 
 	activeThreadID := p.Transaction.ActiveThreadID
 	treesByThreadID := make(map[uint64][]*nodetree.Node)
-	previousTimestamp := make(map[uint64]uint64)
+	samplesByThreadID := make(map[uint64][]Sample)
+
+	for _, s := range p.Trace.Samples {
+		samplesByThreadID[s.ThreadID] = append(samplesByThreadID[s.ThreadID], s)
+	}
 
 	var current *nodetree.Node
 	h := fnv.New64()
-	for _, s := range p.Trace.Samples {
-		if s.ThreadID != activeThreadID {
-			continue
-		}
-
-		if len(p.Trace.Stacks) <= s.StackID {
-			return nil, ErrInvalidStackID
-		}
-
-		stack := p.Trace.Stacks[s.StackID]
-
-		for i := len(stack) - 1; i >= 0; i-- {
-			if len(p.Trace.Frames) <= stack[i] {
-				return nil, ErrInvalidFrameID
+	for _, samples := range samplesByThreadID {
+		// The last sample is not represented, only used for its timestamp.
+		for sampleIndex := 0; sampleIndex < len(samples)-1; sampleIndex++ {
+			s := samples[sampleIndex]
+			if s.ThreadID != activeThreadID {
+				continue
 			}
-		}
 
-		for i := len(stack) - 1; i >= 0; i-- {
-			f := p.Trace.Frames[stack[i]]
-			f.WriteToHash(h)
-			fingerprint := h.Sum64()
-			if current == nil {
-				i := len(treesByThreadID[s.ThreadID]) - 1
-				if i >= 0 && treesByThreadID[s.ThreadID][i].Fingerprint == fingerprint &&
-					treesByThreadID[s.ThreadID][i].EndNS == previousTimestamp[s.ThreadID] {
-					current = treesByThreadID[s.ThreadID][i]
-					current.Update(s.ElapsedSinceStartNS)
-				} else {
-					n := nodetree.NodeFromFrame(f, previousTimestamp[s.ThreadID], s.ElapsedSinceStartNS, fingerprint)
-					treesByThreadID[s.ThreadID] = append(treesByThreadID[s.ThreadID], n)
-					current = n
-				}
-			} else {
-				i := len(current.Children) - 1
-				if i >= 0 && current.Children[i].Fingerprint == fingerprint && current.Children[i].EndNS == previousTimestamp[s.ThreadID] {
-					current = current.Children[i]
-					current.Update(s.ElapsedSinceStartNS)
-				} else {
-					n := nodetree.NodeFromFrame(f, previousTimestamp[s.ThreadID], s.ElapsedSinceStartNS, fingerprint)
-					current.Children = append(current.Children, n)
-					current = n
+			if len(p.Trace.Stacks) <= s.StackID {
+				return nil, ErrInvalidStackID
+			}
+
+			stack := p.Trace.Stacks[s.StackID]
+			for i := len(stack) - 1; i >= 0; i-- {
+				if len(p.Trace.Frames) <= stack[i] {
+					return nil, ErrInvalidFrameID
 				}
 			}
+
+			nextTimestamp := samples[sampleIndex+1].ElapsedSinceStartNS
+
+			for i := len(stack) - 1; i >= 0; i-- {
+				f := p.Trace.Frames[stack[i]]
+				f.WriteToHash(h)
+				fingerprint := h.Sum64()
+				if current == nil {
+					i := len(treesByThreadID[s.ThreadID]) - 1
+					if i >= 0 && treesByThreadID[s.ThreadID][i].Fingerprint == fingerprint &&
+						treesByThreadID[s.ThreadID][i].EndNS == s.ElapsedSinceStartNS {
+						current = treesByThreadID[s.ThreadID][i]
+						current.Update(nextTimestamp)
+					} else {
+						n := nodetree.NodeFromFrame(f, s.ElapsedSinceStartNS, nextTimestamp, fingerprint)
+						treesByThreadID[s.ThreadID] = append(treesByThreadID[s.ThreadID], n)
+						current = n
+					}
+				} else {
+					i := len(current.Children) - 1
+					if i >= 0 && current.Children[i].Fingerprint == fingerprint && current.Children[i].EndNS == s.ElapsedSinceStartNS {
+						current = current.Children[i]
+						current.Update(nextTimestamp)
+					} else {
+						n := nodetree.NodeFromFrame(f, s.ElapsedSinceStartNS, nextTimestamp, fingerprint)
+						current.Children = append(current.Children, n)
+						current = n
+					}
+				}
+			}
+			h.Reset()
+			current = nil
 		}
-		h.Reset()
-		previousTimestamp[s.ThreadID] = s.ElapsedSinceStartNS
-		current = nil
 	}
 
 	return treesByThreadID, nil

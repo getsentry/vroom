@@ -6,6 +6,8 @@
 
 - Change function fingerprints to uint32. ([#295](https://github.com/getsentry/vroom/pull/295))
 - Send an occurrence on frozen frame drops. ([#297](https://github.com/getsentry/vroom/pull/297))
+- Look forward instead of backwards when generating a call tree. ([#299](https://github.com/getsentry/vroom/pull/299))
+- Use the instruction address to generate a frame's fingeprint. ([#298](https://github.com/getsentry/vroom/pull/298))
 
 ## 23.7.1
 

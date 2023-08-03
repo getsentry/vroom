@@ -3,6 +3,9 @@ package flamegraph
 import (
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
+
 	"github.com/getsentry/vroom/internal/frame"
 	"github.com/getsentry/vroom/internal/nodetree"
 	"github.com/getsentry/vroom/internal/platform"
@@ -11,9 +14,6 @@ import (
 	"github.com/getsentry/vroom/internal/speedscope"
 	"github.com/getsentry/vroom/internal/testutil"
 	"github.com/getsentry/vroom/internal/timeutil"
-
-	"github.com/google/go-cmp/cmp"
-	"github.com/google/go-cmp/cmp/cmpopts"
 )
 
 func TestFlamegraphAggregation(t *testing.T) {
@@ -127,17 +127,15 @@ func TestFlamegraphAggregation(t *testing.T) {
 				},
 				Profiles: []interface{}{
 					speedscope.SampledProfile{
-						EndValue:     7,
+						EndValue:     5,
 						IsMainThread: true,
 						Samples: [][]int{
 							{0, 1},
-							{0},
 							{2, 0},
 							{2},
 							{3},
 						},
 						SamplesProfiles: [][]int{
-							{0, 1},
 							{0},
 							{1},
 							{0},
@@ -145,9 +143,9 @@ func TestFlamegraphAggregation(t *testing.T) {
 						},
 						Type:              "sampled",
 						Unit:              "count",
-						Weights:           []uint64{3, 1, 1, 1, 1},
-						SampleCounts:      []uint64{3, 1, 1, 1, 1},
-						SampleDurationsNs: []uint64{20, 10, 0, 10, 10},
+						Weights:           []uint64{2, 1, 1, 1},
+						SampleCounts:      []uint64{2, 1, 1, 1},
+						SampleDurationsNs: []uint64{20, 10, 10, 10},
 					},
 				},
 				Shared: speedscope.SharedData{
