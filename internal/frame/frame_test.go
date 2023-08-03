@@ -50,7 +50,11 @@ func TestIsCocoaApplicationFrame(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if isApplication := tt.frame.IsCocoaApplicationFrame(); isApplication != tt.isApplication {
-				t.Fatalf("Expected %s frame but got %s frame", frameType(tt.isApplication), frameType(isApplication))
+				t.Fatalf(
+					"Expected %s frame but got %s frame",
+					frameType(tt.isApplication),
+					frameType(isApplication),
+				)
 			}
 		})
 	}
@@ -125,7 +129,11 @@ func TestIsPythonApplicationFrame(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if isApplication := tt.frame.IsPythonApplicationFrame(); isApplication != tt.isApplication {
-				t.Fatalf("Expected %s frame but got %s frame", frameType(tt.isApplication), frameType(isApplication))
+				t.Fatalf(
+					"Expected %s frame but got %s frame",
+					frameType(tt.isApplication),
+					frameType(isApplication),
+				)
 			}
 		})
 	}
@@ -168,7 +176,11 @@ func TestIsNodeApplicationFrame(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if isApplication := tt.frame.IsNodeApplicationFrame(); isApplication != tt.isApplication {
-				t.Fatalf("Expected %s frame but got %s frame", frameType(tt.isApplication), frameType(isApplication))
+				t.Fatalf(
+					"Expected %s frame but got %s frame",
+					frameType(tt.isApplication),
+					frameType(isApplication),
+				)
 			}
 		})
 	}
@@ -214,7 +226,11 @@ func TestIsPHPApplicationFrame(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if isApplication := tt.frame.IsPHPApplicationFrame(); isApplication != tt.isApplication {
-				t.Fatalf("Expected %s frame but got %s frame", frameType(tt.isApplication), frameType(isApplication))
+				t.Fatalf(
+					"Expected %s frame but got %s frame",
+					frameType(tt.isApplication),
+					frameType(isApplication),
+				)
 			}
 		})
 	}
@@ -227,7 +243,7 @@ func TestWriteToHash(t *testing.T) {
 		frame Frame
 	}{
 		{
-			name:  "empty frame",
+			name:  "unknown frame",
 			bytes: []byte("--"),
 			frame: Frame{},
 		},
@@ -260,6 +276,13 @@ func TestWriteToHash(t *testing.T) {
 			bytes: []byte("-qux"),
 			frame: Frame{
 				Function: "qux",
+			},
+		},
+		{
+			name:  "native unknown frame",
+			bytes: []byte("--0x123456789"),
+			frame: Frame{
+				InstructionAddr: "0x123456789",
 			},
 		},
 	}
