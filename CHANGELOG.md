@@ -5,6 +5,7 @@
 **Internal**
 
 - Change function fingerprints to uint32. ([#295](https://github.com/getsentry/vroom/pull/295))
+- Use non dynamically sampled profiles to enhance slowest functions aggregation with more data ([300](https://github.com/getsentry/vroom/pull/300)) 
 
 ## 23.7.1
 
