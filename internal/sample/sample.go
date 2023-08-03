@@ -78,6 +78,7 @@ type (
 	}
 
 	RawProfile struct {
+		Sampled             bool                                `json:"sampled"`
 		DebugMeta           debugmeta.DebugMeta                 `json:"debug_meta"`
 		Device              Device                              `json:"device"`
 		Environment         string                              `json:"environment,omitempty"`
@@ -641,4 +642,8 @@ func (p RawProfile) GetTransactionMetadata() transaction.Metadata {
 
 func (p RawProfile) GetTransactionTags() map[string]string {
 	return p.TransactionTags
+}
+
+func (p RawProfile) IsSampled() bool {
+	return p.Sampled
 }

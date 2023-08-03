@@ -36,6 +36,7 @@ type (
 		Normalize()
 		Speedscope() (speedscope.Output, error)
 		StoragePath() string
+		IsSampled() bool
 	}
 
 	Profile struct {
@@ -150,4 +151,8 @@ func (p *Profile) TransactionMetadata() transaction.Metadata {
 
 func (p *Profile) TransactionTags() map[string]string {
 	return p.profile.GetTransactionTags()
+}
+
+func (p *Profile) IsSampled() bool {
+	return p.profile.IsSampled()
 }

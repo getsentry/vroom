@@ -28,6 +28,7 @@ type (
 	}
 
 	RawProfile struct {
+		Sampled              bool                                `json:"sampled"`
 		AndroidAPILevel      uint32                              `json:"android_api_level,omitempty"`
 		Architecture         string                              `json:"architecture,omitempty"`
 		BuildID              string                              `json:"build_id,omitempty"`
@@ -257,4 +258,8 @@ func (p LegacyProfile) GetTransactionMetadata() transaction.Metadata {
 
 func (p LegacyProfile) GetTransactionTags() map[string]string {
 	return p.TransactionTags
+}
+
+func (p LegacyProfile) IsSampled() bool {
+	return p.Sampled
 }
