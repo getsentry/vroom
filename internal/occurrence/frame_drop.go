@@ -1,6 +1,7 @@
 package occurrence
 
 import (
+	"fmt"
 	"sort"
 
 	"github.com/getsentry/vroom/internal/frame"
@@ -75,6 +76,7 @@ func findFrameDropFrame(
 	defer func() {
 		*st = (*st)[:len(*st)-1]
 	}()
+	fmt.Println(*n, frozenFrameStartNS, frozenFrameEndNS)
 	if len(n.Children) == 0 {
 		stackTrace := *st
 		inAppIndex := -1
@@ -89,8 +91,8 @@ func findFrameDropFrame(
 		if inAppIndex == -1 {
 			return nil
 		}
-		// We truncate to focus on the last in app frame.
-		stackTrace = stackTrace[:inAppIndex]
+		// We truncate right behind the last in app frame we want to focus on.
+		stackTrace = stackTrace[:inAppIndex+1]
 		// This is the new node we're going to report.
 		node := stackTrace[len(stackTrace)-1]
 		// If the function we'd like to return is unknown, the issue is not
