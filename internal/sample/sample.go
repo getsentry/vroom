@@ -651,3 +651,7 @@ func (p RawProfile) GetTransactionMetadata() transaction.Metadata {
 func (p RawProfile) GetTransactionTags() map[string]string {
 	return p.TransactionTags
 }
+
+func (p RawProfile) GetMeasurements() map[string]measurements.Measurement {
+	return p.Measurements
+}

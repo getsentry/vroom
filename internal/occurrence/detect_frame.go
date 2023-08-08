@@ -30,8 +30,6 @@ type (
 		Node       nodetree.Node
 		StackTrace []frame.Frame
 	}
-
-	Category string
 )
 
 const (

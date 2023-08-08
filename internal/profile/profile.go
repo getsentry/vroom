@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/getsentry/vroom/internal/debugmeta"
+	"github.com/getsentry/vroom/internal/measurements"
 	"github.com/getsentry/vroom/internal/metadata"
 	"github.com/getsentry/vroom/internal/nodetree"
 	"github.com/getsentry/vroom/internal/platform"
@@ -19,6 +20,7 @@ type (
 		GetDurationNS() uint64
 		GetEnvironment() string
 		GetID() string
+		GetMeasurements() map[string]measurements.Measurement
 		GetOrganizationID() uint64
 		GetPlatform() platform.Platform
 		GetProjectID() uint64
@@ -150,4 +152,8 @@ func (p *Profile) TransactionMetadata() transaction.Metadata {
 
 func (p *Profile) TransactionTags() map[string]string {
 	return p.profile.GetTransactionTags()
+}
+
+func (p *Profile) Measurements() map[string]measurements.Measurement {
+	return p.profile.GetMeasurements()
 }

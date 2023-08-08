@@ -258,3 +258,7 @@ func (p LegacyProfile) GetTransactionMetadata() transaction.Metadata {
 func (p LegacyProfile) GetTransactionTags() map[string]string {
 	return p.TransactionTags
 }
+
+func (p LegacyProfile) GetMeasurements() map[string]measurements.Measurement {
+	return p.Measurements
+}

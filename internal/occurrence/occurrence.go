@@ -75,6 +75,8 @@ type (
 		IssueTitle IssueTitle
 		Type       Type
 	}
+
+	Category string
 )
 
 const (
@@ -85,6 +87,7 @@ const (
 	JSONDecodeType  Type = 2003
 	RegexType       Type = 2007
 	ViewType        Type = 2006
+	FrameDropType   Type = 2008
 
 	EvidenceNameDuration EvidenceName = "Duration"
 	EvidenceNameFunction EvidenceName = "Suspect function"
@@ -122,6 +125,7 @@ var issueTitles = map[Category]CategoryMetadata{
 	ViewRender:       {IssueTitle: "SwiftUI View Render is slow", Type: ViewType},
 	ViewUpdate:       {IssueTitle: "SwiftUI View Update is slow", Type: ViewType},
 	XPC:              {IssueTitle: "XPC operation on Main Thread"},
+	FrameDrop:        {IssueTitle: "Frame Drop", Type: FrameDropType},
 }
 
 // NewOccurrence returns an Occurrence struct populated with info.
@@ -138,41 +142,14 @@ func NewOccurrence(p profile.Profile, ni nodeInfo) *Occurrence {
 		title = IssueTitle(fmt.Sprintf("%v issue detected", ni.Category))
 	}
 	pf := p.Platform()
-	nodeDuration := time.Duration(ni.Node.DurationNS).Round(10 * time.Microsecond)
-	profilePercentage := float64(ni.Node.DurationNS*100) / float64(p.DurationNS())
-	evidenceData := map[string]interface{}{
-		"frame_duration_ns":   ni.Node.DurationNS,
-		"frame_module":        ni.Node.Frame.Module,
-		"frame_name":          ni.Node.Name,
-		"frame_package":       ni.Node.Frame.Package,
-		"profile_duration_ns": p.DurationNS(),
-		"template_name":       "profile",
-		"transaction_id":      t.ID,
-		"transaction_name":    t.Name,
-		ProfileID:             p.ID(),
-	}
-	var duration string
 	switch pf {
 	case platform.Android:
-		duration = fmt.Sprintf(
-			"%s (%0.2f%% of the profile)",
-			nodeDuration,
-			profilePercentage,
-		)
 		pf = platform.Java
 		normalizeAndroidStackTrace(ni.StackTrace)
 		ni.Node.Name = android.StripPackageNameFromFullMethodName(
 			ni.Node.Name,
 			ni.Node.Package,
 		)
-	default:
-		duration = fmt.Sprintf(
-			"%s (%0.2f%% of the profile, found in %d samples)",
-			nodeDuration,
-			profilePercentage,
-			ni.Node.SampleCount,
-		)
-		evidenceData["sample_count"] = ni.Node.SampleCount
 	}
 	h := md5.New()
 	_, _ = io.WriteString(h, strconv.FormatUint(p.ProjectID(), 10))
@@ -201,33 +178,18 @@ func NewOccurrence(p profile.Profile, ni nodeInfo) *Occurrence {
 			Tags:           tags,
 			Timestamp:      p.Timestamp(),
 		},
-		EvidenceData: evidenceData,
-		EvidenceDisplay: []Evidence{
-			{
-				Important: true,
-				Name:      EvidenceNameFunction,
-				Value:     ni.Node.Name,
-			},
-
-			{
-				Name:  EvidenceNamePackage,
-				Value: ni.Node.Package,
-			},
-			{
-				Name:  EvidenceNameDuration,
-				Value: duration,
-			},
-		},
-		Fingerprint: []string{fingerprint},
-		ID:          eventID(),
-		IssueTitle:  title,
-		Level:       "info",
-		ProjectID:   p.ProjectID(),
-		Subtitle:    ni.Node.Name,
-		Type:        issueType,
-		category:    ni.Category,
-		durationNS:  ni.Node.DurationNS,
-		sampleCount: ni.Node.SampleCount,
+		EvidenceData:    generateEvidenceData(p, ni),
+		EvidenceDisplay: generateEvidenceDisplay(p, ni),
+		Fingerprint:     []string{fingerprint},
+		ID:              eventID(),
+		IssueTitle:      title,
+		Level:           "info",
+		ProjectID:       p.ProjectID(),
+		Subtitle:        ni.Node.Name,
+		Type:            issueType,
+		category:        ni.Category,
+		durationNS:      ni.Node.DurationNS,
+		sampleCount:     ni.Node.SampleCount,
 	}
 }
 
@@ -239,4 +201,69 @@ func normalizeAndroidStackTrace(st []frame.Frame) {
 	for i := range st {
 		st[i].Function = android.StripPackageNameFromFullMethodName(st[i].Function, st[i].Package)
 	}
+}
+
+func generateEvidenceData(p profile.Profile, ni nodeInfo) map[string]interface{} {
+	t := p.Transaction()
+	evidenceData := map[string]interface{}{
+		"frame_duration_ns":   ni.Node.DurationNS,
+		"frame_module":        ni.Node.Frame.Module,
+		"frame_name":          ni.Node.Name,
+		"frame_package":       ni.Node.Frame.Package,
+		"profile_duration_ns": p.DurationNS(),
+		"template_name":       "profile",
+		"transaction_id":      t.ID,
+		"transaction_name":    t.Name,
+		ProfileID:             p.ID(),
+	}
+	switch ni.Category {
+	case FrameDrop:
+	default:
+		switch p.Platform() {
+		case platform.Android:
+			evidenceData["sample_count"] = ni.Node.SampleCount
+		}
+	}
+	return evidenceData
+}
+
+func generateEvidenceDisplay(p profile.Profile, ni nodeInfo) []Evidence {
+	evidenceDisplay := []Evidence{
+		{
+			Important: true,
+			Name:      EvidenceNameFunction,
+			Value:     ni.Node.Name,
+		},
+		{
+			Name:  EvidenceNamePackage,
+			Value: ni.Node.Package,
+		},
+	}
+	switch ni.Category {
+	case FrameDrop:
+	default:
+		nodeDuration := time.Duration(ni.Node.DurationNS).Round(10 * time.Microsecond)
+		profilePercentage := float64(ni.Node.DurationNS*100) / float64(p.DurationNS())
+		var duration string
+		switch p.Platform() {
+		case platform.Android:
+			duration = fmt.Sprintf(
+				"%s (%0.2f%% of the profile)",
+				nodeDuration,
+				profilePercentage,
+			)
+		default:
+			duration = fmt.Sprintf(
+				"%s (%0.2f%% of the profile, found in %d samples)",
+				nodeDuration,
+				profilePercentage,
+				ni.Node.SampleCount,
+			)
+		}
+		evidenceDisplay = append(evidenceDisplay, Evidence{
+			Name:  EvidenceNameDuration,
+			Value: duration,
+		})
+	}
+	return evidenceDisplay
 }
