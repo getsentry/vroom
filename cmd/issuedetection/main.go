@@ -100,6 +100,7 @@ func AnalyzeProfile(pathChannel chan string, errChan chan error, wg *sync.WaitGr
 				o.Event.Platform,
 				o.Event.ProjectID,
 				o.EvidenceData["profile_id"],
+				o.EvidenceData["frame_duration_ns"],
 				o.IssueTitle,
 				o.Subtitle,
 			)

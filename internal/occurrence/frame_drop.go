@@ -1,7 +1,6 @@
 package occurrence
 
 import (
-	"fmt"
 	"sort"
 
 	"github.com/getsentry/vroom/internal/frame"
@@ -56,8 +55,9 @@ func findFrameDropCause(
 				*occurrences = append(
 					*occurrences,
 					NewOccurrence(p, nodeInfo{
-						Category: FrameDrop,
-						Node:     frameDropInfo.Node, StackTrace: stackTrace,
+						Category:   FrameDrop,
+						Node:       frameDropInfo.Node,
+						StackTrace: stackTrace,
 					}),
 				)
 				break
@@ -76,7 +76,6 @@ func findFrameDropFrame(
 	defer func() {
 		*st = (*st)[:len(*st)-1]
 	}()
-	fmt.Println(*n, frozenFrameStartNS, frozenFrameEndNS)
 	if len(n.Children) == 0 {
 		stackTrace := *st
 		inAppIndex := -1
