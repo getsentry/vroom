@@ -10,15 +10,16 @@ import (
 	"strconv"
 
 	"github.com/getsentry/sentry-go"
+	"github.com/google/uuid"
+	"github.com/julienschmidt/httprouter"
+	"github.com/segmentio/kafka-go"
+	"google.golang.org/api/googleapi"
+
 	"github.com/getsentry/vroom/internal/nodetree"
 	"github.com/getsentry/vroom/internal/occurrence"
 	"github.com/getsentry/vroom/internal/platform"
 	"github.com/getsentry/vroom/internal/profile"
 	"github.com/getsentry/vroom/internal/storageutil"
-	"github.com/google/uuid"
-	"github.com/julienschmidt/httprouter"
-	"github.com/segmentio/kafka-go"
-	"google.golang.org/api/googleapi"
 )
 
 const maxUniqueFunctionsPerProfile = 100

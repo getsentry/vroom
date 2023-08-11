@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+**Internal**
+
+- Remove unwanted Println and add a CI rule to prevent further issues. ([#301](https://github.com/getsentry/vroom/pull/301))
+
 ## 23.7.2
 
 **Internal**
