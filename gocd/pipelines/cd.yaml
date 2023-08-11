@@ -20,8 +20,6 @@ pipelines:
         stages:
             - checks:
                   fetch_materials: true
-                  approval:
-                      type: manual
                   jobs:
                       check_ci_status:
                           timeout: 600
