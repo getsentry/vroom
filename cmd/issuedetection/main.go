@@ -24,7 +24,7 @@ const (
 func main() {
 	args := os.Args[1:]
 	if len(args) != 1 {
-		fmt.Println("./issuedetection <profiles directory>")
+		fmt.Println("./issuedetection <profiles directory>") // nolint
 		return
 	}
 
@@ -96,7 +96,7 @@ func AnalyzeProfile(pathChannel chan string, errChan chan error, wg *sync.WaitGr
 			continue
 		}
 		for _, o := range occurrence.Find(p, callTrees) {
-			fmt.Println(
+			fmt.Println( // nolint
 				o.Event.Platform,
 				o.Event.ProjectID,
 				o.EvidenceData["profile_id"],

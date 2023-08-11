@@ -14,7 +14,13 @@ import (
 	"cloud.google.com/go/storage"
 )
 
-func download(client *storage.Client, root string, objects chan string, errorsChan chan error, wg *sync.WaitGroup) {
+func download(
+	client *storage.Client,
+	root string,
+	objects chan string,
+	errorsChan chan error,
+	wg *sync.WaitGroup,
+) {
 	defer wg.Done()
 
 	b := client.Bucket("sentryio-profiles")
@@ -76,7 +82,9 @@ func download(client *storage.Client, root string, objects chan string, errorsCh
 func main() {
 	args := os.Args[1:]
 	if len(args) != 2 {
-		fmt.Println("./downloader <file of relative object paths> <destination directory>")
+		fmt.Println( // nolint
+			"./downloader <file of relative object paths> <destination directory>",
+		)
 		return
 	}
 
