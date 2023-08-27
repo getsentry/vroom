@@ -2,6 +2,7 @@ package occurrence
 
 import (
 	"sort"
+	"strings"
 
 	"github.com/getsentry/vroom/internal/frame"
 	"github.com/getsentry/vroom/internal/nodetree"
@@ -9,14 +10,10 @@ import (
 )
 
 type (
-	indexDuration struct {
-		durationNS uint64
-		index      int
-	}
-
-	frameDropInfo struct {
-		Node       nodetree.Node
-		StackTrace []*nodetree.Node
+	inAppFrameInfo struct {
+		depth int
+		n     *nodetree.Node
+		st    []*nodetree.Node
 	}
 )
 
@@ -40,104 +37,96 @@ func findFrameDropCause(
 	for _, mv := range frameDrops.Values {
 		for _, root := range callTrees {
 			st := make([]*nodetree.Node, 0, 128)
-			frameDropInfo := findFrameDropFrame(
+			var inAppFrames []inAppFrameInfo
+			findAllInAppFramesInSection(
 				root,
 				mv.ElapsedSinceStartNs-uint64(mv.Value),
 				mv.ElapsedSinceStartNs,
+				&inAppFrames,
 				&st,
 			)
-			// We found a potential stacktrace responsible for this frozen frame
-			if frameDropInfo != nil {
-				stackTrace := make([]frame.Frame, 0, len(frameDropInfo.StackTrace))
-				for _, f := range frameDropInfo.StackTrace {
-					stackTrace = append(stackTrace, f.ToFrame())
-				}
-				*occurrences = append(
-					*occurrences,
-					NewOccurrence(p, nodeInfo{
-						Category:   FrameDrop,
-						Node:       frameDropInfo.Node,
-						StackTrace: stackTrace,
-					}),
-				)
-				break
+			// No in app frame in the section, we bail.
+			if len(inAppFrames) == 0 {
+				continue
 			}
+			// Order frames by duration descending and if equal durations,
+			// choose the deepest frame.
+			sort.SliceStable(inAppFrames, func(i, j int) bool {
+				a, b := inAppFrames[i].n, inAppFrames[j].n
+				if a.DurationNS == b.DurationNS {
+					return i > j
+				}
+				return a.DurationNS > b.DurationNS
+			})
+			// This will be the deepest in app frame we think is responsible.
+			iaf := refineCause(&inAppFrames[0])
+			// We found a potential stacktrace responsible for this frozen frame
+			stackTrace := make([]frame.Frame, 0, len(iaf.st))
+			for _, f := range iaf.st {
+				stackTrace = append(stackTrace, f.ToFrame())
+			}
+			*occurrences = append(
+				*occurrences,
+				NewOccurrence(p, nodeInfo{
+					Category:   FrameDrop,
+					Node:       *iaf.n,
+					StackTrace: stackTrace,
+				}),
+			)
+			break
 		}
 	}
 }
 
-func findFrameDropFrame(
+func refineCause(iaf *inAppFrameInfo) *inAppFrameInfo {
+	// If there are many children or none, we keep the current cause.
+	if len(iaf.n.Children) != 1 {
+		return iaf
+	}
+	// If there's only one children, try to find a deeper in app frame.
+	// The in app frame must be of the same duration other we're not making
+	// progress.
+	c := iaf.n.Children[0]
+	if iaf.n.DurationNS != c.DurationNS {
+		return iaf
+	}
+	cause := refineCause(&inAppFrameInfo{
+		iaf.depth + 1,
+		c,
+		append(iaf.st, c),
+	})
+	// If the frame returned is from the app, it's our new cause.
+	if cause.n.IsApplication {
+		return cause
+	}
+	return iaf
+}
+
+// findAllInAppFramesInSection will find all in app frames from the start of
+// the frozen frame to the end of it and return at which depth we found each
+// frame and an associated stack trace.
+func findAllInAppFramesInSection(
 	n *nodetree.Node,
 	frozenFrameStartNS uint64,
 	frozenFrameEndNS uint64,
+	inAppFrames *[]inAppFrameInfo,
 	st *[]*nodetree.Node,
-) *frameDropInfo {
+) {
 	*st = append(*st, n)
 	defer func() {
 		*st = (*st)[:len(*st)-1]
 	}()
-	if len(n.Children) == 0 {
-		stackTrace := *st
-		inAppIndex := -1
-		for i := len(stackTrace) - 1; i >= 0; i-- {
-			f := stackTrace[i]
-			if *f.Frame.InApp {
-				inAppIndex = i
-				break
-			}
-		}
-		// We didn't find an in app frame in the stack, occurrence is discarded.
-		if inAppIndex == -1 {
-			return nil
-		}
-		// We truncate right behind the last in app frame we want to focus on.
-		stackTrace = stackTrace[:inAppIndex+1]
-		// This is the new node we're going to report.
-		node := stackTrace[len(stackTrace)-1]
-		// If the function we'd like to return is unknown, the issue is not
-		// actionable and we drop it.
-		if node.Frame.Function == "" {
-			return nil
-		}
-		fdi := frameDropInfo{
-			Node:       *node,
-			StackTrace: make([]*nodetree.Node, len(stackTrace)),
-		}
-		fdi.Node.Children = nil
-		copy(fdi.StackTrace, stackTrace)
-		return &fdi
-	} else if len(n.Children) == 1 {
-		return findFrameDropFrame(n.Children[0], frozenFrameStartNS, frozenFrameEndNS, st)
+	if !strings.HasPrefix(n.Frame.Function, "@objc") &&
+		n.StartNS >= frozenFrameStartNS &&
+		n.EndNS <= frozenFrameEndNS &&
+		n.IsApplication {
+		*inAppFrames = append(*inAppFrames, inAppFrameInfo{
+			0,
+			n,
+			*st,
+		})
 	}
-	// Select candidates to explore next
-	candidates := make([]indexDuration, 0, len(n.Children))
-	for i, c := range n.Children {
-		if c.EndNS < frozenFrameStartNS || c.StartNS > frozenFrameEndNS {
-			continue
-		}
-		candidates = append(
-			candidates,
-			indexDuration{
-				c.DurationNS,
-				i,
-			},
-		)
+	for _, c := range n.Children {
+		findAllInAppFramesInSection(c, frozenFrameStartNS, frozenFrameEndNS, inAppFrames, st)
 	}
-	// If there's no candidate, it means no child starts before or during
-	// the frozen frame and ends during or after the frozen frame.
-	// This is not the call tree we're looking for.
-	if len(candidates) == 0 {
-		return nil
-	}
-	sort.SliceStable(candidates, func(i, j int) bool {
-		return candidates[i].durationNS > candidates[j].durationNS
-	})
-	// We pick the child with the longest duration and continue to look for
-	// the leaf.
-	return findFrameDropFrame(
-		n.Children[candidates[0].index],
-		frozenFrameStartNS,
-		frozenFrameEndNS,
-		st,
-	)
 }

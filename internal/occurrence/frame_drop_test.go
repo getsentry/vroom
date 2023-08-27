@@ -25,7 +25,7 @@ func TestFindFrameDrop(t *testing.T) {
 		want      []*Occurrence
 	}{
 		{
-			name: "Find longest leaf frame",
+			name: "Find a basic cause of a frame drop",
 			profile: profile.New(&sample.Profile{
 				RawProfile: sample.RawProfile{
 					EventID: "1234567890",
@@ -34,8 +34,8 @@ func TestFindFrameDrop(t *testing.T) {
 							Unit: "nanosecond",
 							Values: []measurements.MeasurementValue{
 								{
-									ElapsedSinceStartNs: uint64(51 * time.Millisecond),
-									Value:               float64(31 * time.Millisecond),
+									ElapsedSinceStartNs: uint64(500 * time.Millisecond),
+									Value:               float64(300 * time.Millisecond),
 								},
 							},
 						},
@@ -52,7 +52,153 @@ func TestFindFrameDrop(t *testing.T) {
 								ElapsedSinceStartNS: 0,
 							},
 							{
-								ElapsedSinceStartNS: uint64(50 * time.Millisecond),
+								ElapsedSinceStartNS: uint64(500 * time.Millisecond),
+							},
+						},
+					},
+				},
+			}),
+			callTrees: map[uint64][]*nodetree.Node{
+				1: {
+					{
+						DurationNS:    uint64(500 * time.Millisecond),
+						EndNS:         uint64(500 * time.Millisecond),
+						IsApplication: true,
+						Name:          "root",
+						Package:       "package",
+						Path:          "path",
+						Frame: frame.Frame{
+							Function: "root",
+							InApp:    &testutil.False,
+							Package:  "package",
+							Path:     "path",
+						},
+						Children: []*nodetree.Node{
+							{
+								DurationNS:    uint64(200 * time.Millisecond),
+								EndNS:         uint64(200 * time.Millisecond),
+								IsApplication: true,
+								Name:          "child1-1",
+								Package:       "package",
+								Path:          "path",
+								Frame: frame.Frame{
+									Function: "child1-1",
+									InApp:    &testutil.True,
+									Package:  "package",
+									Path:     "path",
+								},
+								Children: []*nodetree.Node{},
+							},
+							{
+								DurationNS:    uint64(100 * time.Millisecond),
+								EndNS:         uint64(300 * time.Millisecond),
+								IsApplication: true,
+								Name:          "child1-2",
+								Package:       "package",
+								Path:          "path",
+								StartNS:       uint64(200 * time.Millisecond),
+								Frame: frame.Frame{
+									Function: "child1-2",
+									InApp:    &testutil.True,
+									Package:  "package",
+									Path:     "path",
+								},
+								Children: []*nodetree.Node{
+									{
+										DurationNS:    uint64(50 * time.Millisecond),
+										EndNS:         uint64(250 * time.Millisecond),
+										IsApplication: true,
+										Name:          "child1-3",
+										Package:       "package",
+										Path:          "path",
+										StartNS:       uint64(200 * time.Millisecond),
+										Frame: frame.Frame{
+											Function: "child1-3",
+											InApp:    &testutil.False,
+											Package:  "package",
+											Path:     "path",
+										},
+										Children: []*nodetree.Node{},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			want: []*Occurrence{
+				{
+					Culprit: "some",
+					Event: Event{
+						Platform: "cocoa",
+						StackTrace: StackTrace{Frames: []frame.Frame{
+							{
+								Function: "root",
+								InApp:    &testutil.False,
+								Package:  "package",
+								Path:     "path",
+							},
+							{
+								Function: "child1-2",
+								InApp:    &testutil.True,
+								Package:  "package",
+								Path:     "path",
+							},
+						}},
+						Tags: map[string]string{},
+					},
+					EvidenceData: map[string]interface{}{
+						"frame_duration_ns":   uint64(100000000),
+						"frame_module":        "",
+						"frame_name":          "child1-2",
+						"frame_package":       "package",
+						"profile_id":          "1234567890",
+						"template_name":       "profile",
+						"transaction_id":      "1234",
+						"transaction_name":    "some",
+						"profile_duration_ns": uint64(500000000),
+					},
+					EvidenceDisplay: []Evidence{
+						{Name: "Suspect function", Value: "child1-2", Important: true},
+						{Name: "Package", Value: "package"},
+					},
+					Fingerprint: []string{"4ece5e7519f4f6ed944db4aeb826f1ae"},
+					IssueTitle:  issueTitles[FrameDrop].IssueTitle,
+					Level:       "info",
+					Subtitle:    "child1-2",
+					Type:        issueTitles[FrameDrop].Type,
+				},
+			},
+		},
+		{
+			name: "Find a deeper frame than expected",
+			profile: profile.New(&sample.Profile{
+				RawProfile: sample.RawProfile{
+					EventID: "1234567890",
+					Measurements: map[string]measurements.Measurement{
+						"frozen_frame_renders": {
+							Unit: "nanosecond",
+							Values: []measurements.MeasurementValue{
+								{
+									ElapsedSinceStartNs: uint64(500 * time.Millisecond),
+									Value:               float64(300 * time.Millisecond),
+								},
+							},
+						},
+					},
+					Transaction: transaction.Transaction{
+						ActiveThreadID: 1,
+						ID:             "1234",
+						Name:           "some",
+					},
+					Platform: platform.Cocoa,
+					Trace: sample.Trace{
+						Samples: []sample.Sample{
+							{
+								ElapsedSinceStartNS: 0,
+							},
+							{
+								ElapsedSinceStartNS: uint64(500 * time.Millisecond),
 							},
 						},
 					},
@@ -90,20 +236,99 @@ func TestFindFrameDrop(t *testing.T) {
 								Children: []*nodetree.Node{},
 							},
 							{
-								DurationNS:    uint64(30 * time.Millisecond),
-								EndNS:         uint64(30 * time.Millisecond),
+								DurationNS:    uint64(100 * time.Millisecond),
+								EndNS:         uint64(300 * time.Millisecond),
 								IsApplication: true,
 								Name:          "child1-2",
 								Package:       "package",
 								Path:          "path",
-								StartNS:       uint64(20 * time.Millisecond),
+								StartNS:       uint64(200 * time.Millisecond),
 								Frame: frame.Frame{
 									Function: "child1-2",
 									InApp:    &testutil.True,
 									Package:  "package",
 									Path:     "path",
 								},
-								Children: []*nodetree.Node{},
+								Children: []*nodetree.Node{
+									{
+										DurationNS:    uint64(100 * time.Millisecond),
+										EndNS:         uint64(300 * time.Millisecond),
+										IsApplication: false,
+										Name:          "child1-3",
+										Package:       "package",
+										Path:          "path",
+										StartNS:       uint64(200 * time.Millisecond),
+										Frame: frame.Frame{
+											Function: "child1-3",
+											InApp:    &testutil.False,
+											Package:  "package",
+											Path:     "path",
+										},
+										Children: []*nodetree.Node{
+											{
+												DurationNS:    uint64(100 * time.Millisecond),
+												EndNS:         uint64(300 * time.Millisecond),
+												IsApplication: true,
+												Name:          "child1-4",
+												Package:       "package",
+												Path:          "path",
+												StartNS:       uint64(200 * time.Millisecond),
+												Frame: frame.Frame{
+													Function: "child1-4",
+													InApp:    &testutil.True,
+													Package:  "package",
+													Path:     "path",
+												},
+												Children: []*nodetree.Node{
+													{
+														DurationNS: uint64(
+															100 * time.Millisecond,
+														),
+														EndNS: uint64(
+															300 * time.Millisecond,
+														),
+														IsApplication: false,
+														Name:          "child1-5",
+														Package:       "package",
+														Path:          "path",
+														StartNS: uint64(
+															200 * time.Millisecond,
+														),
+														Frame: frame.Frame{
+															Function: "child1-5",
+															InApp:    &testutil.False,
+															Package:  "package",
+															Path:     "path",
+														},
+														Children: []*nodetree.Node{
+															{
+																DurationNS: uint64(
+																	100 * time.Millisecond,
+																),
+																EndNS: uint64(
+																	300 * time.Millisecond,
+																),
+																IsApplication: false,
+																Name:          "child1-6",
+																Package:       "package",
+																Path:          "path",
+																StartNS: uint64(
+																	200 * time.Millisecond,
+																),
+																Frame: frame.Frame{
+																	Function: "child1-6",
+																	InApp:    &testutil.False,
+																	Package:  "package",
+																	Path:     "path",
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
 							},
 						},
 					},
@@ -127,28 +352,40 @@ func TestFindFrameDrop(t *testing.T) {
 								Package:  "package",
 								Path:     "path",
 							},
+							{
+								Function: "child1-3",
+								InApp:    &testutil.False,
+								Package:  "package",
+								Path:     "path",
+							},
+							{
+								Function: "child1-4",
+								InApp:    &testutil.True,
+								Package:  "package",
+								Path:     "path",
+							},
 						}},
 						Tags: map[string]string{},
 					},
 					EvidenceData: map[string]interface{}{
-						"frame_duration_ns":   uint64(30000000),
+						"frame_duration_ns":   uint64(100000000),
 						"frame_module":        "",
-						"frame_name":          "child1-2",
+						"frame_name":          "child1-4",
 						"frame_package":       "package",
 						"profile_id":          "1234567890",
 						"template_name":       "profile",
 						"transaction_id":      "1234",
 						"transaction_name":    "some",
-						"profile_duration_ns": uint64(50000000),
+						"profile_duration_ns": uint64(500000000),
 					},
 					EvidenceDisplay: []Evidence{
-						{Name: "Suspect function", Value: "child1-2", Important: true},
+						{Name: "Suspect function", Value: "child1-4", Important: true},
 						{Name: "Package", Value: "package"},
 					},
-					Fingerprint: []string{"4ece5e7519f4f6ed944db4aeb826f1ae"},
+					Fingerprint: []string{"4638c5d8bc93d6ce2cbf87c47941a906"},
 					IssueTitle:  issueTitles[FrameDrop].IssueTitle,
 					Level:       "info",
-					Subtitle:    "child1-2",
+					Subtitle:    "child1-4",
 					Type:        issueTitles[FrameDrop].Type,
 				},
 			},
