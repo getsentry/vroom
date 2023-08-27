@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+**Features**
+
+- Improve frame drop detection algorithm. ([#304](https://github.com/getsentry/vroom/pull/304))
+
 ## 23.8.0
 
 **Internal**
