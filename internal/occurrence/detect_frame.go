@@ -12,8 +12,8 @@ import (
 
 type (
 	DetectFrameOptions interface {
-		OnlyCheckActiveThread() bool
-		CheckNode(*nodetree.Node) *nodeInfo
+		onlyCheckActiveThread() bool
+		checkNode(*nodetree.Node) *nodeInfo
 	}
 
 	DetectExactFrameOptions struct {
@@ -77,11 +77,11 @@ const (
 	XPC              Category = "xpc"
 )
 
-func (options DetectExactFrameOptions) OnlyCheckActiveThread() bool {
+func (options DetectExactFrameOptions) onlyCheckActiveThread() bool {
 	return options.ActiveThreadOnly
 }
 
-func (options DetectExactFrameOptions) CheckNode(n *nodetree.Node) *nodeInfo {
+func (options DetectExactFrameOptions) checkNode(n *nodetree.Node) *nodeInfo {
 	// Check if we have a list of functions associated to the package.
 	functions, exists := options.FunctionsByPackage[n.Package]
 	if !exists {
@@ -112,11 +112,11 @@ func (options DetectExactFrameOptions) CheckNode(n *nodetree.Node) *nodeInfo {
 	return &ni
 }
 
-func (options DetectAndroidFrameOptions) OnlyCheckActiveThread() bool {
+func (options DetectAndroidFrameOptions) onlyCheckActiveThread() bool {
 	return options.ActiveThreadOnly
 }
 
-func (options DetectAndroidFrameOptions) CheckNode(n *nodetree.Node) *nodeInfo {
+func (options DetectAndroidFrameOptions) checkNode(n *nodetree.Node) *nodeInfo {
 	// Check if we have a list of functions associated to the package.
 	functions, exists := options.FunctionsByPackage[n.Package]
 	if !exists {
@@ -467,7 +467,7 @@ func detectFrame(
 ) {
 	// List nodes matching criteria
 	nodes := make(map[nodeKey]nodeInfo)
-	if options.OnlyCheckActiveThread() {
+	if options.onlyCheckActiveThread() {
 		callTrees, exists := callTreesPerThreadID[p.Transaction().ActiveThreadID]
 		if !exists {
 			return
@@ -517,7 +517,7 @@ func detectFrameInNode(
 	if issueDetected {
 		return nil
 	}
-	ni := options.CheckNode(n)
+	ni := options.checkNode(n)
 	if ni != nil {
 		nk := nodeKey{Package: ni.Node.Package, Function: ni.Node.Name}
 		if _, exists := nodes[nk]; !exists {
