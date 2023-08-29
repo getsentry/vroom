@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+**Features**
+
+- Improve frame drop detection algorithm. ([#304](https://github.com/getsentry/vroom/pull/304))
+
 **Internal**
 
 - Fix android issue frame detection. ([#305](https://github.com/getsentry/vroom/pull/305))

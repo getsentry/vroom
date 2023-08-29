@@ -109,6 +109,7 @@ var issueTitles = map[Category]CategoryMetadata{
 	Decompression:    {IssueTitle: "Decompression on Main Thread"},
 	FileRead:         {IssueTitle: "File I/O on Main Thread"},
 	FileWrite:        {IssueTitle: "File I/O on Main Thread"},
+	FrameDrop:        {IssueTitle: "A Frame Drop Occurred", Type: FrameDropType},
 	HTTP:             {IssueTitle: "Network I/O on Main Thread"},
 	ImageDecode:      {IssueTitle: "Image Decoding on Main Thread", Type: ImageDecodeType},
 	ImageEncode:      {IssueTitle: "Image Encoding on Main Thread"},
@@ -125,7 +126,6 @@ var issueTitles = map[Category]CategoryMetadata{
 	ViewRender:       {IssueTitle: "SwiftUI View Render is slow", Type: ViewType},
 	ViewUpdate:       {IssueTitle: "SwiftUI View Update is slow", Type: ViewType},
 	XPC:              {IssueTitle: "XPC operation on Main Thread"},
-	FrameDrop:        {IssueTitle: "Frame Drop", Type: FrameDropType},
 }
 
 // NewOccurrence returns an Occurrence struct populated with info.
