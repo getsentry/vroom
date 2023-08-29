@@ -11,7 +11,7 @@ import (
 
 func TestDetectFrameInCallTree(t *testing.T) {
 	tests := []struct {
-		job  DetectExactFrameOptions
+		job  DetectFrameOptions
 		name string
 		node *nodetree.Node
 		want map[nodeKey]nodeInfo
@@ -787,6 +787,69 @@ func TestDetectFrameInCallTree(t *testing.T) {
 							InApp:    &testutil.True,
 							Line:     0,
 							Package:  "CoreFoundation",
+							Path:     "path",
+						},
+					},
+				},
+			},
+		},
+		{
+			job: DetectAndroidFrameOptions{
+				DurationThreshold: 16 * time.Millisecond,
+				FunctionsByPackage: map[string]map[string]Category{
+					"android.graphics": {
+						"android.graphics.BitmapFactory.decodeStream": ImageDecode,
+					},
+				},
+			},
+			name: "Detect android frame",
+			node: &nodetree.Node{
+				DurationNS:    uint64(30 * time.Millisecond),
+				EndNS:         uint64(30 * time.Millisecond),
+				Fingerprint:   0,
+				IsApplication: true,
+				Line:          0,
+				Name:          "android.graphics.BitmapFactory.decodeStream(java.io.InputStream, android.graphics.Rect, android.graphics.BitmapFactory$Options): android.graphics.Bitmap",
+				Package:       "android.graphics",
+				Path:          "path",
+				StartNS:       0,
+				Frame: frame.Frame{
+					Function: "android.graphics.BitmapFactory.decodeStream(java.io.InputStream, android.graphics.Rect, android.graphics.BitmapFactory$Options): android.graphics.Bitmap",
+					InApp:    &testutil.True,
+					Package:  "android.graphics",
+					Path:     "path",
+				},
+				Children: []*nodetree.Node{},
+			},
+			want: map[nodeKey]nodeInfo{
+				{
+					Package:  "android.graphics",
+					Function: "android.graphics.BitmapFactory.decodeStream(java.io.InputStream, android.graphics.Rect, android.graphics.BitmapFactory$Options): android.graphics.Bitmap",
+				}: {
+					Category: ImageDecode,
+					Node: nodetree.Node{
+						DurationNS:    uint64(30 * time.Millisecond),
+						EndNS:         uint64(30 * time.Millisecond),
+						Fingerprint:   0,
+						IsApplication: true,
+						Line:          0,
+						Name:          "android.graphics.BitmapFactory.decodeStream(java.io.InputStream, android.graphics.Rect, android.graphics.BitmapFactory$Options): android.graphics.Bitmap",
+						Package:       "android.graphics",
+						Path:          "path",
+						StartNS:       0,
+						Frame: frame.Frame{
+							Function: "android.graphics.BitmapFactory.decodeStream(java.io.InputStream, android.graphics.Rect, android.graphics.BitmapFactory$Options): android.graphics.Bitmap",
+							InApp:    &testutil.True,
+							Package:  "android.graphics",
+							Path:     "path",
+						},
+					},
+					StackTrace: []frame.Frame{
+						{
+							Function: "android.graphics.BitmapFactory.decodeStream(java.io.InputStream, android.graphics.Rect, android.graphics.BitmapFactory$Options): android.graphics.Bitmap",
+							InApp:    &testutil.True,
+							Line:     0,
+							Package:  "android.graphics",
 							Path:     "path",
 						},
 					},

@@ -4,7 +4,11 @@
 
 **Features**
 
-- Improve frame drop detection algorithm. ([#304](https://github.com/getsentry/vroom/pull/304))
+- Improve frame drop detection algorithm. ([#304](https://github.com/getsentry/vroom/pull/30))
+
+**Internal**
+
+- Fix android issue frame detection. ([#305](https://github.com/getsentry/vroom/pull/305))
 
 ## 23.8.0
 
