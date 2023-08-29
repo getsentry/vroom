@@ -90,14 +90,16 @@ func findFrameDropCauseFrame(
 			longest = cause
 			continue
 		}
+
 		// Only keep the longest node.
-		if cause.n.DurationNS >= longest.n.DurationNS && cause.depth >= longest.depth {
+		if cause.n.DurationNS > longest.n.DurationNS ||
+			cause.n.DurationNS == longest.n.DurationNS && cause.depth > longest.depth {
 			longest = cause
 		}
 	}
 
 	// Create a nodeStack of the current node
-	ns := &nodeStack{depth, n, make([]*nodetree.Node, len(*st))}
+	ns := &nodeStack{depth, n, nil}
 	// Check if current node if valid.
 	current := nodeStackIfValid(
 		ns,
@@ -107,15 +109,18 @@ func findFrameDropCauseFrame(
 
 	// If we didn't find any valid node downstream, we return the current.
 	if longest == nil {
+		ns.st = make([]*nodetree.Node, len(*st))
 		copy(ns.st, *st)
 		return current
 	}
 
 	// If current is not valid or a node downstream is equal or longer, we return it.
+	// We gave priority to the child instead of the current node.
 	if current == nil || longest.n.DurationNS >= current.n.DurationNS {
 		return longest
 	}
 
+	ns.st = make([]*nodetree.Node, len(*st))
 	copy(ns.st, *st)
 	return current
 }
