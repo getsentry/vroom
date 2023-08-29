@@ -1,16 +1,13 @@
 package occurrence
 
 import (
-	"sort"
-	"strings"
-
 	"github.com/getsentry/vroom/internal/frame"
 	"github.com/getsentry/vroom/internal/nodetree"
 	"github.com/getsentry/vroom/internal/profile"
 )
 
 type (
-	inAppFrameInfo struct {
+	nodeStack struct {
 		depth int
 		n     *nodetree.Node
 		st    []*nodetree.Node
@@ -37,39 +34,26 @@ func findFrameDropCause(
 	for _, mv := range frameDrops.Values {
 		for _, root := range callTrees {
 			st := make([]*nodetree.Node, 0, 128)
-			var inAppFrames []inAppFrameInfo
-			findAllInAppFramesInSection(
+			cause := findFrameDropCauseFrame(
 				root,
 				mv.ElapsedSinceStartNs-uint64(mv.Value),
 				mv.ElapsedSinceStartNs,
-				&inAppFrames,
 				&st,
+				0,
 			)
-			// No in app frame in the section, we bail.
-			if len(inAppFrames) == 0 {
+			if cause == nil {
 				continue
 			}
-			// Order frames by duration descending and if equal durations,
-			// choose the deepest frame.
-			sort.SliceStable(inAppFrames, func(i, j int) bool {
-				a, b := inAppFrames[i].n, inAppFrames[j].n
-				if a.DurationNS == b.DurationNS {
-					return i > j
-				}
-				return a.DurationNS > b.DurationNS
-			})
-			// This will be the deepest in app frame we think is responsible.
-			iaf := refineCause(&inAppFrames[0])
 			// We found a potential stacktrace responsible for this frozen frame
-			stackTrace := make([]frame.Frame, 0, len(iaf.st))
-			for _, f := range iaf.st {
+			stackTrace := make([]frame.Frame, 0, len(cause.st))
+			for _, f := range cause.st {
 				stackTrace = append(stackTrace, f.ToFrame())
 			}
 			*occurrences = append(
 				*occurrences,
 				NewOccurrence(p, nodeInfo{
 					Category:   FrameDrop,
-					Node:       *iaf.n,
+					Node:       *cause.n,
 					StackTrace: stackTrace,
 				}),
 			)
@@ -78,55 +62,74 @@ func findFrameDropCause(
 	}
 }
 
-func refineCause(iaf *inAppFrameInfo) *inAppFrameInfo {
-	// If there are many children or none, we keep the current cause.
-	if len(iaf.n.Children) != 1 {
-		return iaf
-	}
-	// If there's only one children, try to find a deeper in app frame.
-	// The in app frame must be of the same duration other we're not making
-	// progress.
-	c := iaf.n.Children[0]
-	if iaf.n.DurationNS != c.DurationNS {
-		return iaf
-	}
-	cause := refineCause(&inAppFrameInfo{
-		iaf.depth + 1,
-		c,
-		append(iaf.st, c),
-	})
-	// If the frame returned is from the app, it's our new cause.
-	if cause.n.IsApplication {
-		return cause
-	}
-	return iaf
-}
-
-// findAllInAppFramesInSection will find all in app frames from the start of
-// the frozen frame to the end of it and return at which depth we found each
-// frame and an associated stack trace.
-func findAllInAppFramesInSection(
+func findFrameDropCauseFrame(
 	n *nodetree.Node,
-	frozenFrameStartNS uint64,
-	frozenFrameEndNS uint64,
-	inAppFrames *[]inAppFrameInfo,
+	frozenFrameStartNS, frozenFrameEndNS uint64,
 	st *[]*nodetree.Node,
-) {
+	depth int,
+) *nodeStack {
 	*st = append(*st, n)
 	defer func() {
 		*st = (*st)[:len(*st)-1]
 	}()
-	if !strings.HasPrefix(n.Frame.Function, "@objc") &&
-		n.StartNS >= frozenFrameStartNS &&
-		n.EndNS <= frozenFrameEndNS &&
-		n.IsApplication {
-		*inAppFrames = append(*inAppFrames, inAppFrameInfo{
-			0,
-			n,
-			*st,
-		})
-	}
+	var longest *nodeStack
+
+	// Explore each branch to find the deepest valid node.
 	for _, c := range n.Children {
-		findAllInAppFramesInSection(c, frozenFrameStartNS, frozenFrameEndNS, inAppFrames, st)
+		cause := findFrameDropCauseFrame(
+			c,
+			frozenFrameStartNS,
+			frozenFrameEndNS,
+			st,
+			depth+1,
+		)
+		if cause == nil {
+			continue
+		}
+		if longest == nil {
+			longest = cause
+			continue
+		}
+		// Only keep the longest node.
+		if cause.n.DurationNS >= longest.n.DurationNS && cause.depth >= longest.depth {
+			longest = cause
+		}
 	}
+
+	// Create a nodeStack of the current node
+	ns := &nodeStack{depth, n, make([]*nodetree.Node, len(*st))}
+	// Check if current node if valid.
+	current := nodeStackIfValid(
+		ns,
+		frozenFrameStartNS,
+		frozenFrameEndNS,
+	)
+
+	// If we didn't find any valid node downstream, we return the current.
+	if longest == nil {
+		copy(ns.st, *st)
+		return current
+	}
+
+	// If current is not valid or a node downstream is equal or longer, we return it.
+	if current == nil || longest.n.DurationNS >= current.n.DurationNS {
+		return longest
+	}
+
+	copy(ns.st, *st)
+	return current
+}
+
+// nodeStackIfValid returns the nodeStack if we consider it valid as
+// a frame drop cause.
+func nodeStackIfValid(
+	ns *nodeStack,
+	frozenFrameStartNS, frozenFrameEndNS uint64,
+) *nodeStack {
+	if ns.n.StartNS >= frozenFrameStartNS &&
+		ns.n.EndNS <= frozenFrameEndNS &&
+		ns.n.IsApplication {
+		return ns
+	}
+	return nil
 }
