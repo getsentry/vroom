@@ -10,6 +10,7 @@
 **Internal**
 
 - Fix android issue frame detection. ([#305](https://github.com/getsentry/vroom/pull/305))
+- Fix backward compatibility with Android profiles without timestamp. ([#307](https://github.com/getsentry/vroom/pull/307))
 
 ## 23.8.0
 
