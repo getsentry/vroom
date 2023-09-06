@@ -49,6 +49,7 @@ type (
 		ProjectID            uint64                              `json:"project_id"`
 		Received             timeutil.Time                       `json:"received"`
 		RetentionDays        int                                 `json:"retention_days"`
+		Timestamp            time.Time                           `json:"timestamp"`
 		TraceID              string                              `json:"trace_id"`
 		TransactionID        string                              `json:"transaction_id"`
 		TransactionMetadata  transaction.Metadata                `json:"transaction_metadata"`
@@ -183,7 +184,7 @@ func (p *LegacyProfile) Metadata() metadata.Metadata {
 		DeviceOSVersion:      p.DeviceOSVersion,
 		ID:                   p.ProfileID,
 		ProjectID:            strconv.FormatUint(p.GetProjectID(), 10),
-		Timestamp:            p.Received.Time().Unix(),
+		Timestamp:            p.Timestamp.Unix(),
 		TraceDurationMs:      float64(p.DurationNS) / 1_000_000,
 		TransactionID:        p.TransactionID,
 		TransactionName:      p.TransactionName,
@@ -215,7 +216,7 @@ func (p LegacyProfile) GetDebugMeta() debugmeta.DebugMeta {
 }
 
 func (p LegacyProfile) GetTimestamp() time.Time {
-	return p.Received.Time()
+	return p.Timestamp
 }
 
 func (p LegacyProfile) GetReceived() time.Time {
