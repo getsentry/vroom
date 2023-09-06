@@ -216,6 +216,9 @@ func (p LegacyProfile) GetDebugMeta() debugmeta.DebugMeta {
 }
 
 func (p LegacyProfile) GetTimestamp() time.Time {
+	if p.Timestamp.IsZero() {
+		return time.Time(p.Received)
+	}
 	return p.Timestamp
 }
 
