@@ -1,6 +1,9 @@
 package occurrence
 
 import (
+	"math"
+	"time"
+
 	"github.com/getsentry/vroom/internal/frame"
 	"github.com/getsentry/vroom/internal/nodetree"
 	"github.com/getsentry/vroom/internal/profile"
@@ -12,10 +15,46 @@ type (
 		n     *nodetree.Node
 		st    []*nodetree.Node
 	}
+
+	frozenFrameStats struct {
+		durationNS    uint64
+		endNS         uint64
+		minDurationNS uint64
+		startLimitNS  uint64
+		startNS       uint64
+	}
 )
+
+func newFrozenFrameStats(endNS uint64, durationNS float64) frozenFrameStats {
+	margin := uint64(math.Max(durationNS*marginPercent, float64(10*time.Millisecond)))
+	s := frozenFrameStats{
+		endNS:         endNS + margin,
+		durationNS:    uint64(durationNS),
+		minDurationNS: uint64(durationNS * minFrameDurationPercent),
+	}
+	if endNS >= (s.durationNS + margin) {
+		s.startNS = endNS - s.durationNS - margin
+	}
+	s.startLimitNS = s.startNS + uint64(durationNS*0.20)
+	return s
+}
+
+// nodeStackIfValid returns the nodeStack if we consider it valid as
+// a frame drop cause.
+func (s *frozenFrameStats) IsNodeStackValid(ns *nodeStack) bool {
+	return s.startNS <= ns.n.StartNS &&
+		ns.n.EndNS <= s.endNS &&
+		s.minDurationNS <= s.durationNS &&
+		ns.n.StartNS <= s.startLimitNS &&
+		ns.n.IsApplication
+}
 
 const (
 	FrameDrop Category = "frame_drop"
+
+	marginPercent           float64 = 0.05
+	minFrameDurationPercent float64 = 0.5
+	startLimitPercent       float64 = 0.2
 )
 
 func findFrameDropCause(
@@ -32,12 +71,12 @@ func findFrameDropCause(
 		return
 	}
 	for _, mv := range frameDrops.Values {
+		stats := newFrozenFrameStats(mv.ElapsedSinceStartNs, mv.Value)
 		for _, root := range callTrees {
 			st := make([]*nodetree.Node, 0, 128)
 			cause := findFrameDropCauseFrame(
 				root,
-				mv.ElapsedSinceStartNs-uint64(mv.Value),
-				mv.ElapsedSinceStartNs,
+				stats,
 				&st,
 				0,
 			)
@@ -64,7 +103,7 @@ func findFrameDropCause(
 
 func findFrameDropCauseFrame(
 	n *nodetree.Node,
-	frozenFrameStartNS, frozenFrameEndNS uint64,
+	stats frozenFrameStats,
 	st *[]*nodetree.Node,
 	depth int,
 ) *nodeStack {
@@ -78,8 +117,7 @@ func findFrameDropCauseFrame(
 	for _, c := range n.Children {
 		cause := findFrameDropCauseFrame(
 			c,
-			frozenFrameStartNS,
-			frozenFrameEndNS,
+			stats,
 			st,
 			depth+1,
 		)
@@ -98,19 +136,23 @@ func findFrameDropCauseFrame(
 		}
 	}
 
+	var current *nodeStack
+
 	// Create a nodeStack of the current node
 	ns := &nodeStack{depth, n, nil}
 	// Check if current node if valid.
-	current := nodeStackIfValid(
-		ns,
-		frozenFrameStartNS,
-		frozenFrameEndNS,
-	)
+	if stats.IsNodeStackValid(ns) {
+		current = ns
+	}
+
+	if longest == nil && current == nil {
+		return nil
+	}
 
 	// If we didn't find any valid node downstream, we return the current.
 	if longest == nil {
-		ns.st = make([]*nodetree.Node, len(*st))
-		copy(ns.st, *st)
+		current.st = make([]*nodetree.Node, len(*st))
+		copy(current.st, *st)
 		return current
 	}
 
@@ -120,21 +162,7 @@ func findFrameDropCauseFrame(
 		return longest
 	}
 
-	ns.st = make([]*nodetree.Node, len(*st))
-	copy(ns.st, *st)
+	current.st = make([]*nodetree.Node, len(*st))
+	copy(current.st, *st)
 	return current
-}
-
-// nodeStackIfValid returns the nodeStack if we consider it valid as
-// a frame drop cause.
-func nodeStackIfValid(
-	ns *nodeStack,
-	frozenFrameStartNS, frozenFrameEndNS uint64,
-) *nodeStack {
-	if ns.n.StartNS >= frozenFrameStartNS &&
-		ns.n.EndNS <= frozenFrameEndNS &&
-		ns.n.IsApplication {
-		return ns
-	}
-	return nil
 }
