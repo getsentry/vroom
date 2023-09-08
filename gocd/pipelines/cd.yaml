@@ -48,20 +48,13 @@ pipelines:
                           timeout: 600
                           elastic_profile_id: vroom
                           tasks:
+                              # Prevents `ERROR: (gcloud.compute.ssh) INVALID_ARGUMENT: Login profile size exceeds 32 KiB. Delete profile values to make additional space.`
+                              # From: https://github.com/kyma-project/test-infra/issues/93
                               - script: |
-                                   USE_GKE_GCLOUD_AUTH_PLUGIN=True \
-                                      gcloud --project "$GCP_PROJECT" \
-                                        container clusters get-credentials "$GKE_CLUSTER" \
-                                        --zone "${GKE_REGION}-${GKE_CLUSTER_ZONE}" \
-                                      && tmpdir=$(mktemp -d) \
-                                      && ssh-keygen -q -t ed25519 -N '' -f "${tmpdir}/google_compute_engine" \
-                                      && gcloud compute ssh "dicd-gkehop-${GKE_CLUSTER}" \
-                                        --ssh-key-file="${tmpdir}/google_compute_engine" \
-                                        --tunnel-through-iap \
-                                        "--project=${GCP_PROJECT}" \
-                                        "--zone=${GKE_REGION}-${GKE_BASTION_ZONE}" \
-                                        -- -4 -L8888:127.0.0.1:8888 -N -q -f
+                                   for i in $(gcloud compute os-login ssh-keys list | grep -v FINGERPRINT); do echo $i; gcloud compute os-login ssh-keys remove --key $i; done
                               - script: |
+                                   /devinfra/scripts/k8s/k8stunnel
+
                                    /devinfra/scripts/k8s/k8s-deploy.py \
                                       --context="gke_${GCP_PROJECT}_${GKE_REGION}-${GKE_CLUSTER_ZONE}_${GKE_CLUSTER}" \
                                       --label-selector="service=vroom,component=default,environment=${ENVIRONMENT},env=canary" \
@@ -80,19 +73,8 @@ pipelines:
                           elastic_profile_id: vroom
                           tasks:
                               - script: |
-                                   USE_GKE_GCLOUD_AUTH_PLUGIN=True \
-                                      gcloud --project "$GCP_PROJECT" \
-                                        container clusters get-credentials "$GKE_CLUSTER" \
-                                        --zone "${GKE_REGION}-${GKE_CLUSTER_ZONE}" \
-                                      && tmpdir=$(mktemp -d) \
-                                      && ssh-keygen -q -t ed25519 -N '' -f "${tmpdir}/google_compute_engine" \
-                                      && gcloud compute ssh "dicd-gkehop-${GKE_CLUSTER}" \
-                                        --ssh-key-file="${tmpdir}/google_compute_engine" \
-                                        --tunnel-through-iap \
-                                        "--project=${GCP_PROJECT}" \
-                                        "--zone=${GKE_REGION}-${GKE_BASTION_ZONE}" \
-                                        -- -4 -L8888:127.0.0.1:8888 -N -q -f
-                              - script: |
+                                   /devinfra/scripts/k8s/k8stunnel
+
                                    /devinfra/scripts/k8s/k8s-deploy.py \
                                       --context="gke_${GCP_PROJECT}_${GKE_REGION}-${GKE_CLUSTER_ZONE}_${GKE_CLUSTER}" \
                                       --label-selector="service=vroom,component=default,environment=${ENVIRONMENT}" \
