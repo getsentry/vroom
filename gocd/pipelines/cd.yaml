@@ -48,10 +48,6 @@ pipelines:
                           timeout: 600
                           elastic_profile_id: vroom
                           tasks:
-                              # Prevents `ERROR: (gcloud.compute.ssh) INVALID_ARGUMENT: Login profile size exceeds 32 KiB. Delete profile values to make additional space.`
-                              # From: https://github.com/kyma-project/test-infra/issues/93
-                              - script: |
-                                   for i in $(gcloud compute os-login ssh-keys list | grep -v FINGERPRINT); do echo $i; gcloud compute os-login ssh-keys remove --key $i; done
                               - script: |
                                    /devinfra/scripts/k8s/k8stunnel
 
