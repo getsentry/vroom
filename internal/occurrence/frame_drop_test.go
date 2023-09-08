@@ -490,13 +490,13 @@ func TestFindFrameDrop(t *testing.T) {
 								},
 								Children: []*nodetree.Node{
 									{
-										DurationNS:    uint64(100 * time.Millisecond),
+										DurationNS:    uint64(150 * time.Millisecond),
 										EndNS:         uint64(250 * time.Millisecond),
 										IsApplication: true,
 										Name:          "child2-1",
 										Package:       "package",
 										Path:          "path",
-										StartNS:       uint64(150 * time.Millisecond),
+										StartNS:       uint64(100 * time.Millisecond),
 										Frame: frame.Frame{
 											Function: "child2-1",
 											InApp:    &testutil.True,
@@ -570,7 +570,7 @@ func TestFindFrameDrop(t *testing.T) {
 						Tags: map[string]string{},
 					},
 					EvidenceData: map[string]interface{}{
-						"frame_duration_ns":   uint64(100000000),
+						"frame_duration_ns":   uint64(150000000),
 						"frame_module":        "",
 						"frame_name":          "child2-1",
 						"frame_package":       "package",

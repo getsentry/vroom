@@ -6,6 +6,7 @@
 
 - Improve frame drop detection algorithm. ([#304](https://github.com/getsentry/vroom/pull/304))
 - Accept and return the time a profile started at in a timestamp field on Android. ([#306](https://github.com/getsentry/vroom/pull/306))
+- Filter frame drop candidates based on thresholds. ([#308](https://github.com/getsentry/vroom/pull/308))
 
 **Internal**
 
