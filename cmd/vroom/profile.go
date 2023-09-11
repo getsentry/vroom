@@ -75,12 +75,11 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 	err = storageutil.CompressedWrite(ctx, env.storage, p.StoragePath(), p)
 	s.Finish()
 	if err != nil {
-		var e *googleapi.Error
-		if ok := errors.As(err, &e); ok {
-			w.WriteHeader(http.StatusBadGateway)
-		} else if errors.Is(err, context.DeadlineExceeded) {
+		if errors.Is(err, context.DeadlineExceeded) {
+			// This is a transient error, we'll retry
 			w.WriteHeader(http.StatusTooManyRequests)
 		} else {
+			// These errors won't be retried
 			hub.CaptureException(err)
 			w.WriteHeader(http.StatusInternalServerError)
 		}
