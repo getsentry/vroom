@@ -32,7 +32,7 @@ function(region) {
       },
     },
     {
-      deploy_canary: {
+      'deploy-canary': {
         fetch_materials: true,
         jobs: {
           deploy: {
@@ -51,7 +51,7 @@ function(region) {
       },
     },
     {
-      deploy_primary: {
+      'deploy-primary': {
         fetch_materials: true,
         jobs: {
           deploy: {
