@@ -2,9 +2,9 @@ local gocdtasks = import 'github.com/getsentry/gocd-jsonnet/libs/gocd-tasks.libs
 
 function(region) {
   environment_variables: {
-    // SENTRY_REGION is used by the dev-infra scripts to connect to GKE
-    SENTRY_REGION: region,
     GITHUB_TOKEN: '{{SECRET:[devinfra-github][token]}}',
+    SENTRY_REGION: region,
+    SKIP_CANARY_CHECKS: false,
   },
   materials: {
     vroom_repo: {
