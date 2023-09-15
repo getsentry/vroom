@@ -5,7 +5,6 @@ function(region) {
     // SENTRY_REGION is used by the dev-infra scripts to connect to GKE
     SENTRY_REGION: region,
     GITHUB_TOKEN: '{{SECRET:[devinfra-github][token]}}',
-    GCP_PROJECT: 'internal-sentry',
   },
   materials: {
     vroom_repo: {
