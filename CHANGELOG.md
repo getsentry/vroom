@@ -13,6 +13,7 @@
 - Fix android issue frame detection. ([#305](https://github.com/getsentry/vroom/pull/305))
 - Fix backward compatibility with Android profiles without timestamp. ([#307](https://github.com/getsentry/vroom/pull/307))
 - Report all GCS errors again. ([#311](https://github.com/getsentry/vroom/pull/311))
+- Use pipedreams to deploy. ([#312](https://github.com/getsentry/vroom/pull/312))
 
 ## 23.8.0
 
