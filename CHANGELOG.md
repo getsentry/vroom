@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+**Internal**
+
+- Rename the frame drop issue title. ([#315](https://github.com/getsentry/vroom/pull/315))
+
 ## 23.9.1
 
 **Internal**

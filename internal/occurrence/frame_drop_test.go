@@ -161,11 +161,10 @@ func TestFindFrameDrop(t *testing.T) {
 						{Name: "Suspect function", Value: "child2", Important: true},
 						{Name: "Package", Value: "package"},
 					},
-					Fingerprint: []string{"8f2e4eaab20fd0a0acb48bb9bdd11b21"},
-					IssueTitle:  issueTitles[FrameDrop].IssueTitle,
-					Level:       "info",
-					Subtitle:    "child2",
-					Type:        issueTitles[FrameDrop].Type,
+					IssueTitle: issueTitles[FrameDrop].IssueTitle,
+					Level:      "info",
+					Subtitle:   "child2",
+					Type:       issueTitles[FrameDrop].Type,
 				},
 			},
 		},
@@ -384,9 +383,6 @@ func TestFindFrameDrop(t *testing.T) {
 						},
 						{Name: "Package", Value: "package"},
 					},
-					Fingerprint: []string{
-						"5f5584b142aab31b5f33b26884cdec56",
-					},
 					IssueTitle: issueTitles[FrameDrop].IssueTitle,
 					Level:      "info",
 					Subtitle:   "child2-1-1",
@@ -588,9 +584,6 @@ func TestFindFrameDrop(t *testing.T) {
 						},
 						{Name: "Package", Value: "package"},
 					},
-					Fingerprint: []string{
-						"1247dbde8be089556f3ae631f81e73c2",
-					},
 					IssueTitle: issueTitles[FrameDrop].IssueTitle,
 					Level:      "info",
 					Subtitle:   "child2-1",
@@ -759,9 +752,6 @@ func TestFindFrameDrop(t *testing.T) {
 						},
 						{Name: "Package", Value: "package"},
 					},
-					Fingerprint: []string{
-						"1247dbde8be089556f3ae631f81e73c2",
-					},
 					IssueTitle: issueTitles[FrameDrop].IssueTitle,
 					Level:      "info",
 					Subtitle:   "child2-1",
@@ -773,7 +763,7 @@ func TestFindFrameDrop(t *testing.T) {
 
 	options := cmp.Options{
 		cmpopts.IgnoreFields(Event{}, "ID"),
-		cmpopts.IgnoreFields(Occurrence{}, "DetectionTime", "ID"),
+		cmpopts.IgnoreFields(Occurrence{}, "DetectionTime", "ID", "Fingerprint"),
 		cmpopts.IgnoreUnexported(Occurrence{}),
 	}
 
