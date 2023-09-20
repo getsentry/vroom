@@ -1,12 +1,11 @@
 # Changelog
 
-## Unreleased
+## 23.9.1
 
 **Internal**
 
 - Bump the Go SDK to `v0.24.0`. ([#313](https://github.com/getsentry/vroom/pull/313))
 - Remove the `TracesSampler` in favour of Inbound Data Filters. ([#313](https://github.com/getsentry/vroom/pull/313))
-
 
 ## 23.9.0
 
