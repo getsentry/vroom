@@ -109,7 +109,7 @@ var issueTitles = map[Category]CategoryMetadata{
 	Decompression:    {IssueTitle: "Decompression on Main Thread"},
 	FileRead:         {IssueTitle: "File I/O on Main Thread"},
 	FileWrite:        {IssueTitle: "File I/O on Main Thread"},
-	FrameDrop:        {IssueTitle: "A Frame Drop Occurred", Type: FrameDropType},
+	FrameDrop:        {IssueTitle: "Frame Drop", Type: FrameDropType},
 	HTTP:             {IssueTitle: "Network I/O on Main Thread"},
 	ImageDecode:      {IssueTitle: "Image Decoding on Main Thread", Type: ImageDecodeType},
 	ImageEncode:      {IssueTitle: "Image Encoding on Main Thread"},
