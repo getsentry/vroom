@@ -41,30 +41,28 @@ jobs:
         head: HEAD
         extra_args: --debug --only-verified
 
-  self-hosted-end-to-end:
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    services:
-      registry:
-        image: registry:2
-        ports:
-          - 5000:5000
+  publish-to-dockerhub:
+    name: Publish Vroom to DockerHub
+    needs: build
+    runs-on: ubuntu-20.04
+    if: ${{ (github.ref_name == 'master') }}
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v3
-      - name: Build vroom
-        uses: docker/build-push-action@v4
-        with:
-          context: .
-          push: true
-          tags: localhost:5000/getsentry/vroom:latest
-      - name: Run Sentry self-hosted e2e CI
-        # Skip for dependabot or if it's a fork as the image cannot be uploaded to ghcr since this test attempts to pull
-        # the image from ghcr
-        if: "!github.event.pull_request.head.repo.fork && github.actor != 'dependabot[bot]'"
-        uses: getsentry/action-self-hosted-e2e-tests@main
-        with:
-          project_name: vroom
-          image_url: localhost:5000/getsentry/vroom:latest
-          docker_repo: getsentry/vroom
-          docker_password: ${{ secrets.DOCKER_HUB_RW_TOKEN }}
+      - uses: actions/checkout@v3
+      - timeout-minutes: 20
+        run: until docker pull "us.gcr.io/sentryio/vroom:${{ github.sha }}" 2>/dev/null; do sleep 10; done
+      - name: Push built docker image
+        shell: bash
+        run: |
+          IMAGE_URL="us.gcr.io/sentryio/vroom:${{ github.sha }}"
+          docker login --username=sentrybuilder --password ${{ secrets.DOCKER_HUB_RW_TOKEN }}
+          # We push 3 tags to Dockerhub:
+          # first, the full sha of the commit
+          docker tag "$IMAGE_URL" getsentry/vroom:${GITHUB_SHA}
+          docker push getsentry/vroom:${GITHUB_SHA}
+          # second, the short sha of the commit
+          SHORT_SHA=$(git rev-parse --short "$GITHUB_SHA")
+          docker tag "$IMAGE_URL" getsentry/vroom:${SHORT_SHA}
+          docker push getsentry/vroom:${SHORT_SHA}
+          # finally, nightly
+          docker tag "$IMAGE_URL" getsentry/vroom:nightly
+          docker push getsentry/vroom:nightly
