@@ -45,7 +45,7 @@ jobs:
     name: Publish Vroom to DockerHub
     needs: build
     runs-on: ubuntu-20.04
-    if: ${{ (github.ref_name == 'master') }}
+    if: ${{ (github.ref_name == 'main') }}
     steps:
       - uses: actions/checkout@v3
       - timeout-minutes: 20
