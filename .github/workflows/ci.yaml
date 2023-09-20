@@ -43,7 +43,6 @@ jobs:
 
   publish-to-dockerhub:
     name: Publish Vroom to DockerHub
-    needs: build
     runs-on: ubuntu-20.04
     if: ${{ (github.ref_name == 'main') }}
     steps:
