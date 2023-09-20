@@ -173,15 +173,10 @@ func main() {
 	err = sentry.Init(sentry.ClientOptions{
 		Dsn:                   env.config.SentryDSN,
 		EnableTracing:         true,
+		TracesSampleRate:      1.0,
 		Environment:           env.config.Environment,
 		Release:               release,
 		BeforeSendTransaction: httputil.SetHTTPStatusCodeTag,
-		TracesSampler: func(ctx sentry.SamplingContext) float64 {
-			if ctx.Span.Name == "GET /health" {
-				return 0
-			}
-			return 1
-		},
 	})
 	if err != nil {
 		log.Fatal().Err(err).Msg("can't initialize sentry")
