@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+**Features**
+
+- Return the first and deepest issue detected. ([#317](https://github.com/getsentry/vroom/pull/317))
+
 **Internal**
 
 - Rename the frame drop issue title. ([#315](https://github.com/getsentry/vroom/pull/315))
