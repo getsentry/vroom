@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+**Bug Fixes**
+
+- Close remaining open events in Android profiles. ([#316](https://github.com/getsentry/vroom/pull/316))
+
 **Internal**
 
 - Rename the frame drop issue title. ([#315](https://github.com/getsentry/vroom/pull/315))
