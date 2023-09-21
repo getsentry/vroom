@@ -26,6 +26,7 @@ type (
 		InstructionAddr string `json:"instruction_addr,omitempty"`
 		Lang            string `json:"lang,omitempty"`
 		Line            uint32 `json:"lineno,omitempty"`
+		MethodID        uint64 `json:"-"`
 		Module          string `json:"module,omitempty"`
 		Package         string `json:"package,omitempty"`
 		Path            string `json:"abs_path,omitempty"`

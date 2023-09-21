@@ -62,15 +62,16 @@ func (m AndroidMethod) Frame() frame.Frame {
 		inApp = packageutil.IsAndroidApplicationPackage(m.ClassName)
 	}
 	return frame.Frame{
-		Function: methodName,
-		Package:  className,
-		File:     path.Base(m.SourceFile),
-		Path:     m.SourceFile,
-		Line:     m.SourceLine,
-		InApp:    &inApp,
 		Data: frame.Data{
 			DeobfuscationStatus: m.Data.DeobfuscationStatus,
 		},
+		File:     path.Base(m.SourceFile),
+		Function: methodName,
+		InApp:    &inApp,
+		Line:     m.SourceLine,
+		MethodID: m.ID,
+		Package:  className,
+		Path:     m.SourceFile,
 	}
 }
 
@@ -237,7 +238,13 @@ func (p Android) CallTrees() map[uint64][]*nodetree.Node {
 			if len(stacks[e.ThreadID]) == 0 {
 				continue
 			}
-			closeFrame(e.ThreadID, ts)
+			for i := len(stacks[e.ThreadID]) - 1; i >= 0; i-- {
+				closeFrame(e.ThreadID, ts)
+				n := stacks[e.ThreadID][i]
+				if n.Frame.MethodID == e.MethodID {
+					break
+				}
+			}
 		}
 	}
 
