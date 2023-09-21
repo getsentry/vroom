@@ -508,14 +508,10 @@ func detectFrameInNode(
 	defer func() {
 		*st = (*st)[:len(*st)-1]
 	}()
-	var issueDetected bool
 	for _, c := range n.Children {
 		if ni := detectFrameInNode(c, options, nodes, st); ni != nil {
-			issueDetected = true
+			return ni
 		}
-	}
-	if issueDetected {
-		return nil
 	}
 	ni := options.checkNode(n)
 	if ni != nil {
