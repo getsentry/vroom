@@ -117,7 +117,10 @@ type CallTreeFunction struct {
 // children with durations 20ms, 30ms, and 40ms, and they are system, application, system
 // functions respectively, the self-time of `bar` will be 70ms because
 // 100ms - 30ms = 70ms.
-func (n *Node) CollectFunctions(profilePlatform platform.Platform, results map[uint32]CallTreeFunction) (uint64, uint64) {
+func (n *Node) CollectFunctions(
+	profilePlatform platform.Platform,
+	results map[uint32]CallTreeFunction,
+) (uint64, uint64) {
 	var childrenApplicationDurationNS uint64
 	var childrenSystemDurationNS uint64
 
@@ -239,4 +242,15 @@ func shouldAggregateFrame(profilePlatform platform.Platform, frame frame.Frame) 
 
 	// all other frames are safe to aggregate
 	return true
+}
+
+func (n *Node) Close(timestamp uint64) {
+	if n.EndNS == 0 {
+		n.SetDuration(timestamp)
+	} else {
+		timestamp = n.EndNS
+	}
+	for _, c := range n.Children {
+		c.Close(timestamp)
+	}
 }
