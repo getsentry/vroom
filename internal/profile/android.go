@@ -382,6 +382,9 @@ func (p Android) Speedscope() (speedscope.Output, error) {
 	methodStacks := make(map[uint64][]uint64) // map of thread ID -> stack of method IDs
 	buildTimestamp := p.TimestampGetter()
 
+	enterPerMethod := make(map[uint64]int)
+	exitPerMethod := make(map[uint64]int)
+
 	for _, event := range p.Events {
 		ts := buildTimestamp(event.Time)
 		prof, ok := threadIDToProfile[event.ThreadID]
@@ -399,6 +402,7 @@ func (p Android) Speedscope() (speedscope.Output, error) {
 
 		switch event.Action {
 		case "Enter":
+			enterPerMethod[event.MethodID]++
 			methodStacks[event.ThreadID] = append(methodStacks[event.ThreadID], event.MethodID)
 			emitEvent(prof, speedscope.EventTypeOpenFrame, event.MethodID, ts)
 		case "Exit", "Unwind":
@@ -419,12 +423,17 @@ func (p Android) Speedscope() (speedscope.Output, error) {
 			// indefinite durations.
 			for ; i >= 0; i-- {
 				methodID := stack[i]
-				// We skip missing Enter events
-				if methodID != event.MethodID {
+				// Skip exit event when we didn't record an enter event for that method
+				if methodID != event.MethodID &&
+					enterPerMethod[event.MethodID] <= exitPerMethod[event.MethodID] {
 					continue
 				}
 				emitEvent(prof, speedscope.EventTypeCloseFrame, methodID, ts)
-				break
+				exitPerMethod[methodID]++
+				// Keep closing methods until we closed the one we intended to close
+				if methodID == event.MethodID {
+					break
+				}
 			}
 			if i >= 0 {
 				// Pop the elements that we emitted end events for off the stack
