@@ -193,17 +193,22 @@ func (p Android) CallTrees() map[uint64][]*nodetree.Node {
 	buildTimestamp := p.TimestampGetter()
 	treesByThreadID := make(map[uint64][]*nodetree.Node)
 	stacks := make(map[uint64][]*nodetree.Node)
+
 	methods := make(map[uint64]AndroidMethod)
 	for _, m := range p.Methods {
 		methods[m.ID] = m
 	}
+
 	closeFrame := func(threadID uint64, ts uint64, i int) {
 		n := stacks[threadID][i]
 		n.Update(ts)
 		n.SampleCount = int(math.Ceil(float64(n.DurationNS) / float64((10 * time.Millisecond))))
-		stacks[threadID] = stacks[threadID][:i]
 	}
+
 	var maxTimestampNS uint64
+	enterPerMethod := make(map[uint64]int)
+	exitPerMethod := make(map[uint64]int)
+
 	for _, e := range p.Events {
 		if e.ThreadID != activeThreadID {
 			continue
@@ -216,6 +221,7 @@ func (p Android) CallTrees() map[uint64][]*nodetree.Node {
 
 		switch e.Action {
 		case EnterAction:
+			enterPerMethod[e.MethodID]++
 			m, exists := methods[e.MethodID]
 			if !exists {
 				methods[e.MethodID] = AndroidMethod{
@@ -237,13 +243,24 @@ func (p Android) CallTrees() map[uint64][]*nodetree.Node {
 			if len(stacks[e.ThreadID]) == 0 {
 				continue
 			}
-			for i := len(stacks[e.ThreadID]) - 1; i >= 0; i-- {
+			i := len(stacks[e.ThreadID]) - 1
+			var eventSkipped bool
+			for ; i >= 0; i-- {
 				n := stacks[e.ThreadID][i]
-				if n.Frame.MethodID != e.MethodID {
-					continue
+				if n.Frame.MethodID != e.MethodID &&
+					enterPerMethod[e.MethodID] <= exitPerMethod[e.MethodID] {
+					eventSkipped = true
+					break
 				}
 				closeFrame(e.ThreadID, ts, i)
-				break
+				exitPerMethod[e.MethodID]++
+				if n.Frame.MethodID == e.MethodID {
+					break
+				}
+			}
+			// If we didn't skip the event, we should cut the stack accordingly.
+			if !eventSkipped {
+				stacks[e.ThreadID] = stacks[e.ThreadID][:i]
 			}
 		}
 	}
@@ -421,22 +438,25 @@ func (p Android) Speedscope() (speedscope.Output, error) {
 			// not been explicitly ended, matching the behavior of the Chrome trace viewer. Speedscope
 			// handles this scenario a different way by doing nothing and leaving these methods with
 			// indefinite durations.
+			var eventSkipped bool
 			for ; i >= 0; i-- {
 				methodID := stack[i]
-				// Skip exit event when we didn't record an enter event for that method
+				// Skip exit event when we didn't record an enter event for that method.
 				if methodID != event.MethodID &&
 					enterPerMethod[event.MethodID] <= exitPerMethod[event.MethodID] {
-					continue
+					eventSkipped = true
+					break
 				}
 				emitEvent(prof, speedscope.EventTypeCloseFrame, methodID, ts)
 				exitPerMethod[methodID]++
+				// Pop the elements that we emitted end events for off the stack
 				// Keep closing methods until we closed the one we intended to close
 				if methodID == event.MethodID {
 					break
 				}
 			}
-			if i >= 0 {
-				// Pop the elements that we emitted end events for off the stack
+			// If we didn't skip the event, we should cut the stack accordingly.
+			if !eventSkipped {
 				methodStacks[event.ThreadID] = methodStacks[event.ThreadID][:i]
 			}
 		default:

@@ -12,6 +12,205 @@ import (
 	"github.com/getsentry/vroom/internal/testutil"
 )
 
+var (
+	missingEnterEventsTrace = Android{
+		Clock: "Dual",
+		Events: []AndroidEvent{
+			{
+				Action:   "Enter",
+				ThreadID: 1,
+				MethodID: 1,
+				Time: EventTime{
+					Monotonic: EventMonotonic{
+						Wall: Duration{
+							Nanos: 1000,
+						},
+					},
+				},
+			},
+			{
+				Action:   "Enter",
+				ThreadID: 1,
+				MethodID: 3,
+				Time: EventTime{
+					Monotonic: EventMonotonic{
+						Wall: Duration{
+							Nanos: 1500,
+						},
+					},
+				},
+			},
+			{
+				Action:   "Enter",
+				ThreadID: 1,
+				MethodID: 4,
+				Time: EventTime{
+					Monotonic: EventMonotonic{
+						Wall: Duration{
+							Nanos: 1750,
+						},
+					},
+				},
+			},
+			{
+				Action:   "Exit",
+				ThreadID: 1,
+				MethodID: 2,
+				Time: EventTime{
+					Monotonic: EventMonotonic{
+						Wall: Duration{
+							Nanos: 2000,
+						},
+					},
+				},
+			},
+			{
+				Action:   "Exit",
+				ThreadID: 1,
+				MethodID: 4,
+				Time: EventTime{
+					Monotonic: EventMonotonic{
+						Wall: Duration{
+							Nanos: 2250,
+						},
+					},
+				},
+			},
+			{
+				Action:   "Exit",
+				ThreadID: 1,
+				MethodID: 3,
+				Time: EventTime{
+					Monotonic: EventMonotonic{
+						Wall: Duration{
+							Nanos: 2500,
+						},
+					},
+				},
+			},
+			{
+				Action:   "Exit",
+				ThreadID: 1,
+				MethodID: 1,
+				Time: EventTime{
+					Monotonic: EventMonotonic{
+						Wall: Duration{
+							Nanos: 3000,
+						},
+					},
+				},
+			},
+		},
+		Methods: []AndroidMethod{
+			{
+				ClassName: "class1",
+				ID:        1,
+				Name:      "method1",
+				Signature: "()",
+			},
+			{
+				ClassName: "class2",
+				ID:        2,
+				Name:      "method2",
+				Signature: "()",
+			},
+			{
+				ClassName: "class3",
+				ID:        3,
+				Name:      "method3",
+				Signature: "()",
+			},
+			{
+				ClassName: "class4",
+				ID:        4,
+				Name:      "method4",
+				Signature: "()",
+			},
+		},
+		StartTime: 398635355383000,
+		Threads: []AndroidThread{
+			{
+				ID:   1,
+				Name: "main",
+			},
+		},
+	}
+	missingExitEventsTrace = Android{
+		Clock: "Dual",
+		Events: []AndroidEvent{
+			{
+				Action:   "Enter",
+				ThreadID: 1,
+				MethodID: 1,
+				Time: EventTime{
+					Monotonic: EventMonotonic{
+						Wall: Duration{
+							Nanos: 1000,
+						},
+					},
+				},
+			},
+			{
+				Action:   "Enter",
+				ThreadID: 1,
+				MethodID: 2,
+				Time: EventTime{
+					Monotonic: EventMonotonic{
+						Wall: Duration{
+							Nanos: 1000,
+						},
+					},
+				},
+			},
+			{
+				Action:   "Exit",
+				ThreadID: 1,
+				MethodID: 1,
+				Time: EventTime{
+					Monotonic: EventMonotonic{
+						Wall: Duration{
+							Nanos: 2000,
+						},
+					},
+				},
+			},
+			{
+				Action:   "Enter",
+				ThreadID: 1,
+				MethodID: 1,
+				Time: EventTime{
+					Monotonic: EventMonotonic{
+						Wall: Duration{
+							Nanos: 3000,
+						},
+					},
+				},
+			},
+		},
+		Methods: []AndroidMethod{
+			{
+				ClassName: "class1",
+				ID:        1,
+				Name:      "method1",
+				Signature: "()",
+			},
+			{
+				ClassName: "class2",
+				ID:        2,
+				Name:      "method2",
+				Signature: "()",
+			},
+		},
+		StartTime: 398635355383000,
+		Threads: []AndroidThread{
+			{
+				ID:   1,
+				Name: "main",
+			},
+		},
+	}
+)
+
 func TestSpeedscope(t *testing.T) {
 	tests := []struct {
 		name  string
@@ -19,81 +218,8 @@ func TestSpeedscope(t *testing.T) {
 		want  speedscope.Output
 	}{
 		{
-			name: "Build speedscope with missing exit events",
-			trace: Android{
-				Clock: "Dual",
-				Events: []AndroidEvent{
-					{
-						Action:   "Enter",
-						ThreadID: 1,
-						MethodID: 1,
-						Time: EventTime{
-							Monotonic: EventMonotonic{
-								Wall: Duration{
-									Nanos: 1000,
-								},
-							},
-						},
-					},
-					{
-						Action:   "Enter",
-						ThreadID: 1,
-						MethodID: 2,
-						Time: EventTime{
-							Monotonic: EventMonotonic{
-								Wall: Duration{
-									Nanos: 1000,
-								},
-							},
-						},
-					},
-					{
-						Action:   "Exit",
-						ThreadID: 1,
-						MethodID: 1,
-						Time: EventTime{
-							Monotonic: EventMonotonic{
-								Wall: Duration{
-									Nanos: 2000,
-								},
-							},
-						},
-					},
-					{
-						Action:   "Enter",
-						ThreadID: 1,
-						MethodID: 1,
-						Time: EventTime{
-							Monotonic: EventMonotonic{
-								Wall: Duration{
-									Nanos: 3000,
-								},
-							},
-						},
-					},
-				},
-				Methods: []AndroidMethod{
-					{
-						ClassName: "class1",
-						ID:        1,
-						Name:      "method1",
-						Signature: "()",
-					},
-					{
-						ClassName: "class2",
-						ID:        2,
-						Name:      "method2",
-						Signature: "()",
-					},
-				},
-				StartTime: 398635355383000,
-				Threads: []AndroidThread{
-					{
-						ID:   1,
-						Name: "main",
-					},
-				},
-			},
+			name:  "Build speedscope with missing exit events",
+			trace: missingExitEventsTrace,
 			want: speedscope.Output{
 				AndroidClock: "Dual",
 				Profiles: []any{
@@ -123,69 +249,8 @@ func TestSpeedscope(t *testing.T) {
 			},
 		},
 		{
-			name: "Build speedscope with missing enter events",
-			trace: Android{
-				Clock: "Dual",
-				Events: []AndroidEvent{
-					{
-						Action:   "Enter",
-						ThreadID: 1,
-						MethodID: 1,
-						Time: EventTime{
-							Monotonic: EventMonotonic{
-								Wall: Duration{
-									Nanos: 1000,
-								},
-							},
-						},
-					},
-					{
-						Action:   "Exit",
-						ThreadID: 1,
-						MethodID: 2,
-						Time: EventTime{
-							Monotonic: EventMonotonic{
-								Wall: Duration{
-									Nanos: 2000,
-								},
-							},
-						},
-					},
-					{
-						Action:   "Exit",
-						ThreadID: 1,
-						MethodID: 1,
-						Time: EventTime{
-							Monotonic: EventMonotonic{
-								Wall: Duration{
-									Nanos: 3000,
-								},
-							},
-						},
-					},
-				},
-				Methods: []AndroidMethod{
-					{
-						ClassName: "class1",
-						ID:        1,
-						Name:      "method1",
-						Signature: "()",
-					},
-					{
-						ClassName: "class2",
-						ID:        2,
-						Name:      "method2",
-						Signature: "()",
-					},
-				},
-				StartTime: 398635355383000,
-				Threads: []AndroidThread{
-					{
-						ID:   1,
-						Name: "main",
-					},
-				},
-			},
+			name:  "Build speedscope with missing enter events",
+			trace: missingEnterEventsTrace,
 			want: speedscope.Output{
 				AndroidClock: "Dual",
 				Profiles: []any{
@@ -193,6 +258,10 @@ func TestSpeedscope(t *testing.T) {
 						EndValue: 3000,
 						Events: []speedscope.Event{
 							{Type: "O", Frame: 0, At: 1000},
+							{Type: "O", Frame: 2, At: 1500},
+							{Type: "O", Frame: 3, At: 1750},
+							{Type: "C", Frame: 3, At: 2250},
+							{Type: "C", Frame: 2, At: 2500},
 							{Type: "C", Frame: 0, At: 3000},
 						},
 						Name:       "main",
@@ -204,12 +273,10 @@ func TestSpeedscope(t *testing.T) {
 				},
 				Shared: speedscope.SharedData{
 					Frames: []speedscope.Frame{
-						{
-							Image:         "class1",
-							IsApplication: true,
-							Name:          "class1.method1()",
-						},
-						{Image: "class2", IsApplication: true, Name: "class2.method2()"},
+						{Image: "class1", Name: "class1.method1()", IsApplication: true},
+						{Image: "class2", Name: "class2.method2()", IsApplication: true},
+						{Image: "class3", Name: "class3.method3()", IsApplication: true},
+						{Image: "class4", Name: "class4.method4()", IsApplication: true},
 					},
 				},
 			},
@@ -236,81 +303,8 @@ func TestCallTrees(t *testing.T) {
 		want  map[uint64][]*nodetree.Node
 	}{
 		{
-			name: "Build call trees with missing exit events",
-			trace: Android{
-				Clock: "Dual",
-				Events: []AndroidEvent{
-					{
-						Action:   "Enter",
-						MethodID: 1,
-						ThreadID: 1,
-						Time: EventTime{
-							Monotonic: EventMonotonic{
-								Wall: Duration{
-									Nanos: 1000,
-								},
-							},
-						},
-					},
-					{
-						Action:   "Enter",
-						MethodID: 2,
-						ThreadID: 1,
-						Time: EventTime{
-							Monotonic: EventMonotonic{
-								Wall: Duration{
-									Nanos: 1000,
-								},
-							},
-						},
-					},
-					{
-						Action:   "Exit",
-						MethodID: 1,
-						ThreadID: 1,
-						Time: EventTime{
-							Monotonic: EventMonotonic{
-								Wall: Duration{
-									Nanos: 2000,
-								},
-							},
-						},
-					},
-					{
-						Action:   "Enter",
-						ThreadID: 1,
-						MethodID: 1,
-						Time: EventTime{
-							Monotonic: EventMonotonic{
-								Wall: Duration{
-									Nanos: 3000,
-								},
-							},
-						},
-					},
-				},
-				Methods: []AndroidMethod{
-					{
-						ClassName: "class1",
-						ID:        1,
-						Name:      "method1",
-						Signature: "()",
-					},
-					{
-						ClassName: "class2",
-						ID:        2,
-						Name:      "method2",
-						Signature: "()",
-					},
-				},
-				StartTime: 398635355383000,
-				Threads: []AndroidThread{
-					{
-						ID:   1,
-						Name: "main",
-					},
-				},
-			},
+			name:  "Build call trees with missing exit events",
+			trace: missingExitEventsTrace,
 			want: map[uint64][]*nodetree.Node{
 				1: {
 					{
@@ -363,74 +357,12 @@ func TestCallTrees(t *testing.T) {
 			},
 		},
 		{
-			name: "Build call trees with missing enter events",
-			trace: Android{
-				Clock: "Dual",
-				Events: []AndroidEvent{
-					{
-						Action:   "Enter",
-						ThreadID: 1,
-						MethodID: 1,
-						Time: EventTime{
-							Monotonic: EventMonotonic{
-								Wall: Duration{
-									Nanos: 1000,
-								},
-							},
-						},
-					},
-					{
-						Action:   "Exit",
-						ThreadID: 1,
-						MethodID: 2,
-						Time: EventTime{
-							Monotonic: EventMonotonic{
-								Wall: Duration{
-									Nanos: 2000,
-								},
-							},
-						},
-					},
-					{
-						Action:   "Exit",
-						ThreadID: 1,
-						MethodID: 1,
-						Time: EventTime{
-							Monotonic: EventMonotonic{
-								Wall: Duration{
-									Nanos: 3000,
-								},
-							},
-						},
-					},
-				},
-				Methods: []AndroidMethod{
-					{
-						ClassName: "class1",
-						ID:        1,
-						Name:      "method1",
-						Signature: "()",
-					},
-					{
-						ClassName: "class2",
-						ID:        2,
-						Name:      "method2",
-						Signature: "()",
-					},
-				},
-				StartTime: 398635355383000,
-				Threads: []AndroidThread{
-					{
-						ID:   1,
-						Name: "main",
-					},
-				},
-			},
+			name:  "Build call trees with missing enter events",
+			trace: missingEnterEventsTrace,
 			want: map[uint64][]*nodetree.Node{
 				1: {
 					{
 						DurationNS:    2000,
-						Fingerprint:   12638153115695167473,
 						IsApplication: true,
 						EndNS:         3000,
 						SampleCount:   1,
@@ -442,6 +374,40 @@ func TestCallTrees(t *testing.T) {
 							InApp:    &testutil.True,
 							MethodID: 1,
 							Package:  "class1",
+						},
+						Children: []*nodetree.Node{
+							{
+								DurationNS:    1000,
+								IsApplication: true,
+								EndNS:         2500,
+								SampleCount:   1,
+								StartNS:       1500,
+								Package:       "class3",
+								Name:          "class3.method3()",
+								Frame: frame.Frame{
+									Function: "class3.method3()",
+									InApp:    &testutil.True,
+									MethodID: 3,
+									Package:  "class3",
+								},
+								Children: []*nodetree.Node{
+									{
+										DurationNS:    500,
+										IsApplication: true,
+										EndNS:         2250,
+										SampleCount:   1,
+										StartNS:       1750,
+										Package:       "class4",
+										Name:          "class4.method4()",
+										Frame: frame.Frame{
+											Function: "class4.method4()",
+											InApp:    &testutil.True,
+											MethodID: 4,
+											Package:  "class4",
+										},
+									},
+								},
+							},
 						},
 					},
 				},
