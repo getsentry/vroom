@@ -20,7 +20,7 @@ type RegressedFunction struct {
 	AbsolutePercentageChange float64 `json:"absolute_percentage_change"`
 	AggregateRange1          float64 `json:"aggregate_range_1"`
 	AggregateRange2          float64 `json:"aggregate_range_2"`
-	Breakpoint               int64   `json:"breakpoint"`
+	Breakpoint               uint64  `json:"breakpoint"`
 	TrendDifference          float64 `json:"trend_difference"`
 	TrendPercentage          float64 `json:"trend_percentage"`
 	UnweightedPValue         float64 `json:"unweighted_p_value"`

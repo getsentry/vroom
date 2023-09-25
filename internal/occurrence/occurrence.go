@@ -90,9 +90,12 @@ const (
 	FrameDropType          Type = 2008
 	FrameRegressionExpType Type = 2010
 
-	EvidenceNameDuration EvidenceName = "Duration"
-	EvidenceNameFunction EvidenceName = "Suspect function"
-	EvidenceNamePackage  EvidenceName = "Package"
+	EvidenceNameDuration       EvidenceName = "Duration"
+	EvidenceNameFunction       EvidenceName = "Suspect function"
+	EvidenceNamePackage        EvidenceName = "Package"
+	EvidenceFullyQualifiedName EvidenceName = "Fully qualified name"
+	EvidenceBreakpoint         EvidenceName = "Breakpoint"
+	EvidenceRegression         EvidenceName = "Regression"
 
 	ContextTrace Context = "trace"
 
@@ -202,14 +205,15 @@ func FromRegressedFunction(p profile.Profile, regressed RegressedFunction, f fra
 		pf = platform.Java
 	}
 
+	fullyQualifiedName := f.FullyQualifiedName(pf)
 	now := time.Now().UTC()
 	fingerprint := fmt.Sprintf("%x", regressed.Fingerprint)
 	beforeP95 := time.Duration(regressed.AggregateRange1).Round(10 * time.Microsecond)
 	afterP95 := time.Duration(regressed.AggregateRange2).Round(10 * time.Microsecond)
-	subtitle := fmt.Sprintf("P95 frame duration increased from %s to %s.", beforeP95, afterP95)
+	regressionText := fmt.Sprintf("P95 frame duration increased from %s to %s.", beforeP95, afterP95)
 
 	return &Occurrence{
-		Culprit:       f.FullyQualifiedName(pf),
+		Culprit:       fullyQualifiedName,
 		DetectionTime: now,
 		Event: Event{
 			ID:             eventID(),
@@ -243,14 +247,28 @@ func FromRegressedFunction(p profile.Profile, regressed RegressedFunction, f fra
 			"unweighted_p_value":         regressed.UnweightedPValue,
 			"unweighted_t_value":         regressed.UnweightedTValue,
 		},
-		EvidenceDisplay: []Evidence{},
-		Fingerprint:     []string{fingerprint},
-		ID:              eventID(),
-		IssueTitle:      "Frame Duration Regression",
-		Level:           "info",
-		ProjectID:       regressed.ProjectID,
-		Subtitle:        subtitle,
-		Type:            FrameRegressionExpType,
+		EvidenceDisplay: []Evidence{
+			{
+				Important: true,
+				Name:      EvidenceRegression,
+				Value:     regressionText,
+			},
+			{
+				Name:  EvidenceBreakpoint,
+				Value: strconv.FormatUint(regressed.Breakpoint, 10),
+			},
+			{
+				Name:  EvidenceFullyQualifiedName,
+				Value: fullyQualifiedName,
+			},
+		},
+		Fingerprint: []string{fingerprint},
+		ID:          eventID(),
+		IssueTitle:  "Frame Duration Regression",
+		Level:       "info",
+		ProjectID:   regressed.ProjectID,
+		Subtitle:    regressionText,
+		Type:        FrameRegressionExpType,
 	}
 }
 
