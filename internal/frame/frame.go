@@ -5,10 +5,12 @@ import (
 	"encoding/hex"
 	"fmt"
 	"hash"
+	"hash/fnv"
 	"regexp"
 	"strings"
 
 	"github.com/getsentry/vroom/internal/packageutil"
+	"github.com/getsentry/vroom/internal/platform"
 )
 
 var (
@@ -180,4 +182,63 @@ func (f Frame) IsPythonApplicationFrame() bool {
 
 func (f Frame) IsPHPApplicationFrame() bool {
 	return !strings.Contains(f.Path, "/vendor/")
+}
+
+func (f Frame) Fingerprint() uint32 {
+	frameFunction := f.Function
+	framePackage := f.ModuleOrPackage()
+
+	h := fnv.New64()
+	h.Write([]byte(framePackage))
+	h.Write([]byte{':'})
+	h.Write([]byte(frameFunction))
+
+	// casting to an uint32 here because snuba does not handle uint64 values well
+	// as it is converted to a float somewhere not changing to the 32 bit hash
+	// function here to preserve backwards compatibility with existing fingerprints
+	// that we can cast
+	return uint32(h.Sum64())
+}
+
+func defaultFormatter(f Frame) string {
+	return f.Function
+}
+
+func makeJoinedNameFormatter(separator string) func(f Frame) string {
+	return func(f Frame) string {
+		// These platforms can additionally use the module/package name to fully
+		// qualify the function name and uses `.` as the separator. So extract the
+		// module/package name, and concatenate it with the function name.
+		moduleOrPackage := f.ModuleOrPackage()
+		if moduleOrPackage == "" {
+			return f.Function
+		}
+		return fmt.Sprintf("%s%s%s", moduleOrPackage, separator, f.Function)
+	}
+}
+
+var fullyQualifiedNameFormatters = map[platform.Platform]func(f Frame) string{
+	// These platforms have the module name as a prefix of the function already.
+	// So no formatting required.
+	platform.Android: defaultFormatter,
+	platform.Java:    defaultFormatter,
+	platform.PHP:     defaultFormatter,
+
+	// The package name for these platforms varies depending on how it's compiled.
+	// So we just use the function name.
+	platform.Cocoa: defaultFormatter,
+
+	// These platforms can additionally use the module/package name to fully
+	// qualify the function name and uses `.` as the separator. So extract the
+	// module/package name, and concatenate it with the function name.
+	platform.Python: makeJoinedNameFormatter("."),
+	platform.Node:   makeJoinedNameFormatter("."),
+}
+
+func (f Frame) FullyQualifiedName(p platform.Platform) string {
+	formatter, ok := fullyQualifiedNameFormatters[p]
+	if !ok {
+		formatter = defaultFormatter
+	}
+	return formatter(f)
 }

@@ -80,14 +80,15 @@ type (
 )
 
 const (
-	NoneType        Type = 0
-	CoreDataType    Type = 2004
-	FileIOType      Type = 2001
-	ImageDecodeType Type = 2002
-	JSONDecodeType  Type = 2003
-	RegexType       Type = 2007
-	ViewType        Type = 2006
-	FrameDropType   Type = 2008
+	NoneType               Type = 0
+	CoreDataType           Type = 2004
+	FileIOType             Type = 2001
+	ImageDecodeType        Type = 2002
+	JSONDecodeType         Type = 2003
+	RegexType              Type = 2007
+	ViewType               Type = 2006
+	FrameDropType          Type = 2008
+	FrameRegressionExpType Type = 2010
 
 	EvidenceNameDuration EvidenceName = "Duration"
 	EvidenceNameFunction EvidenceName = "Suspect function"
@@ -190,6 +191,66 @@ func NewOccurrence(p profile.Profile, ni nodeInfo) *Occurrence {
 		category:        ni.Category,
 		durationNS:      ni.Node.DurationNS,
 		sampleCount:     ni.Node.SampleCount,
+	}
+}
+
+func FromRegressedFunction(p profile.Profile, regressed RegressedFunction, f frame.Frame) *Occurrence {
+	pf := p.Platform()
+
+	switch pf {
+	case platform.Android:
+		pf = platform.Java
+	}
+
+	now := time.Now().UTC()
+	fingerprint := fmt.Sprintf("%x", regressed.Fingerprint)
+	beforeP95 := time.Duration(regressed.AggregateRange1).Round(10 * time.Microsecond)
+	afterP95 := time.Duration(regressed.AggregateRange2).Round(10 * time.Microsecond)
+	subtitle := fmt.Sprintf("P95 frame duration increased from %s to %s.", beforeP95, afterP95)
+
+	return &Occurrence{
+		Culprit:       f.FullyQualifiedName(pf),
+		DetectionTime: now,
+		Event: Event{
+			ID:             eventID(),
+			OrganizationID: regressed.OrganizationID,
+			Platform:       pf,
+			ProjectID:      regressed.ProjectID,
+			Received:       now,
+			Timestamp:      now,
+		},
+		EvidenceData: map[string]interface{}{
+			"organization_id": regressed.OrganizationID,
+			"project_id":      regressed.ProjectID,
+			"profile_id":      regressed.ProfileID,
+
+			// frame info
+			"file":        f.File,
+			"fingerprint": regressed.Fingerprint,
+			"function":    f.Function,
+			"module":      f.Module,
+			"package":     f.Package,
+			"path":        f.Path,
+			"symbol":      f.Symbol,
+
+			// trend info
+			"absolute_percentage_change": regressed.AbsolutePercentageChange,
+			"aggregate_range_1":          regressed.AggregateRange1,
+			"aggregate_range_2":          regressed.AggregateRange2,
+			"breakpoint":                 regressed.Breakpoint,
+			"trend_difference":           regressed.TrendDifference,
+			"trend_percentage":           regressed.TrendPercentage,
+			"unweighted_p_value":         regressed.UnweightedPValue,
+			"unweighted_t_value":         regressed.UnweightedTValue,
+		},
+		EvidenceDisplay: []Evidence{},
+		Fingerprint:     []string{fingerprint},
+		ID:              eventID(),
+		IssueTitle:      "Frame Duration Regression",
+		Level:           "info",
+		ProjectID:       regressed.ProjectID,
+		Subtitle:        subtitle,
+		Type:            FrameRegressionExpType,
 	}
 }
 

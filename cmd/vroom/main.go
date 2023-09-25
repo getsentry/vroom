@@ -147,6 +147,7 @@ func (e *environment) newRouter() (*httprouter.Router, error) {
 		},
 		{http.MethodGet, "/health", e.getHealth},
 		{http.MethodPost, "/profile", e.postProfile},
+		{http.MethodPost, "/regressed", e.postRegressed},
 	}
 
 	router := httprouter.New()

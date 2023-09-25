@@ -3,6 +3,8 @@ package frame
 import (
 	"hash/fnv"
 	"testing"
+
+	"github.com/getsentry/vroom/internal/platform"
 )
 
 func frameType(isApplication bool) string {
@@ -351,6 +353,78 @@ func TestTrimPackage(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.expected, func(t *testing.T) {
 			result := trimPackage(tt.pkg)
+			if result != tt.expected {
+				t.Fatalf("Expected %s but got %s", tt.expected, result)
+			}
+		})
+	}
+}
+
+func TestFullyQualifiedName(t *testing.T) {
+	tests := []struct {
+		name     string
+		platform platform.Platform
+		frame    Frame
+		expected string
+	}{
+		{
+			name:     "nodejs no package",
+			platform: platform.Node,
+			frame: Frame{
+				Function: "run",
+			},
+			expected: "run",
+		},
+		{
+			name:     "nodejs",
+			platform: platform.Node,
+			frame: Frame{
+				Package:  "node:events",
+				Function: "emit",
+			},
+			expected: "node:events.emit",
+		},
+		{
+			name:     "android",
+			platform: platform.Android,
+			frame: Frame{
+				Package:  "java.util",
+				Function: "java.util.Arrays.copyOf(byte[], int): byte[]",
+			},
+			expected: "java.util.Arrays.copyOf(byte[], int): byte[]",
+		},
+		{
+			name:     "java",
+			platform: platform.Java,
+			frame: Frame{
+				Package:  "java.util",
+				Function: "java.util.Arrays.copyOf(byte[], int): byte[]",
+			},
+			expected: "java.util.Arrays.copyOf(byte[], int): byte[]",
+		},
+		{
+			name:     "cocoa",
+			platform: platform.Cocoa,
+			frame: Frame{
+				Package:  "/private/var/containers/Bundle/Application/00000000-0000-0000-0000-000000000000/iOS-Swift.app/iOS-Swift",
+				Function: "Controller.doWork()",
+			},
+			expected: "Controller.doWork()",
+		},
+		{
+			name:     "python",
+			platform: platform.Python,
+			frame: Frame{
+				Module:   "threading",
+				Function: "Condition.wait",
+			},
+			expected: "threading.Condition.wait",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := tt.frame.FullyQualifiedName(tt.platform)
 			if result != tt.expected {
 				t.Fatalf("Expected %s but got %s", tt.expected, result)
 			}
