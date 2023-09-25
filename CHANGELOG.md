@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+**Features**
+
+- Return the first and deepest issue detected. ([#317](https://github.com/getsentry/vroom/pull/317))
+
 **Bug Fixes**
 
 - Close remaining open events in Android profiles. ([#316](https://github.com/getsentry/vroom/pull/316))

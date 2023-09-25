@@ -500,9 +500,8 @@ func TestDetectFrameInCallTree(t *testing.T) {
 				DurationThreshold: 16 * time.Millisecond,
 				FunctionsByPackage: map[string]map[string]Category{
 					"CoreFoundation": {
-						"AnotherLeafFunction": FileRead,
-						"LeafFunction":        FileRead,
-						"RandomFunction":      FileRead,
+						"LeafFunction":   FileRead,
+						"RandomFunction": FileRead,
 					},
 				},
 			},
@@ -524,24 +523,6 @@ func TestDetectFrameInCallTree(t *testing.T) {
 					Path:     "path",
 				},
 				Children: []*nodetree.Node{
-					{
-						DurationNS:    uint64(20 * time.Millisecond),
-						EndNS:         uint64(20 * time.Millisecond),
-						Fingerprint:   0,
-						IsApplication: false,
-						Line:          0,
-						Name:          "AnotherLeafFunction",
-						Package:       "CoreFoundation",
-						Path:          "path",
-						StartNS:       0,
-						Frame: frame.Frame{
-							Function: "AnotherLeafFunction",
-							InApp:    &testutil.False,
-							Package:  "CoreFoundation",
-							Path:     "path",
-						},
-						Children: []*nodetree.Node{},
-					},
 					{
 						DurationNS:    uint64(20 * time.Millisecond),
 						EndNS:         uint64(20 * time.Millisecond),
@@ -601,45 +582,6 @@ func TestDetectFrameInCallTree(t *testing.T) {
 				},
 			},
 			want: map[nodeKey]nodeInfo{
-				{
-					Package:  "CoreFoundation",
-					Function: "AnotherLeafFunction",
-				}: {
-					Category: FileRead,
-					Node: nodetree.Node{
-						DurationNS:    uint64(20 * time.Millisecond),
-						EndNS:         uint64(20 * time.Millisecond),
-						Fingerprint:   0,
-						IsApplication: false,
-						Line:          0,
-						Name:          "AnotherLeafFunction",
-						Package:       "CoreFoundation",
-						Path:          "path",
-						StartNS:       0,
-						Frame: frame.Frame{
-							Function: "AnotherLeafFunction",
-							InApp:    &testutil.False,
-							Package:  "CoreFoundation",
-							Path:     "path",
-						},
-					},
-					StackTrace: []frame.Frame{
-						{
-							Function: "root",
-							InApp:    &testutil.True,
-							Line:     0,
-							Package:  "package",
-							Path:     "path",
-						},
-						{
-							Function: "AnotherLeafFunction",
-							InApp:    &testutil.False,
-							Line:     0,
-							Package:  "CoreFoundation",
-							Path:     "path",
-						},
-					},
-				},
 				{
 					Package:  "CoreFoundation",
 					Function: "LeafFunction",
