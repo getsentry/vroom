@@ -30,8 +30,8 @@ func (env *environment) postRegressed(w http.ResponseWriter, r *http.Request) {
 
 	s := sentry.StartSpan(ctx, "json.marshal")
 	data := struct {
-		occurrences int
-	}{occurrences: len(occurrences)}
+		Occurrences int `json:"occurrences"`
+	}{Occurrences: len(occurrences)}
 	b, err := json.Marshal(data)
 	s.Finish()
 	if err != nil {

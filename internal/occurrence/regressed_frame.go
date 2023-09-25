@@ -32,7 +32,6 @@ func processRegressedFunction(
 	profilesBucket *blob.Bucket,
 	regressedFunction RegressedFunction,
 ) (*Occurrence, error) {
-
 	s := sentry.StartSpan(ctx, "profile.read")
 	s.Description = "Read profile from GCS"
 	var p profile.Profile
@@ -85,15 +84,15 @@ func ProcessRegressedFunctions(
 	}
 
 	var wg sync.WaitGroup
-	wg.Add(len(regressedFunctions))
+	wg.Add(numWorkers)
 
 	regressedChan := make(chan RegressedFunction, numWorkers)
 	occurrenceChan := make(chan *Occurrence)
 
 	for i := 0; i < numWorkers; i++ {
 		go func() {
+			defer wg.Done()
 			for regressedFunction := range regressedChan {
-				defer wg.Done()
 				occurrence, err := processRegressedFunction(ctx, profilesBucket, regressedFunction)
 				if err != nil {
 					hub.CaptureException(err)
