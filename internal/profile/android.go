@@ -62,15 +62,16 @@ func (m AndroidMethod) Frame() frame.Frame {
 		inApp = packageutil.IsAndroidApplicationPackage(m.ClassName)
 	}
 	return frame.Frame{
-		Function: methodName,
-		Package:  className,
-		File:     path.Base(m.SourceFile),
-		Path:     m.SourceFile,
-		Line:     m.SourceLine,
-		InApp:    &inApp,
 		Data: frame.Data{
 			DeobfuscationStatus: m.Data.DeobfuscationStatus,
 		},
+		File:     path.Base(m.SourceFile),
+		Function: methodName,
+		InApp:    &inApp,
+		Line:     m.SourceLine,
+		MethodID: m.ID,
+		Package:  className,
+		Path:     m.SourceFile,
 	}
 }
 
@@ -190,32 +191,37 @@ func (p Android) CallTrees() map[uint64][]*nodetree.Node {
 	}
 
 	buildTimestamp := p.TimestampGetter()
-	trees := make(map[uint64][]*nodetree.Node)
+	treesByThreadID := make(map[uint64][]*nodetree.Node)
 	stacks := make(map[uint64][]*nodetree.Node)
+
 	methods := make(map[uint64]AndroidMethod)
 	for _, m := range p.Methods {
 		methods[m.ID] = m
 	}
-	closeFrame := func(threadID uint64, ts uint64) {
-		i := len(stacks[threadID]) - 1
+
+	closeFrame := func(threadID uint64, ts uint64, i int) {
 		n := stacks[threadID][i]
 		n.Update(ts)
 		n.SampleCount = int(math.Ceil(float64(n.DurationNS) / float64((10 * time.Millisecond))))
-		stacks[threadID] = stacks[threadID][:i]
 	}
-	var maxTimestampNs uint64
+
+	var maxTimestampNS uint64
+	enterPerMethod := make(map[uint64]int)
+	exitPerMethod := make(map[uint64]int)
+
 	for _, e := range p.Events {
 		if e.ThreadID != activeThreadID {
 			continue
 		}
 
 		ts := buildTimestamp(e.Time)
-		if ts > maxTimestampNs {
-			maxTimestampNs = ts
+		if ts > maxTimestampNS {
+			maxTimestampNS = ts
 		}
 
 		switch e.Action {
 		case EnterAction:
+			enterPerMethod[e.MethodID]++
 			m, exists := methods[e.MethodID]
 			if !exists {
 				methods[e.MethodID] = AndroidMethod{
@@ -226,7 +232,7 @@ func (p Android) CallTrees() map[uint64][]*nodetree.Node {
 			}
 			n := nodetree.NodeFromFrame(m.Frame(), ts, 0, 0)
 			if len(stacks[e.ThreadID]) == 0 {
-				trees[e.ThreadID] = append(trees[e.ThreadID], n)
+				treesByThreadID[e.ThreadID] = append(treesByThreadID[e.ThreadID], n)
 			} else {
 				i := len(stacks[e.ThreadID]) - 1
 				stacks[e.ThreadID][i].Children = append(stacks[e.ThreadID][i].Children, n)
@@ -237,18 +243,39 @@ func (p Android) CallTrees() map[uint64][]*nodetree.Node {
 			if len(stacks[e.ThreadID]) == 0 {
 				continue
 			}
-			closeFrame(e.ThreadID, ts)
+			i := len(stacks[e.ThreadID]) - 1
+			var eventSkipped bool
+			for ; i >= 0; i-- {
+				n := stacks[e.ThreadID][i]
+				if n.Frame.MethodID != e.MethodID &&
+					enterPerMethod[e.MethodID] <= exitPerMethod[e.MethodID] {
+					eventSkipped = true
+					break
+				}
+				closeFrame(e.ThreadID, ts, i)
+				exitPerMethod[e.MethodID]++
+				if n.Frame.MethodID == e.MethodID {
+					break
+				}
+			}
+			// If we didn't skip the event, we should cut the stack accordingly.
+			if !eventSkipped {
+				stacks[e.ThreadID] = stacks[e.ThreadID][:i]
+			}
 		}
 	}
-
 	// Close remaining open frames.
 	for threadID, stack := range stacks {
 		for i := len(stack) - 1; i >= 0; i-- {
-			closeFrame(threadID, maxTimestampNs)
+			closeFrame(threadID, maxTimestampNS, i)
 		}
 	}
-
-	return trees
+	for _, trees := range treesByThreadID {
+		for _, root := range trees {
+			root.Close(maxTimestampNS)
+		}
+	}
+	return treesByThreadID
 }
 
 func (p Android) DurationNS() uint64 {
@@ -372,6 +399,9 @@ func (p Android) Speedscope() (speedscope.Output, error) {
 	methodStacks := make(map[uint64][]uint64) // map of thread ID -> stack of method IDs
 	buildTimestamp := p.TimestampGetter()
 
+	enterPerMethod := make(map[uint64]int)
+	exitPerMethod := make(map[uint64]int)
+
 	for _, event := range p.Events {
 		ts := buildTimestamp(event.Time)
 		prof, ok := threadIDToProfile[event.ThreadID]
@@ -389,6 +419,7 @@ func (p Android) Speedscope() (speedscope.Output, error) {
 
 		switch event.Action {
 		case "Enter":
+			enterPerMethod[event.MethodID]++
 			methodStacks[event.ThreadID] = append(methodStacks[event.ThreadID], event.MethodID)
 			emitEvent(prof, speedscope.EventTypeOpenFrame, event.MethodID, ts)
 		case "Exit", "Unwind":
@@ -407,33 +438,35 @@ func (p Android) Speedscope() (speedscope.Output, error) {
 			// not been explicitly ended, matching the behavior of the Chrome trace viewer. Speedscope
 			// handles this scenario a different way by doing nothing and leaving these methods with
 			// indefinite durations.
+			var eventSkipped bool
 			for ; i >= 0; i-- {
 				methodID := stack[i]
+				// Skip exit event when we didn't record an enter event for that method.
+				if methodID != event.MethodID &&
+					enterPerMethod[event.MethodID] <= exitPerMethod[event.MethodID] {
+					eventSkipped = true
+					break
+				}
 				emitEvent(prof, speedscope.EventTypeCloseFrame, methodID, ts)
-
+				exitPerMethod[methodID]++
+				// Pop the elements that we emitted end events for off the stack
+				// Keep closing methods until we closed the one we intended to close
 				if methodID == event.MethodID {
 					break
 				}
 			}
-			if stack[i] != event.MethodID {
-				return speedscope.Output{}, fmt.Errorf(
-					"chrometrace: %w: ending event %v but stack for thread %v does not contain that record",
-					errorutil.ErrDataIntegrity,
-					event,
-					event.ThreadID,
-				)
+			// If we didn't skip the event, we should cut the stack accordingly.
+			if !eventSkipped {
+				methodStacks[event.ThreadID] = methodStacks[event.ThreadID][:i]
 			}
-			// Pop the elements that we emitted end events for off the stack
-			methodStacks[event.ThreadID] = methodStacks[event.ThreadID][:i]
-
 		default:
 			return speedscope.Output{}, fmt.Errorf(
 				"chrometrace: %w: invalid method action: %v",
 				errorutil.ErrDataIntegrity,
 				event.Action,
 			)
-		} // end switch
-	} // end loop events
+		}
+	}
 
 	// Close any remaining open frames.
 	for threadID, stack := range methodStacks {
