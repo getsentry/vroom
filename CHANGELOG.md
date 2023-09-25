@@ -13,6 +13,7 @@
 **Internal**
 
 - Rename the frame drop issue title. ([#315](https://github.com/getsentry/vroom/pull/315))
+- Add new endpoint for regressed functions. ([#318](https://github.com/getsentry/vroom/pull/318))
 
 ## 23.9.1
 
