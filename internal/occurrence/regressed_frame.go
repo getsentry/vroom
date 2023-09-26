@@ -62,7 +62,10 @@ func ProcessRegressedFunction(
 
 	s = sentry.StartSpan(ctx, "processing")
 	s.Description = "Searching for fingerprint"
-	node := nodetree.FindNodeByFingerprint(regressedFunction.Fingerprint, calltrees)
+	var node *nodetree.Node
+	for _, calltree := range calltrees {
+		node = calltree.FindNodeByFingerprint(regressedFunction.Fingerprint)
+	}
 	s.Finish()
 
 	if node == nil {

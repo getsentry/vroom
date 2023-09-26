@@ -246,13 +246,13 @@ func (n *Node) Close(timestamp uint64) {
 	}
 }
 
-func FindNodeByFingerprint(target uint32, nodes []*Node) *Node {
-	for _, node := range nodes {
-		if node.Frame.Fingerprint() == target {
-			return node
-		}
+func (n *Node) FindNodeByFingerprint(target uint32) *Node {
+	if n.Frame.Fingerprint() == target {
+		return n
+	}
 
-		node := FindNodeByFingerprint(target, node.Children)
+	for _, child := range n.Children {
+		node := child.FindNodeByFingerprint(target)
 		if node != nil {
 			return node
 		}
