@@ -42,9 +42,9 @@ func newFrozenFrameStats(endNS uint64, durationNS float64) frozenFrameStats {
 // nodeStackIfValid returns the nodeStack if we consider it valid as
 // a frame drop cause.
 func (s *frozenFrameStats) IsNodeStackValid(ns *nodeStack) bool {
-	return s.startNS <= ns.n.StartNS &&
+	return ns.n.StartNS >= s.startNS &&
 		ns.n.EndNS <= s.endNS &&
-		s.minDurationNS <= s.durationNS &&
+		ns.n.DurationNS >= s.minDurationNS &&
 		ns.n.StartNS <= s.startLimitNS &&
 		ns.n.IsApplication
 }
