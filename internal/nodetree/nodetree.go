@@ -248,9 +248,10 @@ func (n *Node) Close(timestamp uint64) {
 
 func FindNodeByFingerprint(target uint32, nodes []*Node) *Node {
 	for _, node := range nodes {
-		if node.Frame.Fingerprint() != target {
+		if node.Frame.Fingerprint() == target {
 			return node
 		}
+
 		node := FindNodeByFingerprint(target, node.Children)
 		if node != nil {
 			return node

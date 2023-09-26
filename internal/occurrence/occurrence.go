@@ -222,6 +222,7 @@ func FromRegressedFunction(p profile.Profile, regressed RegressedFunction, f fra
 			ProjectID:      regressed.ProjectID,
 			Received:       now,
 			Timestamp:      now,
+			Tags:           make(map[string]string),
 		},
 		EvidenceData: map[string]interface{}{
 			"organization_id": regressed.OrganizationID,

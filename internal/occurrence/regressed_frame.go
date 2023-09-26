@@ -106,16 +106,18 @@ func ProcessRegressedFunctions(
 		}()
 	}
 
-	for _, regressedFunction := range regressedFunctions {
-		regressedChan <- regressedFunction
-	}
-	close(regressedChan)
+	go func() {
+		for _, regressedFunction := range regressedFunctions {
+			regressedChan <- regressedFunction
+		}
+		close(regressedChan)
 
-	// wait until all the profiles have been processed
-	// then we can close the occurrence channel and collect
-	// any occurrences that have been created
-	wg.Wait()
-	close(occurrenceChan)
+		// wait until all the profiles have been processed
+		// then we can close the occurrence channel and collect
+		// any occurrences that have been created
+		wg.Wait()
+		close(occurrenceChan)
+	}()
 
 	occurrences := []*Occurrence{}
 	for occurrence := range occurrenceChan {
