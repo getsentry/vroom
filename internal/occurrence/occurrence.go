@@ -210,7 +210,7 @@ func FromRegressedFunction(p profile.Profile, regressed RegressedFunction, f fra
 	fingerprint := fmt.Sprintf("%x", regressed.Fingerprint)
 	beforeP95 := time.Duration(regressed.AggregateRange1).Round(10 * time.Microsecond)
 	afterP95 := time.Duration(regressed.AggregateRange2).Round(10 * time.Microsecond)
-	regressionText := fmt.Sprintf("P95 frame duration increased from %s to %s.", beforeP95, afterP95)
+	regressionText := fmt.Sprintf("P95 function duration increased from %s to %s.", beforeP95, afterP95)
 
 	return &Occurrence{
 		Culprit:       fullyQualifiedName,
@@ -265,7 +265,7 @@ func FromRegressedFunction(p profile.Profile, regressed RegressedFunction, f fra
 		},
 		Fingerprint: []string{fingerprint},
 		ID:          eventID(),
-		IssueTitle:  "Frame Duration Regression",
+		IssueTitle:  "Function Duration Regression",
 		Level:       "info",
 		ProjectID:   regressed.ProjectID,
 		Subtitle:    regressionText,
