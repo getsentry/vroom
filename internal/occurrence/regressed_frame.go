@@ -27,7 +27,7 @@ type RegressedFunction struct {
 	UnweightedTValue         float64 `json:"unweighted_t_value"`
 }
 
-func processRegressedFunction(
+func ProcessRegressedFunction(
 	ctx context.Context,
 	profilesBucket *blob.Bucket,
 	regressedFunction RegressedFunction,
@@ -93,7 +93,7 @@ func ProcessRegressedFunctions(
 		go func() {
 			defer wg.Done()
 			for regressedFunction := range regressedChan {
-				occurrence, err := processRegressedFunction(ctx, profilesBucket, regressedFunction)
+				occurrence, err := ProcessRegressedFunction(ctx, profilesBucket, regressedFunction)
 				if err != nil {
 					hub.CaptureException(err)
 					continue

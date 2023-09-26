@@ -20,13 +20,17 @@ func (env *environment) postRegressed(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	occurrences := occurrence.ProcessRegressedFunctions(
-		ctx,
-		hub,
-		env.storage,
-		regressedFunctions,
-		10,
-	)
+	occurrences := []*occurrence.Occurrence{}
+	for _, regressedFunction := range regressedFunctions {
+		occurrence, err := occurrence.ProcessRegressedFunction(ctx, env.storage, regressedFunction)
+		if err != nil {
+			hub.CaptureException(err)
+			continue
+		} else if occurrence == nil {
+			continue
+		}
+		occurrences = append(occurrences, occurrence)
+	}
 
 	s := sentry.StartSpan(ctx, "json.marshal")
 	data := struct {
