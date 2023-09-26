@@ -1,6 +1,22 @@
-# vroom
+<p align="center">
+  <a href="https://sentry.io/?utm_source=github&utm_medium=logo" target="_blank">
+    <picture>
+      <source srcset="https://sentry-brand.storage.googleapis.com/sentry-logo-white.png" media="(prefers-color-scheme: dark)" />
+      <source srcset="https://sentry-brand.storage.googleapis.com/sentry-logo-black.png" media="(prefers-color-scheme: light), (prefers-color-scheme: no-preference)" />
+      <img src="https://sentry-brand.storage.googleapis.com/sentry-logo-black.png" alt="Sentry" width="280">
+    </picture>
+  </a>
+</p>
 
-`vroom` is the profiling service processing profiles and deriving data about your profiles. It's written in Go.
+# Sentry vroom
+
+[![GitHub Release](https://img.shields.io/github/release/getsentry/vroom.svg)](https://github.com/getsentry/relay/vroom/latest)
+
+<p align="center">
+    <img src="https://github.com/getsentry/vroom/blob/main/artwork/vroom-logo.png?raw=true" alt="vroom" width="640">
+</p>
+
+`vroom` is Sentry's profiling service, processing and deriving data about your profiles. It's written in Go.
 
 The name was inspired by this [video](https://www.youtube.com/watch?v=t_rzYnXEQlE).
 
