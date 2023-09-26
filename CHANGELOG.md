@@ -9,6 +9,7 @@
 **Bug Fixes**
 
 - Close remaining open events in Android profiles. ([#316](https://github.com/getsentry/vroom/pull/316))
+- Enforce minimum frame duration for frame drop issue. ([#319](https://github.com/getsentry/vroom/pull/319))
 
 **Internal**
 
