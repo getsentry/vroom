@@ -34,8 +34,8 @@ func TestFindFrameDrop(t *testing.T) {
 							Unit: "nanosecond",
 							Values: []measurements.MeasurementValue{
 								{
-									ElapsedSinceStartNs: uint64(500 * time.Millisecond),
-									Value:               float64(300 * time.Millisecond),
+									ElapsedSinceStartNs: uint64(400 * time.Millisecond),
+									Value:               float64(200 * time.Millisecond),
 								},
 							},
 						},
@@ -178,8 +178,8 @@ func TestFindFrameDrop(t *testing.T) {
 							Unit: "nanosecond",
 							Values: []measurements.MeasurementValue{
 								{
-									ElapsedSinceStartNs: uint64(500 * time.Millisecond),
-									Value:               float64(300 * time.Millisecond),
+									ElapsedSinceStartNs: uint64(400 * time.Millisecond),
+									Value:               float64(200 * time.Millisecond),
 								},
 							},
 						},
@@ -400,8 +400,8 @@ func TestFindFrameDrop(t *testing.T) {
 							Unit: "nanosecond",
 							Values: []measurements.MeasurementValue{
 								{
-									ElapsedSinceStartNs: uint64(500 * time.Millisecond),
-									Value:               float64(450 * time.Millisecond),
+									ElapsedSinceStartNs: uint64(400 * time.Millisecond),
+									Value:               float64(300 * time.Millisecond),
 								},
 							},
 						},
@@ -628,8 +628,8 @@ func TestFindFrameDrop(t *testing.T) {
 			callTrees: map[uint64][]*nodetree.Node{
 				1: {
 					{
-						DurationNS:    uint64(500 * time.Millisecond),
-						EndNS:         uint64(500 * time.Millisecond),
+						DurationNS:    uint64(1000 * time.Millisecond),
+						EndNS:         uint64(1000 * time.Millisecond),
 						IsApplication: false,
 						Name:          "root",
 						Package:       "package",
@@ -671,8 +671,8 @@ func TestFindFrameDrop(t *testing.T) {
 								},
 								Children: []*nodetree.Node{
 									{
-										DurationNS:    uint64(200 * time.Millisecond),
-										EndNS:         uint64(300 * time.Millisecond),
+										DurationNS:    uint64(250 * time.Millisecond),
+										EndNS:         uint64(350 * time.Millisecond),
 										IsApplication: true,
 										Name:          "child2-1",
 										Package:       "package",
@@ -688,13 +688,13 @@ func TestFindFrameDrop(t *testing.T) {
 								},
 							},
 							{
-								DurationNS:    uint64(200 * time.Millisecond),
+								DurationNS:    uint64(250 * time.Millisecond),
 								EndNS:         uint64(500 * time.Millisecond),
 								IsApplication: true,
 								Name:          "child3",
 								Package:       "package",
 								Path:          "path",
-								StartNS:       uint64(300 * time.Millisecond),
+								StartNS:       uint64(250 * time.Millisecond),
 								Frame: frame.Frame{
 									Function: "child3",
 									InApp:    &testutil.True,
@@ -734,7 +734,7 @@ func TestFindFrameDrop(t *testing.T) {
 						Tags: map[string]string{},
 					},
 					EvidenceData: map[string]interface{}{
-						"frame_duration_ns":   uint64(200000000),
+						"frame_duration_ns":   uint64(250000000),
 						"frame_module":        "",
 						"frame_name":          "child2-1",
 						"frame_package":       "package",
@@ -773,6 +773,44 @@ func TestFindFrameDrop(t *testing.T) {
 			findFrameDropCause(tt.profile, tt.callTrees, &occurrences)
 			if diff := testutil.Diff(occurrences, tt.want, options); diff != "" {
 				t.Fatalf("Result mismatch: got - want +\n%s", diff)
+			}
+		})
+	}
+}
+
+func TestIsNodeStackValid(t *testing.T) {
+	tests := []struct {
+		name      string
+		stats     frozenFrameStats
+		nodestack *nodeStack
+		valid     bool
+	}{
+		{
+			name: "frame too short",
+			stats: frozenFrameStats{
+				startLimitNS:  0,
+				durationNS:    1000,
+				minDurationNS: 500,
+				startNS:       0,
+				endNS:         1000,
+			},
+			nodestack: &nodeStack{
+				n: &nodetree.Node{
+					StartNS:       100,
+					EndNS:         200,
+					IsApplication: true,
+					DurationNS:    100,
+				},
+			},
+			valid: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			output := tt.stats.IsNodeStackValid(tt.nodestack)
+			if output != tt.valid {
+				t.Fatalf("Didn't expect this value: %v", output)
 			}
 		})
 	}
