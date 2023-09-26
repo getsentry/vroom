@@ -65,6 +65,9 @@ func ProcessRegressedFunction(
 	var node *nodetree.Node
 	for _, calltree := range calltrees {
 		node = calltree.FindNodeByFingerprint(regressedFunction.Fingerprint)
+		if node != nil {
+			break
+		}
 	}
 	s.Finish()
 

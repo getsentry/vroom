@@ -185,13 +185,10 @@ func (f Frame) IsPHPApplicationFrame() bool {
 }
 
 func (f Frame) Fingerprint() uint32 {
-	frameFunction := f.Function
-	framePackage := f.ModuleOrPackage()
-
 	h := fnv.New64()
-	h.Write([]byte(framePackage))
+	h.Write([]byte(f.ModuleOrPackage()))
 	h.Write([]byte{':'})
-	h.Write([]byte(frameFunction))
+	h.Write([]byte(f.Function))
 
 	// casting to an uint32 here because snuba does not handle uint64 values well
 	// as it is converted to a float somewhere not changing to the 32 bit hash
