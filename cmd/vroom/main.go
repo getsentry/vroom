@@ -225,7 +225,11 @@ func main() {
 }
 
 func (e *environment) getHealth(w http.ResponseWriter, _ *http.Request) {
-	w.WriteHeader(http.StatusNoContent)
+	if _, err := os.Stat("/tmp/vroom.down"); err == nil {
+		w.WriteHeader(http.StatusNoContent)
+	} else {
+		w.WriteHeader(http.StatusBadGateway)
+	}
 }
 
 type Filter struct {
