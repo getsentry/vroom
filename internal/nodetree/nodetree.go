@@ -2,7 +2,6 @@ package nodetree
 
 import (
 	"hash"
-	"hash/fnv"
 	"strings"
 
 	"github.com/getsentry/vroom/internal/frame"
@@ -139,9 +138,6 @@ func (n *Node) CollectFunctions(
 		applicationDurationNS = n.DurationNS
 	}
 
-	frameFunction := n.Frame.Function
-	framePackage := n.Frame.ModuleOrPackage()
-
 	var selfTimeNS uint64
 
 	if shouldAggregateFrame(profilePlatform, n.Frame) {
@@ -165,23 +161,18 @@ func (n *Node) CollectFunctions(
 		}
 
 		if selfTimeNS > 0 {
-			h := fnv.New64()
-			h.Write([]byte(framePackage))
-			h.Write([]byte{':'})
-			h.Write([]byte(frameFunction))
-
 			// casting to an uint32 here because snuba does not handle uint64 values
 			// well as it is converted to a float somewhere
 			// not changing to the 32 bit hash function here to preserve backwards
 			// compatibility with existing fingerprints that we can cast
-			fingerprint := uint32(h.Sum64())
+			fingerprint := n.Frame.Fingerprint()
 
 			function, exists := results[fingerprint]
 			if !exists {
 				results[fingerprint] = CallTreeFunction{
 					Fingerprint:   fingerprint,
 					Function:      n.Frame.Function,
-					Package:       framePackage,
+					Package:       n.Frame.ModuleOrPackage(),
 					InApp:         n.IsApplication,
 					SelfTimesNS:   []uint64{selfTimeNS},
 					SumSelfTimeNS: selfTimeNS,
@@ -253,4 +244,19 @@ func (n *Node) Close(timestamp uint64) {
 	for _, c := range n.Children {
 		c.Close(timestamp)
 	}
+}
+
+func (n *Node) FindNodeByFingerprint(target uint32) *Node {
+	if n.Frame.Fingerprint() == target {
+		return n
+	}
+
+	for _, child := range n.Children {
+		node := child.FindNodeByFingerprint(target)
+		if node != nil {
+			return node
+		}
+	}
+
+	return nil
 }
