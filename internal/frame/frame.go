@@ -16,6 +16,9 @@ import (
 var (
 	windowsPathRegex      = regexp.MustCompile(`(?i)^([a-z]:\\|\\\\)`)
 	packageExtensionRegex = regexp.MustCompile(`\.(dylib|so|a|dll|exe)$`)
+	cocoaSystemPackage    = map[string]struct{}{
+		"Sentry": {},
+	}
 )
 
 type (
@@ -160,6 +163,13 @@ func (f Frame) IsCocoaApplicationFrame() bool {
 		// as a system frame as it does not contain any user code
 		return false
 	}
+
+	// Some packages are known to be system packages.
+	// If we detect them, mark them as a system frame immediately.
+	if _, exists := cocoaSystemPackage[f.ModuleOrPackage()]; exists {
+		return false
+	}
+
 	return packageutil.IsCocoaApplicationPackage(f.Package)
 }
 
