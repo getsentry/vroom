@@ -42,11 +42,12 @@ func newFrozenFrameStats(endNS uint64, durationNS float64) frozenFrameStats {
 // nodeStackIfValid returns the nodeStack if we consider it valid as
 // a frame drop cause.
 func (s *frozenFrameStats) IsNodeStackValid(ns *nodeStack) bool {
-	return ns.n.StartNS >= s.startNS &&
+	return ns.n.Frame.Function != "" &&
+		ns.n.IsApplication &&
+		ns.n.StartNS >= s.startNS &&
 		ns.n.EndNS <= s.endNS &&
 		ns.n.DurationNS >= s.minDurationNS &&
-		ns.n.StartNS <= s.startLimitNS &&
-		ns.n.IsApplication
+		ns.n.StartNS <= s.startLimitNS
 }
 
 const (
@@ -151,7 +152,7 @@ func findFrameDropCauseFrame(
 	// Create a nodeStack of the current node
 	ns := &nodeStack{depth, n, nil}
 	// Check if current node if valid.
-	if stats.IsNodeStackValid(ns) && ns.n.Frame.Function != "" {
+	if stats.IsNodeStackValid(ns) {
 		current = ns
 	}
 
