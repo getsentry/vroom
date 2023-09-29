@@ -52,9 +52,10 @@ func (s *frozenFrameStats) IsNodeStackValid(ns *nodeStack) bool {
 const (
 	FrameDrop Category = "frame_drop"
 
-	marginPercent           float64 = 0.05
-	minFrameDurationPercent float64 = 0.5
-	startLimitPercent       float64 = 0.2
+	marginPercent                    float64 = 0.05
+	minFrameDurationPercent          float64 = 0.5
+	startLimitPercent                float64 = 0.2
+	unknownFramesInTheStackThreshold float64 = 0.8
 )
 
 func findFrameDropCause(
@@ -85,8 +86,17 @@ func findFrameDropCause(
 			}
 			// We found a potential stacktrace responsible for this frozen frame
 			stackTrace := make([]frame.Frame, 0, len(cause.st))
+			var unknownFramesCount float64
 			for _, f := range cause.st {
+				if f.Frame.Function == "" {
+					unknownFramesCount++
+				}
 				stackTrace = append(stackTrace, f.ToFrame())
+			}
+			// If there are too many unknown frames in the stack,
+			// we do not create an occurrence.
+			if unknownFramesCount >= float64(len(stackTrace))*unknownFramesInTheStackThreshold {
+				continue
 			}
 			*occurrences = append(
 				*occurrences,
@@ -141,7 +151,7 @@ func findFrameDropCauseFrame(
 	// Create a nodeStack of the current node
 	ns := &nodeStack{depth, n, nil}
 	// Check if current node if valid.
-	if stats.IsNodeStackValid(ns) {
+	if stats.IsNodeStackValid(ns) && ns.n.Frame.Function != "" {
 		current = ns
 	}
 
