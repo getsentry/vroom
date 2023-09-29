@@ -47,6 +47,14 @@ func TestIsCocoaApplicationFrame(t *testing.T) {
 			},
 			isApplication: true,
 		},
+		{
+			name: "symbolicate_internal",
+			frame: Frame{
+				Function: "symbolicate_internal",
+				Package:  "/private/var/containers/Bundle/Application/00000000-0000-0000-0000-000000000000/App.app/Frameworks/Sentry.framework/Sentry",
+			},
+			isApplication: false,
+		},
 	}
 
 	for _, tt := range tests {
