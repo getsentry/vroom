@@ -5,6 +5,7 @@
 **Features**
 
 - Return the first and deepest issue detected. ([#317](https://github.com/getsentry/vroom/pull/317))
+- Release frame drop issue detection. ([#329](https://github.com/getsentry/vroom/pull/329))
 
 **Bug Fixes**
 
