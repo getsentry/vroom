@@ -87,7 +87,7 @@ const (
 	JSONDecodeType         Type = 2003
 	RegexType              Type = 2007
 	ViewType               Type = 2006
-	FrameDropType          Type = 2008
+	FrameDropType          Type = 2009
 	FrameRegressionExpType Type = 2010
 
 	EvidenceNameDuration       EvidenceName = "Duration"
@@ -197,7 +197,11 @@ func NewOccurrence(p profile.Profile, ni nodeInfo) *Occurrence {
 	}
 }
 
-func FromRegressedFunction(p profile.Profile, regressed RegressedFunction, f frame.Frame) *Occurrence {
+func FromRegressedFunction(
+	p profile.Profile,
+	regressed RegressedFunction,
+	f frame.Frame,
+) *Occurrence {
 	pf := p.Platform()
 
 	switch pf {
@@ -210,7 +214,11 @@ func FromRegressedFunction(p profile.Profile, regressed RegressedFunction, f fra
 	fingerprint := fmt.Sprintf("%x", regressed.Fingerprint)
 	beforeP95 := time.Duration(regressed.AggregateRange1).Round(10 * time.Microsecond)
 	afterP95 := time.Duration(regressed.AggregateRange2).Round(10 * time.Microsecond)
-	regressionText := fmt.Sprintf("P95 function duration increased from %s to %s.", beforeP95, afterP95)
+	regressionText := fmt.Sprintf(
+		"P95 function duration increased from %s to %s.",
+		beforeP95,
+		afterP95,
+	)
 
 	return &Occurrence{
 		Culprit:       fullyQualifiedName,
