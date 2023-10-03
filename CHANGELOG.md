@@ -19,8 +19,8 @@
 - Rename the frame drop issue title. ([#315](https://github.com/getsentry/vroom/pull/315))
 - Add new endpoint for regressed functions. ([#318](https://github.com/getsentry/vroom/pull/318))
 - Return 502 from health endpoint on shutdown. ([#323](https://github.com/getsentry/vroom/pull/323)), ([#324](https://github.com/getsentry/vroom/pull/324))
-- Health endpoint returns 200 instead of 204 on success ([#326](https://github.com/getsentry/vroom/pull/326))
-
+- Health endpoint returns 200 instead of 204 on success. ([#326](https://github.com/getsentry/vroom/pull/326))
+- Bump max profile duration for which we generate call trees. ([#330](https://github.com/getsentry/vroom/pull/330))
 
 ## 23.9.1
 
