@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log/slog"
 	"strconv"
 	"strings"
 	"time"
@@ -17,6 +18,8 @@ import (
 	"github.com/getsentry/vroom/internal/timeutil"
 	"github.com/getsentry/vroom/internal/transaction"
 )
+
+const maxProfileDurationForCallTrees = 15 * time.Second
 
 var ErrProfileHasNoTrace = errors.New("profile has no trace")
 
@@ -135,7 +138,11 @@ func (p *LegacyProfile) UnmarshalJSON(b []byte) error {
 func (p LegacyProfile) CallTrees() (map[uint64][]*nodetree.Node, error) {
 	// Profiles longer than 5s contain a lot of call trees and it produces a lot of noise for the aggregation.
 	// The majority of them might also be timing out and we want to ignore them for the aggregation.
-	if time.Duration(p.DurationNS) > 5*time.Second {
+	if time.Duration(p.DurationNS) > maxProfileDurationForCallTrees {
+		slog.Debug(
+			"profile is too long for call trees",
+			slog.Duration("duration", time.Duration(p.DurationNS)),
+		)
 		return make(map[uint64][]*nodetree.Node), nil
 	}
 	if p.Trace == nil {
