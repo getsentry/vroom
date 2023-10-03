@@ -4,7 +4,6 @@ local pipedream = import 'github.com/getsentry/gocd-jsonnet/libs/pipedream.libso
 local pipedream_config = {
   name: 'vroom',
   exclude_regions: [
-    's4s',
     'customer-1',
     'customer-2',
     'customer-3',
