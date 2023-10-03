@@ -4,6 +4,8 @@ import (
 	"strings"
 	"time"
 
+	"log/slog"
+
 	"github.com/getsentry/vroom/internal/frame"
 	"github.com/getsentry/vroom/internal/nodetree"
 	"github.com/getsentry/vroom/internal/platform"
@@ -120,6 +122,7 @@ func (options DetectAndroidFrameOptions) checkNode(n *nodetree.Node) *nodeInfo {
 	// Check if we have a list of functions associated to the package.
 	functions, exists := options.FunctionsByPackage[n.Package]
 	if !exists {
+		slog.Debug("package doesn't exist", slog.String("package", n.Package))
 		return nil
 	}
 
@@ -135,16 +138,19 @@ func (options DetectAndroidFrameOptions) checkNode(n *nodetree.Node) *nodeInfo {
 	// Check if we need to detect that function.
 	category, exists := functions[name]
 	if !exists {
+		slog.Debug("function doesn't exist", slog.String("function", name))
 		return nil
 	}
 
 	// Check if it's above the duration threshold.
 	if n.DurationNS < uint64(options.DurationThreshold) {
+		slog.Debug("duration is too small", slog.Uint64("duration_ns", n.DurationNS))
 		return nil
 	}
 
 	// Check if it's above the sample threshold.
 	if n.SampleCount < options.SampleThreshold {
+		slog.Debug("sample count is too low", slog.Int("sample_count", n.SampleCount))
 		return nil
 	}
 
@@ -470,6 +476,10 @@ func detectFrame(
 	if options.onlyCheckActiveThread() {
 		callTrees, exists := callTreesPerThreadID[p.Transaction().ActiveThreadID]
 		if !exists {
+			slog.Debug(
+				"call tree for active thread ID doesn't exist",
+				slog.Uint64("active_thread_id", p.Transaction().ActiveThreadID),
+			)
 			return
 		}
 		for _, root := range callTrees {
