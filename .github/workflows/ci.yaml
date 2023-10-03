@@ -20,7 +20,22 @@ defaults:
     shell: bash
 
 jobs:
-  test-vroom:
+  trufflehog:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    - name: TruffleHog OSS
+      uses: trufflesecurity/trufflehog@v3.16.4
+      with:
+        path: ./
+        base: ${{ github.event.repository.default_branch }}
+        head: HEAD
+        extra_args: --debug --only-verified
+
+  golangci:
+    name: lint
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
@@ -36,14 +51,18 @@ jobs:
       with:
         version: latest
     - uses: pre-commit/action@v3.0.0
-    - run: make test
-    - name: TruffleHog OSS
-      uses: trufflesecurity/trufflehog@v3.16.4
+
+  test-vroom:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
       with:
-        path: ./
-        base: ${{ github.event.repository.default_branch }}
-        head: HEAD
-        extra_args: --debug --only-verified
+        fetch-depth: 0
+    - uses: actions/setup-go@v4
+      with:
+        go-version: stable
+        cache: false
+    - run: make test
 
   publish-to-dockerhub:
     name: Publish Vroom to DockerHub
