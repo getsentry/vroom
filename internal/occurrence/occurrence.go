@@ -273,7 +273,7 @@ func FromRegressedFunction(
 		},
 		Fingerprint: []string{fingerprint},
 		ID:          eventID(),
-		IssueTitle:  "Function Duration Regression",
+		IssueTitle:  "Function Duration Regression (Experimental)",
 		Level:       "info",
 		ProjectID:   regressed.ProjectID,
 		Subtitle:    regressionText,
