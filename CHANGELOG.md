@@ -5,6 +5,7 @@
 **Features**
 
 - Return the first and deepest issue detected. ([#317](https://github.com/getsentry/vroom/pull/317))
+- Append experimental to function regression issue. ([#334](https://github.com/getsentry/vroom/pull/334))
 
 **Bug Fixes**
 
