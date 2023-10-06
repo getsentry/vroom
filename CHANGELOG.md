@@ -5,19 +5,23 @@
 **Features**
 
 - Return the first and deepest issue detected. ([#317](https://github.com/getsentry/vroom/pull/317))
+- Release frame drop issue detection. ([#329](https://github.com/getsentry/vroom/pull/329))
 - Append experimental to function regression issue. ([#334](https://github.com/getsentry/vroom/pull/334))
 
 **Bug Fixes**
 
 - Close remaining open events in Android profiles. ([#316](https://github.com/getsentry/vroom/pull/316))
 - Enforce minimum frame duration for frame drop issue. ([#319](https://github.com/getsentry/vroom/pull/319))
+- Mark sentry frames as system frames when it's dynamically linked. ([#325](https://github.com/getsentry/vroom/pull/325))
+- Do not return an occurrence for unknown function or when the stack is filled with them. ([#328](https://github.com/getsentry/vroom/pull/328))
 
 **Internal**
 
 - Rename the frame drop issue title. ([#315](https://github.com/getsentry/vroom/pull/315))
 - Add new endpoint for regressed functions. ([#318](https://github.com/getsentry/vroom/pull/318))
 - Return 502 from health endpoint on shutdown. ([#323](https://github.com/getsentry/vroom/pull/323)), ([#324](https://github.com/getsentry/vroom/pull/324))
-
+- Health endpoint returns 200 instead of 204 on success. ([#326](https://github.com/getsentry/vroom/pull/326))
+- Bump max profile duration for which we generate call trees. ([#330](https://github.com/getsentry/vroom/pull/330))
 
 ## 23.9.1
 

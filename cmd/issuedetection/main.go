@@ -2,10 +2,12 @@ package main
 
 import (
 	"errors"
+	"flag"
 	"fmt"
 	"io"
 	"io/fs"
 	"log"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"sync"
@@ -22,14 +24,20 @@ const (
 )
 
 func main() {
-	args := os.Args[1:]
-	if len(args) != 1 {
-		fmt.Println("./issuedetection <profiles directory>") // nolint
-		return
+	debug := flag.Bool("debug", false, "activate debug logs")
+	root := flag.String("path", ".", "path to a profile or a directory with profiles")
+
+	flag.Parse()
+
+	if *debug {
+		opts := slog.HandlerOptions{
+			Level: slog.LevelDebug,
+		}
+		handler := slog.NewTextHandler(os.Stdout, &opts)
+		slog.SetDefault(slog.New(handler))
 	}
 
-	root := args[0]
-	f, err := os.Open(root)
+	f, err := os.Open(*root)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -51,7 +59,7 @@ func main() {
 		go AnalyzeProfile(pathChannel, errChannel, &wg)
 	}
 
-	err = filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
+	err = filepath.WalkDir(*root, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}

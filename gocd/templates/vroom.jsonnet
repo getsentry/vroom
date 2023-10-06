@@ -4,12 +4,10 @@ local pipedream = import 'github.com/getsentry/gocd-jsonnet/libs/pipedream.libso
 local pipedream_config = {
   name: 'vroom',
   exclude_regions: [
-    's4s',
     'customer-1',
     'customer-2',
     'customer-3',
     'customer-4',
-    'customer-5',
     'customer-6',
   ],
   materials: {
@@ -24,6 +22,9 @@ local pipedream_config = {
     material_name: 'vroom_repo',
     stage: 'deploy-primary',
     elastic_profile_id: 'vroom',
+    // TODO: Remove the final_stage value once v2.3.1 a few goocd deploys are
+    // done with the pipeline-complete stage
+    final_stage: 'deploy-primary',
   },
 };
 
