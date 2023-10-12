@@ -283,6 +283,7 @@ var detectFrameJobs = map[platform.Platform][]DetectFrameOptions{
 					"JSONDecoder.decode<A>(_: A.Type, from: Any)":                                           JSONDecode,
 					"JSONDecoder.decode<A>(_: A.Type, from: Data)":                                          JSONDecode,
 					"JSONDecoder.decode<A>(_: A.Type, jsonData: Data, logErrors: Bool)":                     JSONDecode,
+					"-[_NSJSONReader parseData:options:error:]":                                             JSONEncode,
 					"JSONEncoder.encode<A>(A)":                                                              JSONEncode,
 					"NSFileManager.contents(atURL: URL)":                                                    FileRead,
 				},
