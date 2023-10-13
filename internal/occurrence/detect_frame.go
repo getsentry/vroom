@@ -360,6 +360,7 @@ var detectFrameJobs = map[platform.Platform][]DetectFrameOptions{
 					"ViewRendererHost.updateViewGraph<A>(body: (ViewGraph))":             ViewUpdate,
 				},
 				"UIKit": {
+					"-[_UIPathLazyImageAsset imageWithConfiguration:]": ImageDecode,
 					"-[UINib instantiateWithOwner:options:]": ViewInflation,
 				},
 			},
