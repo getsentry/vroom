@@ -361,7 +361,7 @@ var detectFrameJobs = map[platform.Platform][]DetectFrameOptions{
 				},
 				"UIKit": {
 					"-[_UIPathLazyImageAsset imageWithConfiguration:]": ImageDecode,
-					"-[UINib instantiateWithOwner:options:]": ViewInflation,
+					"-[UINib instantiateWithOwner:options:]":           ViewInflation,
 				},
 			},
 		},
