@@ -14,6 +14,7 @@
 - Enforce minimum frame duration for frame drop issue. ([#319](https://github.com/getsentry/vroom/pull/319))
 - Mark sentry frames as system frames when it's dynamically linked. ([#325](https://github.com/getsentry/vroom/pull/325))
 - Do not return an occurrence for unknown function or when the stack is filled with them. ([#328](https://github.com/getsentry/vroom/pull/328))
+- Add more Cocoa symbols for profiling issue detectors ([#336](https://github.com/getsentry/vroom/pull/336))
 
 **Internal**
 
