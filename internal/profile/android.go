@@ -200,7 +200,7 @@ func getAdjustedTime(maxSecs, latest, current uint64) uint64 {
 // Wall-clock time is supposed to be monotonic
 // in a few rare cases we've noticed this was not the case.
 // Due to some overflow happening client-side in the embedded
-// profile, the sequence might be decreasing at certain points.
+// profiler, the sequence might be decreasing at certain points.
 //
 // This is just a workaround to mitigate this issue, should it
 // happen.
