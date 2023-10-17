@@ -180,14 +180,14 @@ func (p Android) TimestampGetter() func(EventTime) uint64 {
 	return buildTimestamp
 }
 
-// maxSecs: the highest timestamp/secs in the sequence so far
+// maxTime: the highest time in the sequence so far
 // latest: the latest time value (at time t-1) before it was updated
 // current: current value (at time t) before it's updated
-func getAdjustedTime(maxSecs, latest, current uint64) uint64 {
-	if current < maxSecs && current < latest {
-		return maxSecs + 1
+func getAdjustedTime(maxTime, latest, current uint64) uint64 {
+	if current < maxTime && current < latest {
+		return maxTime + 1e9
 	}
-	return maxSecs + (current - latest)
+	return maxTime + (current - latest)
 }
 
 // Wall-clock time is supposed to be monotonic
@@ -201,27 +201,28 @@ func (p *Android) FixSamplesTime() {
 	if p.Clock == GlobalClock || p.Clock == CPUClock {
 		return
 	}
-	threadMaxSecs := make(map[uint64]uint64)
+	threadMaxTime := make(map[uint64]uint64)
 	threadLatestSampleTime := make(map[uint64]uint64)
 	var regression bool
 
 	for i, event := range p.Events {
-		current := event.Time.Monotonic.Wall.Secs
+		current := (event.Time.Monotonic.Wall.Secs * 1e9) + event.Time.Monotonic.Wall.Nanos
 		if current < threadLatestSampleTime[event.ThreadID] {
 			regression = true
 		}
 
 		if regression {
-			newSec := getAdjustedTime(threadMaxSecs[event.ThreadID], threadLatestSampleTime[event.ThreadID], current)
-			threadMaxSecs[event.ThreadID] = max(threadMaxSecs[event.ThreadID], newSec)
+			newTime := getAdjustedTime(threadMaxTime[event.ThreadID], threadLatestSampleTime[event.ThreadID], current)
+			threadMaxTime[event.ThreadID] = max(threadMaxTime[event.ThreadID], newTime)
 
 			threadLatestSampleTime[event.ThreadID] = current
-			p.Events[i].Time.Monotonic.Wall.Secs = newSec
+			p.Events[i].Time.Monotonic.Wall.Secs = (newTime / 1e9)
+			p.Events[i].Time.Monotonic.Wall.Nanos = (newTime % 1e9)
 			continue
 		}
 
 		threadLatestSampleTime[event.ThreadID] = current
-		threadMaxSecs[event.ThreadID] = max(threadMaxSecs[event.ThreadID], current)
+		threadMaxTime[event.ThreadID] = max(threadMaxTime[event.ThreadID], current)
 	}
 }
 

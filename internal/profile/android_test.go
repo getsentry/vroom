@@ -635,7 +635,7 @@ func TestFixSamplesTime(t *testing.T) {
 							Monotonic: EventMonotonic{
 								Wall: Duration{
 									Secs:  8,
-									Nanos: 3000,
+									Nanos: 2000,
 								},
 							},
 						},
@@ -648,7 +648,7 @@ func TestFixSamplesTime(t *testing.T) {
 							Monotonic: EventMonotonic{
 								Wall: Duration{
 									Secs:  8,
-									Nanos: 3000,
+									Nanos: 2000,
 								},
 							},
 						},
@@ -661,7 +661,7 @@ func TestFixSamplesTime(t *testing.T) {
 							Monotonic: EventMonotonic{
 								Wall: Duration{
 									Secs:  11,
-									Nanos: 3000,
+									Nanos: 2000,
 								},
 							},
 						},
