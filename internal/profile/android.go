@@ -187,12 +187,12 @@ func uint64Max(a, b uint64) uint64 {
 	return b
 }
 
+// maxSecs: the highest timestamp/secs in the sequence so far
+// latest: the latest time value (at time t-1) before it was updated
+// current: current value (at time t) before it's updated
 func getAdjustedTime(maxSecs, latest, current uint64) uint64 {
-	if current < maxSecs {
-		if current < latest {
-			return maxSecs + 1
-		}
-		return maxSecs + (current - latest)
+	if current < maxSecs && current < latest {
+		return maxSecs + 1
 	}
 	return maxSecs + (current - latest)
 }
