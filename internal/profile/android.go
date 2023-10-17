@@ -205,6 +205,9 @@ func getAdjustedTime(maxSecs, latest, current uint64) uint64 {
 // This is just a workaround to mitigate this issue, should it
 // happen.
 func (p *Android) FixSamplesTime() {
+	if p.Clock == GlobalClock || p.Clock == CPUClock {
+		return
+	}
 	threadMaxSecs := make(map[uint64]uint64)
 	threadLatestSampleTime := make(map[uint64]uint64)
 	var regression bool
