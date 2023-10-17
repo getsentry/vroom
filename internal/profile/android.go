@@ -203,21 +203,19 @@ func (p *Android) FixSamplesTime() {
 	}
 	threadMaxTimeNs := make(map[uint64]uint64)
 	threadLatestSampleTimeNs := make(map[uint64]uint64)
-	regression := false
-	regressionIndex := 0
+	regressionIndex := -1
 
 	for i, event := range p.Events {
 		current := (event.Time.Monotonic.Wall.Secs * 1e9) + event.Time.Monotonic.Wall.Nanos
 		if current < threadLatestSampleTimeNs[event.ThreadID] {
 			regressionIndex = i
-			regression = true
 			break
 		}
 		threadLatestSampleTimeNs[event.ThreadID] = current
 		threadMaxTimeNs[event.ThreadID] = max(threadMaxTimeNs[event.ThreadID], current)
 	}
 
-	if regression {
+	if regressionIndex > 0 {
 		for i := regressionIndex; i < len(p.Events); i++ {
 			event := p.Events[i]
 			current := (event.Time.Monotonic.Wall.Secs * 1e9) + event.Time.Monotonic.Wall.Nanos
