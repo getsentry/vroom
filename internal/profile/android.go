@@ -180,14 +180,14 @@ func (p Android) TimestampGetter() func(EventTime) uint64 {
 	return buildTimestamp
 }
 
-// maxTime: the highest time in the sequence so far
-// latest: the latest time value (at time t-1) before it was updated
-// current: current value (at time t) before it's updated
-func getAdjustedTime(maxTime, latest, current uint64) uint64 {
-	if current < maxTime && current < latest {
-		return maxTime + 1e9
+// maxTimeNs: the highest time (in nanoseconds) in the sequence so far
+// latestNs: the latest time value in ns (at time t-1) before it was updated
+// currentNs: current value in ns (at time t) before it's updated.
+func getAdjustedTime(maxTimeNs, latestNs, currentNs uint64) uint64 {
+	if currentNs < maxTimeNs && currentNs < latestNs {
+		return maxTimeNs + 1e9
 	}
-	return maxTime + (current - latest)
+	return maxTimeNs + (currentNs - latestNs)
 }
 
 // Wall-clock time is supposed to be monotonic
@@ -201,28 +201,28 @@ func (p *Android) FixSamplesTime() {
 	if p.Clock == GlobalClock || p.Clock == CPUClock {
 		return
 	}
-	threadMaxTime := make(map[uint64]uint64)
-	threadLatestSampleTime := make(map[uint64]uint64)
+	threadMaxTimeNs := make(map[uint64]uint64)
+	threadLatestSampleTimeNs := make(map[uint64]uint64)
 	var regression bool
 
 	for i, event := range p.Events {
 		current := (event.Time.Monotonic.Wall.Secs * 1e9) + event.Time.Monotonic.Wall.Nanos
-		if current < threadLatestSampleTime[event.ThreadID] {
+		if current < threadLatestSampleTimeNs[event.ThreadID] {
 			regression = true
 		}
 
 		if regression {
-			newTime := getAdjustedTime(threadMaxTime[event.ThreadID], threadLatestSampleTime[event.ThreadID], current)
-			threadMaxTime[event.ThreadID] = max(threadMaxTime[event.ThreadID], newTime)
+			newTime := getAdjustedTime(threadMaxTimeNs[event.ThreadID], threadLatestSampleTimeNs[event.ThreadID], current)
+			threadMaxTimeNs[event.ThreadID] = max(threadMaxTimeNs[event.ThreadID], newTime)
 
-			threadLatestSampleTime[event.ThreadID] = current
+			threadLatestSampleTimeNs[event.ThreadID] = current
 			p.Events[i].Time.Monotonic.Wall.Secs = (newTime / 1e9)
 			p.Events[i].Time.Monotonic.Wall.Nanos = (newTime % 1e9)
 			continue
 		}
 
-		threadLatestSampleTime[event.ThreadID] = current
-		threadMaxTime[event.ThreadID] = max(threadMaxTime[event.ThreadID], current)
+		threadLatestSampleTimeNs[event.ThreadID] = current
+		threadMaxTimeNs[event.ThreadID] = max(threadMaxTimeNs[event.ThreadID], current)
 	}
 }
 
