@@ -197,6 +197,13 @@ func getAdjustedTime(maxSecs, latest, current uint64) uint64 {
 	return maxSecs + (current - latest)
 }
 
+// Wall-clock time is supposed to be monotonic
+// in a few rare cases we've noticed this was not the case.
+// Due to some overflow happening client-side in the embedded
+// profile, the sequence might be decreasing at certain points.
+//
+// This is just a workaround to mitigate this issue, should it
+// happen.
 func (p *Android) FixSamplesTime() {
 	threadMaxSecs := make(map[uint64]uint64)
 	threadLatest := make(map[uint64]uint64)
@@ -224,6 +231,8 @@ func (p *Android) FixSamplesTime() {
 
 // CallTrees generates call trees for a given profile.
 func (p Android) CallTrees() map[uint64][]*nodetree.Node {
+	// in case wall-clock.secs is not monotonic, "fix" it
+	p.FixSamplesTime()
 	var activeThreadID uint64
 	for _, thread := range p.Threads {
 		if thread.Name == mainThread {
@@ -362,6 +371,8 @@ func (p *Android) NormalizeMethods(pi profileInterface) {
 }
 
 func (p Android) Speedscope() (speedscope.Output, error) {
+	// in case wall-clock.secs is not monotonic, "fix" it
+	p.FixSamplesTime()
 	frames := make([]speedscope.Frame, 0)
 	methodIDToFrameIndex := make(map[uint64][]int)
 	for _, method := range p.Methods {
