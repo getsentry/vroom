@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+**Features**
+
+
+**Bug Fixes**
+- Turn non-monotonic samples wall-clock time into monotonic. ([#337](https://github.com/getsentry/vroom/pull/337))
+
+**Internal**
+
+
 ## 23.10.0
 
 **Features**
