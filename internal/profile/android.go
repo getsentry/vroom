@@ -206,25 +206,25 @@ func getAdjustedTime(maxSecs, latest, current uint64) uint64 {
 // happen.
 func (p *Android) FixSamplesTime() {
 	threadMaxSecs := make(map[uint64]uint64)
-	threadLatest := make(map[uint64]uint64)
+	threadLatestSampleTime := make(map[uint64]uint64)
 	var regression bool
 
 	for i, event := range p.Events {
 		current := event.Time.Monotonic.Wall.Secs
-		if current < threadLatest[event.ThreadID] {
+		if current < threadLatestSampleTime[event.ThreadID] {
 			regression = true
 		}
 
 		if regression {
-			newSec := getAdjustedTime(threadMaxSecs[event.ThreadID], threadLatest[event.ThreadID], current)
+			newSec := getAdjustedTime(threadMaxSecs[event.ThreadID], threadLatestSampleTime[event.ThreadID], current)
 			threadMaxSecs[event.ThreadID] = uint64Max(threadMaxSecs[event.ThreadID], newSec)
 
-			threadLatest[event.ThreadID] = current
+			threadLatestSampleTime[event.ThreadID] = current
 			p.Events[i].Time.Monotonic.Wall.Secs = newSec
 			continue
 		}
 
-		threadLatest[event.ThreadID] = current
+		threadLatestSampleTime[event.ThreadID] = current
 		threadMaxSecs[event.ThreadID] = uint64Max(threadMaxSecs[event.ThreadID], current)
 	}
 }
