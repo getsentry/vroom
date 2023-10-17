@@ -291,12 +291,68 @@ var (
 					},
 				},
 			},
+			{
+				Action:   "Enter",
+				ThreadID: 2,
+				MethodID: 1,
+				Time: EventTime{
+					Monotonic: EventMonotonic{
+						Wall: Duration{
+							Secs:  1,
+							Nanos: 3000,
+						},
+					},
+				},
+			},
+			{
+				Action:   "Enter",
+				ThreadID: 2,
+				MethodID: 2,
+				Time: EventTime{
+					Monotonic: EventMonotonic{
+						Wall: Duration{
+							Secs:  2,
+							Nanos: 3000,
+						},
+					},
+				},
+			},
+			{
+				Action:   "Exit",
+				ThreadID: 2,
+				MethodID: 2,
+				Time: EventTime{
+					Monotonic: EventMonotonic{
+						Wall: Duration{
+							Secs:  2,
+							Nanos: 3000,
+						},
+					},
+				},
+			},
+			{
+				Action:   "Exit",
+				ThreadID: 2,
+				MethodID: 1,
+				Time: EventTime{
+					Monotonic: EventMonotonic{
+						Wall: Duration{
+							Secs:  3,
+							Nanos: 3000,
+						},
+					},
+				},
+			},
 		},
 		StartTime: 398635355383000,
 		Threads: []AndroidThread{
 			{
 				ID:   1,
 				Name: "main",
+			},
+			{
+				ID:   2,
+				Name: "background",
 			},
 		},
 	}
@@ -610,12 +666,68 @@ func TestFixSamplesTime(t *testing.T) {
 							},
 						},
 					},
+					{
+						Action:   "Enter",
+						ThreadID: 2,
+						MethodID: 1,
+						Time: EventTime{
+							Monotonic: EventMonotonic{
+								Wall: Duration{
+									Secs:  1,
+									Nanos: 3000,
+								},
+							},
+						},
+					},
+					{
+						Action:   "Enter",
+						ThreadID: 2,
+						MethodID: 2,
+						Time: EventTime{
+							Monotonic: EventMonotonic{
+								Wall: Duration{
+									Secs:  2,
+									Nanos: 3000,
+								},
+							},
+						},
+					},
+					{
+						Action:   "Exit",
+						ThreadID: 2,
+						MethodID: 2,
+						Time: EventTime{
+							Monotonic: EventMonotonic{
+								Wall: Duration{
+									Secs:  2,
+									Nanos: 3000,
+								},
+							},
+						},
+					},
+					{
+						Action:   "Exit",
+						ThreadID: 2,
+						MethodID: 1,
+						Time: EventTime{
+							Monotonic: EventMonotonic{
+								Wall: Duration{
+									Secs:  3,
+									Nanos: 3000,
+								},
+							},
+						},
+					},
 				},
 				StartTime: 398635355383000,
 				Threads: []AndroidThread{
 					{
 						ID:   1,
 						Name: "main",
+					},
+					{
+						ID:   2,
+						Name: "background",
 					},
 				},
 			},
