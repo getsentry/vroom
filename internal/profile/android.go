@@ -180,6 +180,48 @@ func (p Android) TimestampGetter() func(EventTime) uint64 {
 	return buildTimestamp
 }
 
+func uint64Max(a, b uint64) uint64 {
+	if a > b {
+		return a
+	}
+	return b
+}
+
+func getAdjustedTime(maxSecs, latest, current uint64) uint64 {
+	if current < maxSecs {
+		if current < latest {
+			return maxSecs + 1
+		}
+		return maxSecs + (current - latest)
+	}
+	return maxSecs + (current - latest)
+}
+
+func (p *Android) FixSamplesTime() {
+	threadMaxSecs := make(map[uint64]uint64)
+	threadLatest := make(map[uint64]uint64)
+	var regression bool
+
+	for i, event := range p.Events {
+		current := event.Time.Monotonic.Wall.Secs
+		if current < threadLatest[event.ThreadID] {
+			regression = true
+		}
+
+		if regression {
+			newSec := getAdjustedTime(threadMaxSecs[event.ThreadID], threadLatest[event.ThreadID], current)
+			threadMaxSecs[event.ThreadID] = uint64Max(threadMaxSecs[event.ThreadID], newSec)
+
+			threadLatest[event.ThreadID] = current
+			p.Events[i].Time.Monotonic.Wall.Secs = newSec
+			continue
+		}
+
+		threadLatest[event.ThreadID] = current
+		threadMaxSecs[event.ThreadID] = uint64Max(threadMaxSecs[event.ThreadID], current)
+	}
+}
+
 // CallTrees generates call trees for a given profile.
 func (p Android) CallTrees() map[uint64][]*nodetree.Node {
 	var activeThreadID uint64
