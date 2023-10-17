@@ -234,8 +234,6 @@ func (p *Android) FixSamplesTime() {
 
 // CallTrees generates call trees for a given profile.
 func (p Android) CallTrees() map[uint64][]*nodetree.Node {
-	// in case wall-clock.secs is not monotonic, "fix" it
-	p.FixSamplesTime()
 	var activeThreadID uint64
 	for _, thread := range p.Threads {
 		if thread.Name == mainThread {
@@ -374,8 +372,6 @@ func (p *Android) NormalizeMethods(pi profileInterface) {
 }
 
 func (p Android) Speedscope() (speedscope.Output, error) {
-	// in case wall-clock.secs is not monotonic, "fix" it
-	p.FixSamplesTime()
 	frames := make([]speedscope.Frame, 0)
 	methodIDToFrameIndex := make(map[uint64][]int)
 	for _, method := range p.Methods {
