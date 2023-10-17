@@ -180,13 +180,6 @@ func (p Android) TimestampGetter() func(EventTime) uint64 {
 	return buildTimestamp
 }
 
-func uint64Max(a, b uint64) uint64 {
-	if a > b {
-		return a
-	}
-	return b
-}
-
 // maxSecs: the highest timestamp/secs in the sequence so far
 // latest: the latest time value (at time t-1) before it was updated
 // current: current value (at time t) before it's updated
@@ -220,7 +213,7 @@ func (p *Android) FixSamplesTime() {
 
 		if regression {
 			newSec := getAdjustedTime(threadMaxSecs[event.ThreadID], threadLatestSampleTime[event.ThreadID], current)
-			threadMaxSecs[event.ThreadID] = uint64Max(threadMaxSecs[event.ThreadID], newSec)
+			threadMaxSecs[event.ThreadID] = max(threadMaxSecs[event.ThreadID], newSec)
 
 			threadLatestSampleTime[event.ThreadID] = current
 			p.Events[i].Time.Monotonic.Wall.Secs = newSec
@@ -228,7 +221,7 @@ func (p *Android) FixSamplesTime() {
 		}
 
 		threadLatestSampleTime[event.ThreadID] = current
-		threadMaxSecs[event.ThreadID] = uint64Max(threadMaxSecs[event.ThreadID], current)
+		threadMaxSecs[event.ThreadID] = max(threadMaxSecs[event.ThreadID], current)
 	}
 }
 
