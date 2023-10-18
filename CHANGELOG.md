@@ -4,14 +4,15 @@
 
 **Features**
 
+- Update base Docker image to Debian 12. ([#340](https://github.com/getsentry/vroom/pull/340))
 
 **Bug Fixes**
+
 - Turn non-monotonic samples wall-clock time into monotonic. ([#337](https://github.com/getsentry/vroom/pull/337))
 
 **Internal**
 
 - Move FixSamplesTime call to speedscope and calltrees methods([#339](https://github.com/getsentry/vroom/pull/339))
-
 
 ## 23.10.0
 
