@@ -180,6 +180,56 @@ func (p Android) TimestampGetter() func(EventTime) uint64 {
 	return buildTimestamp
 }
 
+// maxTimeNs: the highest time (in nanoseconds) in the sequence so far
+// latestNs: the latest time value in ns (at time t-1) before it was updated
+// currentNs: current value in ns (at time t) before it's updated.
+func getAdjustedTime(maxTimeNs, latestNs, currentNs uint64) uint64 {
+	if currentNs < maxTimeNs && currentNs < latestNs {
+		return maxTimeNs + 1e9
+	}
+	return maxTimeNs + (currentNs - latestNs)
+}
+
+// Wall-clock time is supposed to be monotonic
+// in a few rare cases we've noticed this was not the case.
+// Due to some overflow happening client-side in the embedded
+// profiler, the sequence might be decreasing at certain points.
+//
+// This is just a workaround to mitigate this issue, should it
+// happen.
+func (p *Android) FixSamplesTime() {
+	if p.Clock == GlobalClock || p.Clock == CPUClock {
+		return
+	}
+	threadMaxTimeNs := make(map[uint64]uint64)
+	threadLatestSampleTimeNs := make(map[uint64]uint64)
+	regressionIndex := -1
+
+	for i, event := range p.Events {
+		current := (event.Time.Monotonic.Wall.Secs * 1e9) + event.Time.Monotonic.Wall.Nanos
+		if current < threadLatestSampleTimeNs[event.ThreadID] {
+			regressionIndex = i
+			break
+		}
+		threadLatestSampleTimeNs[event.ThreadID] = current
+		threadMaxTimeNs[event.ThreadID] = max(threadMaxTimeNs[event.ThreadID], current)
+	}
+
+	if regressionIndex > 0 {
+		for i := regressionIndex; i < len(p.Events); i++ {
+			event := p.Events[i]
+			current := (event.Time.Monotonic.Wall.Secs * 1e9) + event.Time.Monotonic.Wall.Nanos
+
+			newTime := getAdjustedTime(threadMaxTimeNs[event.ThreadID], threadLatestSampleTimeNs[event.ThreadID], current)
+			threadMaxTimeNs[event.ThreadID] = max(threadMaxTimeNs[event.ThreadID], newTime)
+
+			threadLatestSampleTimeNs[event.ThreadID] = current
+			p.Events[i].Time.Monotonic.Wall.Secs = (newTime / 1e9)
+			p.Events[i].Time.Monotonic.Wall.Nanos = (newTime % 1e9)
+		}
+	}
+}
+
 // CallTrees generates call trees for a given profile.
 func (p Android) CallTrees() map[uint64][]*nodetree.Node {
 	var activeThreadID uint64

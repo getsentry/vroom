@@ -209,6 +209,153 @@ var (
 			},
 		},
 	}
+
+	nonMonotonicTrace = Android{
+		Clock: "Dual",
+		Events: []AndroidEvent{
+			{
+				Action:   "Enter",
+				ThreadID: 1,
+				MethodID: 1,
+				Time: EventTime{
+					Monotonic: EventMonotonic{
+						Wall: Duration{
+							Secs:  1,
+							Nanos: 1000,
+						},
+					},
+				},
+			},
+			{
+				Action:   "Enter",
+				ThreadID: 1,
+				MethodID: 2,
+				Time: EventTime{
+					Monotonic: EventMonotonic{
+						Wall: Duration{
+							Secs:  2,
+							Nanos: 1000,
+						},
+					},
+				},
+			},
+			{
+				Action:   "Enter",
+				ThreadID: 1,
+				MethodID: 3,
+				Time: EventTime{
+					Monotonic: EventMonotonic{
+						Wall: Duration{
+							Secs:  7,
+							Nanos: 2000,
+						},
+					},
+				},
+			},
+			{
+				Action:   "Exit",
+				ThreadID: 1,
+				MethodID: 3,
+				Time: EventTime{
+					Monotonic: EventMonotonic{
+						Wall: Duration{
+							Secs:  6,
+							Nanos: 3000,
+						},
+					},
+				},
+			},
+			{
+				Action:   "Exit",
+				ThreadID: 1,
+				MethodID: 2,
+				Time: EventTime{
+					Monotonic: EventMonotonic{
+						Wall: Duration{
+							Secs:  6,
+							Nanos: 3000,
+						},
+					},
+				},
+			},
+			{
+				Action:   "Exit",
+				ThreadID: 1,
+				MethodID: 1,
+				Time: EventTime{
+					Monotonic: EventMonotonic{
+						Wall: Duration{
+							Secs:  9,
+							Nanos: 3000,
+						},
+					},
+				},
+			},
+			{
+				Action:   "Enter",
+				ThreadID: 2,
+				MethodID: 1,
+				Time: EventTime{
+					Monotonic: EventMonotonic{
+						Wall: Duration{
+							Secs:  1,
+							Nanos: 3000,
+						},
+					},
+				},
+			},
+			{
+				Action:   "Enter",
+				ThreadID: 2,
+				MethodID: 2,
+				Time: EventTime{
+					Monotonic: EventMonotonic{
+						Wall: Duration{
+							Secs:  2,
+							Nanos: 3000,
+						},
+					},
+				},
+			},
+			{
+				Action:   "Exit",
+				ThreadID: 2,
+				MethodID: 2,
+				Time: EventTime{
+					Monotonic: EventMonotonic{
+						Wall: Duration{
+							Secs:  2,
+							Nanos: 3000,
+						},
+					},
+				},
+			},
+			{
+				Action:   "Exit",
+				ThreadID: 2,
+				MethodID: 1,
+				Time: EventTime{
+					Monotonic: EventMonotonic{
+						Wall: Duration{
+							Secs:  3,
+							Nanos: 3000,
+						},
+					},
+				},
+			},
+		},
+		StartTime: 398635355383000,
+		Threads: []AndroidThread{
+			{
+				ID:   1,
+				Name: "main",
+			},
+			{
+				ID:   2,
+				Name: "background",
+			},
+		},
+	}
 )
 
 func TestSpeedscope(t *testing.T) {
@@ -423,6 +570,174 @@ func TestCallTrees(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			if diff := testutil.Diff(test.trace.CallTrees(), test.want, options); diff != "" {
+				t.Fatalf("Result mismatch: got - want +\n%s", diff)
+			}
+		})
+	}
+}
+
+func TestFixSamplesTime(t *testing.T) {
+	tests := []struct {
+		name  string
+		trace Android
+		want  Android
+	}{
+		{
+			name:  "Make sample secs monotonic",
+			trace: nonMonotonicTrace,
+			want: Android{
+				Clock: "Dual",
+				Events: []AndroidEvent{
+					{
+						Action:   "Enter",
+						ThreadID: 1,
+						MethodID: 1,
+						Time: EventTime{
+							Monotonic: EventMonotonic{
+								Wall: Duration{
+									Secs:  1,
+									Nanos: 1000,
+								},
+							},
+						},
+					},
+					{
+						Action:   "Enter",
+						ThreadID: 1,
+						MethodID: 2,
+						Time: EventTime{
+							Monotonic: EventMonotonic{
+								Wall: Duration{
+									Secs:  2,
+									Nanos: 1000,
+								},
+							},
+						},
+					},
+					{
+						Action:   "Enter",
+						ThreadID: 1,
+						MethodID: 3,
+						Time: EventTime{
+							Monotonic: EventMonotonic{
+								Wall: Duration{
+									Secs:  7,
+									Nanos: 2000,
+								},
+							},
+						},
+					},
+					{
+						Action:   "Exit",
+						ThreadID: 1,
+						MethodID: 3,
+						Time: EventTime{
+							Monotonic: EventMonotonic{
+								Wall: Duration{
+									Secs:  8,
+									Nanos: 2000,
+								},
+							},
+						},
+					},
+					{
+						Action:   "Exit",
+						ThreadID: 1,
+						MethodID: 2,
+						Time: EventTime{
+							Monotonic: EventMonotonic{
+								Wall: Duration{
+									Secs:  8,
+									Nanos: 2000,
+								},
+							},
+						},
+					},
+					{
+						Action:   "Exit",
+						ThreadID: 1,
+						MethodID: 1,
+						Time: EventTime{
+							Monotonic: EventMonotonic{
+								Wall: Duration{
+									Secs:  11,
+									Nanos: 2000,
+								},
+							},
+						},
+					},
+					{
+						Action:   "Enter",
+						ThreadID: 2,
+						MethodID: 1,
+						Time: EventTime{
+							Monotonic: EventMonotonic{
+								Wall: Duration{
+									Secs:  1,
+									Nanos: 3000,
+								},
+							},
+						},
+					},
+					{
+						Action:   "Enter",
+						ThreadID: 2,
+						MethodID: 2,
+						Time: EventTime{
+							Monotonic: EventMonotonic{
+								Wall: Duration{
+									Secs:  2,
+									Nanos: 3000,
+								},
+							},
+						},
+					},
+					{
+						Action:   "Exit",
+						ThreadID: 2,
+						MethodID: 2,
+						Time: EventTime{
+							Monotonic: EventMonotonic{
+								Wall: Duration{
+									Secs:  2,
+									Nanos: 3000,
+								},
+							},
+						},
+					},
+					{
+						Action:   "Exit",
+						ThreadID: 2,
+						MethodID: 1,
+						Time: EventTime{
+							Monotonic: EventMonotonic{
+								Wall: Duration{
+									Secs:  3,
+									Nanos: 3000,
+								},
+							},
+						},
+					},
+				},
+				StartTime: 398635355383000,
+				Threads: []AndroidThread{
+					{
+						ID:   1,
+						Name: "main",
+					},
+					{
+						ID:   2,
+						Name: "background",
+					},
+				},
+			},
+		},
+	} // end tests
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			test.trace.FixSamplesTime()
+			if diff := testutil.Diff(test.trace, test.want); diff != "" {
 				t.Fatalf("Result mismatch: got - want +\n%s", diff)
 			}
 		})

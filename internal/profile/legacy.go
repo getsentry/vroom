@@ -239,6 +239,8 @@ func (p *LegacyProfile) Normalize() {
 		t.ReplaceIdleStacks()
 	case *Android:
 		t.NormalizeMethods(p)
+		// in case wall-clock.secs is not monotonic, "fix" it
+		t.FixSamplesTime()
 	}
 
 	if p.BuildID != "" {
