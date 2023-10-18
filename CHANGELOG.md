@@ -10,6 +10,8 @@
 
 **Internal**
 
+- Move FixSamplesTime call to speedscope and calltrees methods([#339](https://github.com/getsentry/vroom/pull/339))
+
 
 ## 23.10.0
 
