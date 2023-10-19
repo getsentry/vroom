@@ -12,6 +12,8 @@
 
 **Internal**
 
+- Bump trufflesecurity/trufflehog from 3.16.4 to 3.60.1. ([#343](https://github.com/getsentry/vroom/pull/343))
+
 - Move FixSamplesTime call to speedscope and calltrees methods([#339](https://github.com/getsentry/vroom/pull/339))
 
 ## 23.10.0
