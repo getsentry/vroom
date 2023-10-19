@@ -12,6 +12,8 @@
 
 **Internal**
 
+- Remove iOS legacy profile support. ([#296](https://github.com/getsentry/vroom/pull/296))
+
 - Bump golang.org/x/net from 0.8.0 to 0.17.0 ([#335](https://github.com/getsentry/vroom/pull/335))
 
 - Bump actions/github-script from 6.3.3 to 6.4.1 ([#342](https://github.com/getsentry/vroom/pull/342))
