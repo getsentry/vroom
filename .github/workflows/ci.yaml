@@ -23,7 +23,7 @@ jobs:
   trufflehog:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         fetch-depth: 0
     - name: TruffleHog OSS
@@ -37,7 +37,7 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         fetch-depth: 0
     - uses: actions/setup-go@v4
@@ -54,7 +54,7 @@ jobs:
   test-vroom:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         fetch-depth: 0
     - uses: actions/setup-go@v4
@@ -68,7 +68,7 @@ jobs:
     runs-on: ubuntu-20.04
     if: ${{ (github.ref_name == 'main') }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - timeout-minutes: 20
         run: until docker pull "us.gcr.io/sentryio/vroom:${{ github.sha }}" 2>/dev/null; do sleep 10; done
       - name: Push built docker image
