@@ -9,6 +9,7 @@
 **Bug Fixes**
 
 - Turn non-monotonic samples wall-clock time into monotonic. ([#337](https://github.com/getsentry/vroom/pull/337))
+- Classify browser extension paths as system frames. ([#344](https://github.com/getsentry/vroom/pull/344))
 
 **Internal**
 
