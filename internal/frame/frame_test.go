@@ -181,6 +181,46 @@ func TestIsNodeApplicationFrame(t *testing.T) {
 			},
 			isApplication: false,
 		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if isApplication := tt.frame.IsNodeApplicationFrame(); isApplication != tt.isApplication {
+				t.Fatalf(
+					"Expected %s frame but got %s frame",
+					frameType(tt.isApplication),
+					frameType(isApplication),
+				)
+			}
+		})
+	}
+}
+
+func TestIsJavaScriptApplicationFrame(t *testing.T) {
+	tests := []struct {
+		name          string
+		frame         Frame
+		isApplication bool
+	}{
+		{
+			name:          "empty",
+			frame:         Frame{},
+			isApplication: true,
+		},
+		{
+			name: "app",
+			frame: Frame{
+				Path: "/home/user/app/app.js",
+			},
+			isApplication: true,
+		},
+		{
+			name: "node_modules",
+			frame: Frame{
+				Path: "/home/user/app/node_modules/express/lib/express.js",
+			},
+			isApplication: false,
+		},
 		{
 			name: "app",
 			frame: Frame{
@@ -199,7 +239,7 @@ func TestIsNodeApplicationFrame(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if isApplication := tt.frame.IsNodeApplicationFrame(); isApplication != tt.isApplication {
+			if isApplication := tt.frame.IsJavaScriptApplicationFrame(); isApplication != tt.isApplication {
 				t.Fatalf(
 					"Expected %s frame but got %s frame",
 					frameType(tt.isApplication),

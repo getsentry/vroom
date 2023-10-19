@@ -403,6 +403,8 @@ func (p *Profile) IsApplicationFrame(f frame.Frame) bool {
 	switch p.Platform {
 	case platform.Node:
 		return f.IsNodeApplicationFrame()
+	case platform.JavaScript:
+		return f.IsJavaScriptApplicationFrame()
 	case platform.Cocoa:
 		return f.IsCocoaApplicationFrame()
 	case platform.Rust:
