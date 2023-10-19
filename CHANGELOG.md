@@ -12,6 +12,8 @@
 
 **Internal**
 
+- Bump actions/github-script from 6.3.3 to 6.4.1 ([#342](https://github.com/getsentry/vroom/pull/342))
+
 - Bump actions/checkout from 3 to 4. ([#341](https://github.com/getsentry/vroom/pull/341))
 
 - Bump trufflesecurity/trufflehog from 3.16.4 to 3.60.1. ([#343](https://github.com/getsentry/vroom/pull/343))
