@@ -14,9 +14,10 @@ import (
 )
 
 var (
-	windowsPathRegex      = regexp.MustCompile(`(?i)^([a-z]:\\|\\\\)`)
-	packageExtensionRegex = regexp.MustCompile(`\.(dylib|so|a|dll|exe)$`)
-	cocoaSystemPackage    = map[string]struct{}{
+	windowsPathRegex            = regexp.MustCompile(`(?i)^([a-z]:\\|\\\\)`)
+	packageExtensionRegex       = regexp.MustCompile(`\.(dylib|so|a|dll|exe)$`)
+	nodeSystemPackagePathRegexp = regexp.MustCompile(`node_modules|^(@moz-extension|chrome-extension)`)
+	cocoaSystemPackage          = map[string]struct{}{
 		"Sentry": {},
 	}
 )
@@ -152,13 +153,12 @@ func (f Frame) IsInline() bool {
 	return f.Status == "symbolicated" && f.SymAddr == ""
 }
 
-var isNodeSystemFrame = regexp.MustCompile(`node_modules|^(@moz-extension|chrome-extension)`);
 func (f Frame) IsNodeApplicationFrame() bool {
 	if len(f.Path) == 0 {
-		return true;
+		return true
 	}
 
-	return !strings.HasPrefix(f.Path, "node:internal") && !isNodeSystemFrame.MatchString(f.Path);
+	return !strings.HasPrefix(f.Path, "node:internal") && !nodeSystemPackagePathRegexp.MatchString(f.Path)
 }
 
 func (f Frame) IsCocoaApplicationFrame() bool {
