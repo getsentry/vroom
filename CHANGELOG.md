@@ -12,6 +12,8 @@
 
 **Internal**
 
+- Bump actions/checkout from 3 to 4. ([#341](https://github.com/getsentry/vroom/pull/341))
+
 - Bump trufflesecurity/trufflehog from 3.16.4 to 3.60.1. ([#343](https://github.com/getsentry/vroom/pull/343))
 
 - Move FixSamplesTime call to speedscope and calltrees methods([#339](https://github.com/getsentry/vroom/pull/339))
