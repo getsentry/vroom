@@ -181,6 +181,20 @@ func TestIsNodeApplicationFrame(t *testing.T) {
 			},
 			isApplication: false,
 		},
+		{
+			name: "app",
+			frame: Frame{
+				Path: "@moz-extension://00000000-0000-0000-0000-000000000000/app.js",
+			},
+			isApplication: false,
+		},
+		{
+			name: "app",
+			frame: Frame{
+				Path: "chrome-extension://00000000-0000-0000-0000-000000000000/app.js",
+			},
+			isApplication: false,
+		},
 	}
 
 	for _, tt := range tests {

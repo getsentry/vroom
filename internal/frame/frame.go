@@ -152,8 +152,13 @@ func (f Frame) IsInline() bool {
 	return f.Status == "symbolicated" && f.SymAddr == ""
 }
 
+var isNodeSystemFrame = regexp.MustCompile(`node_modules|^(@moz-extension|chrome-extension)`);
 func (f Frame) IsNodeApplicationFrame() bool {
-	return !strings.HasPrefix(f.Path, "node:internal") && !strings.Contains(f.Path, "node_modules")
+	if len(f.Path) == 0 {
+		return true;
+	}
+
+	return !strings.HasPrefix(f.Path, "node:internal") && !isNodeSystemFrame.MatchString(f.Path);
 }
 
 func (f Frame) IsCocoaApplicationFrame() bool {
