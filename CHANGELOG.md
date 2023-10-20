@@ -14,13 +14,15 @@
 
 - Bump golang.org/x/net from 0.8.0 to 0.17.0 ([#335](https://github.com/getsentry/vroom/pull/335))
 
-- Bump actions/github-script from 6.3.3 to 6.4.1 ([#342](https://github.com/getsentry/vroom/pull/342))
+- Move FixSamplesTime call to speedscope and calltrees methods([#339](https://github.com/getsentry/vroom/pull/339))
 
 - Bump actions/checkout from 3 to 4. ([#341](https://github.com/getsentry/vroom/pull/341))
 
+- Bump actions/github-script from 6.3.3 to 6.4.1 ([#342](https://github.com/getsentry/vroom/pull/342))
+
 - Bump trufflesecurity/trufflehog from 3.16.4 to 3.60.1. ([#343](https://github.com/getsentry/vroom/pull/343))
 
-- Move FixSamplesTime call to speedscope and calltrees methods([#339](https://github.com/getsentry/vroom/pull/339))
+- Bump actions/checkout from 3 to 4. ([#345](https://github.com/getsentry/vroom/pull/345))
 
 ## 23.10.0
 
