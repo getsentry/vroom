@@ -13,6 +13,8 @@
 
 **Internal**
 
+- Remove iOS legacy profile support. ([#296](https://github.com/getsentry/vroom/pull/296))
+
 - Bump golang.org/x/net from 0.8.0 to 0.17.0 ([#335](https://github.com/getsentry/vroom/pull/335))
 
 - Move FixSamplesTime call to speedscope and calltrees methods([#339](https://github.com/getsentry/vroom/pull/339))
