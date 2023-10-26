@@ -7,6 +7,7 @@
 - Remove iOS legacy profile support. ([#296](https://github.com/getsentry/vroom/pull/296))
 - Bump trufflesecurity/trufflehog from 3.60.1 to 3.60.2 ([#347](https://github.com/getsentry/vroom/pull/347))
 - Bump trufflesecurity/trufflehog from 3.60.2 to 3.60.3 ([#348](https://github.com/getsentry/vroom/pull/348))
+- Bump google.golang.org/grpc from 1.53.0 to 1.56.3 ([#349](https://github.com/getsentry/vroom/pull/349))
 
 ## 23.10.1
 
