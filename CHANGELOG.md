@@ -6,6 +6,7 @@
 
 - Remove iOS legacy profile support. ([#296](https://github.com/getsentry/vroom/pull/296))
 - Bump trufflesecurity/trufflehog from 3.60.1 to 3.60.2 ([#347](https://github.com/getsentry/vroom/pull/347))
+- Bump trufflesecurity/trufflehog from 3.60.2 to 3.60.3 ([#348](https://github.com/getsentry/vroom/pull/348))
 
 ## 23.10.1
 
