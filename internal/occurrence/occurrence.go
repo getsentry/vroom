@@ -22,6 +22,7 @@ type (
 	IssueTitle   string
 	Type         int
 	Context      string
+	PayloadType  string
 
 	Evidence struct {
 		Name      EvidenceName `json:"name"`
@@ -56,6 +57,7 @@ type (
 		ID              string                 `json:"id"`
 		IssueTitle      IssueTitle             `json:"issue_title"`
 		Level           string                 `json:"level,omitempty"`
+		PayloadType     PayloadType            `json:"payload_type"`
 		ProjectID       uint64                 `json:"project_id"`
 		ResourceID      string                 `json:"resource_id,omitempty"`
 		Subtitle        string                 `json:"subtitle"`
@@ -100,6 +102,8 @@ const (
 	ContextTrace Context = "trace"
 
 	ProfileID string = "profile_id"
+
+	OccurrencePayload PayloadType = "occurrence"
 )
 
 var issueTitles = map[Category]CategoryMetadata{
@@ -188,6 +192,7 @@ func NewOccurrence(p profile.Profile, ni nodeInfo) *Occurrence {
 		ID:              eventID(),
 		IssueTitle:      title,
 		Level:           "info",
+		PayloadType:     OccurrencePayload,
 		ProjectID:       p.ProjectID(),
 		Subtitle:        ni.Node.Name,
 		Type:            issueType,
@@ -275,6 +280,7 @@ func FromRegressedFunction(
 		ID:          eventID(),
 		IssueTitle:  "Function Duration Regression (Experimental)",
 		Level:       "info",
+		PayloadType: OccurrencePayload,
 		ProjectID:   regressed.ProjectID,
 		Subtitle:    regressionText,
 		Type:        FrameRegressionExpType,
