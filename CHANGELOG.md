@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+**Bug Fixes**:
+
+- Add payload type to occurrence payloads. ([#351](https://github.com/getsentry/vroom/pull/351))
+
 **Internal**:
 
 - Remove iOS legacy profile support. ([#296](https://github.com/getsentry/vroom/pull/296))
