@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+**Features**:
+
+- Support released key on regressed functions ([#355](https://github.com/getsentry/vroom/pull/355))
+
 **Bug Fixes**:
 
 - Add payload type to occurrence payloads. ([#351](https://github.com/getsentry/vroom/pull/351))

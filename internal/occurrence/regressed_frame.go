@@ -25,6 +25,7 @@ type RegressedFunction struct {
 	TrendPercentage          float64 `json:"trend_percentage"`
 	UnweightedPValue         float64 `json:"unweighted_p_value"`
 	UnweightedTValue         float64 `json:"unweighted_t_value"`
+	Released                 bool    `json:"released,omitempty"`
 }
 
 func ProcessRegressedFunction(
@@ -75,7 +76,7 @@ func ProcessRegressedFunction(
 		return nil, errors.New("fingerprint not found")
 	}
 
-	return FromRegressedFunction(p, regressedFunction, node.Frame), nil
+	return FromRegressedFunction(p.Platform(), regressedFunction, node.Frame), nil
 }
 
 func ProcessRegressedFunctions(
