@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"time"
 
+	"cloud.google.com/go/storage"
 	"github.com/pierrec/lz4/v4"
 	"gocloud.dev/blob"
 	"gocloud.dev/gcerrors"
@@ -20,7 +21,19 @@ func CompressedWrite(ctx context.Context, b *blob.Bucket, objectName string, d i
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	ow, err := b.NewWriter(ctx, objectName, nil)
+	writerOptions := &blob.WriterOptions{
+		BeforeWrite: func(asFunc func(interface{}) bool) error {
+			var objp **storage.ObjectHandle
+			// If it's not a GCS resource, we just move on.
+			if !asFunc(&objp) {
+				return nil
+			}
+			// Replace the ObjectHandle with a new one that adds Conditions.
+			*objp = (*objp).If(storage.Conditions{DoesNotExist: true})
+			return nil
+		},
+	}
+	ow, err := b.NewWriter(ctx, objectName, writerOptions)
 	if err != nil {
 		return err
 	}
@@ -29,21 +42,26 @@ func CompressedWrite(ctx context.Context, b *blob.Bucket, objectName string, d i
 	jw := json.NewEncoder(zw)
 	err = jw.Encode(d)
 	if err != nil {
+		cancel()
+		ow.Close()
 		return err
 	}
 	err = zw.Close()
 	if err != nil {
+		cancel()
+		ow.Close()
 		return err
 	}
-	err = ow.Close()
-	if err != nil {
-		return err
-	}
-	return nil
+	return ow.Close()
 }
 
 // UnmarshalCompressed reads compressed JSON data from GCS and unmarshals it.
-func UnmarshalCompressed(ctx context.Context, b *blob.Bucket, objectName string, d interface{}) error {
+func UnmarshalCompressed(
+	ctx context.Context,
+	b *blob.Bucket,
+	objectName string,
+	d interface{},
+) error {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
