@@ -13,6 +13,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/julienschmidt/httprouter"
 	"github.com/segmentio/kafka-go"
+	"gocloud.dev/gcerrors"
 	"google.golang.org/api/googleapi"
 
 	"github.com/getsentry/vroom/internal/nodetree"
@@ -74,7 +75,13 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 	s.Description = "Write profile to GCS"
 	err = storageutil.CompressedWrite(ctx, env.storage, p.StoragePath(), p)
 	s.Finish()
-	if err != nil {
+
+	// Determine if the error is because of a duplicate profile ID.
+	duplicateProfileID := gcerrors.Code(err) == gcerrors.FailedPrecondition
+
+	// If it's an error but not because of a duplicate ID,
+	// handle it a return an approriate error code.
+	if err != nil && !duplicateProfileID {
 		if errors.Is(err, context.DeadlineExceeded) {
 			// This is a transient error, we'll retry
 			w.WriteHeader(http.StatusTooManyRequests)
@@ -96,7 +103,9 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if len(callTrees) > 0 {
+	// Look for issues only if it's not a duplicate profile ID,
+	// otherwise we'd reference a profile in the issue that doesn't exist.
+	if !duplicateProfileID && len(callTrees) > 0 {
 		s = sentry.StartSpan(ctx, "processing")
 		s.Description = "Find occurrences"
 		occurrences := occurrence.Find(p, callTrees)
@@ -157,6 +166,13 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			hub.CaptureException(err)
 		}
+	}
+
+	// After ingesting function metrics, return a permanent error code
+	// so no indexed outcome is counted for the profile.
+	if duplicateProfileID {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 
 	// Prepare profile Kafka message
