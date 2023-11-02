@@ -181,7 +181,7 @@ func main() {
 		BeforeSendTransaction: httputil.SetHTTPStatusCodeTag,
 		BeforeSend: func(event *sentry.Event, hint *sentry.EventHint) *sentry.Event {
 			if code := gcerrors.Code(hint.OriginalException); code != gcerrors.Unknown {
-				event.Fingerprint = []string{code.String()}
+				event.Fingerprint = []string{"{{ default }}", code.String()}
 			}
 			return event
 		},
