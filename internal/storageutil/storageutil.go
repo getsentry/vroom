@@ -20,7 +20,6 @@ var ErrObjectNotFound = errors.New("object not found")
 func CompressedWrite(ctx context.Context, b *blob.Bucket, objectName string, d interface{}) error {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
-
 	writerOptions := &blob.WriterOptions{
 		BeforeWrite: func(asFunc func(interface{}) bool) error {
 			var objp **storage.ObjectHandle

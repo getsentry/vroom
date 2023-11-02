@@ -23,6 +23,7 @@ import (
 	_ "gocloud.dev/blob/fileblob"
 	_ "gocloud.dev/blob/gcsblob"
 	_ "gocloud.dev/blob/s3blob"
+	"gocloud.dev/gcerrors"
 
 	"github.com/getsentry/vroom/internal/httputil"
 	"github.com/getsentry/vroom/internal/logutil"
@@ -178,6 +179,12 @@ func main() {
 		Environment:           env.config.Environment,
 		Release:               release,
 		BeforeSendTransaction: httputil.SetHTTPStatusCodeTag,
+		BeforeSend: func(event *sentry.Event, hint *sentry.EventHint) *sentry.Event {
+			if code := gcerrors.Code(hint.OriginalException); code != gcerrors.Unknown {
+				event.Fingerprint = []string{code.String()}
+			}
+			return event
+		},
 	})
 	if err != nil {
 		log.Fatal().Err(err).Msg("can't initialize sentry")
