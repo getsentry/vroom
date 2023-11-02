@@ -180,7 +180,14 @@ func main() {
 		Release:               release,
 		BeforeSendTransaction: httputil.SetHTTPStatusCodeTag,
 		BeforeSend: func(event *sentry.Event, hint *sentry.EventHint) *sentry.Event {
-			if code := gcerrors.Code(hint.OriginalException); code != gcerrors.Unknown {
+			code := gcerrors.Code(hint.OriginalException)
+			switch code {
+			// Ignore unknown or network errors as gcerrors returns a specific GCS error
+			// in case we have generic network errors, even if it didn't come from the gocloud
+			// library and we can't check for the specific gocloud error type as it's in
+			// an internal package.
+			case gcerrors.Canceled, gcerrors.DeadlineExceeded, gcerrors.Unknown, gcerrors.OK:
+			default:
 				event.Fingerprint = []string{"{{ default }}", code.String()}
 			}
 			return event
