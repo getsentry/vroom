@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+**Features**:
+
+- Support released key on regressed functions ([#355](https://github.com/getsentry/vroom/pull/355))
+
 **Bug Fixes**:
 
 - Add payload type to occurrence payloads. ([#351](https://github.com/getsentry/vroom/pull/351))
@@ -13,6 +17,7 @@
 - Bump trufflesecurity/trufflehog from 3.60.2 to 3.60.3 ([#348](https://github.com/getsentry/vroom/pull/348))
 - Bump google.golang.org/grpc from 1.53.0 to 1.56.3 ([#349](https://github.com/getsentry/vroom/pull/349))
 - Bump trufflesecurity/trufflehog from 3.60.3 to 3.60.4 ([#350](https://github.com/getsentry/vroom/pull/350))
+- Add a pre-condition to check if the file already exists before write. ([#354](https://github.com/getsentry/vroom/pull/354))
 - Bump trufflesecurity/trufflehog from 3.60.4 to 3.62.1 ([#353](https://github.com/getsentry/vroom/pull/353))
 
 ## 23.10.1

@@ -91,6 +91,7 @@ const (
 	ViewType               Type = 2006
 	FrameDropType          Type = 2009
 	FrameRegressionExpType Type = 2010
+	FrameRegressionType    Type = 2011
 
 	EvidenceNameDuration       EvidenceName = "Duration"
 	EvidenceNameFunction       EvidenceName = "Suspect function"
@@ -203,12 +204,10 @@ func NewOccurrence(p profile.Profile, ni nodeInfo) *Occurrence {
 }
 
 func FromRegressedFunction(
-	p profile.Profile,
+	pf platform.Platform,
 	regressed RegressedFunction,
 	f frame.Frame,
 ) *Occurrence {
-	pf := p.Platform()
-
 	switch pf {
 	case platform.Android:
 		pf = platform.Java
@@ -220,10 +219,18 @@ func FromRegressedFunction(
 	beforeP95 := time.Duration(regressed.AggregateRange1).Round(10 * time.Microsecond)
 	afterP95 := time.Duration(regressed.AggregateRange2).Round(10 * time.Microsecond)
 	regressionText := fmt.Sprintf(
-		"P95 function duration increased from %s to %s.",
+		"%s increased from %s to %s.",
+		fullyQualifiedName,
 		beforeP95,
 		afterP95,
 	)
+
+	occurrenceType := FrameRegressionExpType
+	var issueTitle IssueTitle = "Function Duration Regression (Experimental)"
+	if regressed.Released {
+		occurrenceType = FrameRegressionType
+		issueTitle = "Function Regression"
+	}
 
 	return &Occurrence{
 		Culprit:       fullyQualifiedName,
@@ -278,12 +285,12 @@ func FromRegressedFunction(
 		},
 		Fingerprint: []string{fingerprint},
 		ID:          eventID(),
-		IssueTitle:  "Function Duration Regression (Experimental)",
+		IssueTitle:  issueTitle,
 		Level:       "info",
 		PayloadType: OccurrencePayload,
 		ProjectID:   regressed.ProjectID,
 		Subtitle:    regressionText,
-		Type:        FrameRegressionExpType,
+		Type:        occurrenceType,
 	}
 }
 
