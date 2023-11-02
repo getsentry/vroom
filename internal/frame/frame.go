@@ -195,6 +195,15 @@ func (f Frame) IsPythonApplicationFrame() bool {
 	}
 
 	module := strings.SplitN(f.Module, ".", 2)
+
+	// It's possible that users do not install packages
+	// into one of the default paths. In this case, we
+	// should try to classify the sdk as a system frame
+	// at least to minimum false classification.
+	if module[0] == "sentry_sdk" {
+		return false
+	}
+
 	_, ok := pythonStdlib[module[0]]
 	return !ok
 }

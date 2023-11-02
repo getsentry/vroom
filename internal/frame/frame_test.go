@@ -134,6 +134,13 @@ func TestIsPythonApplicationFrame(t *testing.T) {
 			},
 			isApplication: false,
 		},
+		{
+			name: "sentry_sdk",
+			frame: Frame{
+				Module: "sentry_sdk.profiler",
+			},
+			isApplication: false,
+		},
 	}
 
 	for _, tt := range tests {
