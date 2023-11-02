@@ -9,6 +9,7 @@
 **Bug Fixes**:
 
 - Add payload type to occurrence payloads. ([#351](https://github.com/getsentry/vroom/pull/351))
+- Always classify sentry_sdk as system frame. ([#357](https://github.com/getsentry/vroom/pull/357))
 
 **Internal**:
 
