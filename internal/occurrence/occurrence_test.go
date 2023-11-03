@@ -68,7 +68,7 @@ func TestFromRegressedFunction(t *testing.T) {
 			},
 			expectedType:     2011,
 			expectedTitle:    "Function Regression",
-			expectedSubtitle: "foo.bar increased from 100ms to 200ms.",
+			expectedSubtitle: "Duration increased from 100ms to 200ms (P95).",
 		},
 		{
 			name:  "unreleased",
@@ -84,7 +84,7 @@ func TestFromRegressedFunction(t *testing.T) {
 			},
 			expectedType:     2010,
 			expectedTitle:    "Function Duration Regression (Experimental)",
-			expectedSubtitle: "foo.bar increased from 100ms to 200ms.",
+			expectedSubtitle: "Duration increased from 100ms to 200ms (P95).",
 		},
 	}
 
