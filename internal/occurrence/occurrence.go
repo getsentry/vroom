@@ -218,12 +218,6 @@ func FromRegressedFunction(
 	fingerprint := fmt.Sprintf("%x", regressed.Fingerprint)
 	beforeP95 := time.Duration(regressed.AggregateRange1).Round(10 * time.Microsecond)
 	afterP95 := time.Duration(regressed.AggregateRange2).Round(10 * time.Microsecond)
-	regressionText := fmt.Sprintf(
-		"%s increased from %s to %s.",
-		fullyQualifiedName,
-		beforeP95,
-		afterP95,
-	)
 
 	occurrenceType := FrameRegressionExpType
 	var issueTitle IssueTitle = "Function Duration Regression (Experimental)"
@@ -272,7 +266,12 @@ func FromRegressedFunction(
 			{
 				Important: true,
 				Name:      EvidenceRegression,
-				Value:     regressionText,
+				Value: fmt.Sprintf(
+					"%s duration increased from %s to %s (P95).",
+					fullyQualifiedName,
+					beforeP95,
+					afterP95,
+				),
 			},
 			{
 				Name:  EvidenceBreakpoint,
@@ -289,8 +288,12 @@ func FromRegressedFunction(
 		Level:       "info",
 		PayloadType: OccurrencePayload,
 		ProjectID:   regressed.ProjectID,
-		Subtitle:    regressionText,
-		Type:        occurrenceType,
+		Subtitle: fmt.Sprintf(
+			"Duration increased from %s to %s (P95).",
+			beforeP95,
+			afterP95,
+		),
+		Type: occurrenceType,
 	}
 }
 
