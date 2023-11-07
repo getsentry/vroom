@@ -21,6 +21,7 @@
 - Bump trufflesecurity/trufflehog from 3.60.3 to 3.60.4 ([#350](https://github.com/getsentry/vroom/pull/350))
 - Add a pre-condition to check if the file already exists before write. ([#354](https://github.com/getsentry/vroom/pull/354), [#356](https://github.com/getsentry/vroom/pull/356))
 - Bump trufflesecurity/trufflehog from 3.60.4 to 3.62.1 ([#353](https://github.com/getsentry/vroom/pull/353))
+- Enable Go SDK profiling ([#360])(https://github.com/getsentry/vroom/pull/360)
 
 ## 23.10.1
 
