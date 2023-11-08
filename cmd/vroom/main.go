@@ -176,7 +176,6 @@ func main() {
 		Dsn:                   env.config.SentryDSN,
 		EnableTracing:         true,
 		TracesSampleRate:      1.0,
-		ProfilesSampleRate:    0.05,
 		Environment:           env.config.Environment,
 		Release:               release,
 		BeforeSendTransaction: httputil.SetHTTPStatusCodeTag,
