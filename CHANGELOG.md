@@ -21,6 +21,7 @@
 - Bump trufflesecurity/trufflehog from 3.60.3 to 3.60.4 ([#350](https://github.com/getsentry/vroom/pull/350))
 - Add a pre-condition to check if the file already exists before write. ([#354](https://github.com/getsentry/vroom/pull/354), [#356](https://github.com/getsentry/vroom/pull/356))
 - Bump trufflesecurity/trufflehog from 3.60.4 to 3.62.1 ([#353](https://github.com/getsentry/vroom/pull/353))
+- Bump github.com/getsentry/sentry-go from 0.24.1 to 0.25.0 ([#359](https://github.com/getsentry/vroom/pull/359))
 
 ## 23.10.1
 
