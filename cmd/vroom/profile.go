@@ -13,6 +13,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/julienschmidt/httprouter"
 	"github.com/segmentio/kafka-go"
+	"gocloud.dev/gcerrors"
 	"google.golang.org/api/googleapi"
 
 	"github.com/getsentry/vroom/internal/nodetree"
@@ -44,7 +45,7 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 
 	var p profile.Profile
 	s = sentry.StartSpan(ctx, "json.unmarshal")
-	s.Description = "Unmarshal Snuba profile"
+	s.Description = "Unmarshal profile"
 	err = json.Unmarshal(body, &p)
 	s.Finish()
 	if err != nil {
@@ -81,7 +82,11 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 		} else {
 			// These errors won't be retried
 			hub.CaptureException(err)
-			w.WriteHeader(http.StatusInternalServerError)
+			if code := gcerrors.Code(err); code == gcerrors.FailedPrecondition {
+				w.WriteHeader(http.StatusPreconditionFailed)
+			} else {
+				w.WriteHeader(http.StatusInternalServerError)
+			}
 		}
 		return
 	}
