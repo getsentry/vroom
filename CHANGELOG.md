@@ -23,6 +23,7 @@
 - Bump trufflesecurity/trufflehog from 3.60.4 to 3.62.1 ([#353](https://github.com/getsentry/vroom/pull/353))
 - Bump github.com/getsentry/sentry-go from 0.24.1 to 0.25.0 ([#359](https://github.com/getsentry/vroom/pull/359))
 - Return a more appriopriate HTTP status code for duplicate profiles. ([#363](https://github.com/getsentry/vroom/pull/363))
+- Bump actions/github-script from 6.4.1 to 7.0.0 ([#365](https://github.com/getsentry/vroom/pull/365))
 
 ## 23.10.1
 
