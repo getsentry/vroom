@@ -5,6 +5,7 @@
 **Features**:
 
 - Support released key on regressed functions ([#355](https://github.com/getsentry/vroom/pull/355))
+- Add frame-level platform field ([#364](https://github.com/getsentry/vroom/pull/364))
 
 **Bug Fixes**:
 

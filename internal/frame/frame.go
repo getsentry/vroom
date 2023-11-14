@@ -39,6 +39,7 @@ type (
 		Status          string `json:"status,omitempty"`
 		SymAddr         string `json:"sym_addr,omitempty"`
 		Symbol          string `json:"symbol,omitempty"`
+		Platform        string `json:"platform,omitempty"`
 	}
 
 	Data struct {
