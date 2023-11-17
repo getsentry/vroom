@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Relicense under FSL-1.0-Apache-2.0. ([#366](https://github.com/getsentry/vroom/pull/366))
+
 ## 23.11.0
 
 **Features**:
