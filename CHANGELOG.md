@@ -1,5 +1,13 @@
 # Changelog
 
+**Features**:
+
+**Bug Fixes**:
+
+**Internal**:
+
+- Bump trufflesecurity/trufflehog from 3.62.1 to 3.63.0 ([#367](https://github.com/getsentry/vroom/pull/367))
+
 ## 23.11.0
 
 **Features**:
