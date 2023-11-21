@@ -10,6 +10,7 @@
 
 **Internal**:
 
+- Updated craft build rules to no longer bump version after move to FSL license
 - Bump trufflesecurity/trufflehog from 3.62.1 to 3.63.0 ([#367](https://github.com/getsentry/vroom/pull/367))
 - Bump actions/github-script from 7.0.0 to 7.0.1 ([#368](https://github.com/getsentry/vroom/pull/368))
 - Bump trufflesecurity/trufflehog from 3.63.0 to 3.63.1 ([#369](https://github.com/getsentry/vroom/pull/369))
