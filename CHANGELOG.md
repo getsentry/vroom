@@ -11,6 +11,7 @@
 **Internal**:
 
 - Bump trufflesecurity/trufflehog from 3.62.1 to 3.63.0 ([#367](https://github.com/getsentry/vroom/pull/367))
+- Bump actions/github-script from 7.0.0 to 7.0.1 ([#368](https://github.com/getsentry/vroom/pull/368))
 
 ## 23.11.0
 
