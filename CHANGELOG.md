@@ -5,6 +5,8 @@
 **Features**:
 
 - Relicense under FSL-1.0-Apache-2.0. ([#366](https://github.com/getsentry/vroom/pull/366))
+- Return the emitted regressions in response. ([#372](https://github.com/getsentry/vroom/pull/372))
+
 
 **Bug Fixes**:
 
