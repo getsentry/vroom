@@ -6,9 +6,6 @@
 
 - Return the emitted regressions in response. ([#372](https://github.com/getsentry/vroom/pull/372))
 
-
-**Bug Fixes**:
-
 **Internal**:
 
 - Bump google-github-actions/auth from 1 to 2 ([#371](https://github.com/getsentry/vroom/pull/371))
