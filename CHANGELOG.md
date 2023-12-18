@@ -20,6 +20,7 @@
 - Bump trufflesecurity/trufflehog from 3.63.1 to 3.63.2 ([#373](https://github.com/getsentry/vroom/pull/373))
 - Bump actions/setup-go from 4 to 5 ([#374](https://github.com/getsentry/vroom/pull/374))
 - Bump github/codeql-action from 2 to 3 ([#377](https://github.com/getsentry/vroom/pull/377))
+- Bump trufflesecurity/trufflehog from 3.63.2 to 3.63.4 ([#379](https://github.com/getsentry/vroom/pull/379))
 
 
 ## 23.11.0
