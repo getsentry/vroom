@@ -19,6 +19,8 @@
 - Bump google-github-actions/auth from 1 to 2 ([#371](https://github.com/getsentry/vroom/pull/371))
 - Bump trufflesecurity/trufflehog from 3.63.1 to 3.63.2 ([#373](https://github.com/getsentry/vroom/pull/373))
 - Bump actions/setup-go from 4 to 5 ([#374](https://github.com/getsentry/vroom/pull/374))
+- Bump github/codeql-action from 2 to 3 ([#377](https://github.com/getsentry/vroom/pull/377))
+
 
 ## 23.11.0
 
