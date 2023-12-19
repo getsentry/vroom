@@ -1,13 +1,26 @@
 # Changelog
 
-## Unreleased
+## 23.12.0
+
+**Features**:
+
+- Return the emitted regressions in response. ([#372](https://github.com/getsentry/vroom/pull/372))
+- Support ingesting mixed android/js profiles for react-native ([#375](https://github.com/getsentry/vroom/pull/375)) --> this will let us store those profiles but it won't render the js part yet. A coming change will support that.
+
+**Internal**:
+
+- Bump google-github-actions/auth from 1 to 2 ([#371](https://github.com/getsentry/vroom/pull/371))
+- Bump trufflesecurity/trufflehog from 3.63.1 to 3.63.2 ([#373](https://github.com/getsentry/vroom/pull/373))
+- Bump actions/setup-go from 4 to 5 ([#374](https://github.com/getsentry/vroom/pull/374))
+- Bump golang.org/x/crypto from 0.14.0 to 0.17.0 ([#380](https://github.com/getsentry/vroom/pull/380))
+
+## 23.11.2
+
+## 23.11.1
 
 **Features**:
 
 - Relicense under FSL-1.0-Apache-2.0. ([#366](https://github.com/getsentry/vroom/pull/366))
-- Return the emitted regressions in response. ([#372](https://github.com/getsentry/vroom/pull/372))
-- Support ingesting mixed android/js profiles for react-native ([#375](https://github.com/getsentry/vroom/pull/375)) --> this will let us store those profiles but it won't render the js part yet. A coming change will support that.
-
 
 **Bug Fixes**:
 
@@ -20,6 +33,9 @@
 - Bump google-github-actions/auth from 1 to 2 ([#371](https://github.com/getsentry/vroom/pull/371))
 - Bump trufflesecurity/trufflehog from 3.63.1 to 3.63.2 ([#373](https://github.com/getsentry/vroom/pull/373))
 - Bump actions/setup-go from 4 to 5 ([#374](https://github.com/getsentry/vroom/pull/374))
+- Bump github/codeql-action from 2 to 3 ([#377](https://github.com/getsentry/vroom/pull/377))
+- Bump trufflesecurity/trufflehog from 3.63.2 to 3.63.4 ([#379](https://github.com/getsentry/vroom/pull/379))
+
 
 ## 23.11.0
 
