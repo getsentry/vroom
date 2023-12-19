@@ -11,6 +11,7 @@
 - Bump google-github-actions/auth from 1 to 2 ([#371](https://github.com/getsentry/vroom/pull/371))
 - Bump trufflesecurity/trufflehog from 3.63.1 to 3.63.2 ([#373](https://github.com/getsentry/vroom/pull/373))
 - Bump actions/setup-go from 4 to 5 ([#374](https://github.com/getsentry/vroom/pull/374))
+- Bump golang.org/x/crypto from 0.14.0 to 0.17.0 ([#380](https://github.com/getsentry/vroom/pull/380))
 
 ## 23.11.2
 
