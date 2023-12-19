@@ -48,6 +48,7 @@ type (
 		OrganizationID       uint64                              `json:"organization_id"`
 		Platform             platform.Platform                   `json:"platform"`
 		Profile              json.RawMessage                     `json:"profile,omitempty"`
+		JsProfile            json.RawMessage                     `json:"js_profile,omitempty"`
 		ProfileID            string                              `json:"profile_id"`
 		ProjectID            uint64                              `json:"project_id"`
 		Received             timeutil.Time                       `json:"received"`

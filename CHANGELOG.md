@@ -5,6 +5,7 @@
 **Features**:
 
 - Return the emitted regressions in response. ([#372](https://github.com/getsentry/vroom/pull/372))
+- Support ingesting mixed android/js profiles for react-native ([#375](https://github.com/getsentry/vroom/pull/375)) --> this will let us store those profiles but it won't render the js part yet. A coming change will support that.
 
 **Internal**:
 
@@ -20,6 +21,8 @@
 **Features**:
 
 - Relicense under FSL-1.0-Apache-2.0. ([#366](https://github.com/getsentry/vroom/pull/366))
+
+**Bug Fixes**:
 
 **Internal**:
 
