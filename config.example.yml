@@ -1,0 +1,49 @@
+# vroom binds to all host by default, if you want to bind to specific host,
+# uncomment the line below
+# host:
+port: 8085
+
+environment: "development"
+
+sentry_dsn: ""
+
+occurrences:
+  kafka_brokers:
+    - "localhost:9092"
+  kafka_topic: "ingest-occurrences"
+
+profiling:
+  kafka_brokers:
+    - "localhost:9092"
+  call_trees_kafka_topic: "profiles-call-tree"
+  profiles_kafka_topic: "processed-profiles"
+
+snuba_host: "http://localhost:1218"
+
+# The default bucket URL points to local filesystem. This bucket stores the profiles data compressed with LZ4.
+# For connecting to custom blob storage such as S3, GCS, or Azure Blob, change the value below.
+#
+# For S3: s3://my-bucket-name?region=us-west-1&awssdk=2&s3ForcePathStyle=false&disableSSL=true
+# For S3 hosted on MinIO: s3://my-bucket-name?awssdk=2&endpoint=minio.selfhosted.com&s3ForcePathStyle=true&disableSSL=true
+# Do provide these as environment variables (if needed):
+#   AWS_ACCESS_KEY=foobar
+#   AWS_SECRET_KEY=foobar
+#   AWS_SESSION_TOKEN=foobar (not required)
+#
+# For GCS: gs://my-bucket-name
+# Do provide these as environment variables (if needed):
+#   GOOGLE_APPLICATION_CREDENTIALS=foobar
+#
+# For Azure Blob: azblob://my-container?protocol=http&domain=localhost:10001&protocol=string&localemu=false&cdn=false
+# Do provide these as environment variables (if needed):
+#   AZURE_STORAGE_ACCOUNT=foobar
+#   AZURE_STORAGE_KEY=foobar
+#   AZURE_STORAGE_SAS_TOKEN=foobar
+bucket_url: "file://./test/gcs/sentry-profiles"
+
+logging:
+  # Available values are: "trace", "debug", "info", "warn", "error", "fatal", "panic", "disabled"
+  level: "info"
+  # "simplified" provides human-readable log on the console.
+  # "json" provides JSON log on the console
+  format: "simplified"

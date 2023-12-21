@@ -3,7 +3,9 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -14,6 +16,7 @@ import (
 	"github.com/CAFxX/httpcompression"
 	"github.com/getsentry/sentry-go"
 	sentryhttp "github.com/getsentry/sentry-go/http"
+	"github.com/getsentry/vroom/internal/logutil"
 	"github.com/ilyakaznacheev/cleanenv"
 	"github.com/julienschmidt/httprouter"
 	"github.com/rs/zerolog/log"
@@ -26,7 +29,6 @@ import (
 	"gocloud.dev/gcerrors"
 
 	"github.com/getsentry/vroom/internal/httputil"
-	"github.com/getsentry/vroom/internal/logutil"
 	"github.com/getsentry/vroom/internal/snubautil"
 )
 
@@ -50,9 +52,16 @@ const (
 
 func newEnvironment() (*environment, error) {
 	var e environment
-	err := cleanenv.ReadEnv(&e.config)
+	err := cleanenv.ReadConfig("config.yml", &e.config)
 	if err != nil {
-		return nil, err
+		if errors.Is(err, os.ErrNotExist) {
+			err := cleanenv.ReadEnv(&e.config)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			return nil, err
+		}
 	}
 
 	e.snuba, err = snubautil.NewClient(e.config.SnubaHost, "profiles")
@@ -67,16 +76,16 @@ func newEnvironment() (*environment, error) {
 	}
 
 	e.occurrencesWriter = &kafka.Writer{
-		Addr:         kafka.TCP(e.config.OccurrencesKafkaBrokers...),
+		Addr:         kafka.TCP(e.config.Occurrences.OccurrencesKafkaBrokers...),
 		Async:        true,
 		Balancer:     kafka.CRC32Balancer{},
 		BatchSize:    100,
 		ReadTimeout:  3 * time.Second,
-		Topic:        e.config.OccurrencesKafkaTopic,
+		Topic:        e.config.Occurrences.OccurrencesKafkaTopic,
 		WriteTimeout: 3 * time.Second,
 	}
 	e.profilingWriter = &kafka.Writer{
-		Addr:         kafka.TCP(e.config.ProfilingKafkaBrokers...),
+		Addr:         kafka.TCP(e.config.Profiling.ProfilingKafkaBrokers...),
 		Async:        true,
 		Balancer:     kafka.CRC32Balancer{},
 		BatchBytes:   20 * MiB,
@@ -165,12 +174,12 @@ func (e *environment) newRouter() (*httprouter.Router, error) {
 }
 
 func main() {
-	logutil.ConfigureLogger()
-
 	env, err := newEnvironment()
 	if err != nil {
 		log.Fatal().Err(err).Msg("error setting up environment")
 	}
+
+	logutil.ConfigureLogger(env.config.Logging.Level, env.config.Logging.Format)
 
 	err = sentry.Init(sentry.ClientOptions{
 		Dsn:                   env.config.SentryDSN,
@@ -204,7 +213,7 @@ func main() {
 	}
 
 	server := http.Server{
-		Addr:              fmt.Sprintf(":%d", env.config.Port),
+		Addr:              net.JoinHostPort(env.config.Host, env.config.Port),
 		ReadHeaderTimeout: time.Second,
 		Handler:           sentryhttp.New(sentryhttp.Options{}).Handle(router),
 	}
@@ -227,7 +236,7 @@ func main() {
 	}()
 
 	err = server.ListenAndServe()
-	if err != nil && err != http.ErrServerClosed {
+	if err != nil && !errors.Is(err, http.ErrServerClosed) {
 		sentry.CaptureException(err)
 		log.Err(err).Msg("server failed")
 	}
