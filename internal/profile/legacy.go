@@ -10,10 +10,12 @@ import (
 	"time"
 
 	"github.com/getsentry/vroom/internal/debugmeta"
+	"github.com/getsentry/vroom/internal/frame"
 	"github.com/getsentry/vroom/internal/measurements"
 	"github.com/getsentry/vroom/internal/metadata"
 	"github.com/getsentry/vroom/internal/nodetree"
 	"github.com/getsentry/vroom/internal/platform"
+	"github.com/getsentry/vroom/internal/sample"
 	"github.com/getsentry/vroom/internal/speedscope"
 	"github.com/getsentry/vroom/internal/timeutil"
 	"github.com/getsentry/vroom/internal/transaction"
@@ -22,8 +24,11 @@ import (
 const maxProfileDurationForCallTrees = 15 * time.Second
 
 var ErrProfileHasNoTrace = errors.New("profile has no trace")
+var member void
 
 type (
+	void struct{}
+
 	LegacyProfile struct {
 		RawProfile
 
@@ -263,4 +268,137 @@ func (p LegacyProfile) GetTransactionTags() map[string]string {
 
 func (p LegacyProfile) GetMeasurements() map[string]measurements.Measurement {
 	return p.Measurements
+}
+
+func sampleToAndroidFormat(p sample.Trace, offset uint64) Android {
+	//var Clock Clock
+	var events []AndroidEvent
+	var methods []AndroidMethod
+	//var StartTime uint64
+	var threads []AndroidThread
+
+	tidLastTimeNs := make(map[uint64]uint64)
+	tidLastStack := make(map[uint64][]int)
+
+	methodSet := make(map[uint64]void)
+	threadSet := make(map[uint64]void)
+
+	for si, sample := range p.Samples {
+		tidLastTimeNs[sample.ThreadID] = sample.ElapsedSinceStartNS
+		eventTime := getEventTimeFromElapsedNanoseconds(sample.ElapsedSinceStartNS)
+		i := 0
+		lastStack := tidLastStack[sample.ThreadID]
+		currentStack := p.Stacks[sample.StackID]
+		for i < len(lastStack) && i < len(currentStack) {
+			if lastStack[i] != currentStack[i] {
+				break
+			}
+			i++
+		}
+		// at this point we've scanned through all the common frames at the bottom
+		// of the stack. For any frames left in the older stack we need to generate
+		// an "exit" event.
+		// This logic applies to all samples except the 1st
+		if si > 0 {
+			for j := len(lastStack) - 1; j >= i; j-- {
+				frameID := lastStack[j]
+				offsetID := uint64(frameID) + offset
+
+				ev := AndroidEvent{
+					Action:   ExitAction,
+					ThreadID: sample.ThreadID,
+					MethodID: offsetID,
+					Time:     eventTime,
+				}
+
+				events = append(events, ev)
+			}
+		}
+
+		// For any frames left in the current stack we need to generate
+		// an "enter" event.
+		for _, frameID := range currentStack[i:] {
+			offsetID := uint64(frameID) + offset
+
+			if _, exists := methodSet[offsetID]; !exists {
+				updateMethods(methodSet, &methods, p.Frames[frameID], offsetID)
+			}
+			if _, exists := threadSet[sample.ThreadID]; !exists {
+				metadata := p.ThreadMetadata[strconv.FormatUint(sample.ThreadID, 10)]
+				updateThreads(threadSet, &threads, sample.ThreadID, &metadata)
+			}
+			ev := AndroidEvent{
+				Action:   EnterAction,
+				ThreadID: sample.ThreadID,
+				MethodID: offsetID,
+				Time:     eventTime,
+			}
+			events = append(events, ev)
+		}
+		tidLastStack[sample.ThreadID] = currentStack
+	} // end sample loop
+
+	// once we looped all the samples, for each thread
+	// we close all the events that are left open
+	for tid, lastStack := range tidLastStack {
+		// for the last exit events we use as elpased time
+		// whatever the latest time was plus 10ms
+		closingTimeNs := tidLastTimeNs[tid] + 1e7
+		eventTime := getEventTimeFromElapsedNanoseconds(closingTimeNs)
+
+		for i := len(lastStack) - 1; i >= 0; i-- {
+			frameID := lastStack[i]
+			offsetID := uint64(frameID) + offset
+
+			ev := AndroidEvent{
+				Action:   ExitAction,
+				ThreadID: tid,
+				MethodID: offsetID,
+				Time:     eventTime,
+			}
+
+			events = append(events, ev)
+		}
+	}
+
+	return Android{
+		Clock:   DualClock,
+		Events:  events,
+		Methods: methods,
+		Threads: threads,
+	}
+
+	// TODO: write unit tests
+}
+
+func updateMethods(methodSet map[uint64]void, methods *[]AndroidMethod, fr frame.Frame, offsetID uint64) {
+	method := AndroidMethod{
+		ID:         offsetID,
+		Name:       fr.Function,
+		SourceFile: fr.Path,
+		SourceLine: fr.Line,
+	}
+	*methods = append(*methods, method)
+	methodSet[offsetID] = member
+}
+
+func updateThreads(threadSet map[uint64]void, threads *[]AndroidThread, threadID uint64, metadata *sample.ThreadMetadata) {
+	thread := AndroidThread{
+		ID:   threadID,
+		Name: metadata.Name,
+	}
+
+	*threads = append(*threads, thread)
+	threadSet[threadID] = member
+}
+
+func getEventTimeFromElapsedNanoseconds(ns uint64) EventTime {
+	return EventTime{
+		Monotonic: EventMonotonic{
+			Wall: Duration{
+				Secs:  (ns / 1e9),
+				Nanos: (ns % 1e9),
+			},
+		},
+	}
 }
