@@ -377,6 +377,7 @@ func updateMethods(methodSet map[uint64]void, methods *[]AndroidMethod, fr frame
 		Name:       fr.Function,
 		SourceFile: fr.Path,
 		SourceLine: fr.Line,
+		InApp:      fr.InApp,
 	}
 	*methods = append(*methods, method)
 	methodSet[offsetID] = member
@@ -393,6 +394,16 @@ func updateThreads(threadSet map[uint64]void, threads *[]AndroidThread, threadID
 }
 
 func getEventTimeFromElapsedNanoseconds(ns uint64) EventTime {
+	if ns < 1e9 {
+		return EventTime{
+			Monotonic: EventMonotonic{
+				Wall: Duration{
+					Secs:  0,
+					Nanos: ns,
+				},
+			},
+		}
+	}
 	return EventTime{
 		Monotonic: EventMonotonic{
 			Wall: Duration{
