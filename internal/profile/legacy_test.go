@@ -41,7 +41,7 @@ func TestSampleToAndroidFormat(t *testing.T) {
 				},
 				ThreadMetadata: map[string]sample.ThreadMetadata{
 					"1": {
-						Name: "main",
+						Name: "JavaScriptThread",
 					},
 				},
 			},
@@ -50,25 +50,25 @@ func TestSampleToAndroidFormat(t *testing.T) {
 				Events: []AndroidEvent{
 					{
 						Action:   "Enter",
-						ThreadID: 1,
+						ThreadID: 2,
 						MethodID: 1,
 						Time:     EventTime{},
 					},
 					{
 						Action:   "Enter",
-						ThreadID: 1,
+						ThreadID: 2,
 						MethodID: 2,
 						Time:     EventTime{},
 					},
 					{
 						Action:   "Enter",
-						ThreadID: 1,
+						ThreadID: 2,
 						MethodID: 3,
 						Time:     EventTime{},
 					},
 					{
 						Action:   "Exit",
-						ThreadID: 1,
+						ThreadID: 2,
 						MethodID: 3,
 						Time: EventTime{
 							Monotonic: EventMonotonic{
@@ -81,7 +81,7 @@ func TestSampleToAndroidFormat(t *testing.T) {
 					},
 					{
 						Action:   "Enter",
-						ThreadID: 1,
+						ThreadID: 2,
 						MethodID: 4,
 						Time: EventTime{
 							Monotonic: EventMonotonic{
@@ -94,7 +94,7 @@ func TestSampleToAndroidFormat(t *testing.T) {
 					},
 					{
 						Action:   "Exit",
-						ThreadID: 1,
+						ThreadID: 2,
 						MethodID: 4,
 						Time: EventTime{
 							Monotonic: EventMonotonic{
@@ -107,7 +107,7 @@ func TestSampleToAndroidFormat(t *testing.T) {
 					},
 					{
 						Action:   "Exit",
-						ThreadID: 1,
+						ThreadID: 2,
 						MethodID: 2,
 						Time: EventTime{
 							Monotonic: EventMonotonic{
@@ -120,7 +120,7 @@ func TestSampleToAndroidFormat(t *testing.T) {
 					},
 					{
 						Action:   "Exit",
-						ThreadID: 1,
+						ThreadID: 2,
 						MethodID: 1,
 						Time: EventTime{
 							Monotonic: EventMonotonic{
@@ -157,7 +157,7 @@ func TestSampleToAndroidFormat(t *testing.T) {
 
 				Threads: []AndroidThread{
 					{
-						ID:   1,
+						ID:   2,
 						Name: "main",
 					},
 				},
@@ -167,7 +167,8 @@ func TestSampleToAndroidFormat(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			convertedProfile := sampleToAndroidFormat(tests[0].input, 1)
+			convertedProfile := sampleToAndroidFormat(tests[0].input, 1, map[uint64]void{1: {}})
+
 			if diff := testutil.Diff(convertedProfile, test.output); diff != "" {
 				t.Fatalf("Result mismatch: got - want +\n%s", diff)
 			}

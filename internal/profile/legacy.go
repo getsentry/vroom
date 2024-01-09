@@ -270,7 +270,7 @@ func (p LegacyProfile) GetMeasurements() map[string]measurements.Measurement {
 	return p.Measurements
 }
 
-func sampleToAndroidFormat(p sample.Trace, offset uint64) Android {
+func sampleToAndroidFormat(p sample.Trace, offset uint64, usedTids map[uint64]void) Android {
 	//var Clock Clock
 	var events []AndroidEvent
 	var methods []AndroidMethod
@@ -283,11 +283,17 @@ func sampleToAndroidFormat(p sample.Trace, offset uint64) Android {
 	methodSet := make(map[uint64]void)
 	threadSet := make(map[uint64]void)
 
+	mainTID, newMainTID := getMainThreadIDs(p.ThreadMetadata, usedTids)
+
 	for si, sample := range p.Samples {
-		tidLastTimeNs[sample.ThreadID] = sample.ElapsedSinceStartNS
+		sampleTID := sample.ThreadID
+		if sampleTID == mainTID {
+			sampleTID = newMainTID
+		}
+		tidLastTimeNs[sampleTID] = sample.ElapsedSinceStartNS
 		eventTime := getEventTimeFromElapsedNanoseconds(sample.ElapsedSinceStartNS)
 		i := 0
-		lastStack := tidLastStack[sample.ThreadID]
+		lastStack := tidLastStack[sampleTID]
 		currentStack := p.Stacks[sample.StackID]
 		for i < len(lastStack) && i < len(currentStack) {
 			if lastStack[i] != currentStack[i] {
@@ -306,7 +312,7 @@ func sampleToAndroidFormat(p sample.Trace, offset uint64) Android {
 
 				ev := AndroidEvent{
 					Action:   ExitAction,
-					ThreadID: sample.ThreadID,
+					ThreadID: sampleTID,
 					MethodID: offsetID,
 					Time:     eventTime,
 				}
@@ -323,19 +329,19 @@ func sampleToAndroidFormat(p sample.Trace, offset uint64) Android {
 			if _, exists := methodSet[offsetID]; !exists {
 				updateMethods(methodSet, &methods, p.Frames[frameID], offsetID)
 			}
-			if _, exists := threadSet[sample.ThreadID]; !exists {
+			if _, exists := threadSet[sampleTID]; !exists {
 				metadata := p.ThreadMetadata[strconv.FormatUint(sample.ThreadID, 10)]
-				updateThreads(threadSet, &threads, sample.ThreadID, &metadata)
+				updateThreads(threadSet, &threads, sampleTID, newMainTID, &metadata)
 			}
 			ev := AndroidEvent{
 				Action:   EnterAction,
-				ThreadID: sample.ThreadID,
+				ThreadID: sampleTID,
 				MethodID: offsetID,
 				Time:     eventTime,
 			}
 			events = append(events, ev)
 		}
-		tidLastStack[sample.ThreadID] = currentStack
+		tidLastStack[sampleTID] = currentStack
 	} // end sample loop
 
 	// once we looped all the samples, for each thread
@@ -383,14 +389,49 @@ func updateMethods(methodSet map[uint64]void, methods *[]AndroidMethod, fr frame
 	methodSet[offsetID] = member
 }
 
-func updateThreads(threadSet map[uint64]void, threads *[]AndroidThread, threadID uint64, metadata *sample.ThreadMetadata) {
+func updateThreads(threadSet map[uint64]void, threads *[]AndroidThread, threadID, newMainTID uint64, metadata *sample.ThreadMetadata) {
 	thread := AndroidThread{
 		ID:   threadID,
 		Name: metadata.Name,
 	}
+	// In a few other places (CallTree), we rely on the thread
+	// name "main" to figure out which thread data to use.
+	// For reactNative we want to ignore the Android "main"
+	// thread and instead use the js as the main one.
+	if threadID == newMainTID {
+		thread.Name = "main"
+	}
 
 	*threads = append(*threads, thread)
 	threadSet[threadID] = member
+}
+
+// Native Android profile and JS profile have a thread ID in common
+// As of now, we want to show them separately instead of merged
+// To do so, the thread in the JS profile, will get a new ID
+// that is not yet used by any of the threads in the native Android
+// profile.
+func getMainThreadIDs(threads map[string]sample.ThreadMetadata, usedTids map[uint64]void) (uint64, uint64) {
+	const mainThreadName = "JavaScriptThread"
+	var tid uint64
+	var newTid uint64
+	for id, threadMetadata := range threads {
+		if threadMetadata.Name == mainThreadName {
+			intNum, _ := strconv.ParseInt(id, 10, 64)
+			tid = uint64(intNum)
+			newTid = getUniqueTid(tid, usedTids)
+			break
+		}
+	}
+	return tid, newTid
+}
+
+func getUniqueTid(tid uint64, usedTids map[uint64]void) uint64 {
+	for i := tid + 1; ; i++ {
+		if _, exists := usedTids[i]; !exists {
+			return i
+		}
+	}
 }
 
 func getEventTimeFromElapsedNanoseconds(ns uint64) EventTime {
