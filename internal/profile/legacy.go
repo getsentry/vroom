@@ -154,6 +154,29 @@ func (p LegacyProfile) IsSampleFormat() bool {
 }
 
 func (p *LegacyProfile) Speedscope() (speedscope.Output, error) {
+	t, ok := p.Trace.(Android)
+	// this is to handle only the Reactnative (android + js)
+	// use case. If it's an Android profile but there is no
+	// js profile, we'll skip this entirely
+	if ok && p.JsProfile != nil {
+		st, err := unmarshalSampleProfile(p.JsProfile)
+		if err == nil {
+			// collect set of TIDs used and change main thread name
+			tidSet := make(map[uint64]void)
+			for i := range t.Threads {
+				tidSet[t.Threads[i].ID] = member
+				if t.Threads[i].Name == "main" {
+					t.Threads[i].Name = "android_main"
+				}
+			}
+
+			ap := sampleToAndroidFormat(st, uint64(len(t.Methods)), tidSet)
+			t.Events = append(t.Events, ap.Events...)
+			t.Methods = append(t.Methods, ap.Methods...)
+			t.Threads = append(t.Threads, ap.Threads...)
+			p.Trace = t
+		}
+	}
 	o, err := p.Trace.Speedscope()
 	if err != nil {
 		return speedscope.Output{}, err
@@ -331,7 +354,7 @@ func sampleToAndroidFormat(p sample.Trace, offset uint64, usedTids map[uint64]vo
 			}
 			if _, exists := threadSet[sampleTID]; !exists {
 				metadata := p.ThreadMetadata[strconv.FormatUint(sample.ThreadID, 10)]
-				updateThreads(threadSet, &threads, sampleTID, newMainTID, &metadata)
+				updateThreads(threadSet, &threads, sampleTID, &metadata)
 			}
 			ev := AndroidEvent{
 				Action:   EnterAction,
@@ -389,7 +412,8 @@ func updateMethods(methodSet map[uint64]void, methods *[]AndroidMethod, fr frame
 	methodSet[offsetID] = member
 }
 
-func updateThreads(threadSet map[uint64]void, threads *[]AndroidThread, threadID, newMainTID uint64, metadata *sample.ThreadMetadata) {
+func updateThreads(threadSet map[uint64]void, threads *[]AndroidThread, threadID uint64, metadata *sample.ThreadMetadata) {
+	const mainThreadName = "JavaScriptThread"
 	thread := AndroidThread{
 		ID:   threadID,
 		Name: metadata.Name,
@@ -398,7 +422,7 @@ func updateThreads(threadSet map[uint64]void, threads *[]AndroidThread, threadID
 	// name "main" to figure out which thread data to use.
 	// For reactNative we want to ignore the Android "main"
 	// thread and instead use the js as the main one.
-	if threadID == newMainTID {
+	if thread.Name == mainThreadName {
 		thread.Name = "main"
 	}
 
@@ -453,4 +477,20 @@ func getEventTimeFromElapsedNanoseconds(ns uint64) EventTime {
 			},
 		},
 	}
+}
+
+func unmarshalSampleProfile(p json.RawMessage) (sample.Trace, error) {
+	var s string
+	err := json.Unmarshal(p, &s)
+	if err != nil {
+		return sample.Trace{}, err
+	}
+	raw := []byte(s)
+
+	var st sample.Trace
+	err = json.Unmarshal(raw, &st)
+	if err != nil {
+		return sample.Trace{}, err
+	}
+	return st, nil
 }
