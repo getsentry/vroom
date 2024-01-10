@@ -158,7 +158,7 @@ func (p *LegacyProfile) Speedscope() (speedscope.Output, error) {
 	// this is to handle only the Reactnative (android + js)
 	// use case. If it's an Android profile but there is no
 	// js profile, we'll skip this entirely
-	if ok && p.JsProfile != nil {
+	if ok && p.JsProfile != nil && len(p.JsProfile) > 0 {
 		st, err := unmarshalSampleProfile(p.JsProfile)
 		if err == nil {
 			// collect set of TIDs used and change main thread name
