@@ -480,17 +480,11 @@ func getEventTimeFromElapsedNanoseconds(ns uint64) EventTime {
 }
 
 func unmarshalSampleProfile(p json.RawMessage) (sample.Trace, error) {
-	var s string
-	err := json.Unmarshal(p, &s)
-	if err != nil {
-		return sample.Trace{}, err
-	}
-	raw := []byte(s)
-
 	var st sample.Trace
-	err = json.Unmarshal(raw, &st)
+	err := json.Unmarshal(p, &st)
 	if err != nil {
 		return sample.Trace{}, err
 	}
+
 	return st, nil
 }
