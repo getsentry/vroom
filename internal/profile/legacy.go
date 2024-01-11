@@ -293,6 +293,10 @@ func (p LegacyProfile) GetMeasurements() map[string]measurements.Measurement {
 	return p.Measurements
 }
 
+// This is to be used for ReactNative JS profile only since it works based on the
+// assumption that we'll only have 1 thread in the JS profile, as is the case
+// for ReactNative.
+// See: https://github.com/facebook/react-native-website/blob/43bc708c784be56b68a4d74711dd8824851b38f9/website/architecture/threading-model.md
 func sampleToAndroidFormat(p sample.Trace, offset uint64, usedTids map[uint64]void) Android {
 	//var Clock Clock
 	var events []AndroidEvent
