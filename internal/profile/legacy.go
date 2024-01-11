@@ -319,7 +319,7 @@ func sampleToAndroidFormat(p sample.Trace, offset uint64, usedTids map[uint64]vo
 		currentStack := p.Stacks[sample.StackID]
 		i := len(lastStack) - 1
 		j := len(currentStack) - 1
-		for i >= 0 && j > 0 {
+		for i >= 0 && j >= 0 {
 			if lastStack[i] != currentStack[j] {
 				break
 			}
@@ -332,7 +332,7 @@ func sampleToAndroidFormat(p sample.Trace, offset uint64, usedTids map[uint64]vo
 		// This logic applies to all samples except the 1st
 		if si > 0 {
 			for z := 0; z <= i; z++ {
-				frameID := lastStack[j]
+				frameID := lastStack[z]
 				offsetID := uint64(frameID) + offset
 
 				ev := AndroidEvent{
