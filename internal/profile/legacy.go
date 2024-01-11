@@ -373,7 +373,7 @@ func sampleToAndroidFormat(p sample.Trace, offset uint64, usedTids map[uint64]vo
 	// once we looped all the samples, for each thread
 	// we close all the events that are left open
 	for tid, lastStack := range tidLastStack {
-		// for the last exit events we use as elpased time
+		// for the last exit events we use as elapsed time
 		// whatever the latest time was plus 10ms
 		closingTimeNs := tidLastTimeNs[tid] + 1e7
 		eventTime := getEventTimeFromElapsedNanoseconds(closingTimeNs)
