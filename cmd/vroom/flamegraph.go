@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	numWorkers int           = 5
+	numWorkers int           = 10
 	timeout    time.Duration = time.Second * 5
 )
 
