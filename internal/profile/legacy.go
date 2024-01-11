@@ -300,22 +300,16 @@ func sampleToAndroidFormat(p sample.Trace, offset uint64, usedTids map[uint64]vo
 	//var StartTime uint64
 	var threads []AndroidThread
 
-	tidLastTimeNs := make(map[uint64]uint64)
-	tidLastStack := make(map[uint64][]int)
+	var lastStack []int
 
 	methodSet := make(map[uint64]void)
 	threadSet := make(map[uint64]void)
 
-	mainTID, newMainTID := getMainThreadIDs(p.ThreadMetadata, usedTids)
+	newMainTID := getMainThreadIDs(p.ThreadMetadata, usedTids)
 
-	for si, sample := range p.Samples {
-		sampleTID := sample.ThreadID
-		if sampleTID == mainTID {
-			sampleTID = newMainTID
-		}
-		tidLastTimeNs[sampleTID] = sample.ElapsedSinceStartNS
+	// we ignore (as we do for other platforms) the last sample
+	for si, sample := range p.Samples[:len(p.Samples)-1] {
 		eventTime := getEventTimeFromElapsedNanoseconds(sample.ElapsedSinceStartNS)
-		lastStack := tidLastStack[sampleTID]
 		currentStack := p.Stacks[sample.StackID]
 		i := len(lastStack) - 1
 		j := len(currentStack) - 1
@@ -337,7 +331,7 @@ func sampleToAndroidFormat(p sample.Trace, offset uint64, usedTids map[uint64]vo
 
 				ev := AndroidEvent{
 					Action:   ExitAction,
-					ThreadID: sampleTID,
+					ThreadID: newMainTID,
 					MethodID: offsetID,
 					Time:     eventTime,
 				}
@@ -355,42 +349,38 @@ func sampleToAndroidFormat(p sample.Trace, offset uint64, usedTids map[uint64]vo
 			if _, exists := methodSet[offsetID]; !exists {
 				updateMethods(methodSet, &methods, p.Frames[frameID], offsetID)
 			}
-			if _, exists := threadSet[sampleTID]; !exists {
+			if _, exists := threadSet[newMainTID]; !exists {
 				metadata := p.ThreadMetadata[strconv.FormatUint(sample.ThreadID, 10)]
-				updateThreads(threadSet, &threads, sampleTID, &metadata)
+				updateThreads(threadSet, &threads, newMainTID, &metadata)
 			}
 			ev := AndroidEvent{
 				Action:   EnterAction,
-				ThreadID: sampleTID,
+				ThreadID: newMainTID,
 				MethodID: offsetID,
 				Time:     eventTime,
 			}
 			events = append(events, ev)
 		}
-		tidLastStack[sampleTID] = currentStack
+		lastStack = currentStack
 	} // end sample loop
 
-	// once we looped all the samples, for each thread
-	// we close all the events that are left open
-	for tid, lastStack := range tidLastStack {
-		// for the last exit events we use as elapsed time
-		// whatever the latest time was plus 10ms
-		closingTimeNs := tidLastTimeNs[tid] + 1e7
-		eventTime := getEventTimeFromElapsedNanoseconds(closingTimeNs)
+	// we use the elapsed time since start of the latest sample
+	// to exit all the events of the previous one
+	closingTimeNs := p.Samples[len(p.Samples)-1].ElapsedSinceStartNS
+	eventTime := getEventTimeFromElapsedNanoseconds(closingTimeNs)
 
-		for i := 0; i < len(lastStack); i++ {
-			frameID := lastStack[i]
-			offsetID := uint64(frameID) + offset
+	for i := 0; i < len(lastStack); i++ {
+		frameID := lastStack[i]
+		offsetID := uint64(frameID) + offset
 
-			ev := AndroidEvent{
-				Action:   ExitAction,
-				ThreadID: tid,
-				MethodID: offsetID,
-				Time:     eventTime,
-			}
-
-			events = append(events, ev)
+		ev := AndroidEvent{
+			Action:   ExitAction,
+			ThreadID: newMainTID,
+			MethodID: offsetID,
+			Time:     eventTime,
 		}
+
+		events = append(events, ev)
 	}
 
 	return Android{
@@ -399,8 +389,6 @@ func sampleToAndroidFormat(p sample.Trace, offset uint64, usedTids map[uint64]vo
 		Methods: methods,
 		Threads: threads,
 	}
-
-	// TODO: write unit tests
 }
 
 func updateMethods(methodSet map[uint64]void, methods *[]AndroidMethod, fr frame.Frame, offsetID uint64) {
@@ -438,19 +426,18 @@ func updateThreads(threadSet map[uint64]void, threads *[]AndroidThread, threadID
 // To do so, the thread in the JS profile, will get a new ID
 // that is not yet used by any of the threads in the native Android
 // profile.
-func getMainThreadIDs(threads map[string]sample.ThreadMetadata, usedTids map[uint64]void) (uint64, uint64) {
+func getMainThreadIDs(threads map[string]sample.ThreadMetadata, usedTids map[uint64]void) uint64 {
 	const mainThreadName = "JavaScriptThread"
-	var tid uint64
 	var newTid uint64
 	for id, threadMetadata := range threads {
 		if threadMetadata.Name == mainThreadName {
 			intNum, _ := strconv.ParseInt(id, 10, 64)
-			tid = uint64(intNum)
+			tid := uint64(intNum)
 			newTid = getUniqueTid(tid, usedTids)
 			break
 		}
 	}
-	return tid, newTid
+	return newTid
 }
 
 func getUniqueTid(tid uint64, usedTids map[uint64]void) uint64 {

@@ -34,6 +34,11 @@ func TestSampleToAndroidFormat(t *testing.T) {
 						StackID:             1,
 						ThreadID:            1,
 					},
+					{
+						ElapsedSinceStartNS: 1e7 * 2,
+						StackID:             0,
+						ThreadID:            1,
+					},
 				},
 				Stacks: []sample.Stack{
 					{2, 1, 0},
@@ -180,6 +185,11 @@ func TestSampleToAndroidFormat(t *testing.T) {
 					{
 						ElapsedSinceStartNS: 1e7,
 						StackID:             1,
+						ThreadID:            1,
+					},
+					{
+						ElapsedSinceStartNS: 1e7 * 2,
+						StackID:             0,
 						ThreadID:            1,
 					},
 				},
