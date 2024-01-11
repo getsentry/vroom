@@ -315,21 +315,23 @@ func sampleToAndroidFormat(p sample.Trace, offset uint64, usedTids map[uint64]vo
 		}
 		tidLastTimeNs[sampleTID] = sample.ElapsedSinceStartNS
 		eventTime := getEventTimeFromElapsedNanoseconds(sample.ElapsedSinceStartNS)
-		i := 0
 		lastStack := tidLastStack[sampleTID]
 		currentStack := p.Stacks[sample.StackID]
-		for i < len(lastStack) && i < len(currentStack) {
-			if lastStack[i] != currentStack[i] {
+		i := len(lastStack) - 1
+		j := len(currentStack) - 1
+		for i >= 0 && j > 0 {
+			if lastStack[i] != currentStack[j] {
 				break
 			}
-			i++
+			i--
+			j--
 		}
 		// at this point we've scanned through all the common frames at the bottom
 		// of the stack. For any frames left in the older stack we need to generate
 		// an "exit" event.
 		// This logic applies to all samples except the 1st
 		if si > 0 {
-			for j := len(lastStack) - 1; j >= i; j-- {
+			for z := 0; z <= i; z++ {
 				frameID := lastStack[j]
 				offsetID := uint64(frameID) + offset
 
@@ -346,7 +348,8 @@ func sampleToAndroidFormat(p sample.Trace, offset uint64, usedTids map[uint64]vo
 
 		// For any frames left in the current stack we need to generate
 		// an "enter" event.
-		for _, frameID := range currentStack[i:] {
+		for ; j >= 0; j-- {
+			frameID := currentStack[j]
 			offsetID := uint64(frameID) + offset
 
 			if _, exists := methodSet[offsetID]; !exists {
@@ -375,7 +378,7 @@ func sampleToAndroidFormat(p sample.Trace, offset uint64, usedTids map[uint64]vo
 		closingTimeNs := tidLastTimeNs[tid] + 1e7
 		eventTime := getEventTimeFromElapsedNanoseconds(closingTimeNs)
 
-		for i := len(lastStack) - 1; i >= 0; i-- {
+		for i := 0; i < len(lastStack); i++ {
 			frameID := lastStack[i]
 			offsetID := uint64(frameID) + offset
 

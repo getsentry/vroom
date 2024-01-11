@@ -36,8 +36,8 @@ func TestSampleToAndroidFormat(t *testing.T) {
 					},
 				},
 				Stacks: []sample.Stack{
-					{0, 1, 2},
-					{0, 1, 3},
+					{2, 1, 0},
+					{3, 1, 0},
 				},
 				ThreadMetadata: map[string]sample.ThreadMetadata{
 					"1": {
