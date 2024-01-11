@@ -459,16 +459,6 @@ func getUniqueTid(tid uint64, usedTids map[uint64]void) uint64 {
 }
 
 func getEventTimeFromElapsedNanoseconds(ns uint64) EventTime {
-	if ns < 1e9 {
-		return EventTime{
-			Monotonic: EventMonotonic{
-				Wall: Duration{
-					Secs:  0,
-					Nanos: ns,
-				},
-			},
-		}
-	}
 	return EventTime{
 		Monotonic: EventMonotonic{
 			Wall: Duration{
