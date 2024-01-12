@@ -2,6 +2,8 @@
 
 **Features**:
 
+- Add support for speedscope rendering of Android reactnative profiles ([#386](https://github.com/getsentry/vroom/pull/386))
+
 **Bug Fixes**:
 
 **Internal**:
