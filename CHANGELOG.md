@@ -1,5 +1,17 @@
 # Changelog
 
+**Features**:
+
+- Add support for speedscope rendering of Android reactnative profiles ([#386](https://github.com/getsentry/vroom/pull/386))
+
+**Bug Fixes**:
+
+**Internal**:
+
+- Bump trufflesecurity/trufflehog from 3.63.4 to 3.63.5 ([#381](https://github.com/getsentry/vroom/pull/381))
+- Bump trufflesecurity/trufflehog from 3.63.5 to 3.63.7 ([#385](https://github.com/getsentry/vroom/pull/385))
+- Bump number of workers for flamegraph dynamically ([#388](https://github.com/getsentry/vroom/pull/388))
+
 ## 23.12.0
 
 **Features**:
