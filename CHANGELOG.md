@@ -3,6 +3,7 @@
 **Features**:
 
 - Add support for speedscope rendering of Android reactnative profiles ([#386](https://github.com/getsentry/vroom/pull/386))
+- Add callTree generation for reactnative (android+js) profiles ([#390](https://github.com/getsentry/vroom/pull/390))
 
 **Bug Fixes**:
 
