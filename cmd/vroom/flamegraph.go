@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"errors"
+	"math"
 	"net/http"
 	"strconv"
 	"time"
@@ -15,8 +16,8 @@ import (
 )
 
 const (
-	numWorkers int           = 5
-	timeout    time.Duration = time.Second * 5
+	minNumWorkers int           = 5
+	timeout       time.Duration = time.Second * 5
 )
 
 func (env *environment) getFlamegraph(w http.ResponseWriter, r *http.Request) {
@@ -66,7 +67,7 @@ func (env *environment) getFlamegraph(w http.ResponseWriter, r *http.Request) {
 	s.Finish()
 
 	s = sentry.StartSpan(ctx, "processing")
-	speedscope, err := flamegraph.GetFlamegraphFromProfiles(ctx, env.storage, organizationID, projectID, profileIDs, nil, numWorkers, timeout)
+	speedscope, err := flamegraph.GetFlamegraphFromProfiles(ctx, env.storage, organizationID, projectID, profileIDs, nil, minNumWorkers, timeout)
 	if err != nil {
 		s.Finish()
 		hub.CaptureException(err)
@@ -138,6 +139,12 @@ func (env *environment) postFlamegraphFromProfileIDs(w http.ResponseWriter, r *h
 		return
 	}
 
+	var numWorkers int
+	if len(profiles.ProfileIDs) < minNumWorkers {
+		numWorkers = len(profiles.ProfileIDs)
+	} else {
+		numWorkers = int(math.Ceil((float64(len(profiles.ProfileIDs)) / 100) * float64(minNumWorkers)))
+	}
 	s = sentry.StartSpan(ctx, "processing")
 	speedscope, err := flamegraph.GetFlamegraphFromProfiles(ctx, env.storage, organizationID, projectID, profiles.ProfileIDs, profiles.Spans, numWorkers, timeout)
 	if err != nil {

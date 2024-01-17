@@ -23,6 +23,7 @@ import (
 	_ "gocloud.dev/blob/fileblob"
 	_ "gocloud.dev/blob/gcsblob"
 	_ "gocloud.dev/blob/s3blob"
+	"gocloud.dev/gcerrors"
 
 	"github.com/getsentry/vroom/internal/httputil"
 	"github.com/getsentry/vroom/internal/logutil"
@@ -147,6 +148,7 @@ func (e *environment) newRouter() (*httprouter.Router, error) {
 		},
 		{http.MethodGet, "/health", e.getHealth},
 		{http.MethodPost, "/profile", e.postProfile},
+		{http.MethodPost, "/regressed", e.postRegressed},
 	}
 
 	router := httprouter.New()
@@ -173,14 +175,22 @@ func main() {
 	err = sentry.Init(sentry.ClientOptions{
 		Dsn:                   env.config.SentryDSN,
 		EnableTracing:         true,
+		TracesSampleRate:      1.0,
 		Environment:           env.config.Environment,
 		Release:               release,
 		BeforeSendTransaction: httputil.SetHTTPStatusCodeTag,
-		TracesSampler: func(ctx sentry.SamplingContext) float64 {
-			if ctx.Span.Name == "GET /health" {
-				return 0
+		BeforeSend: func(event *sentry.Event, hint *sentry.EventHint) *sentry.Event {
+			code := gcerrors.Code(hint.OriginalException)
+			switch code {
+			// Ignore unknown or network errors as gcerrors returns a specific GCS error
+			// in case we have generic network errors, even if it didn't come from the gocloud
+			// library and we can't check for the specific gocloud error type as it's in
+			// an internal package.
+			case gcerrors.Canceled, gcerrors.DeadlineExceeded, gcerrors.Unknown, gcerrors.OK:
+			default:
+				event.Fingerprint = []string{"{{ default }}", code.String()}
 			}
-			return 1
+			return event
 		},
 	})
 	if err != nil {
@@ -229,7 +239,11 @@ func main() {
 }
 
 func (e *environment) getHealth(w http.ResponseWriter, _ *http.Request) {
-	w.WriteHeader(http.StatusNoContent)
+	if _, err := os.Stat("/tmp/vroom.down"); err != nil {
+		w.WriteHeader(http.StatusOK)
+	} else {
+		w.WriteHeader(http.StatusBadGateway)
+	}
 }
 
 type Filter struct {

@@ -22,6 +22,7 @@ type (
 	IssueTitle   string
 	Type         int
 	Context      string
+	PayloadType  string
 
 	Evidence struct {
 		Name      EvidenceName `json:"name"`
@@ -56,6 +57,7 @@ type (
 		ID              string                 `json:"id"`
 		IssueTitle      IssueTitle             `json:"issue_title"`
 		Level           string                 `json:"level,omitempty"`
+		PayloadType     PayloadType            `json:"payload_type"`
 		ProjectID       uint64                 `json:"project_id"`
 		ResourceID      string                 `json:"resource_id,omitempty"`
 		Subtitle        string                 `json:"subtitle"`
@@ -75,24 +77,34 @@ type (
 		IssueTitle IssueTitle
 		Type       Type
 	}
+
+	Category string
 )
 
 const (
-	NoneType        Type = 0
-	CoreDataType    Type = 2004
-	FileIOType      Type = 2001
-	ImageDecodeType Type = 2002
-	JSONDecodeType  Type = 2003
-	RegexType       Type = 2007
-	ViewType        Type = 2006
+	NoneType               Type = 0
+	CoreDataType           Type = 2004
+	FileIOType             Type = 2001
+	ImageDecodeType        Type = 2002
+	JSONDecodeType         Type = 2003
+	RegexType              Type = 2007
+	ViewType               Type = 2006
+	FrameDropType          Type = 2009
+	FrameRegressionExpType Type = 2010
+	FrameRegressionType    Type = 2011
 
-	EvidenceNameDuration EvidenceName = "Duration"
-	EvidenceNameFunction EvidenceName = "Suspect function"
-	EvidenceNamePackage  EvidenceName = "Package"
+	EvidenceNameDuration       EvidenceName = "Duration"
+	EvidenceNameFunction       EvidenceName = "Suspect function"
+	EvidenceNamePackage        EvidenceName = "Package"
+	EvidenceFullyQualifiedName EvidenceName = "Fully qualified name"
+	EvidenceBreakpoint         EvidenceName = "Breakpoint"
+	EvidenceRegression         EvidenceName = "Regression"
 
 	ContextTrace Context = "trace"
 
 	ProfileID string = "profile_id"
+
+	OccurrencePayload PayloadType = "occurrence"
 )
 
 var issueTitles = map[Category]CategoryMetadata{
@@ -106,6 +118,7 @@ var issueTitles = map[Category]CategoryMetadata{
 	Decompression:    {IssueTitle: "Decompression on Main Thread"},
 	FileRead:         {IssueTitle: "File I/O on Main Thread"},
 	FileWrite:        {IssueTitle: "File I/O on Main Thread"},
+	FrameDrop:        {IssueTitle: "Frame Drop", Type: FrameDropType},
 	HTTP:             {IssueTitle: "Network I/O on Main Thread"},
 	ImageDecode:      {IssueTitle: "Image Decoding on Main Thread", Type: ImageDecodeType},
 	ImageEncode:      {IssueTitle: "Image Encoding on Main Thread"},
@@ -138,41 +151,14 @@ func NewOccurrence(p profile.Profile, ni nodeInfo) *Occurrence {
 		title = IssueTitle(fmt.Sprintf("%v issue detected", ni.Category))
 	}
 	pf := p.Platform()
-	nodeDuration := time.Duration(ni.Node.DurationNS).Round(10 * time.Microsecond)
-	profilePercentage := float64(ni.Node.DurationNS*100) / float64(p.DurationNS())
-	evidenceData := map[string]interface{}{
-		"frame_duration_ns":   ni.Node.DurationNS,
-		"frame_module":        ni.Node.Frame.Module,
-		"frame_name":          ni.Node.Name,
-		"frame_package":       ni.Node.Frame.Package,
-		"profile_duration_ns": p.DurationNS(),
-		"template_name":       "profile",
-		"transaction_id":      t.ID,
-		"transaction_name":    t.Name,
-		ProfileID:             p.ID(),
-	}
-	var duration string
 	switch pf {
 	case platform.Android:
-		duration = fmt.Sprintf(
-			"%s (%0.2f%% of the profile)",
-			nodeDuration,
-			profilePercentage,
-		)
 		pf = platform.Java
 		normalizeAndroidStackTrace(ni.StackTrace)
 		ni.Node.Name = android.StripPackageNameFromFullMethodName(
 			ni.Node.Name,
 			ni.Node.Package,
 		)
-	default:
-		duration = fmt.Sprintf(
-			"%s (%0.2f%% of the profile, found in %d samples)",
-			nodeDuration,
-			profilePercentage,
-			ni.Node.SampleCount,
-		)
-		evidenceData["sample_count"] = ni.Node.SampleCount
 	}
 	h := md5.New()
 	_, _ = io.WriteString(h, strconv.FormatUint(p.ProjectID(), 10))
@@ -201,33 +187,113 @@ func NewOccurrence(p profile.Profile, ni nodeInfo) *Occurrence {
 			Tags:           tags,
 			Timestamp:      p.Timestamp(),
 		},
-		EvidenceData: evidenceData,
+		EvidenceData:    generateEvidenceData(p, ni),
+		EvidenceDisplay: generateEvidenceDisplay(p, ni),
+		Fingerprint:     []string{fingerprint},
+		ID:              eventID(),
+		IssueTitle:      title,
+		Level:           "info",
+		PayloadType:     OccurrencePayload,
+		ProjectID:       p.ProjectID(),
+		Subtitle:        ni.Node.Name,
+		Type:            issueType,
+		category:        ni.Category,
+		durationNS:      ni.Node.DurationNS,
+		sampleCount:     ni.Node.SampleCount,
+	}
+}
+
+func FromRegressedFunction(
+	pf platform.Platform,
+	regressed RegressedFunction,
+	f frame.Frame,
+) *Occurrence {
+	switch pf {
+	case platform.Android:
+		pf = platform.Java
+	}
+
+	fullyQualifiedName := f.FullyQualifiedName(pf)
+	now := time.Now().UTC()
+	fingerprint := fmt.Sprintf("%x", regressed.Fingerprint)
+	beforeP95 := time.Duration(regressed.AggregateRange1).Round(10 * time.Microsecond)
+	afterP95 := time.Duration(regressed.AggregateRange2).Round(10 * time.Microsecond)
+
+	occurrenceType := FrameRegressionExpType
+	var issueTitle IssueTitle = "Function Duration Regression (Experimental)"
+	if regressed.Released {
+		occurrenceType = FrameRegressionType
+		issueTitle = "Function Regression"
+	}
+
+	return &Occurrence{
+		Culprit:       fullyQualifiedName,
+		DetectionTime: now,
+		Event: Event{
+			ID:             eventID(),
+			OrganizationID: regressed.OrganizationID,
+			Platform:       pf,
+			ProjectID:      regressed.ProjectID,
+			Received:       now,
+			Timestamp:      now,
+			Tags:           make(map[string]string),
+		},
+		EvidenceData: map[string]interface{}{
+			"organization_id": regressed.OrganizationID,
+			"project_id":      regressed.ProjectID,
+			"profile_id":      regressed.ProfileID,
+
+			// frame info
+			"file":        f.File,
+			"fingerprint": regressed.Fingerprint,
+			"function":    f.Function,
+			"module":      f.Module,
+			"package":     f.Package,
+			"path":        f.Path,
+			"symbol":      f.Symbol,
+
+			// trend info
+			"absolute_percentage_change": regressed.AbsolutePercentageChange,
+			"aggregate_range_1":          regressed.AggregateRange1,
+			"aggregate_range_2":          regressed.AggregateRange2,
+			"breakpoint":                 regressed.Breakpoint,
+			"trend_difference":           regressed.TrendDifference,
+			"trend_percentage":           regressed.TrendPercentage,
+			"unweighted_p_value":         regressed.UnweightedPValue,
+			"unweighted_t_value":         regressed.UnweightedTValue,
+		},
 		EvidenceDisplay: []Evidence{
 			{
 				Important: true,
-				Name:      EvidenceNameFunction,
-				Value:     ni.Node.Name,
+				Name:      EvidenceRegression,
+				Value: fmt.Sprintf(
+					"%s duration increased from %s to %s (P95).",
+					fullyQualifiedName,
+					beforeP95,
+					afterP95,
+				),
 			},
-
 			{
-				Name:  EvidenceNamePackage,
-				Value: ni.Node.Package,
+				Name:  EvidenceBreakpoint,
+				Value: strconv.FormatUint(regressed.Breakpoint, 10),
 			},
 			{
-				Name:  EvidenceNameDuration,
-				Value: duration,
+				Name:  EvidenceFullyQualifiedName,
+				Value: fullyQualifiedName,
 			},
 		},
 		Fingerprint: []string{fingerprint},
 		ID:          eventID(),
-		IssueTitle:  title,
+		IssueTitle:  issueTitle,
 		Level:       "info",
-		ProjectID:   p.ProjectID(),
-		Subtitle:    ni.Node.Name,
-		Type:        issueType,
-		category:    ni.Category,
-		durationNS:  ni.Node.DurationNS,
-		sampleCount: ni.Node.SampleCount,
+		PayloadType: OccurrencePayload,
+		ProjectID:   regressed.ProjectID,
+		Subtitle: fmt.Sprintf(
+			"Duration increased from %s to %s (P95).",
+			beforeP95,
+			afterP95,
+		),
+		Type: occurrenceType,
 	}
 }
 
@@ -239,4 +305,69 @@ func normalizeAndroidStackTrace(st []frame.Frame) {
 	for i := range st {
 		st[i].Function = android.StripPackageNameFromFullMethodName(st[i].Function, st[i].Package)
 	}
+}
+
+func generateEvidenceData(p profile.Profile, ni nodeInfo) map[string]interface{} {
+	t := p.Transaction()
+	evidenceData := map[string]interface{}{
+		"frame_duration_ns":   ni.Node.DurationNS,
+		"frame_module":        ni.Node.Frame.Module,
+		"frame_name":          ni.Node.Name,
+		"frame_package":       ni.Node.Frame.Package,
+		"profile_duration_ns": p.DurationNS(),
+		"template_name":       "profile",
+		"transaction_id":      t.ID,
+		"transaction_name":    t.Name,
+		ProfileID:             p.ID(),
+	}
+	switch ni.Category {
+	case FrameDrop:
+	default:
+		switch p.Platform() {
+		case platform.Android:
+			evidenceData["sample_count"] = ni.Node.SampleCount
+		}
+	}
+	return evidenceData
+}
+
+func generateEvidenceDisplay(p profile.Profile, ni nodeInfo) []Evidence {
+	evidenceDisplay := []Evidence{
+		{
+			Important: true,
+			Name:      EvidenceNameFunction,
+			Value:     ni.Node.Name,
+		},
+		{
+			Name:  EvidenceNamePackage,
+			Value: ni.Node.Package,
+		},
+	}
+	switch ni.Category {
+	case FrameDrop:
+	default:
+		nodeDuration := time.Duration(ni.Node.DurationNS).Round(10 * time.Microsecond)
+		profilePercentage := float64(ni.Node.DurationNS*100) / float64(p.DurationNS())
+		var duration string
+		switch p.Platform() {
+		case platform.Android:
+			duration = fmt.Sprintf(
+				"%s (%0.2f%% of the profile)",
+				nodeDuration,
+				profilePercentage,
+			)
+		default:
+			duration = fmt.Sprintf(
+				"%s (%0.2f%% of the profile, found in %d samples)",
+				nodeDuration,
+				profilePercentage,
+				ni.Node.SampleCount,
+			)
+		}
+		evidenceDisplay = append(evidenceDisplay, Evidence{
+			Name:  EvidenceNameDuration,
+			Value: duration,
+		})
+	}
+	return evidenceDisplay
 }

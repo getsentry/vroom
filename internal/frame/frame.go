@@ -5,15 +5,21 @@ import (
 	"encoding/hex"
 	"fmt"
 	"hash"
+	"hash/fnv"
 	"regexp"
 	"strings"
 
 	"github.com/getsentry/vroom/internal/packageutil"
+	"github.com/getsentry/vroom/internal/platform"
 )
 
 var (
-	windowsPathRegex      = regexp.MustCompile(`(?i)^([a-z]:\\|\\\\)`)
-	packageExtensionRegex = regexp.MustCompile(`\.(dylib|so|a|dll|exe)$`)
+	windowsPathRegex                  = regexp.MustCompile(`(?i)^([a-z]:\\|\\\\)`)
+	packageExtensionRegex             = regexp.MustCompile(`\.(dylib|so|a|dll|exe)$`)
+	javascriptSystemPackagePathRegexp = regexp.MustCompile(`node_modules|^(@moz-extension|chrome-extension)`)
+	cocoaSystemPackage                = map[string]struct{}{
+		"Sentry": {},
+	}
 )
 
 type (
@@ -26,12 +32,14 @@ type (
 		InstructionAddr string `json:"instruction_addr,omitempty"`
 		Lang            string `json:"lang,omitempty"`
 		Line            uint32 `json:"lineno,omitempty"`
+		MethodID        uint64 `json:"-"`
 		Module          string `json:"module,omitempty"`
 		Package         string `json:"package,omitempty"`
 		Path            string `json:"abs_path,omitempty"`
 		Status          string `json:"status,omitempty"`
 		SymAddr         string `json:"sym_addr,omitempty"`
 		Symbol          string `json:"symbol,omitempty"`
+		Platform        string `json:"platform,omitempty"`
 	}
 
 	Data struct {
@@ -136,6 +144,10 @@ func (f Frame) WriteToHash(h hash.Hash) {
 		s = "-"
 	}
 	h.Write([]byte(s))
+	// Important for native platforms to distinguish unknown frames
+	if f.InstructionAddr != "" {
+		h.Write([]byte(f.InstructionAddr))
+	}
 }
 
 func (f Frame) IsInline() bool {
@@ -146,6 +158,14 @@ func (f Frame) IsNodeApplicationFrame() bool {
 	return !strings.HasPrefix(f.Path, "node:internal") && !strings.Contains(f.Path, "node_modules")
 }
 
+func (f Frame) IsJavaScriptApplicationFrame() bool {
+	if len(f.Path) == 0 {
+		return true
+	}
+
+	return !javascriptSystemPackagePathRegexp.MatchString(f.Path)
+}
+
 func (f Frame) IsCocoaApplicationFrame() bool {
 	isMain, _ := f.IsMain()
 	if isMain {
@@ -153,6 +173,13 @@ func (f Frame) IsCocoaApplicationFrame() bool {
 		// as a system frame as it does not contain any user code
 		return false
 	}
+
+	// Some packages are known to be system packages.
+	// If we detect them, mark them as a system frame immediately.
+	if _, exists := cocoaSystemPackage[f.ModuleOrPackage()]; exists {
+		return false
+	}
+
 	return packageutil.IsCocoaApplicationPackage(f.Package)
 }
 
@@ -169,10 +196,75 @@ func (f Frame) IsPythonApplicationFrame() bool {
 	}
 
 	module := strings.SplitN(f.Module, ".", 2)
+
+	// It's possible that users do not install packages
+	// into one of the default paths. In this case, we
+	// should try to classify the sdk as a system frame
+	// at least to minimum false classification.
+	if module[0] == "sentry_sdk" {
+		return false
+	}
+
 	_, ok := pythonStdlib[module[0]]
 	return !ok
 }
 
 func (f Frame) IsPHPApplicationFrame() bool {
 	return !strings.Contains(f.Path, "/vendor/")
+}
+
+func (f Frame) Fingerprint() uint32 {
+	h := fnv.New64()
+	h.Write([]byte(f.ModuleOrPackage()))
+	h.Write([]byte{':'})
+	h.Write([]byte(f.Function))
+
+	// casting to an uint32 here because snuba does not handle uint64 values well
+	// as it is converted to a float somewhere not changing to the 32 bit hash
+	// function here to preserve backwards compatibility with existing fingerprints
+	// that we can cast
+	return uint32(h.Sum64())
+}
+
+func defaultFormatter(f Frame) string {
+	return f.Function
+}
+
+func makeJoinedNameFormatter(separator string) func(f Frame) string {
+	return func(f Frame) string {
+		// These platforms can additionally use the module/package name to fully
+		// qualify the function name and uses `.` as the separator. So extract the
+		// module/package name, and concatenate it with the function name.
+		moduleOrPackage := f.ModuleOrPackage()
+		if moduleOrPackage == "" {
+			return f.Function
+		}
+		return fmt.Sprintf("%s%s%s", moduleOrPackage, separator, f.Function)
+	}
+}
+
+var fullyQualifiedNameFormatters = map[platform.Platform]func(f Frame) string{
+	// These platforms have the module name as a prefix of the function already.
+	// So no formatting required.
+	platform.Android: defaultFormatter,
+	platform.Java:    defaultFormatter,
+	platform.PHP:     defaultFormatter,
+
+	// The package name for these platforms varies depending on how it's compiled.
+	// So we just use the function name.
+	platform.Cocoa: defaultFormatter,
+
+	// These platforms can additionally use the module/package name to fully
+	// qualify the function name and uses `.` as the separator. So extract the
+	// module/package name, and concatenate it with the function name.
+	platform.Python: makeJoinedNameFormatter("."),
+	platform.Node:   makeJoinedNameFormatter("."),
+}
+
+func (f Frame) FullyQualifiedName(p platform.Platform) string {
+	formatter, ok := fullyQualifiedNameFormatters[p]
+	if !ok {
+		formatter = defaultFormatter
+	}
+	return formatter(f)
 }

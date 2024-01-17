@@ -1,0 +1,89 @@
+name: continuous-integration
+
+on:
+  pull_request:
+    branches:
+      - '*'
+  push:
+    branches:
+      - main
+
+concurrency:
+    group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+    cancel-in-progress: true
+
+env:
+  SHELL: /bin/bash
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  trufflehog:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    - name: TruffleHog OSS
+      uses: trufflesecurity/trufflehog@v3.63.9
+      with:
+        path: ./
+        base: ${{ github.event.repository.default_branch }}
+        head: HEAD
+        extra_args: --debug --only-verified
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    - uses: actions/setup-go@v5
+      with:
+        go-version: stable
+        cache: false
+    - run: go install golang.org/x/tools/cmd/goimports@latest
+    - name: golangci-lint
+      uses: golangci/golangci-lint-action@v3
+      with:
+        version: latest
+    - uses: pre-commit/action@v3.0.0
+
+  test-vroom:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    - uses: actions/setup-go@v5
+      with:
+        go-version: stable
+        cache: false
+    - run: make test
+
+  publish-to-dockerhub:
+    name: Publish Vroom to DockerHub
+    runs-on: ubuntu-20.04
+    if: ${{ (github.ref_name == 'main') }}
+    steps:
+      - uses: actions/checkout@v4
+      - timeout-minutes: 20
+        run: until docker pull "us.gcr.io/sentryio/vroom:${{ github.sha }}" 2>/dev/null; do sleep 10; done
+      - name: Push built docker image
+        shell: bash
+        run: |
+          IMAGE_URL="us.gcr.io/sentryio/vroom:${{ github.sha }}"
+          docker login --username=sentrybuilder --password ${{ secrets.DOCKER_HUB_RW_TOKEN }}
+          # We push 3 tags to Dockerhub:
+          # first, the full sha of the commit
+          docker tag "$IMAGE_URL" getsentry/vroom:${GITHUB_SHA}
+          docker push getsentry/vroom:${GITHUB_SHA}
+          # second, the short sha of the commit
+          SHORT_SHA=$(git rev-parse --short "$GITHUB_SHA")
+          docker tag "$IMAGE_URL" getsentry/vroom:${SHORT_SHA}
+          docker push getsentry/vroom:${SHORT_SHA}
+          # finally, nightly
+          docker tag "$IMAGE_URL" getsentry/vroom:nightly
+          docker push getsentry/vroom:nightly

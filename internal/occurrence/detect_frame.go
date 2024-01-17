@@ -1,7 +1,10 @@
 package occurrence
 
 import (
+	"strings"
 	"time"
+
+	"log/slog"
 
 	"github.com/getsentry/vroom/internal/frame"
 	"github.com/getsentry/vroom/internal/nodetree"
@@ -10,7 +13,22 @@ import (
 )
 
 type (
+	DetectFrameOptions interface {
+		onlyCheckActiveThread() bool
+		checkNode(*nodetree.Node) *nodeInfo
+	}
+
 	DetectExactFrameOptions struct {
+		ActiveThreadOnly   bool
+		DurationThreshold  time.Duration
+		FunctionsByPackage map[string]map[string]Category
+
+		// SampleThreshold is the minimum number of samples in which we need to
+		// detect the frame in order to create an occurrence.
+		SampleThreshold int
+	}
+
+	DetectAndroidFrameOptions struct {
 		ActiveThreadOnly   bool
 		DurationThreshold  time.Duration
 		FunctionsByPackage map[string]map[string]Category
@@ -30,8 +48,6 @@ type (
 		Node       nodetree.Node
 		StackTrace []frame.Frame
 	}
-
-	Category string
 )
 
 const (
@@ -63,9 +79,92 @@ const (
 	XPC              Category = "xpc"
 )
 
-var detectFrameJobs = map[platform.Platform][]DetectExactFrameOptions{
+func (options DetectExactFrameOptions) onlyCheckActiveThread() bool {
+	return options.ActiveThreadOnly
+}
+
+func (options DetectExactFrameOptions) checkNode(n *nodetree.Node) *nodeInfo {
+	// Check if we have a list of functions associated to the package.
+	functions, exists := options.FunctionsByPackage[n.Package]
+	if !exists {
+		return nil
+	}
+
+	// Check if we need to detect that function.
+	category, exists := functions[n.Name]
+	if !exists {
+		return nil
+	}
+
+	// Check if it's above the duration threshold.
+	if n.DurationNS < uint64(options.DurationThreshold) {
+		return nil
+	}
+
+	// Check if it's above the sample threshold.
+	if n.SampleCount < options.SampleThreshold {
+		return nil
+	}
+
+	ni := nodeInfo{
+		Category: category,
+		Node:     *n,
+	}
+	ni.Node.Children = nil
+	return &ni
+}
+
+func (options DetectAndroidFrameOptions) onlyCheckActiveThread() bool {
+	return options.ActiveThreadOnly
+}
+
+func (options DetectAndroidFrameOptions) checkNode(n *nodetree.Node) *nodeInfo {
+	// Check if we have a list of functions associated to the package.
+	functions, exists := options.FunctionsByPackage[n.Package]
+	if !exists {
+		slog.Debug("package doesn't exist", slog.String("package", n.Package))
+		return nil
+	}
+
+	// Android frame names contain the deobfuscated signature.
+	// Here we strip away the argument and return types to only
+	// match on the the package + function name.
+	name := n.Name
+	parts := strings.SplitN(name, "(", 2)
+	if len(parts) > 0 {
+		name = parts[0]
+	}
+
+	// Check if we need to detect that function.
+	category, exists := functions[name]
+	if !exists {
+		slog.Debug("function doesn't exist", slog.String("function", name))
+		return nil
+	}
+
+	// Check if it's above the duration threshold.
+	if n.DurationNS < uint64(options.DurationThreshold) {
+		slog.Debug("duration is too small", slog.Uint64("duration_ns", n.DurationNS))
+		return nil
+	}
+
+	// Check if it's above the sample threshold.
+	if n.SampleCount < options.SampleThreshold {
+		slog.Debug("sample count is too low", slog.Int("sample_count", n.SampleCount))
+		return nil
+	}
+
+	ni := nodeInfo{
+		Category: category,
+		Node:     *n,
+	}
+	ni.Node.Children = nil
+	return &ni
+}
+
+var detectFrameJobs = map[platform.Platform][]DetectFrameOptions{
 	platform.Node: {
-		{
+		DetectExactFrameOptions{
 			ActiveThreadOnly: true,
 			FunctionsByPackage: map[string]map[string]Category{
 				"node:fs": {
@@ -114,7 +213,7 @@ var detectFrameJobs = map[platform.Platform][]DetectExactFrameOptions{
 				},
 			},
 		},
-		{
+		DetectExactFrameOptions{
 			DurationThreshold: 100 * time.Millisecond,
 			FunctionsByPackage: map[string]map[string]Category{
 				"": {
@@ -125,7 +224,7 @@ var detectFrameJobs = map[platform.Platform][]DetectExactFrameOptions{
 		},
 	},
 	platform.Cocoa: {
-		{
+		DetectExactFrameOptions{
 			ActiveThreadOnly:  true,
 			DurationThreshold: 16 * time.Millisecond,
 			SampleThreshold:   4,
@@ -184,6 +283,7 @@ var detectFrameJobs = map[platform.Platform][]DetectExactFrameOptions{
 					"JSONDecoder.decode<A>(_: A.Type, from: Any)":                                           JSONDecode,
 					"JSONDecoder.decode<A>(_: A.Type, from: Data)":                                          JSONDecode,
 					"JSONDecoder.decode<A>(_: A.Type, jsonData: Data, logErrors: Bool)":                     JSONDecode,
+					"-[_NSJSONReader parseData:options:error:]":                                             JSONEncode,
 					"JSONEncoder.encode<A>(A)":                                                              JSONEncode,
 					"NSFileManager.contents(atURL: URL)":                                                    FileRead,
 				},
@@ -260,135 +360,106 @@ var detectFrameJobs = map[platform.Platform][]DetectExactFrameOptions{
 					"ViewRendererHost.updateViewGraph<A>(body: (ViewGraph))":             ViewUpdate,
 				},
 				"UIKit": {
-					"-[UINib instantiateWithOwner:options:]": ViewInflation,
+					"-[_UIPathLazyImageAsset imageWithConfiguration:]": ImageDecode,
+					"-[UINib instantiateWithOwner:options:]":           ViewInflation,
 				},
 			},
 		},
 	},
 	platform.Android: {
-		{
+		DetectAndroidFrameOptions{
 			ActiveThreadOnly:  true,
 			DurationThreshold: 40 * time.Millisecond,
 			FunctionsByPackage: map[string]map[string]Category{
 				"com.google.gson": {
-					"com.google.gson.Gson.fromJson(JsonElement, Class): Object":    JSONDecode,
-					"com.google.gson.Gson.fromJson(JsonElement, Type): Object":     JSONDecode,
-					"com.google.gson.Gson.fromJson(JsonReader, Type): Object":      JSONDecode,
-					"com.google.gson.Gson.fromJson(JsonReader, TypeToken): Object": JSONDecode,
-					"com.google.gson.Gson.fromJson(Reader, Class): Object":         JSONDecode,
-					"com.google.gson.Gson.fromJson(Reader, Type): Object":          JSONDecode,
-					"com.google.gson.Gson.fromJson(Reader, TypeToken): Object":     JSONDecode,
-					"com.google.gson.Gson.fromJson(String, Class): Object":         JSONDecode,
-					"com.google.gson.Gson.fromJson(String, Type): Object":          JSONDecode,
-					"com.google.gson.Gson.toJson(JsonElement): String":             JSONEncode,
-					"com.google.gson.Gson.toJson(JsonElement, Appendable)":         JSONEncode,
-					"com.google.gson.Gson.toJson(JsonElement, JsonWriter)":         JSONEncode,
-					"com.google.gson.Gson.toJson(Object): String":                  JSONEncode,
-					"com.google.gson.Gson.toJson(Object, Appendable)":              JSONEncode,
-					"com.google.gson.Gson.toJson(Object, Type): String":            JSONEncode,
-					"com.google.gson.Gson.toJson(Object, Type, Appendable)":        JSONEncode,
-					"com.google.gson.Gson.toJson(Object, Type, JsonWriter)":        JSONEncode,
-					"com.google.gson.Gson.toJsonTree(Object): JsonElement":         JSONEncode,
-					"com.google.gson.Gson.toJsonTree(Object, Type): JsonElement":   JSONEncode,
+					"com.google.gson.Gson.fromJson":   JSONDecode,
+					"com.google.gson.Gson.toJson":     JSONEncode,
+					"com.google.gson.Gson.toJsonTree": JSONEncode,
 				},
 				"org.json": {
-					"org.json.JSONArray.get(int): Object":                    JSONDecode,
-					"org.json.JSONArray.opt(int): Object":                    JSONDecode,
-					"org.json.JSONArray.writeTo(JSONStringer)":               JSONEncode,
-					"org.json.JSONObject.checkName(String): String":          JSONDecode,
-					"org.json.JSONObject.get(String): Object":                JSONDecode,
-					"org.json.JSONObject.opt(String): Object":                JSONDecode,
-					"org.json.JSONObject.put(String, Object): JSONObject":    JSONEncode,
-					"org.json.JSONObject.putOpt(String, Object): JSONObject": JSONEncode,
-					"org.json.JSONObject.remove(String): Object":             JSONEncode,
-					"org.json.JSONObject.writeTo(JSONStringer)":              JSONEncode,
+					"org.json.JSONArray.get":        JSONDecode,
+					"org.json.JSONArray.opt":        JSONDecode,
+					"org.json.JSONArray.writeTo":    JSONEncode,
+					"org.json.JSONObject.checkName": JSONDecode,
+					"org.json.JSONObject.get":       JSONDecode,
+					"org.json.JSONObject.opt":       JSONDecode,
+					"org.json.JSONObject.put":       JSONEncode,
+					"org.json.JSONObject.putOpt":    JSONEncode,
+					"org.json.JSONObject.remove":    JSONEncode,
+					"org.json.JSONObject.writeTo":   JSONEncode,
 				},
 				"android.content.res": {
-					"android.content.res.AssetManager.open(String, int): InputStream":      FileRead,
-					"android.content.res.AssetManager.openFd(String): AssetFileDescriptor": FileRead,
+					"android.content.res.AssetManager.open":   FileRead,
+					"android.content.res.AssetManager.openFd": FileRead,
 				},
 				"java.io": {
-					"java.io.File.canExecute(): boolean":                        FileRead,
-					"java.io.File.canRead(): boolean":                           FileRead,
-					"java.io.File.canWrite(): boolean":                          FileRead,
-					"java.io.File.createNewFile(): boolean":                     FileWrite,
-					"java.io.File.createTempFile(String, String): File":         FileWrite,
-					"java.io.File.createTempFile(String, String, File): File":   FileWrite,
-					"java.io.File.delete(): boolean":                            FileWrite,
-					"java.io.File.exists(): boolean":                            FileRead,
-					"java.io.File.length(): long":                               FileRead,
-					"java.io.File.mkdir(): boolean":                             FileWrite,
-					"java.io.File.mkdirs(): boolean":                            FileWrite,
-					"java.io.File.mkdirs(boolean): boolean":                     FileWrite,
-					"java.io.File.renameTo(File): boolean":                      FileWrite,
-					"java.io.FileInputStream.open(String)":                      FileRead,
-					"java.io.FileInputStream.read(byte[], int, int): int":       FileRead,
-					"java.io.FileOutputStream.open(String, boolean)":            FileRead,
-					"java.io.FileOutputStream.write(byte[], int, int)":          FileWrite,
-					"java.io.RandomAccessFile.readBytes(byte[], int, int): int": FileRead,
-					"java.io.RandomAccessFile.writeBytes(byte[], int, int)":     FileWrite,
+					"java.io.File.canExecute":             FileRead,
+					"java.io.File.canRead":                FileRead,
+					"java.io.File.canWrite":               FileRead,
+					"java.io.File.createNewFile":          FileWrite,
+					"java.io.File.createTempFile":         FileWrite,
+					"java.io.File.delete":                 FileWrite,
+					"java.io.File.exists":                 FileRead,
+					"java.io.File.length":                 FileRead,
+					"java.io.File.mkdir":                  FileWrite,
+					"java.io.File.mkdirs":                 FileWrite,
+					"java.io.File.renameTo":               FileWrite,
+					"java.io.FileInputStream.open":        FileRead,
+					"java.io.FileInputStream.read":        FileRead,
+					"java.io.FileOutputStream.open":       FileRead,
+					"java.io.FileOutputStream.write":      FileWrite,
+					"java.io.RandomAccessFile.readBytes":  FileRead,
+					"java.io.RandomAccessFile.writeBytes": FileWrite,
 				},
 				"okio": {
-					"okio.Buffer.read(Buffer, long): long":              FileRead,
-					"okio.Buffer.read(ByteBuffer): int":                 FileRead,
-					"okio.Buffer.read(byte[], int, int): int":           FileRead,
-					"okio.Buffer.readByte(): byte":                      FileRead,
-					"okio.Buffer.write(Buffer, long)":                   FileWrite,
-					"okio.Buffer.write(ByteString): Buffer":             FileWrite,
-					"okio.Buffer.write(ByteString): BufferedSink":       FileWrite,
-					"okio.Buffer.write(byte[]): BufferedSink":           FileWrite,
-					"okio.Buffer.write(byte[], int, int)":               FileWrite,
-					"okio.Buffer.write(byte[], int, int): Buffer":       FileWrite,
-					"okio.Buffer.write(byte[], int, int): BufferedSink": FileWrite,
-					"okio.Buffer.writeAll(Source): long":                FileWrite,
+					"okio.Buffer.read":     FileRead,
+					"okio.Buffer.readByte": FileRead,
+					"okio.Buffer.write":    FileWrite,
+					"okio.Buffer.writeAll": FileWrite,
 				},
 				"android.graphics": {
-					"android.graphics.BitmapFactory.decodeByteArray(byte[], int, int, BitmapFactory$Options): Bitmap":          ImageDecode,
-					"android.graphics.BitmapFactory.decodeFile(String, BitmapFactory$Options): Bitmap":                         ImageDecode,
-					"android.graphics.BitmapFactory.decodeFileDescriptor(FileDescriptor, Rect, BitmapFactory$Options): Bitmap": ImageDecode,
-					"android.graphics.BitmapFactory.decodeStream(InputStream, Rect, BitmapFactory$Options): Bitmap":            ImageDecode,
-					"android.graphics.BitmapFactory.decodeStream(InputStream, Rect, BitmapFactory$Options, boolean): Bitmap":   ImageDecode,
+					"android.graphics.BitmapFactory.decodeByteArray":      ImageDecode,
+					"android.graphics.BitmapFactory.decodeFile":           ImageDecode,
+					"android.graphics.BitmapFactory.decodeFileDescriptor": ImageDecode,
+					"android.graphics.BitmapFactory.decodeStream":         ImageDecode,
 				},
 				"android.database.sqlite": {
-					"android.database.sqlite.SQLiteDatabase.insertWithOnConflict(String, String, ContentValues, int): long":                                          SQL,
-					"android.database.sqlite.SQLiteDatabase.open()":                                                                                                  SQL,
-					"android.database.sqlite.SQLiteDatabase.open(String, String)":                                                                                    SQL,
-					"android.database.sqlite.SQLiteDatabase.query(boolean, String, String[], String, String[], String, String, String, String): Cursor":              SQL,
-					"android.database.sqlite.SQLiteDatabase.rawQueryWithFactory(SQLiteDatabase$CursorFactory, String, String[], String, CancellationSignal): Cursor": SQL,
-					"android.database.sqlite.SQLiteStatement.execute()":                                                                                              SQL,
-					"android.database.sqlite.SQLiteStatement.executeInsert(): long":                                                                                  SQL,
-					"android.database.sqlite.SQLiteStatement.executeUpdateDelete(): int":                                                                             SQL,
-					"android.database.sqlite.SQLiteStatement.simpleQueryForLong(): long":                                                                             SQL,
+					"android.database.sqlite.SQLiteDatabase.insertWithOnConflict": SQL,
+					"android.database.sqlite.SQLiteDatabase.open":                 SQL,
+					"android.database.sqlite.SQLiteDatabase.query":                SQL,
+					"android.database.sqlite.SQLiteDatabase.rawQueryWithFactory":  SQL,
+					"android.database.sqlite.SQLiteStatement.execute":             SQL,
+					"android.database.sqlite.SQLiteStatement.executeInsert":       SQL,
+					"android.database.sqlite.SQLiteStatement.executeUpdateDelete": SQL,
+					"android.database.sqlite.SQLiteStatement.simpleQueryForLong":  SQL,
 				},
 				"androidx.room": {
-					"androidx.room.RoomDatabase.query(SupportSQLiteQuery): Cursor":                     SQL,
-					"androidx.room.RoomDatabase.query(SupportSQLiteQuery, CancellationSignal): Cursor": SQL,
+					"androidx.room.RoomDatabase.query": SQL,
 				},
 				"java.util.zip": {
-					"java.util.zip.Deflater.deflate(byte[], int, int, int): int":            Compression,
-					"java.util.zip.Deflater.deflateBytes(long, byte[], int, int, int): int": Compression,
-					"java.util.zip.DeflaterOutputStream.write(byte[], int, int)":            Compression,
-					"java.util.zip.GZIPInputStream.read(byte[], int, int): int":             Compression,
-					"java.util.zip.GZIPOutputStream.write(byte[], int, int)":                Compression,
-					"java.util.zip.Inflater.inflate(byte[], int, int): int":                 Compression,
-					"java.util.zip.Inflater.inflateBytes(long, byte[], int, int): int":      Compression,
+					"java.util.zip.Deflater.deflate":           Compression,
+					"java.util.zip.Deflater.deflateBytes":      Compression,
+					"java.util.zip.DeflaterOutputStream.write": Compression,
+					"java.util.zip.GZIPInputStream.read":       Compression,
+					"java.util.zip.GZIPOutputStream.write":     Compression,
+					"java.util.zip.Inflater.inflate":           Compression,
+					"java.util.zip.Inflater.inflateBytes":      Compression,
 				},
 				"java.util": {
-					"java.util.Base64$Decoder.decode(String): byte[]":                 Base64Decode,
-					"java.util.Base64$Decoder.decode(byte[]): byte[]":                 Base64Decode,
-					"java.util.Base64$Decoder.decode0(byte[], int, int, byte[]): int": Base64Decode,
+					"java.util.Base64$Decoder.decode":  Base64Decode,
+					"java.util.Base64$Decoder.decode0": Base64Decode,
 				},
 				"java.util.regex": {
-					"java.util.regex.Matcher.matches(): boolean":   Regex,
-					"java.util.regex.Matcher.find(): boolean":      Regex,
-					"java.util.regex.Matcher.lookingAt(): boolean": Regex,
+					"java.util.regex.Matcher.matches":   Regex,
+					"java.util.regex.Matcher.find":      Regex,
+					"java.util.regex.Matcher.lookingAt": Regex,
 				},
 				"kotlinx.coroutines": {
-					"kotlinx.coroutines.AwaitAll.await(d): Object":                    ThreadWait,
-					"kotlinx.coroutines.AwaitKt.awaitAll(Collection, d): Object":      ThreadWait,
-					"kotlinx.coroutines.BlockingCoroutine.joinBlocking(): Object":     ThreadWait,
-					"kotlinx.coroutines.JobSupport.join(Continuation): Object":        ThreadWait,
-					"kotlinx.coroutines.JobSupport.joinSuspend(Continuation): Object": ThreadWait,
+					"kotlinx.coroutines.AwaitAll.await":                 ThreadWait,
+					"kotlinx.coroutines.AwaitKt.awaitAll":               ThreadWait,
+					"kotlinx.coroutines.BlockingCoroutine.joinBlocking": ThreadWait,
+					"kotlinx.coroutines.JobSupport.join":                ThreadWait,
+					"kotlinx.coroutines.JobSupport.joinSuspend":         ThreadWait,
 				},
 			},
 		},
@@ -399,14 +470,18 @@ var detectFrameJobs = map[platform.Platform][]DetectExactFrameOptions{
 func detectFrame(
 	p profile.Profile,
 	callTreesPerThreadID map[uint64][]*nodetree.Node,
-	options DetectExactFrameOptions,
+	options DetectFrameOptions,
 	occurrences *[]*Occurrence,
 ) {
 	// List nodes matching criteria
 	nodes := make(map[nodeKey]nodeInfo)
-	if options.ActiveThreadOnly {
+	if options.onlyCheckActiveThread() {
 		callTrees, exists := callTreesPerThreadID[p.Transaction().ActiveThreadID]
 		if !exists {
+			slog.Debug(
+				"call tree for active thread ID doesn't exist",
+				slog.Uint64("active_thread_id", p.Transaction().ActiveThreadID),
+			)
 			return
 		}
 		for _, root := range callTrees {
@@ -428,7 +503,7 @@ func detectFrame(
 
 func detectFrameInCallTree(
 	n *nodetree.Node,
-	options DetectExactFrameOptions,
+	options DetectFrameOptions,
 	nodes map[nodeKey]nodeInfo,
 ) {
 	st := make([]frame.Frame, 0, 128)
@@ -437,7 +512,7 @@ func detectFrameInCallTree(
 
 func detectFrameInNode(
 	n *nodetree.Node,
-	options DetectExactFrameOptions,
+	options DetectFrameOptions,
 	nodes map[nodeKey]nodeInfo,
 	st *[]frame.Frame,
 ) *nodeInfo {
@@ -445,16 +520,12 @@ func detectFrameInNode(
 	defer func() {
 		*st = (*st)[:len(*st)-1]
 	}()
-	var issueDetected bool
 	for _, c := range n.Children {
 		if ni := detectFrameInNode(c, options, nodes, st); ni != nil {
-			issueDetected = true
+			return ni
 		}
 	}
-	if issueDetected {
-		return nil
-	}
-	ni := checkNode(n, options)
+	ni := options.checkNode(n)
 	if ni != nil {
 		nk := nodeKey{Package: ni.Node.Package, Function: ni.Node.Name}
 		if _, exists := nodes[nk]; !exists {
@@ -464,38 +535,4 @@ func detectFrameInNode(
 		}
 	}
 	return ni
-}
-
-func checkNode(
-	n *nodetree.Node,
-	options DetectExactFrameOptions,
-) *nodeInfo {
-	// Check if we have a list of functions associated to the package.
-	functions, exists := options.FunctionsByPackage[n.Package]
-	if !exists {
-		return nil
-	}
-
-	// Check if we need to detect that function.
-	category, exists := functions[n.Name]
-	if !exists {
-		return nil
-	}
-
-	// Check if it's above the duration threshold.
-	if n.DurationNS < uint64(options.DurationThreshold) {
-		return nil
-	}
-
-	// Check if it's above the sample threshold.
-	if n.SampleCount < options.SampleThreshold {
-		return nil
-	}
-
-	ni := nodeInfo{
-		Category: category,
-		Node:     *n,
-	}
-	ni.Node.Children = nil
-	return &ni
 }

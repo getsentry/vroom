@@ -10,15 +10,17 @@ import (
 	"strconv"
 
 	"github.com/getsentry/sentry-go"
+	"github.com/google/uuid"
+	"github.com/julienschmidt/httprouter"
+	"github.com/segmentio/kafka-go"
+	"gocloud.dev/gcerrors"
+	"google.golang.org/api/googleapi"
+
 	"github.com/getsentry/vroom/internal/nodetree"
 	"github.com/getsentry/vroom/internal/occurrence"
 	"github.com/getsentry/vroom/internal/platform"
 	"github.com/getsentry/vroom/internal/profile"
 	"github.com/getsentry/vroom/internal/storageutil"
-	"github.com/google/uuid"
-	"github.com/julienschmidt/httprouter"
-	"github.com/segmentio/kafka-go"
-	"google.golang.org/api/googleapi"
 )
 
 const maxUniqueFunctionsPerProfile = 100
@@ -43,7 +45,7 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 
 	var p profile.Profile
 	s = sentry.StartSpan(ctx, "json.unmarshal")
-	s.Description = "Unmarshal Snuba profile"
+	s.Description = "Unmarshal profile"
 	err = json.Unmarshal(body, &p)
 	s.Finish()
 	if err != nil {
@@ -75,16 +77,18 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 		err = storageutil.CompressedWrite(ctx, env.storage, p.StoragePath(), p)
 		s.Finish()
 		if err != nil {
-			var e *googleapi.Error
-			if ok := errors.As(err, &e); ok {
-				w.WriteHeader(http.StatusBadGateway)
-			} else if errors.Is(err, context.DeadlineExceeded) {
+			if errors.Is(err, context.DeadlineExceeded) {
+				// This is a transient error, we'll retry
 				w.WriteHeader(http.StatusTooManyRequests)
 			} else {
+				// These errors won't be retried
 				hub.CaptureException(err)
-				w.WriteHeader(http.StatusInternalServerError)
+				if code := gcerrors.Code(err); code == gcerrors.FailedPrecondition {
+					w.WriteHeader(http.StatusPreconditionFailed)
+				} else {
+					w.WriteHeader(http.StatusInternalServerError)
+				}
 			}
-			return
 		}
 	}
 

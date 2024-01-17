@@ -3,6 +3,8 @@ package frame
 import (
 	"hash/fnv"
 	"testing"
+
+	"github.com/getsentry/vroom/internal/platform"
 )
 
 func frameType(isApplication bool) string {
@@ -45,12 +47,24 @@ func TestIsCocoaApplicationFrame(t *testing.T) {
 			},
 			isApplication: true,
 		},
+		{
+			name: "symbolicate_internal",
+			frame: Frame{
+				Function: "symbolicate_internal",
+				Package:  "/private/var/containers/Bundle/Application/00000000-0000-0000-0000-000000000000/App.app/Frameworks/Sentry.framework/Sentry",
+			},
+			isApplication: false,
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if isApplication := tt.frame.IsCocoaApplicationFrame(); isApplication != tt.isApplication {
-				t.Fatalf("Expected %s frame but got %s frame", frameType(tt.isApplication), frameType(isApplication))
+				t.Fatalf(
+					"Expected %s frame but got %s frame",
+					frameType(tt.isApplication),
+					frameType(isApplication),
+				)
 			}
 		})
 	}
@@ -120,12 +134,23 @@ func TestIsPythonApplicationFrame(t *testing.T) {
 			},
 			isApplication: false,
 		},
+		{
+			name: "sentry_sdk",
+			frame: Frame{
+				Module: "sentry_sdk.profiler",
+			},
+			isApplication: false,
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if isApplication := tt.frame.IsPythonApplicationFrame(); isApplication != tt.isApplication {
-				t.Fatalf("Expected %s frame but got %s frame", frameType(tt.isApplication), frameType(isApplication))
+				t.Fatalf(
+					"Expected %s frame but got %s frame",
+					frameType(tt.isApplication),
+					frameType(isApplication),
+				)
 			}
 		})
 	}
@@ -168,7 +193,65 @@ func TestIsNodeApplicationFrame(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if isApplication := tt.frame.IsNodeApplicationFrame(); isApplication != tt.isApplication {
-				t.Fatalf("Expected %s frame but got %s frame", frameType(tt.isApplication), frameType(isApplication))
+				t.Fatalf(
+					"Expected %s frame but got %s frame",
+					frameType(tt.isApplication),
+					frameType(isApplication),
+				)
+			}
+		})
+	}
+}
+
+func TestIsJavaScriptApplicationFrame(t *testing.T) {
+	tests := []struct {
+		name          string
+		frame         Frame
+		isApplication bool
+	}{
+		{
+			name:          "empty",
+			frame:         Frame{},
+			isApplication: true,
+		},
+		{
+			name: "app",
+			frame: Frame{
+				Path: "/home/user/app/app.js",
+			},
+			isApplication: true,
+		},
+		{
+			name: "node_modules",
+			frame: Frame{
+				Path: "/home/user/app/node_modules/express/lib/express.js",
+			},
+			isApplication: false,
+		},
+		{
+			name: "app",
+			frame: Frame{
+				Path: "@moz-extension://00000000-0000-0000-0000-000000000000/app.js",
+			},
+			isApplication: false,
+		},
+		{
+			name: "app",
+			frame: Frame{
+				Path: "chrome-extension://00000000-0000-0000-0000-000000000000/app.js",
+			},
+			isApplication: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if isApplication := tt.frame.IsJavaScriptApplicationFrame(); isApplication != tt.isApplication {
+				t.Fatalf(
+					"Expected %s frame but got %s frame",
+					frameType(tt.isApplication),
+					frameType(isApplication),
+				)
 			}
 		})
 	}
@@ -214,7 +297,11 @@ func TestIsPHPApplicationFrame(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if isApplication := tt.frame.IsPHPApplicationFrame(); isApplication != tt.isApplication {
-				t.Fatalf("Expected %s frame but got %s frame", frameType(tt.isApplication), frameType(isApplication))
+				t.Fatalf(
+					"Expected %s frame but got %s frame",
+					frameType(tt.isApplication),
+					frameType(isApplication),
+				)
 			}
 		})
 	}
@@ -227,7 +314,7 @@ func TestWriteToHash(t *testing.T) {
 		frame Frame
 	}{
 		{
-			name:  "empty frame",
+			name:  "unknown frame",
 			bytes: []byte("--"),
 			frame: Frame{},
 		},
@@ -260,6 +347,13 @@ func TestWriteToHash(t *testing.T) {
 			bytes: []byte("-qux"),
 			frame: Frame{
 				Function: "qux",
+			},
+		},
+		{
+			name:  "native unknown frame",
+			bytes: []byte("--0x123456789"),
+			frame: Frame{
+				InstructionAddr: "0x123456789",
 			},
 		},
 	}
@@ -328,6 +422,78 @@ func TestTrimPackage(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.expected, func(t *testing.T) {
 			result := trimPackage(tt.pkg)
+			if result != tt.expected {
+				t.Fatalf("Expected %s but got %s", tt.expected, result)
+			}
+		})
+	}
+}
+
+func TestFullyQualifiedName(t *testing.T) {
+	tests := []struct {
+		name     string
+		platform platform.Platform
+		frame    Frame
+		expected string
+	}{
+		{
+			name:     "nodejs no package",
+			platform: platform.Node,
+			frame: Frame{
+				Function: "run",
+			},
+			expected: "run",
+		},
+		{
+			name:     "nodejs",
+			platform: platform.Node,
+			frame: Frame{
+				Package:  "node:events",
+				Function: "emit",
+			},
+			expected: "node:events.emit",
+		},
+		{
+			name:     "android",
+			platform: platform.Android,
+			frame: Frame{
+				Package:  "java.util",
+				Function: "java.util.Arrays.copyOf(byte[], int): byte[]",
+			},
+			expected: "java.util.Arrays.copyOf(byte[], int): byte[]",
+		},
+		{
+			name:     "java",
+			platform: platform.Java,
+			frame: Frame{
+				Package:  "java.util",
+				Function: "java.util.Arrays.copyOf(byte[], int): byte[]",
+			},
+			expected: "java.util.Arrays.copyOf(byte[], int): byte[]",
+		},
+		{
+			name:     "cocoa",
+			platform: platform.Cocoa,
+			frame: Frame{
+				Package:  "/private/var/containers/Bundle/Application/00000000-0000-0000-0000-000000000000/iOS-Swift.app/iOS-Swift",
+				Function: "Controller.doWork()",
+			},
+			expected: "Controller.doWork()",
+		},
+		{
+			name:     "python",
+			platform: platform.Python,
+			frame: Frame{
+				Module:   "threading",
+				Function: "Condition.wait",
+			},
+			expected: "threading.Condition.wait",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := tt.frame.FullyQualifiedName(tt.platform)
 			if result != tt.expected {
 				t.Fatalf("Expected %s but got %s", tt.expected, result)
 			}

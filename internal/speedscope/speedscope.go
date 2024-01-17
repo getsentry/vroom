@@ -2,6 +2,7 @@ package speedscope
 
 import (
 	"encoding/json"
+	"time"
 
 	"github.com/getsentry/vroom/internal/debugmeta"
 	"github.com/getsentry/vroom/internal/measurements"
@@ -101,8 +102,7 @@ type (
 	ProfileMetadata struct {
 		ProfileView
 
-		Timestamp timeutil.Time `json:"timestamp,omitempty"`
-		Version   string        `json:"version"`
+		Version string `json:"version"`
 	}
 
 	ProfileView struct {
@@ -124,10 +124,12 @@ type (
 		OrganizationID       uint64                              `json:"organizationID"`                //nolint:unused
 		Platform             platform.Platform                   `json:"platform"`                      //nolint:unused
 		Profile              json.RawMessage                     `json:"-"`                             //nolint:unused
+		JsProfile            json.RawMessage                     `json:"-"`                             //nolint:unused
 		ProfileID            string                              `json:"profileID"`                     //nolint:unused
 		ProjectID            uint64                              `json:"projectID"`                     //nolint:unused
 		Received             timeutil.Time                       `json:"received"`                      //nolint:unused
 		RetentionDays        int                                 `json:"-"`                             //nolint:unused
+		Timestamp            time.Time                           `json:"timestamp,omitempty"`           //nolint:unused
 		TraceID              string                              `json:"traceID"`                       //nolint:unused
 		TransactionID        string                              `json:"transactionID"`                 //nolint:unused
 		TransactionMetadata  transaction.Metadata                `json:"-"`                             //nolint:unused
