@@ -3,6 +3,7 @@
 **Features**:
 
 - Add support for speedscope rendering of Android reactnative profiles ([#386](https://github.com/getsentry/vroom/pull/386))
+- Use profiles that were not dynamically sampled to enhance slowest functions aggregation ([#300](https://github.com/getsentry/vroom/pull/300))
 
 **Bug Fixes**:
 
