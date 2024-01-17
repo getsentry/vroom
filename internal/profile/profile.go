@@ -39,6 +39,7 @@ type (
 		Speedscope() (speedscope.Output, error)
 		StoragePath() string
 		IsSampled() bool
+		SetProfileID(ID string)
 	}
 
 	Profile struct {
@@ -157,6 +158,10 @@ func (p *Profile) TransactionTags() map[string]string {
 
 func (p *Profile) IsSampled() bool {
 	return p.profile.IsSampled()
+}
+
+func (p *Profile) SetProfileID(ID string) {
+	p.profile.SetProfileID(ID)
 }
 
 func (p *Profile) Measurements() map[string]measurements.Measurement {

@@ -662,3 +662,7 @@ func (p RawProfile) IsSampled() bool {
 func (p RawProfile) GetMeasurements() map[string]measurements.Measurement {
 	return p.Measurements
 }
+
+func (p *RawProfile) SetProfileID(ID string) {
+	p.EventID = ID
+}

@@ -298,6 +298,10 @@ func (p LegacyProfile) GetMeasurements() map[string]measurements.Measurement {
 	return p.Measurements
 }
 
+func (p *LegacyProfile) SetProfileID(ID string) {
+	p.ProfileID = ID
+}
+
 // This is to be used for ReactNative JS profile only since it works based on the
 // assumption that we'll only have 1 thread in the JS profile, as is the case
 // for ReactNative.

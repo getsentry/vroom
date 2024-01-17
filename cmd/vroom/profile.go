@@ -26,6 +26,7 @@ import (
 const maxUniqueFunctionsPerProfile = 100
 
 func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
+	const unsampledProfileID = "00000000000000000000000000000000"
 	ctx := r.Context()
 	hub := sentry.GetHubFromContext(ctx)
 
@@ -70,6 +71,14 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 	s.Description = "Normalize profile"
 	p.Normalize()
 	s.Finish()
+
+	if !p.IsSampled() {
+		// if we're dealing with an unsampled profile
+		// we'll assign the special "000....00" profile ID
+		// so that we can handle it accordingly either in
+		// either of snuba/sentry/front-end
+		p.SetProfileID(unsampledProfileID)
+	}
 
 	if p.IsSampled() {
 		s = sentry.StartSpan(ctx, "gcs.write")
