@@ -12,6 +12,7 @@
 - Bump trufflesecurity/trufflehog from 3.63.5 to 3.63.7 ([#385](https://github.com/getsentry/vroom/pull/385))
 - Bump number of workers for flamegraph dynamically ([#388](https://github.com/getsentry/vroom/pull/388))
 - Bump trufflesecurity/trufflehog from 3.63.8 to 3.63.9 ([#389](https://github.com/getsentry/vroom/pull/389))
+- Bump trufflesecurity/trufflehog from 3.63.9 to 3.63.10 ([#391](https://github.com/getsentry/vroom/pull/391))
 
 ## 23.12.0
 
