@@ -114,6 +114,9 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(callTrees) > 0 {
+		// if the profile was not sampled we skip find_occurrences since we're only
+		// interested in extracting data to improve functions aggregations not in
+		// using it for finding occurrences of an issue
 		if p.IsSampled() {
 			s = sentry.StartSpan(ctx, "processing")
 			s.Description = "Find occurrences"
