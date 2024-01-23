@@ -123,6 +123,7 @@ type (
 		OrganizationID       uint64                              `json:"organizationID"`                //nolint:unused
 		Platform             platform.Platform                   `json:"platform"`                      //nolint:unused
 		Profile              json.RawMessage                     `json:"-"`                             //nolint:unused
+		JsProfile            json.RawMessage                     `json:"-"`                             //nolint:unused
 		ProfileID            string                              `json:"profileID"`                     //nolint:unused
 		ProjectID            uint64                              `json:"projectID"`                     //nolint:unused
 		Received             timeutil.Time                       `json:"received"`                      //nolint:unused

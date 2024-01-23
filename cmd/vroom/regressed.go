@@ -20,6 +20,7 @@ func (env *environment) postRegressed(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	emitted := []occurrence.RegressedFunction{}
 	occurrences := []*occurrence.Occurrence{}
 	for _, regressedFunction := range regressedFunctions {
 		s := sentry.StartSpan(ctx, "processing")
@@ -32,13 +33,15 @@ func (env *environment) postRegressed(w http.ResponseWriter, r *http.Request) {
 		} else if occurrence == nil {
 			continue
 		}
+		emitted = append(emitted, regressedFunction)
 		occurrences = append(occurrences, occurrence)
 	}
 
 	s := sentry.StartSpan(ctx, "json.marshal")
 	data := struct {
-		Occurrences int `json:"occurrences"`
-	}{Occurrences: len(occurrences)}
+		Occurrences int                            `json:"occurrences"`
+		Emitted     []occurrence.RegressedFunction `json:"emitted"`
+	}{Occurrences: len(occurrences), Emitted: emitted}
 	b, err := json.Marshal(data)
 	s.Finish()
 	if err != nil {
