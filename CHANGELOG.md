@@ -3,6 +3,7 @@
 **Features**:
 
 - Add support for speedscope rendering of Android reactnative profiles ([#386](https://github.com/getsentry/vroom/pull/386))
+- Add callTree generation for reactnative (android+js) profiles ([#390](https://github.com/getsentry/vroom/pull/390))
 - Use profiles that were not dynamically sampled to enhance slowest functions aggregation ([#300](https://github.com/getsentry/vroom/pull/300))
 
 **Bug Fixes**:
@@ -13,6 +14,7 @@
 - Bump trufflesecurity/trufflehog from 3.63.5 to 3.63.7 ([#385](https://github.com/getsentry/vroom/pull/385))
 - Bump number of workers for flamegraph dynamically ([#388](https://github.com/getsentry/vroom/pull/388))
 - Bump trufflesecurity/trufflehog from 3.63.8 to 3.63.9 ([#389](https://github.com/getsentry/vroom/pull/389))
+- Bump trufflesecurity/trufflehog from 3.63.9 to 3.63.10 ([#391](https://github.com/getsentry/vroom/pull/391))
 
 ## 23.12.0
 
