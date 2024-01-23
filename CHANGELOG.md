@@ -7,6 +7,8 @@
 
 **Bug Fixes**:
 
+- Label all node frames as system ([#392](https://github.com/getsentry/vroom/pull/392))
+
 **Internal**:
 
 - Bump trufflesecurity/trufflehog from 3.63.4 to 3.63.5 ([#381](https://github.com/getsentry/vroom/pull/381))
