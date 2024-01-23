@@ -23,10 +23,12 @@ import (
 	"github.com/getsentry/vroom/internal/storageutil"
 )
 
-const maxUniqueFunctionsPerProfile = 100
+const (
+	maxUniqueFunctionsPerProfile = 100
+	unsampledProfileID           = "00000000000000000000000000000000"
+)
 
 func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
-	const unsampledProfileID = "00000000000000000000000000000000"
 	ctx := r.Context()
 	hub := sentry.GetHubFromContext(ctx)
 
