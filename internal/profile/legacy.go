@@ -37,6 +37,7 @@ type (
 	}
 
 	RawProfile struct {
+		Sampled              bool                                `json:"sampled"`
 		AndroidAPILevel      uint32                              `json:"android_api_level,omitempty"`
 		Architecture         string                              `json:"architecture,omitempty"`
 		BuildID              string                              `json:"build_id,omitempty"`
@@ -310,8 +311,16 @@ func (p LegacyProfile) GetTransactionTags() map[string]string {
 	return p.TransactionTags
 }
 
+func (p LegacyProfile) IsSampled() bool {
+	return p.Sampled
+}
+
 func (p LegacyProfile) GetMeasurements() map[string]measurements.Measurement {
 	return p.Measurements
+}
+
+func (p *LegacyProfile) SetProfileID(ID string) {
+	p.ProfileID = ID
 }
 
 // This is to be used for ReactNative JS profile only since it works based on the

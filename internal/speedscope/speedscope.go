@@ -106,6 +106,7 @@ type (
 	}
 
 	ProfileView struct {
+		Sampled              bool                                `json:"sampled"`                       //nolint:unused
 		AndroidAPILevel      uint32                              `json:"androidAPILevel,omitempty"`     //nolint:unused
 		Architecture         string                              `json:"architecture,omitempty"`        //nolint:unused
 		BuildID              string                              `json:"-"`                             //nolint:unused
