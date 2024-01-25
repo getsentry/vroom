@@ -20,7 +20,8 @@
 - Bump trufflesecurity/trufflehog from 3.63.8 to 3.63.9 ([#389](https://github.com/getsentry/vroom/pull/389))
 - Bump trufflesecurity/trufflehog from 3.63.9 to 3.63.10 ([#391](https://github.com/getsentry/vroom/pull/391))
 - Bump trufflesecurity/trufflehog from 3.63.10 to 3.63.11 ([#393](https://github.com/getsentry/vroom/pull/393))
-- ref(functions): Clean up Kafka message ([#394](https://github.com/getsentry/vroom/pull/394))
+- Ref(functions): Clean up Kafka message ([#394](https://github.com/getsentry/vroom/pull/394))
+- Bump trufflesecurity/trufflehog from 3.63.11 to 3.64.0 ([#395](https://github.com/getsentry/vroom/pull/395))
 
 ## 23.12.0
 
