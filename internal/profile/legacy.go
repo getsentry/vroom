@@ -148,7 +148,7 @@ func (p LegacyProfile) CallTrees() (map[uint64][]*nodetree.Node, error) {
 	if p.Trace == nil {
 		return nil, ErrProfileHasNoTrace
 	}
-	_, ok := p.Trace.(Android)
+	_, ok := p.Trace.(*Android)
 	// this is to handle only the Reactnative (android + js)
 	// use case. If it's an Android profile but there is no
 	// js profile, we'll skip this entirely
@@ -176,7 +176,7 @@ func (p LegacyProfile) IsSampleFormat() bool {
 }
 
 func (p *LegacyProfile) Speedscope() (speedscope.Output, error) {
-	t, ok := p.Trace.(Android)
+	t, ok := p.Trace.(*Android)
 	// this is to handle only the Reactnative (android + js)
 	// use case. If it's an Android profile but there is no
 	// js profile, we'll skip this entirely
@@ -494,8 +494,13 @@ func getEventTimeFromElapsedNanoseconds(ns uint64) EventTime {
 }
 
 func unmarshalSampleProfile(p json.RawMessage) (sample.Trace, error) {
+	var objmap map[string]json.RawMessage
+	err := json.Unmarshal(p, &objmap)
+	if err != nil {
+		return sample.Trace{}, err
+	}
 	var st sample.Trace
-	err := json.Unmarshal(p, &st)
+	err = json.Unmarshal(objmap["profile"], &st)
 	if err != nil {
 		return sample.Trace{}, err
 	}
