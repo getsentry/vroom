@@ -11,6 +11,7 @@
 **Bug Fixes**:
 
 - Label all node frames as system ([#392](https://github.com/getsentry/vroom/pull/392))
+- Fix react-native (android) rendering issue ([#397](https://github.com/getsentry/vroom/pull/397))
 
 **Internal**:
 
