@@ -493,19 +493,17 @@ func getEventTimeFromElapsedNanoseconds(ns uint64) EventTime {
 	}
 }
 
-func unmarshalSampleProfile(p json.RawMessage) (sample.Trace, error) {
-	var objmap map[string]json.RawMessage
-	err := json.Unmarshal(p, &objmap)
-	if err != nil {
-		return sample.Trace{}, err
-	}
-	var st sample.Trace
-	err = json.Unmarshal(objmap["profile"], &st)
-	if err != nil {
-		return sample.Trace{}, err
-	}
+type NestedProfile struct {
+	Profile sample.Trace `json:"profile"`
+}
 
-	return st, nil
+func unmarshalSampleProfile(p json.RawMessage) (sample.Trace, error) {
+	var np NestedProfile
+	err := json.Unmarshal(p, &np)
+	if err != nil {
+		return sample.Trace{}, err
+	}
+	return np.Profile, nil
 }
 
 // CallTree generation expect activeThreadID to be set in
