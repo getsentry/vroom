@@ -138,7 +138,7 @@ func (env *environment) postFlamegraphFromProfileIDs(w http.ResponseWriter, r *h
 		return
 	}
 
-	var numWorkers = getFlamegraphNumWorkers(len(profiles.ProfileIDs), minNumWorkers)
+	numWorkers := getFlamegraphNumWorkers(len(profiles.ProfileIDs), minNumWorkers)
 
 	s = sentry.StartSpan(ctx, "processing")
 	speedscope, err := flamegraph.GetFlamegraphFromProfiles(ctx, env.storage, organizationID, projectID, profiles.ProfileIDs, profiles.Spans, numWorkers, timeout)
