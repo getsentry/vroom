@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"errors"
-	"math"
 	"net/http"
 	"strconv"
 	"time"
@@ -139,12 +138,8 @@ func (env *environment) postFlamegraphFromProfileIDs(w http.ResponseWriter, r *h
 		return
 	}
 
-	var numWorkers int
-	if len(profiles.ProfileIDs) < minNumWorkers {
-		numWorkers = len(profiles.ProfileIDs)
-	} else {
-		numWorkers = int(math.Ceil((float64(len(profiles.ProfileIDs)) / 100) * float64(minNumWorkers)))
-	}
+	var numWorkers = getFlamegraphNumWorkers(len(profiles.ProfileIDs), minNumWorkers)
+
 	s = sentry.StartSpan(ctx, "processing")
 	speedscope, err := flamegraph.GetFlamegraphFromProfiles(ctx, env.storage, organizationID, projectID, profiles.ProfileIDs, profiles.Spans, numWorkers, timeout)
 	if err != nil {

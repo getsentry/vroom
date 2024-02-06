@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"math"
 	"net/url"
 	"strconv"
 
@@ -143,4 +144,12 @@ func (e *environment) functionsQueryBuilderFromRequest(
 	}
 
 	return sqb, nil
+}
+
+func getFlamegraphNumWorkers(numProfiles, minNumWorkers int) int {
+	if numProfiles < minNumWorkers {
+		return numProfiles
+	}
+	v := int(math.Ceil((float64(numProfiles) / 100) * float64(minNumWorkers)))
+	return max(v, minNumWorkers)
 }
