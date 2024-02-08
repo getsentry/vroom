@@ -31,6 +31,7 @@
 - Bump trufflesecurity/trufflehog from 3.67.0 to 3.67.1 ([#402](https://github.com/getsentry/vroom/pull/402))
 - Refactor flamegraph workers sping-off logic ([#403](https://github.com/getsentry/vroom/pull/403))
 - Bump trufflesecurity/trufflehog from 3.67.1 to 3.67.3 ([#404](https://github.com/getsentry/vroom/pull/404))
+- Bump pre-commit/action from 3.0.0 to 3.0.1 ([#405](https://github.com/getsentry/vroom/pull/405))
 
 ## 23.12.0
 
