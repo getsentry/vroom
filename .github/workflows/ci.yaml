@@ -46,7 +46,7 @@ jobs:
         cache: false
     - run: go install golang.org/x/tools/cmd/goimports@latest
     - name: golangci-lint
-      uses: golangci/golangci-lint-action@v3
+      uses: golangci/golangci-lint-action@v4
       with:
         version: latest
     - uses: pre-commit/action@v3.0.1
