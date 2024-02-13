@@ -219,12 +219,8 @@ func FromRegressedFunction(
 	beforeP95 := time.Duration(regressed.AggregateRange1).Round(10 * time.Microsecond)
 	afterP95 := time.Duration(regressed.AggregateRange2).Round(10 * time.Microsecond)
 
-	occurrenceType := FrameRegressionExpType
-	var issueTitle IssueTitle = "Function Duration Regression (Experimental)"
-	if regressed.Released {
-		occurrenceType = FrameRegressionType
-		issueTitle = "Function Regression"
-	}
+	occurrenceType := FrameRegressionType
+	var issueTitle IssueTitle = "Function Regression"
 
 	return &Occurrence{
 		Culprit:       fullyQualifiedName,

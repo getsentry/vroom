@@ -33,6 +33,9 @@
 - Bump trufflesecurity/trufflehog from 3.67.1 to 3.67.3 ([#404](https://github.com/getsentry/vroom/pull/404))
 - Bump pre-commit/action from 3.0.0 to 3.0.1 ([#405](https://github.com/getsentry/vroom/pull/405))
 - Bump trufflesecurity/trufflehog from 3.67.3 to 3.67.4 ([#406](https://github.com/getsentry/vroom/pull/406))
+- Bump trufflesecurity/trufflehog from 3.67.4 to 3.67.5 ([#407](https://github.com/getsentry/vroom/pull/407))
+- Bump golangci/golangci-lint-action from 3 to 4 ([#408](https://github.com/getsentry/vroom/pull/408))
+- Remove experimental function regression issue ([#409](https://github.com/getsentry/vroom/pull/409))
 
 ## 23.12.0
 
