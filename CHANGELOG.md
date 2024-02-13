@@ -7,6 +7,7 @@
 - Add support for speedscope rendering of Android reactnative profiles ([#386](https://github.com/getsentry/vroom/pull/386))
 - Add callTree generation for reactnative (android+js) profiles ([#390](https://github.com/getsentry/vroom/pull/390))
 - Use profiles that were not dynamically sampled to enhance slowest functions aggregation ([#300](https://github.com/getsentry/vroom/pull/300))
+- Add support for sentry options ([#410](https://github.com/getsentry/vroom/pull/410))
 
 **Bug Fixes**:
 
