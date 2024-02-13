@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/signal"
 	"strconv"
+	"sync/atomic"
 	"syscall"
 	"time"
 
@@ -31,9 +32,9 @@ import (
 )
 
 type environment struct {
-	config ServiceConfig
-
-	snuba snubautil.Client
+	config  ServiceConfig
+	options atomic.Value
+	snuba   snubautil.Client
 
 	occurrencesWriter *kafka.Writer
 	profilingWriter   *kafka.Writer
@@ -44,8 +45,9 @@ type environment struct {
 var release string
 
 const (
-	KiB int64 = 1024
-	MiB       = 1024 * KiB
+	KiB                int64 = 1024
+	MiB                      = 1024 * KiB
+	OptionsPollingSecs       = 20
 )
 
 func newEnvironment() (*environment, error) {
@@ -84,6 +86,12 @@ func newEnvironment() (*environment, error) {
 		Compression:  kafka.Lz4,
 		ReadTimeout:  3 * time.Second,
 		WriteTimeout: 3 * time.Second,
+	}
+	options, err := getSentryOptions(e.config.SentryHost)
+	// if getSentryOptions succeed we store the options, otherwise
+	// we just ignore it to avoid failing the whole vroom bootstrap.
+	if err == nil {
+		e.options.Store(options)
 	}
 	return &e, nil
 }
@@ -224,6 +232,23 @@ func main() {
 		}
 
 		close(waitForShutdown)
+	}()
+
+	ticker := time.NewTicker(OptionsPollingSecs * time.Second)
+	defer ticker.Stop()
+	go func() {
+		for {
+			select {
+			case <-waitForShutdown:
+				return
+			case <-ticker.C:
+				opt, err := getSentryOptions(env.config.SentryHost)
+				if err != nil {
+					sentry.CaptureException(err)
+				}
+				env.options.Store(opt)
+			}
+		}
 	}()
 
 	err = server.ListenAndServe()

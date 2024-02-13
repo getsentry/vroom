@@ -2,7 +2,9 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"math"
+	"net/http"
 	"net/url"
 	"strconv"
 
@@ -152,4 +154,23 @@ func getFlamegraphNumWorkers(numProfiles, minNumWorkers int) int {
 	}
 	v := int(math.Ceil((float64(numProfiles) / 100) * float64(minNumWorkers)))
 	return max(v, minNumWorkers)
+}
+
+func getSentryOptions(sentryHost string) (SentryOptions, error) {
+	resp, err := http.Get(sentryHost + "/api/0/vrooms/options/")
+	if err != nil {
+		return SentryOptions{}, err
+	}
+	defer resp.Body.Close()
+
+	var options SentryOptions
+	err = json.NewDecoder(resp.Body).Decode(&options)
+	if err != nil {
+		return SentryOptions{}, err
+	}
+	return options, nil
+}
+
+type SentryOptions struct {
+	ProfileMetricsSampleRate float32 `json:"profiling.profile_metrics.unsampled_profiles.sample_rate"`
 }

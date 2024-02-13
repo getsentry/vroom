@@ -14,7 +14,8 @@ type (
 		CallTreesKafkaTopic   string   `env:"SENTRY_KAFKA_TOPIC_CALL_TREES"  env-default:"profiles-call-tree"`
 		ProfilesKafkaTopic    string   `env:"SENTRY_KAKFA_TOPIC_PROFILES"    env-default:"processed-profiles"`
 
-		SnubaHost string `env:"SENTRY_SNUBA_HOST" env-default:"http://localhost:1218"`
+		SentryHost string `env:"SENTRY_SENTRY_HOST" env-default:"http://localhost:8000"`
+		SnubaHost  string `env:"SENTRY_SNUBA_HOST" env-default:"http://localhost:1218"`
 
 		BucketURL string `env:"SENTRY_BUCKET_PROFILES" env-default:"file://./test/gcs/sentry-profiles"`
 	}
