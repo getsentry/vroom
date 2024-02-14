@@ -3,6 +3,13 @@ local pipedream = import 'github.com/getsentry/gocd-jsonnet/libs/pipedream.libso
 
 local pipedream_config = {
   name: 'vroom',
+  exclude_regions: [
+    'customer-1',
+    'customer-2',
+    'customer-3',
+    'customer-4',
+    'customer-6',
+  ],
   materials: {
     vroom_repo: {
       git: 'git@github.com:getsentry/vroom.git',
