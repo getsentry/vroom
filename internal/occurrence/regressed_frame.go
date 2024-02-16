@@ -25,7 +25,6 @@ type RegressedFunction struct {
 	TrendPercentage          float64 `json:"trend_percentage"`
 	UnweightedPValue         float64 `json:"unweighted_p_value"`
 	UnweightedTValue         float64 `json:"unweighted_t_value"`
-	Released                 bool    `json:"released,omitempty"`
 }
 
 func ProcessRegressedFunction(

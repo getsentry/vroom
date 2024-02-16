@@ -87,6 +87,11 @@ func (m AndroidMethod) ExtractPackageNameAndSimpleMethodNameFromAndroidMethod() 
 }
 
 func (m AndroidMethod) FullMethodNameFromAndroidMethod() (string, error) {
+	// when we we're dealing with js frame that were "converted"
+	// to android methods (react-native) we don't have class name
+	if m.ClassName == "" {
+		return m.Name, nil
+	}
 	var builder strings.Builder
 	builder.WriteString(m.ClassName)
 	// "<init>" refers to the constructor in which case it's more readable to omit the method name. Note the method name

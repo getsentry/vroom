@@ -1,16 +1,42 @@
 # Changelog
 
+## Unreleased
+
 **Features**:
 
 - Add support for speedscope rendering of Android reactnative profiles ([#386](https://github.com/getsentry/vroom/pull/386))
+- Add callTree generation for reactnative (android+js) profiles ([#390](https://github.com/getsentry/vroom/pull/390))
+- Use profiles that were not dynamically sampled to enhance slowest functions aggregation ([#300](https://github.com/getsentry/vroom/pull/300))
 
 **Bug Fixes**:
+
+- Label all node frames as system ([#392](https://github.com/getsentry/vroom/pull/392))
+- Fix react-native (android) rendering issue ([#397](https://github.com/getsentry/vroom/pull/397))
 
 **Internal**:
 
 - Bump trufflesecurity/trufflehog from 3.63.4 to 3.63.5 ([#381](https://github.com/getsentry/vroom/pull/381))
 - Bump trufflesecurity/trufflehog from 3.63.5 to 3.63.7 ([#385](https://github.com/getsentry/vroom/pull/385))
 - Bump number of workers for flamegraph dynamically ([#388](https://github.com/getsentry/vroom/pull/388))
+- Bump trufflesecurity/trufflehog from 3.63.8 to 3.63.9 ([#389](https://github.com/getsentry/vroom/pull/389))
+- Bump trufflesecurity/trufflehog from 3.63.9 to 3.63.10 ([#391](https://github.com/getsentry/vroom/pull/391))
+- Bump trufflesecurity/trufflehog from 3.63.10 to 3.63.11 ([#393](https://github.com/getsentry/vroom/pull/393))
+- Ref(functions): Clean up Kafka message ([#394](https://github.com/getsentry/vroom/pull/394))
+- Bump trufflesecurity/trufflehog from 3.63.11 to 3.64.0 ([#395](https://github.com/getsentry/vroom/pull/395))
+- Bump trufflesecurity/trufflehog from 3.64.0 to 3.65.0 ([#396](https://github.com/getsentry/vroom/pull/396))
+- Bump trufflesecurity/trufflehog from 3.65.0 to 3.66.1 ([#398](https://github.com/getsentry/vroom/pull/398))
+- Bump trufflesecurity/trufflehog from 3.66.1 to 3.66.2 ([#399](https://github.com/getsentry/vroom/pull/399))
+- Bump trufflesecurity/trufflehog from 3.66.2 to 3.66.3 ([#400](https://github.com/getsentry/vroom/pull/400))
+- Bump trufflesecurity/trufflehog from 3.66.3 to 3.67.0 ([#401](https://github.com/getsentry/vroom/pull/401))
+- Bump trufflesecurity/trufflehog from 3.67.0 to 3.67.1 ([#402](https://github.com/getsentry/vroom/pull/402))
+- Refactor flamegraph workers sping-off logic ([#403](https://github.com/getsentry/vroom/pull/403))
+- Bump trufflesecurity/trufflehog from 3.67.1 to 3.67.3 ([#404](https://github.com/getsentry/vroom/pull/404))
+- Bump pre-commit/action from 3.0.0 to 3.0.1 ([#405](https://github.com/getsentry/vroom/pull/405))
+- Bump trufflesecurity/trufflehog from 3.67.3 to 3.67.4 ([#406](https://github.com/getsentry/vroom/pull/406))
+- Bump trufflesecurity/trufflehog from 3.67.4 to 3.67.5 ([#407](https://github.com/getsentry/vroom/pull/407))
+- Bump golangci/golangci-lint-action from 3 to 4 ([#408](https://github.com/getsentry/vroom/pull/408))
+- Remove experimental function regression issue ([#409](https://github.com/getsentry/vroom/pull/409))
+- Bump trufflesecurity/trufflehog from 3.67.5 to 3.67.6 ([#411](https://github.com/getsentry/vroom/pull/411))
 
 ## 23.12.0
 

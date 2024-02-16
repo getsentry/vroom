@@ -1,8 +1,6 @@
 package main
 
 import (
-	"strconv"
-
 	"github.com/getsentry/vroom/internal/nodetree"
 	"github.com/getsentry/vroom/internal/platform"
 	"github.com/getsentry/vroom/internal/profile"
@@ -11,22 +9,16 @@ import (
 type (
 	// FunctionsKafkaMessage is representing the struct we send to Kafka to insert functions in ClickHouse.
 	FunctionsKafkaMessage struct {
-		Functions         []nodetree.CallTreeFunction `json:"functions"`
-		Environment       string                      `json:"environment,omitempty"`
-		ID                string                      `json:"profile_id"`
-		Platform          platform.Platform           `json:"platform"`
-		ProjectID         uint64                      `json:"project_id"`
-		Received          int64                       `json:"received"`
-		Release           string                      `json:"release,omitempty"`
-		Dist              string                      `json:"dist,omitempty"`
-		RetentionDays     int                         `json:"retention_days"`
-		Timestamp         int64                       `json:"timestamp"`
-		TransactionName   string                      `json:"transaction_name"`
-		TransactionOp     string                      `json:"transaction_op"`
-		TransactionStatus string                      `json:"transaction_status"`
-		HTTPMethod        string                      `json:"http_method,omitempty"`
-		BrowserName       string                      `json:"browser_name,omitempty"`
-		DeviceClass       uint64                      `json:"device_class,omitempty"`
+		Environment     string                      `json:"environment,omitempty"`
+		Functions       []nodetree.CallTreeFunction `json:"functions"`
+		ID              string                      `json:"profile_id"`
+		Platform        platform.Platform           `json:"platform"`
+		ProjectID       uint64                      `json:"project_id"`
+		Received        int64                       `json:"received"`
+		Release         string                      `json:"release,omitempty"`
+		RetentionDays   int                         `json:"retention_days"`
+		Timestamp       int64                       `json:"timestamp"`
+		TransactionName string                      `json:"transaction_name"`
 	}
 
 	// ProfileKafkaMessage is representing the struct we send to Kafka to insert a profile in ClickHouse.
@@ -57,31 +49,17 @@ type (
 )
 
 func buildFunctionsKafkaMessage(p profile.Profile, functions []nodetree.CallTreeFunction) FunctionsKafkaMessage {
-	tm := p.TransactionMetadata()
-	tt := p.TransactionTags()
-
-	deviceClass, err := strconv.ParseUint(tt["device.class"], 10, 8)
-	if err != nil {
-		deviceClass = 0
-	}
-
 	return FunctionsKafkaMessage{
-		Functions:         functions,
-		Environment:       p.Environment(),
-		ID:                p.ID(),
-		Platform:          p.Platform(),
-		ProjectID:         p.ProjectID(),
-		Received:          p.Received().Unix(),
-		Release:           p.Release(),
-		Dist:              tm.Dist,
-		RetentionDays:     p.RetentionDays(),
-		Timestamp:         p.Timestamp().Unix(),
-		TransactionName:   p.Transaction().Name,
-		TransactionOp:     tm.TransactionOp,
-		TransactionStatus: tm.TransactionStatus,
-		HTTPMethod:        tm.HTTPMethod,
-		BrowserName:       tt["browser.name"],
-		DeviceClass:       deviceClass,
+		Environment:     p.Environment(),
+		Functions:       functions,
+		ID:              p.ID(),
+		Platform:        p.Platform(),
+		ProjectID:       p.ProjectID(),
+		Received:        p.Received().Unix(),
+		Release:         p.Release(),
+		RetentionDays:   p.RetentionDays(),
+		Timestamp:       p.Timestamp().Unix(),
+		TransactionName: p.Transaction().Name,
 	}
 }
 

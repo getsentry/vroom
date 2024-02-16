@@ -24,6 +24,7 @@ import (
 const maxProfileDurationForCallTrees = 15 * time.Second
 
 var ErrProfileHasNoTrace = errors.New("profile has no trace")
+var ErrReactHasInvalidJsTrace = errors.New("react-android profile has invalid js trace")
 var member void
 
 type (
@@ -36,6 +37,7 @@ type (
 	}
 
 	RawProfile struct {
+		Sampled              bool                                `json:"sampled"`
 		AndroidAPILevel      uint32                              `json:"android_api_level,omitempty"`
 		Architecture         string                              `json:"architecture,omitempty"`
 		BuildID              string                              `json:"build_id,omitempty"`
@@ -146,6 +148,26 @@ func (p LegacyProfile) CallTrees() (map[uint64][]*nodetree.Node, error) {
 	if p.Trace == nil {
 		return nil, ErrProfileHasNoTrace
 	}
+	_, ok := p.Trace.(*Android)
+	// this is to handle only the Reactnative (android + js)
+	// use case. If it's an Android profile but there is no
+	// js profile, we'll skip this entirely
+	if ok && p.JsProfile != nil && len(p.JsProfile) > 0 {
+		st, err := unmarshalSampleProfile(p.JsProfile)
+		if err != nil {
+			return nil, ErrReactHasInvalidJsTrace
+		}
+		jsProf := sample.Profile{
+			RawProfile: sample.RawProfile{
+				Trace: st,
+			},
+		}
+		err = fillSampleProfileMetadata(&jsProf)
+		if err != nil {
+			return nil, err
+		}
+		return jsProf.CallTrees()
+	}
 	return p.Trace.CallTrees(), nil
 }
 
@@ -154,7 +176,7 @@ func (p LegacyProfile) IsSampleFormat() bool {
 }
 
 func (p *LegacyProfile) Speedscope() (speedscope.Output, error) {
-	t, ok := p.Trace.(Android)
+	t, ok := p.Trace.(*Android)
 	// this is to handle only the Reactnative (android + js)
 	// use case. If it's an Android profile but there is no
 	// js profile, we'll skip this entirely
@@ -289,8 +311,16 @@ func (p LegacyProfile) GetTransactionTags() map[string]string {
 	return p.TransactionTags
 }
 
+func (p LegacyProfile) IsSampled() bool {
+	return p.Sampled
+}
+
 func (p LegacyProfile) GetMeasurements() map[string]measurements.Measurement {
 	return p.Measurements
+}
+
+func (p *LegacyProfile) SetProfileID(ID string) {
+	p.ProfileID = ID
 }
 
 // This is to be used for ReactNative JS profile only since it works based on the
@@ -463,12 +493,33 @@ func getEventTimeFromElapsedNanoseconds(ns uint64) EventTime {
 	}
 }
 
+type NestedProfile struct {
+	Profile sample.Trace `json:"profile"`
+}
+
 func unmarshalSampleProfile(p json.RawMessage) (sample.Trace, error) {
-	var st sample.Trace
-	err := json.Unmarshal(p, &st)
+	var np NestedProfile
+	err := json.Unmarshal(p, &np)
 	if err != nil {
 		return sample.Trace{}, err
 	}
+	return np.Profile, nil
+}
 
-	return st, nil
+// CallTree generation expect activeThreadID to be set in
+// order to be able to choose which samples should be used
+// for the aggregation.
+// Here we set it to the only thread that the js profile has.
+func fillSampleProfileMetadata(sp *sample.Profile) error {
+	for threadID := range sp.Trace.ThreadMetadata {
+		tid, err := strconv.ParseUint(threadID, 10, 64)
+		if err != nil {
+			return err
+		}
+		sp.Transaction = transaction.Transaction{
+			ActiveThreadID: tid,
+		}
+		break
+	}
+	return nil
 }

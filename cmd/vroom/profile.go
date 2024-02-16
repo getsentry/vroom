@@ -23,7 +23,10 @@ import (
 	"github.com/getsentry/vroom/internal/storageutil"
 )
 
-const maxUniqueFunctionsPerProfile = 100
+const (
+	maxUniqueFunctionsPerProfile = 100
+	unsampledProfileID           = "00000000000000000000000000000000"
+)
 
 func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
@@ -71,24 +74,34 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 	p.Normalize()
 	s.Finish()
 
-	s = sentry.StartSpan(ctx, "gcs.write")
-	s.Description = "Write profile to GCS"
-	err = storageutil.CompressedWrite(ctx, env.storage, p.StoragePath(), p)
-	s.Finish()
-	if err != nil {
-		if errors.Is(err, context.DeadlineExceeded) {
-			// This is a transient error, we'll retry
-			w.WriteHeader(http.StatusTooManyRequests)
-		} else {
-			// These errors won't be retried
-			hub.CaptureException(err)
-			if code := gcerrors.Code(err); code == gcerrors.FailedPrecondition {
-				w.WriteHeader(http.StatusPreconditionFailed)
+	if !p.IsSampled() {
+		// if we're dealing with an unsampled profile
+		// we'll assign the special "000....00" profile ID
+		// so that we can handle it accordingly either in
+		// either of snuba/sentry/front-end
+		p.SetProfileID(unsampledProfileID)
+	}
+
+	if p.IsSampled() {
+		s = sentry.StartSpan(ctx, "gcs.write")
+		s.Description = "Write profile to GCS"
+		err = storageutil.CompressedWrite(ctx, env.storage, p.StoragePath(), p)
+		s.Finish()
+		if err != nil {
+			if errors.Is(err, context.DeadlineExceeded) {
+				// This is a transient error, we'll retry
+				w.WriteHeader(http.StatusTooManyRequests)
 			} else {
-				w.WriteHeader(http.StatusInternalServerError)
+				// These errors won't be retried
+				hub.CaptureException(err)
+				if code := gcerrors.Code(err); code == gcerrors.FailedPrecondition {
+					w.WriteHeader(http.StatusPreconditionFailed)
+				} else {
+					w.WriteHeader(http.StatusInternalServerError)
+				}
 			}
+			return
 		}
-		return
 	}
 
 	s = sentry.StartSpan(ctx, "processing")
@@ -102,35 +115,40 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(callTrees) > 0 {
-		s = sentry.StartSpan(ctx, "processing")
-		s.Description = "Find occurrences"
-		occurrences := occurrence.Find(p, callTrees)
-		s.Finish()
-
-		// Filter in-place occurrences without a type.
-		var i int
-		for _, o := range occurrences {
-			if o.Type != occurrence.NoneType {
-				occurrences[i] = o
-				i++
-			}
-		}
-		occurrences = occurrences[:i]
-		s = sentry.StartSpan(ctx, "processing")
-		s.Description = "Build Kafka message batch"
-		occurrenceMessages, err := occurrence.GenerateKafkaMessageBatch(occurrences)
-		s.Finish()
-		if err != nil {
-			// Report the error but don't fail profile insertion
-			hub.CaptureException(err)
-		} else {
+		// if the profile was not sampled we skip find_occurrences since we're only
+		// interested in extracting data to improve functions aggregations not in
+		// using it for finding occurrences of an issue
+		if p.IsSampled() {
 			s = sentry.StartSpan(ctx, "processing")
-			s.Description = "Send occurrences to Kafka"
-			err = env.occurrencesWriter.WriteMessages(ctx, occurrenceMessages...)
+			s.Description = "Find occurrences"
+			occurrences := occurrence.Find(p, callTrees)
+			s.Finish()
+
+			// Filter in-place occurrences without a type.
+			var i int
+			for _, o := range occurrences {
+				if o.Type != occurrence.NoneType {
+					occurrences[i] = o
+					i++
+				}
+			}
+			occurrences = occurrences[:i]
+			s = sentry.StartSpan(ctx, "processing")
+			s.Description = "Build Kafka message batch"
+			occurrenceMessages, err := occurrence.GenerateKafkaMessageBatch(occurrences)
 			s.Finish()
 			if err != nil {
 				// Report the error but don't fail profile insertion
 				hub.CaptureException(err)
+			} else {
+				s = sentry.StartSpan(ctx, "processing")
+				s.Description = "Send occurrences to Kafka"
+				err = env.occurrencesWriter.WriteMessages(ctx, occurrenceMessages...)
+				s.Finish()
+				if err != nil {
+					// Report the error but don't fail profile insertion
+					hub.CaptureException(err)
+				}
 			}
 		}
 
@@ -164,31 +182,33 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Prepare profile Kafka message
-	s = sentry.StartSpan(ctx, "processing")
-	s.Description = "Marshal profile metadata Kafka message"
-	b, err := json.Marshal(buildProfileKafkaMessage(p))
-	s.Finish()
-	if err != nil {
-		hub.CaptureException(err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
+	if p.IsSampled() {
+		// Prepare profile Kafka message
+		s = sentry.StartSpan(ctx, "processing")
+		s.Description = "Marshal profile metadata Kafka message"
+		b, err := json.Marshal(buildProfileKafkaMessage(p))
+		s.Finish()
+		if err != nil {
+			hub.CaptureException(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 
-	s = sentry.StartSpan(ctx, "processing")
-	s.Description = "Send profile metadata to Kafka"
-	err = env.profilingWriter.WriteMessages(ctx, kafka.Message{
-		Topic: env.config.Profiling.ProfilesKafkaTopic,
-		Value: b,
-	})
-	s.Finish()
-	hub.Scope().SetContext("Profile metadata Kafka payload", map[string]interface{}{
-		"Size": len(b),
-	})
-	if err != nil {
-		hub.CaptureException(err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
+		s = sentry.StartSpan(ctx, "processing")
+		s.Description = "Send profile metadata to Kafka"
+		err = env.profilingWriter.WriteMessages(ctx, kafka.Message{
+			Topic: env.config.Profiling.ProfilesKafkaTopic,
+			Value: b,
+		})
+		s.Finish()
+		hub.Scope().SetContext("Profile metadata Kafka payload", map[string]interface{}{
+			"Size": len(b),
+		})
+		if err != nil {
+			hub.CaptureException(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 	}
 
 	w.WriteHeader(http.StatusNoContent)

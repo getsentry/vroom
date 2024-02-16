@@ -78,6 +78,7 @@ type (
 	}
 
 	RawProfile struct {
+		Sampled             bool                                `json:"sampled"`
 		DebugMeta           debugmeta.DebugMeta                 `json:"debug_meta"`
 		Device              Device                              `json:"device"`
 		Environment         string                              `json:"environment,omitempty"`
@@ -654,6 +655,14 @@ func (p RawProfile) GetTransactionTags() map[string]string {
 	return p.TransactionTags
 }
 
+func (p RawProfile) IsSampled() bool {
+	return p.Sampled
+}
+
 func (p RawProfile) GetMeasurements() map[string]measurements.Measurement {
 	return p.Measurements
+}
+
+func (p *RawProfile) SetProfileID(ID string) {
+	p.EventID = ID
 }
