@@ -37,6 +37,7 @@
 - Bump golangci/golangci-lint-action from 3 to 4 ([#408](https://github.com/getsentry/vroom/pull/408))
 - Remove experimental function regression issue ([#409](https://github.com/getsentry/vroom/pull/409))
 - Bump trufflesecurity/trufflehog from 3.67.5 to 3.67.6 ([#411](https://github.com/getsentry/vroom/pull/411))
+- Bump trufflesecurity/trufflehog from 3.67.6 to 3.67.7 ([#413](https://github.com/getsentry/vroom/pull/413))
 
 ## 23.12.0
 
