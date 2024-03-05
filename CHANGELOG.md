@@ -41,6 +41,7 @@
 - Bump trufflesecurity/trufflehog from 3.67.7 to 3.68.0 ([#414](https://github.com/getsentry/vroom/pull/414))
 - Bump trufflesecurity/trufflehog from 3.68.0 to 3.68.2 ([#416](https://github.com/getsentry/vroom/pull/416))
 - Bump trufflesecurity/trufflehog from 3.68.2 to 3.68.3 ([#418](https://github.com/getsentry/vroom/pull/418))
+- Bump trufflesecurity/trufflehog from 3.68.3 to 3.68.4 ([#419](https://github.com/getsentry/vroom/pull/419))
 
 ## 23.12.0
 
