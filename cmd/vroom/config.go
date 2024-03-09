@@ -9,14 +9,14 @@ type (
 		SentryDSN string `env:"SENTRY_DSN" yaml:"sentry_dsn"`
 
 		Occurrences struct {
-			OccurrencesKafkaBrokers []string `env:"SENTRY_KAFKA_BROKERS_OCCURRENCES" yaml:"kafka_brokers" env-default:"localhost:9092"`
-			OccurrencesKafkaTopic   string   `env:"SENTRY_KAFKA_TOPIC_OCCURRENCES"  yaml:"kafka_topic" env-default:"ingest-occurrences"`
+			KafkaBrokers []string `env:"SENTRY_KAFKA_BROKERS_OCCURRENCES" yaml:"kafka_brokers" env-default:"localhost:9092"`
+			KafkaTopic   string   `env:"SENTRY_KAFKA_TOPIC_OCCURRENCES"  yaml:"kafka_topic" env-default:"ingest-occurrences"`
 		} `yaml:"occurrences"`
 
 		Profiling struct {
-			ProfilingKafkaBrokers []string `env:"SENTRY_KAFKA_BROKERS_PROFILING" yaml:"kafka_brokers" env-default:"localhost:9092"`
-			CallTreesKafkaTopic   string   `env:"SENTRY_KAFKA_TOPIC_CALL_TREES" yaml:"call_trees_kafka_topic" env-default:"profiles-call-tree"`
-			ProfilesKafkaTopic    string   `env:"SENTRY_KAKFA_TOPIC_PROFILES" yaml:"profiles_kafka_topic" env-default:"processed-profiles"`
+			KafkaBrokers        []string `env:"SENTRY_KAFKA_BROKERS_PROFILING" yaml:"kafka_brokers" env-default:"localhost:9092"`
+			CallTreesKafkaTopic string   `env:"SENTRY_KAFKA_TOPIC_CALL_TREES" yaml:"call_trees_kafka_topic" env-default:"profiles-call-tree"`
+			ProfilesKafkaTopic  string   `env:"SENTRY_KAKFA_TOPIC_PROFILES" yaml:"profiles_kafka_topic" env-default:"processed-profiles"`
 		} `yaml:"profiling"`
 
 		SnubaHost string `env:"SENTRY_SNUBA_HOST" yaml:"snuba_host" env-default:"http://localhost:1218"`

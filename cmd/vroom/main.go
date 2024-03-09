@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"flag"
 	"fmt"
 	"net"
 	"net/http"
@@ -50,9 +51,9 @@ const (
 	MiB       = 1024 * KiB
 )
 
-func newEnvironment() (*environment, error) {
+func newEnvironment(filePath string) (*environment, error) {
 	var e environment
-	err := cleanenv.ReadConfig("config.yml", &e.config)
+	err := cleanenv.ReadConfig(filePath, &e.config)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
 			err := cleanenv.ReadEnv(&e.config)
@@ -76,16 +77,16 @@ func newEnvironment() (*environment, error) {
 	}
 
 	e.occurrencesWriter = &kafka.Writer{
-		Addr:         kafka.TCP(e.config.Occurrences.OccurrencesKafkaBrokers...),
+		Addr:         kafka.TCP(e.config.Occurrences.KafkaBrokers...),
 		Async:        true,
 		Balancer:     kafka.CRC32Balancer{},
 		BatchSize:    100,
 		ReadTimeout:  3 * time.Second,
-		Topic:        e.config.Occurrences.OccurrencesKafkaTopic,
+		Topic:        e.config.Occurrences.KafkaTopic,
 		WriteTimeout: 3 * time.Second,
 	}
 	e.profilingWriter = &kafka.Writer{
-		Addr:         kafka.TCP(e.config.Profiling.ProfilingKafkaBrokers...),
+		Addr:         kafka.TCP(e.config.Profiling.KafkaBrokers...),
 		Async:        true,
 		Balancer:     kafka.CRC32Balancer{},
 		BatchBytes:   20 * MiB,
@@ -174,7 +175,10 @@ func (e *environment) newRouter() (*httprouter.Router, error) {
 }
 
 func main() {
-	env, err := newEnvironment()
+	configFilePath := flag.String("c", "config.yml", "Path to configuration file")
+	flag.Parse()
+
+	env, err := newEnvironment(*configFilePath)
 	if err != nil {
 		log.Fatal().Err(err).Msg("error setting up environment")
 	}
