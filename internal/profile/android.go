@@ -31,6 +31,7 @@ type (
 		Signature    string          `json:"signature,omitempty"`
 		SourceFile   string          `json:"source_file,omitempty"`
 		SourceLine   uint32          `json:"source_line,omitempty"`
+		SourceCol    uint32          `json:"-"`
 		InApp        *bool           `json:"in_app"`
 	}
 
@@ -69,6 +70,7 @@ func (m AndroidMethod) Frame() frame.Frame {
 		Function: methodName,
 		InApp:    &inApp,
 		Line:     m.SourceLine,
+		Column:   m.SourceCol,
 		MethodID: m.ID,
 		Package:  className,
 		Path:     m.SourceFile,
@@ -402,6 +404,7 @@ func (p Android) Speedscope() (speedscope.Output, error) {
 					Inline:        true,
 					IsApplication: inApp,
 					Line:          m.SourceLine,
+					Col:           m.SourceCol,
 					Name:          m.Name,
 				})
 			}
@@ -425,6 +428,7 @@ func (p Android) Speedscope() (speedscope.Output, error) {
 				Name:          fullMethodName,
 				File:          method.SourceFile,
 				Line:          method.SourceLine,
+				Col:           method.SourceCol,
 				IsApplication: inApp,
 				Image:         packageName,
 			})
