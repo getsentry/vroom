@@ -16,3 +16,6 @@
 
 /gocd/templates/vendor/
 /gocd/generated-pipelines/
+
+# IDE
+.vscode/

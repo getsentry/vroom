@@ -8,7 +8,7 @@ require (
 	github.com/CAFxX/httpcompression v0.0.8
 	github.com/andybalholm/brotli v1.0.5
 	github.com/fsouza/fake-gcs-server v1.44.0
-	github.com/getsentry/sentry-go v0.25.0
+	github.com/getsentry/sentry-go v0.27.1-0.20240306095720-d1aa56b3a38f
 	github.com/goccy/go-json v0.10.0
 	github.com/gojek/heimdall/v7 v7.0.2
 	github.com/google/go-cmp v0.5.9

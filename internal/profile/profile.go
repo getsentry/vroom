@@ -12,6 +12,7 @@ import (
 	"github.com/getsentry/vroom/internal/sample"
 	"github.com/getsentry/vroom/internal/speedscope"
 	"github.com/getsentry/vroom/internal/transaction"
+	"github.com/getsentry/vroom/internal/utils"
 )
 
 type (
@@ -40,6 +41,7 @@ type (
 		StoragePath() string
 		IsSampled() bool
 		SetProfileID(ID string)
+		GetOptions() utils.Options
 	}
 
 	Profile struct {
@@ -166,4 +168,8 @@ func (p *Profile) SetProfileID(ID string) {
 
 func (p *Profile) Measurements() map[string]measurements.Measurement {
 	return p.profile.GetMeasurements()
+}
+
+func (p *Profile) GetOptions() utils.Options {
+	return p.profile.GetOptions()
 }

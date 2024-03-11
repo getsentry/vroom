@@ -19,6 +19,7 @@ import (
 	"github.com/getsentry/vroom/internal/speedscope"
 	"github.com/getsentry/vroom/internal/timeutil"
 	"github.com/getsentry/vroom/internal/transaction"
+	"github.com/getsentry/vroom/internal/utils"
 )
 
 const maxProfileDurationForCallTrees = 15 * time.Second
@@ -53,6 +54,7 @@ type (
 		Environment          string                              `json:"environment,omitempty"`
 		Measurements         map[string]measurements.Measurement `json:"measurements,omitempty"`
 		OrganizationID       uint64                              `json:"organization_id"`
+		Options              utils.Options                       `json:"options,omitempty"`
 		Platform             platform.Platform                   `json:"platform"`
 		Profile              json.RawMessage                     `json:"profile,omitempty"`
 		JsProfile            json.RawMessage                     `json:"js_profile,omitempty"`
@@ -321,6 +323,10 @@ func (p LegacyProfile) GetMeasurements() map[string]measurements.Measurement {
 
 func (p *LegacyProfile) SetProfileID(ID string) {
 	p.ProfileID = ID
+}
+
+func (p LegacyProfile) GetOptions() utils.Options {
+	return p.Options
 }
 
 // This is to be used for ReactNative JS profile only since it works based on the

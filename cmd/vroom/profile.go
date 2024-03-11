@@ -180,6 +180,19 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			hub.CaptureException(err)
 		}
+		if p.GetOptions().ProjectDSN != "" {
+			s = sentry.StartSpan(ctx, "processing")
+			s.Description = "Extract metrics from functions"
+			metrics := extractMetricsFromFunctions(&p, functions)
+			s.Finish()
+
+			if len(metrics) > 0 {
+				s = sentry.StartSpan(ctx, "processing")
+				s.Description = "Send functions metrics to generic metrics platform"
+				sendMetrics(&p, metrics)
+				s.Finish()
+			}
+		}
 	}
 
 	if p.IsSampled() {
