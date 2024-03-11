@@ -170,7 +170,7 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 		s = sentry.StartSpan(ctx, "processing")
 		s.Description = "Send functions to Kafka"
 		err = env.profilingWriter.WriteMessages(ctx, kafka.Message{
-			Topic: env.config.CallTreesKafkaTopic,
+			Topic: env.config.Profiling.CallTreesKafkaTopic,
 			Value: b,
 		})
 		s.Finish()
@@ -197,7 +197,7 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 		s = sentry.StartSpan(ctx, "processing")
 		s.Description = "Send profile metadata to Kafka"
 		err = env.profilingWriter.WriteMessages(ctx, kafka.Message{
-			Topic: env.config.ProfilesKafkaTopic,
+			Topic: env.config.Profiling.ProfilesKafkaTopic,
 			Value: b,
 		})
 		s.Finish()

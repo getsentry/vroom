@@ -9,13 +9,22 @@ import (
 	"cloud.google.com/go/compute/metadata"
 )
 
-func ConfigureLogger() {
+func ConfigureLogger(level string, format string) {
+	logLevel, err := zerolog.ParseLevel(level)
+	if err != nil {
+		logLevel = zerolog.WarnLevel
+	}
+
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
 	log.Logger = log.With().Caller().Stack().Logger()
+	log.Logger = log.Sample(LevelSampler{Level: logLevel})
+
 	if metadata.OnGCE() {
 		log.Logger = log.Hook(ErrorHook{})
 	} else {
-		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+		if format == "simplified" {
+			log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+		}
 	}
 }
 
