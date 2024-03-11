@@ -431,6 +431,7 @@ func updateMethods(methodSet map[uint64]void, methods *[]AndroidMethod, fr frame
 		Name:       fr.Function,
 		SourceFile: fr.Path,
 		SourceLine: fr.Line,
+		SourceCol:  fr.Column,
 		InApp:      fr.InApp,
 	}
 	*methods = append(*methods, method)
