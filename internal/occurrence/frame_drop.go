@@ -75,7 +75,7 @@ func findFrameDropCause(
 	for _, mv := range frameDrops.Values {
 		stats := newFrozenFrameStats(mv.ElapsedSinceStartNs, mv.Value)
 		for _, root := range callTrees {
-			st := make([]*nodetree.Node, 0, 128)
+			st := make([]*nodetree.Node, 0, profile.MaxStackDepth)
 			cause := findFrameDropCauseFrame(
 				root,
 				stats,
