@@ -445,10 +445,9 @@ func TestSpeedscope(t *testing.T) {
 
 func TestCallTrees(t *testing.T) {
 	tests := []struct {
-		name     string
-		trace    Android
-		want     map[uint64][]*nodetree.Node
-		maxDepth int
+		name  string
+		trace Android
+		want  map[uint64][]*nodetree.Node
 	}{
 		{
 			name:  "Build call trees with missing exit events",
@@ -503,7 +502,6 @@ func TestCallTrees(t *testing.T) {
 					},
 				},
 			},
-			maxDepth: MaxStackDepth,
 		},
 		{
 			name:  "Build call trees with missing enter events",
@@ -561,31 +559,6 @@ func TestCallTrees(t *testing.T) {
 					},
 				},
 			},
-			maxDepth: MaxStackDepth,
-		},
-		{
-			name:  "Build call trees but truncate stack depth",
-			trace: missingExitEventsTrace,
-			want: map[uint64][]*nodetree.Node{
-				1: {
-					{
-						DurationNS:    1000,
-						IsApplication: true,
-						EndNS:         2000,
-						StartNS:       1000,
-						Name:          "class1.method1()",
-						Package:       "class1",
-						SampleCount:   1,
-						Frame: frame.Frame{
-							Function: "class1.method1()",
-							InApp:    &testutil.True,
-							MethodID: 1,
-							Package:  "class1",
-						},
-					},
-				},
-			},
-			maxDepth: 1,
 		},
 	}
 
@@ -596,7 +569,7 @@ func TestCallTrees(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			if diff := testutil.Diff(test.trace.CallTreesWithMaxDepth(test.maxDepth), test.want, options); diff != "" {
+			if diff := testutil.Diff(test.trace.CallTrees(), test.want, options); diff != "" {
 				t.Fatalf("Result mismatch: got - want +\n%s", diff)
 			}
 		})

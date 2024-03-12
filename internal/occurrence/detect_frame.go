@@ -506,7 +506,7 @@ func detectFrameInCallTree(
 	options DetectFrameOptions,
 	nodes map[nodeKey]nodeInfo,
 ) {
-	st := make([]frame.Frame, 0, profile.MaxStackDepth)
+	st := make([]frame.Frame, 0, 128)
 	detectFrameInNode(n, options, nodes, &st)
 }
 
