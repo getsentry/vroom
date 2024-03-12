@@ -239,6 +239,10 @@ func (p *Android) FixSamplesTime() {
 
 // CallTrees generates call trees for a given profile.
 func (p Android) CallTrees() map[uint64][]*nodetree.Node {
+	return p.CallTreesWithMaxDepth(128)
+}
+
+func (p Android) CallTreesWithMaxDepth(maxDepth int) map[uint64][]*nodetree.Node {
 	// in case wall-clock.secs is not monotonic, "fix" it
 	p.FixSamplesTime()
 
@@ -253,6 +257,7 @@ func (p Android) CallTrees() map[uint64][]*nodetree.Node {
 	buildTimestamp := p.TimestampGetter()
 	treesByThreadID := make(map[uint64][]*nodetree.Node)
 	stacks := make(map[uint64][]*nodetree.Node)
+	stackDepth := make(map[uint64]int)
 
 	methods := make(map[uint64]AndroidMethod)
 	for _, m := range p.Methods {
@@ -290,6 +295,10 @@ func (p Android) CallTrees() map[uint64][]*nodetree.Node {
 					Name:      "unknown",
 				}
 			}
+			stackDepth[e.ThreadID]++
+			if stackDepth[e.ThreadID] > maxDepth {
+				continue
+			}
 			n := nodetree.NodeFromFrame(m.Frame(), ts, 0, 0)
 			if len(stacks[e.ThreadID]) == 0 {
 				treesByThreadID[e.ThreadID] = append(treesByThreadID[e.ThreadID], n)
@@ -300,6 +309,10 @@ func (p Android) CallTrees() map[uint64][]*nodetree.Node {
 			stacks[e.ThreadID] = append(stacks[e.ThreadID], n)
 			n.Fingerprint = generateFingerprint(stacks[e.ThreadID])
 		case ExitAction, UnwindAction:
+			stackDepth[e.ThreadID]--
+			if stackDepth[e.ThreadID] > maxDepth {
+				continue
+			}
 			if len(stacks[e.ThreadID]) == 0 {
 				continue
 			}
@@ -380,6 +393,10 @@ func (p *Android) NormalizeMethods(pi profileInterface) {
 }
 
 func (p Android) Speedscope() (speedscope.Output, error) {
+	return p.SpeedscopeWithMaxDepth(128)
+}
+
+func (p Android) SpeedscopeWithMaxDepth(maxDepth int) (speedscope.Output, error) {
 	// in case wall-clock.secs is not monotonic, "fix" it
 	p.FixSamplesTime()
 
@@ -462,6 +479,7 @@ func (p Android) Speedscope() (speedscope.Output, error) {
 
 	threadIDToProfile := make(map[uint64]*speedscope.EventedProfile)
 	methodStacks := make(map[uint64][]uint64) // map of thread ID -> stack of method IDs
+	stackDepth := make(map[uint64]int)
 	buildTimestamp := p.TimestampGetter()
 
 	enterPerMethod := make(map[uint64]int)
@@ -484,10 +502,18 @@ func (p Android) Speedscope() (speedscope.Output, error) {
 
 		switch event.Action {
 		case "Enter":
+			stackDepth[event.ThreadID]++
+			if stackDepth[event.ThreadID] > maxDepth {
+				continue
+			}
 			enterPerMethod[event.MethodID]++
 			methodStacks[event.ThreadID] = append(methodStacks[event.ThreadID], event.MethodID)
 			emitEvent(prof, speedscope.EventTypeOpenFrame, event.MethodID, ts)
 		case "Exit", "Unwind":
+			stackDepth[event.ThreadID]--
+			if stackDepth[event.ThreadID] > maxDepth {
+				continue
+			}
 			stack := methodStacks[event.ThreadID]
 			if len(stack) == 0 {
 				// This case happens when we filter events for a given transaction.
