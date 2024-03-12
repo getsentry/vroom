@@ -286,7 +286,6 @@ func (p Android) CallTreesWithMaxDepth(maxDepth int) map[uint64][]*nodetree.Node
 
 		switch e.Action {
 		case EnterAction:
-			enterPerMethod[e.MethodID]++
 			m, exists := methods[e.MethodID]
 			if !exists {
 				methods[e.MethodID] = AndroidMethod{
@@ -299,6 +298,7 @@ func (p Android) CallTreesWithMaxDepth(maxDepth int) map[uint64][]*nodetree.Node
 			if stackDepth[e.ThreadID] > maxDepth {
 				continue
 			}
+			enterPerMethod[e.MethodID]++
 			n := nodetree.NodeFromFrame(m.Frame(), ts, 0, 0)
 			if len(stacks[e.ThreadID]) == 0 {
 				treesByThreadID[e.ThreadID] = append(treesByThreadID[e.ThreadID], n)

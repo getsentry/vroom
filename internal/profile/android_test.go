@@ -356,6 +356,116 @@ var (
 			},
 		},
 	}
+	stackDepth3EventsTrace = Android{
+		Clock: "Dual",
+		Events: []AndroidEvent{
+			{
+				Action:   "Enter",
+				ThreadID: 1,
+				MethodID: 1,
+				Time: EventTime{
+					Monotonic: EventMonotonic{
+						Wall: Duration{
+							Nanos: 1000,
+						},
+					},
+				},
+			},
+			{
+				Action:   "Enter",
+				ThreadID: 1,
+				MethodID: 3,
+				Time: EventTime{
+					Monotonic: EventMonotonic{
+						Wall: Duration{
+							Nanos: 1000,
+						},
+					},
+				},
+			},
+			{
+				Action:   "Enter",
+				ThreadID: 1,
+				MethodID: 4,
+				Time: EventTime{
+					Monotonic: EventMonotonic{
+						Wall: Duration{
+							Nanos: 1000,
+						},
+					},
+				},
+			},
+			{
+				Action:   "Exit",
+				ThreadID: 1,
+				MethodID: 2,
+				Time: EventTime{
+					Monotonic: EventMonotonic{
+						Wall: Duration{
+							Nanos: 2000,
+						},
+					},
+				},
+			},
+			{
+				Action:   "Exit",
+				ThreadID: 1,
+				MethodID: 4,
+				Time: EventTime{
+					Monotonic: EventMonotonic{
+						Wall: Duration{
+							Nanos: 2000,
+						},
+					},
+				},
+			},
+			{
+				Action:   "Exit",
+				ThreadID: 1,
+				MethodID: 3,
+				Time: EventTime{
+					Monotonic: EventMonotonic{
+						Wall: Duration{
+							Nanos: 2000,
+						},
+					},
+				},
+			},
+		},
+		Methods: []AndroidMethod{
+			{
+				ClassName: "class1",
+				ID:        1,
+				Name:      "method1",
+				Signature: "()",
+			},
+			{
+				ClassName: "class2",
+				ID:        2,
+				Name:      "method2",
+				Signature: "()",
+			},
+			{
+				ClassName: "class3",
+				ID:        3,
+				Name:      "method3",
+				Signature: "()",
+			},
+			{
+				ClassName: "class4",
+				ID:        4,
+				Name:      "method4",
+				Signature: "()",
+			},
+		},
+		StartTime: 398635355383000,
+		Threads: []AndroidThread{
+			{
+				ID:   1,
+				Name: "main",
+			},
+		},
+	}
 )
 
 func TestSpeedscope(t *testing.T) {
@@ -565,7 +675,7 @@ func TestCallTrees(t *testing.T) {
 		},
 		{
 			name:  "Build call trees but truncate stack depth",
-			trace: missingExitEventsTrace,
+			trace: stackDepth3EventsTrace,
 			want: map[uint64][]*nodetree.Node{
 				1: {
 					{
