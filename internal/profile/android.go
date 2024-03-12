@@ -239,7 +239,7 @@ func (p *Android) FixSamplesTime() {
 
 // CallTrees generates call trees for a given profile.
 func (p Android) CallTrees() map[uint64][]*nodetree.Node {
-	return p.CallTreesWithMaxDepth(128)
+	return p.CallTreesWithMaxDepth(MaxStackDepth)
 }
 
 func (p Android) CallTreesWithMaxDepth(maxDepth int) map[uint64][]*nodetree.Node {
@@ -393,7 +393,7 @@ func (p *Android) NormalizeMethods(pi profileInterface) {
 }
 
 func (p Android) Speedscope() (speedscope.Output, error) {
-	return p.SpeedscopeWithMaxDepth(128)
+	return p.SpeedscopeWithMaxDepth(MaxStackDepth)
 }
 
 func (p Android) SpeedscopeWithMaxDepth(maxDepth int) (speedscope.Output, error) {

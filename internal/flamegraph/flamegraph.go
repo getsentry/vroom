@@ -212,7 +212,7 @@ func toSpeedscope(trees []*nodetree.Node, minFreq int, projectID uint64) speedsc
 		sampleCounts:     make([]uint64, 0),
 	}
 	for _, tree := range trees {
-		stack := make([]int, 0, 128)
+		stack := make([]int, 0, profile.MaxStackDepth)
 		fd.visitCalltree(tree, &stack)
 	}
 
