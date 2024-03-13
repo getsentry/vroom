@@ -9,6 +9,7 @@ import (
 	"github.com/getsentry/vroom/internal/platform"
 	"github.com/getsentry/vroom/internal/timeutil"
 	"github.com/getsentry/vroom/internal/transaction"
+	"github.com/getsentry/vroom/internal/utils"
 )
 
 const (
@@ -121,21 +122,22 @@ type (
 		DurationNS           uint64                              `json:"durationNS"`                    //nolint:unused
 		Environment          string                              `json:"environment,omitempty"`         //nolint:unused
 		Measurements         map[string]measurements.Measurement `json:"-"`                             //nolint:unused
-		OrganizationID       uint64                              `json:"organizationID"`                //nolint:unused
-		Platform             platform.Platform                   `json:"platform"`                      //nolint:unused
-		Profile              json.RawMessage                     `json:"-"`                             //nolint:unused
-		JsProfile            json.RawMessage                     `json:"-"`                             //nolint:unused
-		ProfileID            string                              `json:"profileID"`                     //nolint:unused
-		ProjectID            uint64                              `json:"projectID"`                     //nolint:unused
-		Received             timeutil.Time                       `json:"received"`                      //nolint:unused
-		RetentionDays        int                                 `json:"-"`                             //nolint:unused
-		Timestamp            time.Time                           `json:"timestamp,omitempty"`           //nolint:unused
-		TraceID              string                              `json:"traceID"`                       //nolint:unused
-		TransactionID        string                              `json:"transactionID"`                 //nolint:unused
-		TransactionMetadata  transaction.Metadata                `json:"-"`                             //nolint:unused
-		TransactionName      string                              `json:"transactionName"`               //nolint:unused
-		TransactionTags      map[string]string                   `json:"-"`                             //nolint:unused
-		VersionCode          string                              `json:"-"`                             //nolint:unused
-		VersionName          string                              `json:"-"`                             //nolint:unused
+		OrganizationID       uint64                              `json:"organizationID"`
+		Options              utils.Options                       `json:"-"`                   //nolint:unused
+		Platform             platform.Platform                   `json:"platform"`            //nolint:unused
+		Profile              json.RawMessage                     `json:"-"`                   //nolint:unused
+		JsProfile            json.RawMessage                     `json:"-"`                   //nolint:unused
+		ProfileID            string                              `json:"profileID"`           //nolint:unused
+		ProjectID            uint64                              `json:"projectID"`           //nolint:unused
+		Received             timeutil.Time                       `json:"received"`            //nolint:unused
+		RetentionDays        int                                 `json:"-"`                   //nolint:unused
+		Timestamp            time.Time                           `json:"timestamp,omitempty"` //nolint:unused
+		TraceID              string                              `json:"traceID"`             //nolint:unused
+		TransactionID        string                              `json:"transactionID"`       //nolint:unused
+		TransactionMetadata  transaction.Metadata                `json:"-"`                   //nolint:unused
+		TransactionName      string                              `json:"transactionName"`     //nolint:unused
+		TransactionTags      map[string]string                   `json:"-"`                   //nolint:unused
+		VersionCode          string                              `json:"-"`                   //nolint:unused
+		VersionName          string                              `json:"-"`                   //nolint:unused
 	}
 )

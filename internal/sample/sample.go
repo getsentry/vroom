@@ -19,6 +19,7 @@ import (
 	"github.com/getsentry/vroom/internal/speedscope"
 	"github.com/getsentry/vroom/internal/timeutil"
 	"github.com/getsentry/vroom/internal/transaction"
+	"github.com/getsentry/vroom/internal/utils"
 )
 
 var (
@@ -86,6 +87,7 @@ type (
 		Measurements        map[string]measurements.Measurement `json:"measurements,omitempty"`
 		OS                  OS                                  `json:"os"`
 		OrganizationID      uint64                              `json:"organization_id"`
+		Options             utils.Options                       `json:"options,omitempty"`
 		Platform            platform.Platform                   `json:"platform"`
 		ProjectID           uint64                              `json:"project_id"`
 		Received            timeutil.Time                       `json:"received"`
@@ -446,6 +448,10 @@ func (p *Profile) Normalize() {
 	}
 
 	p.Trace.ReplaceIdleStacks()
+}
+
+func (p *Profile) GetOptions() utils.Options {
+	return p.Options
 }
 
 func (t Trace) SamplesByThreadD() ([]uint64, map[uint64][]*Sample) {

@@ -1,6 +1,11 @@
 package utils
 
+import "encoding/json"
+
 type Options struct {
-	FunctionMetricsIngestionEnabled       bool  `json:"profiling.generic_metrics.functions_ingestion.enabled"`
-	FunctionMetricsIngestionAllowedOrgIDs []int `json:"profiling.generic_metrics.functions_ingestion.allowed_org_ids"`
+	ProjectDSN string `json:"dsn"`
+}
+
+func (o Options) MarshalJSON() ([]byte, error) {
+	return json.Marshal(nil)
 }

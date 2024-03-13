@@ -5,9 +5,14 @@ import (
 	"math"
 	"net/url"
 	"strconv"
+	"strings"
 
+	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 
+	"github.com/getsentry/sentry-go"
+	"github.com/getsentry/vroom/internal/nodetree"
+	"github.com/getsentry/vroom/internal/profile"
 	"github.com/getsentry/vroom/internal/snubautil"
 )
 
@@ -152,4 +157,49 @@ func getFlamegraphNumWorkers(numProfiles, minNumWorkers int) int {
 	}
 	v := int(math.Ceil((float64(numProfiles) / 100) * float64(minNumWorkers)))
 	return max(v, minNumWorkers)
+}
+
+func extractMetricsFromFunctions(p *profile.Profile, functions []nodetree.CallTreeFunction) []sentry.Metric {
+	metrics := make([]sentry.Metric, 0, len(functions))
+
+	for _, function := range functions {
+		if len(function.SelfTimesNS) == 0 {
+			continue
+		}
+		tags := map[string]string{
+			"project_id":     strconv.FormatUint(p.ProjectID(), 10),
+			"transaction":    p.Transaction().Name,
+			"fingerprint":    strconv.FormatUint(uint64(function.Fingerprint), 10),
+			"name":           function.Function,
+			"package":        function.Package,
+			"is_application": strconv.FormatBool(function.InApp),
+			"platform":       string(p.Platform()),
+			"environment":    p.Environment(),
+			"release":        p.Release(),
+			"os_name":        p.Metadata().DeviceOSName,
+			"os_version":     p.Metadata().DeviceOSVersion,
+		}
+		duration := float64(function.SelfTimesNS[0] / 1e6)
+		dm := sentry.NewDistributionMetric("profiles/function.duration", sentry.MilliSecond(), tags, p.Metadata().Timestamp, duration)
+		// loop remaining selfTime durations
+		for i := 1; i < len(function.SelfTimesNS); i++ {
+			dm.Add(float64(function.SelfTimesNS[i] / 1e6))
+		}
+		metrics = append(metrics, dm)
+	}
+	return metrics
+}
+
+func sendMetrics(p *profile.Profile, metrics []sentry.Metric) {
+	id := strings.Replace(uuid.New().String(), "-", "", -1)
+	e := sentry.NewEvent()
+	e.EventID = sentry.EventID(id)
+	e.Type = "statsd"
+	e.Metrics = metrics
+	tr := sentry.NewHTTPSyncTransport()
+	tr.Configure(sentry.ClientOptions{
+		Dsn: p.GetOptions().ProjectDSN,
+	})
+
+	tr.SendEvent(e)
 }
