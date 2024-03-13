@@ -356,6 +356,116 @@ var (
 			},
 		},
 	}
+	stackDepth3EventsTrace = Android{
+		Clock: "Dual",
+		Events: []AndroidEvent{
+			{
+				Action:   "Enter",
+				ThreadID: 1,
+				MethodID: 1,
+				Time: EventTime{
+					Monotonic: EventMonotonic{
+						Wall: Duration{
+							Nanos: 1000,
+						},
+					},
+				},
+			},
+			{
+				Action:   "Enter",
+				ThreadID: 1,
+				MethodID: 3,
+				Time: EventTime{
+					Monotonic: EventMonotonic{
+						Wall: Duration{
+							Nanos: 1000,
+						},
+					},
+				},
+			},
+			{
+				Action:   "Enter",
+				ThreadID: 1,
+				MethodID: 4,
+				Time: EventTime{
+					Monotonic: EventMonotonic{
+						Wall: Duration{
+							Nanos: 1000,
+						},
+					},
+				},
+			},
+			{
+				Action:   "Exit",
+				ThreadID: 1,
+				MethodID: 2,
+				Time: EventTime{
+					Monotonic: EventMonotonic{
+						Wall: Duration{
+							Nanos: 2000,
+						},
+					},
+				},
+			},
+			{
+				Action:   "Exit",
+				ThreadID: 1,
+				MethodID: 4,
+				Time: EventTime{
+					Monotonic: EventMonotonic{
+						Wall: Duration{
+							Nanos: 2000,
+						},
+					},
+				},
+			},
+			{
+				Action:   "Exit",
+				ThreadID: 1,
+				MethodID: 3,
+				Time: EventTime{
+					Monotonic: EventMonotonic{
+						Wall: Duration{
+							Nanos: 2000,
+						},
+					},
+				},
+			},
+		},
+		Methods: []AndroidMethod{
+			{
+				ClassName: "class1",
+				ID:        1,
+				Name:      "method1",
+				Signature: "()",
+			},
+			{
+				ClassName: "class2",
+				ID:        2,
+				Name:      "method2",
+				Signature: "()",
+			},
+			{
+				ClassName: "class3",
+				ID:        3,
+				Name:      "method3",
+				Signature: "()",
+			},
+			{
+				ClassName: "class4",
+				ID:        4,
+				Name:      "method4",
+				Signature: "()",
+			},
+		},
+		StartTime: 398635355383000,
+		Threads: []AndroidThread{
+			{
+				ID:   1,
+				Name: "main",
+			},
+		},
+	}
 )
 
 func TestSpeedscope(t *testing.T) {
@@ -445,9 +555,10 @@ func TestSpeedscope(t *testing.T) {
 
 func TestCallTrees(t *testing.T) {
 	tests := []struct {
-		name  string
-		trace Android
-		want  map[uint64][]*nodetree.Node
+		name     string
+		trace    Android
+		want     map[uint64][]*nodetree.Node
+		maxDepth int
 	}{
 		{
 			name:  "Build call trees with missing exit events",
@@ -502,6 +613,7 @@ func TestCallTrees(t *testing.T) {
 					},
 				},
 			},
+			maxDepth: MaxStackDepth,
 		},
 		{
 			name:  "Build call trees with missing enter events",
@@ -559,6 +671,31 @@ func TestCallTrees(t *testing.T) {
 					},
 				},
 			},
+			maxDepth: MaxStackDepth,
+		},
+		{
+			name:  "Build call trees but truncate stack depth",
+			trace: stackDepth3EventsTrace,
+			want: map[uint64][]*nodetree.Node{
+				1: {
+					{
+						DurationNS:    1000,
+						IsApplication: true,
+						EndNS:         2000,
+						StartNS:       1000,
+						Name:          "class1.method1()",
+						Package:       "class1",
+						SampleCount:   1,
+						Frame: frame.Frame{
+							Function: "class1.method1()",
+							InApp:    &testutil.True,
+							MethodID: 1,
+							Package:  "class1",
+						},
+					},
+				},
+			},
+			maxDepth: 1,
 		},
 	}
 
@@ -569,7 +706,7 @@ func TestCallTrees(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			if diff := testutil.Diff(test.trace.CallTrees(), test.want, options); diff != "" {
+			if diff := testutil.Diff(test.trace.CallTreesWithMaxDepth(test.maxDepth), test.want, options); diff != "" {
 				t.Fatalf("Result mismatch: got - want +\n%s", diff)
 			}
 		})
