@@ -47,6 +47,7 @@
 - Bump trufflesecurity/trufflehog from 3.68.4 to 3.68.5 ([#420](https://github.com/getsentry/vroom/pull/420))
 - Bump trufflesecurity/trufflehog from 3.68.5 to 3.69.0 ([#421](https://github.com/getsentry/vroom/pull/421))
 - Keep col info when converting from android method to frame ([#423](https://github.com/getsentry/vroom/pull/423))
+- Bump google.golang.org/protobuf from 1.30.0 to 1.33.0 ([#427](https://github.com/getsentry/vroom/pull/427))
 
 ## 23.12.0
 
