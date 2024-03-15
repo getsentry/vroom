@@ -25,7 +25,7 @@ const (
 
 type (
 	Frame struct {
-		Col           uint32 `json:"col,omitempty"`
+		Col           uint32 `json:"colno,omitempty"`
 		File          string `json:"file,omitempty"`
 		Image         string `json:"image,omitempty"`
 		Inline        bool   `json:"inline,omitempty"`
