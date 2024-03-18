@@ -482,8 +482,8 @@ func (p Android) SpeedscopeWithMaxDepth(maxDepth int) (speedscope.Output, error)
 	stackDepth := make(map[uint64]int)
 	buildTimestamp := p.TimestampGetter()
 
-	enterPerMethod := make(map[uint64]int)
-	exitPerMethod := make(map[uint64]int)
+	enterPerMethod := make(map[uint64]map[uint64]int)
+	exitPerMethod := make(map[uint64]map[uint64]int)
 
 	for _, event := range p.Events {
 		ts := buildTimestamp(event.Time)
@@ -506,7 +506,10 @@ func (p Android) SpeedscopeWithMaxDepth(maxDepth int) (speedscope.Output, error)
 			if stackDepth[event.ThreadID] > maxDepth {
 				continue
 			}
-			enterPerMethod[event.MethodID]++
+			if _, ok := enterPerMethod[event.ThreadID]; !ok {
+				enterPerMethod[event.ThreadID] = make(map[uint64]int)
+			}
+			enterPerMethod[event.ThreadID][event.MethodID]++
 			methodStacks[event.ThreadID] = append(methodStacks[event.ThreadID], event.MethodID)
 			emitEvent(prof, speedscope.EventTypeOpenFrame, event.MethodID, ts)
 		case "Exit", "Unwind":
@@ -533,13 +536,15 @@ func (p Android) SpeedscopeWithMaxDepth(maxDepth int) (speedscope.Output, error)
 			for ; i >= 0; i-- {
 				methodID := stack[i]
 				// Skip exit event when we didn't record an enter event for that method.
-				if methodID != event.MethodID &&
-					enterPerMethod[event.MethodID] <= exitPerMethod[event.MethodID] {
+				if methodID != event.MethodID && enterPerMethod[event.ThreadID][event.MethodID] <= exitPerMethod[event.ThreadID][event.MethodID] {
 					eventSkipped = true
 					break
 				}
 				emitEvent(prof, speedscope.EventTypeCloseFrame, methodID, ts)
-				exitPerMethod[methodID]++
+				if _, ok := exitPerMethod[event.ThreadID]; !ok {
+					exitPerMethod[event.ThreadID] = make(map[uint64]int)
+				}
+				exitPerMethod[event.ThreadID][methodID]++
 				// Pop the elements that we emitted end events for off the stack
 				// Keep closing methods until we closed the one we intended to close
 				if methodID == event.MethodID {
