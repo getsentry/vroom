@@ -15,6 +15,7 @@
 - Label all node frames as system ([#392](https://github.com/getsentry/vroom/pull/392))
 - Fix react-native (android) rendering issue ([#397](https://github.com/getsentry/vroom/pull/397))
 - Restrict max depth for android profiles ([#424](https://github.com/getsentry/vroom/pull/424)), ([#426](https://github.com/getsentry/vroom/pull/426))
+- Android enter/exit checks should be per thread ([#429](https://github.com/getsentry/vroom/pull/429))
 
 **Internal**:
 
@@ -48,6 +49,8 @@
 - Bump trufflesecurity/trufflehog from 3.68.4 to 3.68.5 ([#420](https://github.com/getsentry/vroom/pull/420))
 - Bump trufflesecurity/trufflehog from 3.68.5 to 3.69.0 ([#421](https://github.com/getsentry/vroom/pull/421))
 - Keep col info when converting from android method to frame ([#423](https://github.com/getsentry/vroom/pull/423))
+- Bump google.golang.org/protobuf from 1.30.0 to 1.33.0 ([#427](https://github.com/getsentry/vroom/pull/427))
+- Bump trufflesecurity/trufflehog from 3.69.0 to 3.70.2 ([#430](https://github.com/getsentry/vroom/pull/430))
 
 ## 23.12.0
 
