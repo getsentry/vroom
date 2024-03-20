@@ -7,5 +7,6 @@ type (
 		ID             string `json:"id"`
 		Name           string `json:"name"`
 		TraceID        string `json:"trace_id"`
+		SegmentID      string `json:"segment_id"`
 	}
 )
