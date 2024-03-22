@@ -14,6 +14,8 @@ import (
 	"github.com/segmentio/kafka-go"
 )
 
+const profilesFunctionMri = "d:profiles/function.duration@millisecond"
+
 type (
 	// FunctionsKafkaMessage is representing the struct we send to Kafka to insert functions in ClickHouse.
 	FunctionsKafkaMessage struct {
@@ -136,7 +138,7 @@ func generateMetricSummariesKafkaMessageBatch(p *profile.Profile, metrics []sent
 			Max:           metricsSummary[i].Max,
 			Min:           metricsSummary[i].Min,
 			Sum:           metricsSummary[i].Sum,
-			Mri:           "d:profiles/function.duration@millisecond",
+			Mri:           profilesFunctionMri,
 			ProjectID:     p.ProjectID(),
 			Received:      p.Received().Unix(),
 			RetentionDays: p.RetentionDays(),
