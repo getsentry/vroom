@@ -127,7 +127,8 @@ func generateMetricSummariesKafkaMessageBatch(p *profile.Profile, metrics []sent
 	messages := make([]kafka.Message, 0, len(metrics))
 	for i, metric := range metrics {
 		// add profile_id to the metrics_summary tags
-		metric.GetTags()["profile_id"] = p.ID()
+		tags := metric.GetTags()
+		tags["profile_id"] = p.ID()
 		ms := MetricsSummaryKafkaMessage{
 			Count:         metricsSummary[i].Count,
 			DurationMs:    uint32(p.TransactionMetadata().TransactionEnd.UnixMilli() - p.TransactionMetadata().TransactionStart.UnixMilli()),
@@ -139,7 +140,7 @@ func generateMetricSummariesKafkaMessageBatch(p *profile.Profile, metrics []sent
 			ProjectID:     p.ProjectID(),
 			Received:      p.Received().Unix(),
 			RetentionDays: p.RetentionDays(),
-			Tags:          metric.GetTags(),
+			Tags:          tags,
 			TraceID:       p.Transaction().TraceID,
 			// currently we need to set this to a randomly generated span_id because
 			// the metrics_summaries dataset is defined with a ReplaceMergingTree engine
