@@ -183,7 +183,7 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 		if p.GetOptions().ProjectDSN != "" {
 			s = sentry.StartSpan(ctx, "processing")
 			s.Description = "Extract metrics from functions"
-			metrics := extractMetricsFromFunctions(&p, functions)
+			metrics, metricsSummary := extractMetricsFromFunctions(&p, functions)
 			s.Finish()
 
 			if len(metrics) > 0 {
@@ -191,6 +191,20 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 				s.Description = "Send functions metrics to generic metrics platform"
 				sendMetrics(&p, metrics)
 				s.Finish()
+			}
+
+			// Only send a profile sample to the metrics_summary if it's an indexed profile
+			if p.IsSampled() {
+				kafkaMessages, err := generateMetricSummariesKafkaMessageBatch(&p, metrics, metricsSummary)
+				if err != nil {
+					hub.CaptureException(err)
+					w.WriteHeader(http.StatusInternalServerError)
+					return
+				}
+				err = env.metricSummaryWriter.WriteMessages(ctx, kafkaMessages...)
+				if err != nil {
+					hub.CaptureException(err)
+				}
 			}
 		}
 	}

@@ -8,6 +8,7 @@
 - Add callTree generation for reactnative (android+js) profiles ([#390](https://github.com/getsentry/vroom/pull/390))
 - Use profiles that were not dynamically sampled to enhance slowest functions aggregation ([#300](https://github.com/getsentry/vroom/pull/300))
 - Add support for writing function metrics to generic metrics platform ([#422](https://github.com/getsentry/vroom/pull/422))
+- Add support to ingest metric_summaries for profile functions ([#431](https://github.com/getsentry/vroom/pull/431))
 
 **Bug Fixes**:
 

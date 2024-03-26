@@ -159,8 +159,9 @@ func getFlamegraphNumWorkers(numProfiles, minNumWorkers int) int {
 	return max(v, minNumWorkers)
 }
 
-func extractMetricsFromFunctions(p *profile.Profile, functions []nodetree.CallTreeFunction) []sentry.Metric {
+func extractMetricsFromFunctions(p *profile.Profile, functions []nodetree.CallTreeFunction) ([]sentry.Metric, []MetricSummary) {
 	metrics := make([]sentry.Metric, 0, len(functions))
+	metricsSummary := make([]MetricSummary, 0, len(functions))
 
 	for _, function := range functions {
 		if len(function.SelfTimesNS) == 0 {
@@ -180,14 +181,26 @@ func extractMetricsFromFunctions(p *profile.Profile, functions []nodetree.CallTr
 			"os_version":     p.Metadata().DeviceOSVersion,
 		}
 		duration := float64(function.SelfTimesNS[0] / 1e6)
+		summary := MetricSummary{
+			Min:   duration,
+			Max:   duration,
+			Sum:   duration,
+			Count: 1,
+		}
 		dm := sentry.NewDistributionMetric("profiles/function.duration", sentry.MilliSecond(), tags, p.Metadata().Timestamp, duration)
 		// loop remaining selfTime durations
 		for i := 1; i < len(function.SelfTimesNS); i++ {
-			dm.Add(float64(function.SelfTimesNS[i] / 1e6))
+			duration := float64(function.SelfTimesNS[i] / 1e6)
+			dm.Add(duration)
+			summary.Min = min(summary.Min, duration)
+			summary.Max = max(summary.Max, duration)
+			summary.Sum = summary.Sum + duration
+			summary.Count = summary.Count + 1
 		}
 		metrics = append(metrics, dm)
+		metricsSummary = append(metricsSummary, summary)
 	}
-	return metrics
+	return metrics, metricsSummary
 }
 
 func sendMetrics(p *profile.Profile, metrics []sentry.Metric) {
@@ -202,4 +215,11 @@ func sendMetrics(p *profile.Profile, metrics []sentry.Metric) {
 	})
 
 	tr.SendEvent(e)
+}
+
+type MetricSummary struct {
+	Min   float64
+	Max   float64
+	Sum   float64
+	Count uint64
 }

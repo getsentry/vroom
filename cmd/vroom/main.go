@@ -35,8 +35,9 @@ type environment struct {
 
 	snuba snubautil.Client
 
-	occurrencesWriter *kafka.Writer
-	profilingWriter   *kafka.Writer
+	occurrencesWriter   *kafka.Writer
+	profilingWriter     *kafka.Writer
+	metricSummaryWriter *kafka.Writer
 
 	storage *blob.Bucket
 }
@@ -83,6 +84,15 @@ func newEnvironment() (*environment, error) {
 		BatchSize:    10,
 		Compression:  kafka.Lz4,
 		ReadTimeout:  3 * time.Second,
+		WriteTimeout: 3 * time.Second,
+	}
+	e.metricSummaryWriter = &kafka.Writer{
+		Addr:         kafka.TCP(e.config.SpansKafkaBrokers...),
+		Async:        true,
+		Balancer:     kafka.CRC32Balancer{},
+		BatchSize:    100,
+		ReadTimeout:  3 * time.Second,
+		Topic:        e.config.MetricsSummaryKafkaTopic,
 		WriteTimeout: 3 * time.Second,
 	}
 	return &e, nil

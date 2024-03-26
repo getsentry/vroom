@@ -260,6 +260,7 @@ func (p LegacyProfile) GetTransaction() transaction.Transaction {
 		ID:             p.TransactionID,
 		Name:           p.TransactionName,
 		TraceID:        p.TraceID,
+		SegmentID:      p.TransactionMetadata.SegmentID,
 	}
 }
 

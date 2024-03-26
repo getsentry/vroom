@@ -14,5 +14,6 @@ type (
 		TransactionOp     string    `json:"transaction.op,omitempty"`
 		TransactionStart  time.Time `json:"transaction.start"`
 		TransactionStatus string    `json:"transaction.status,omitempty"`
+		SegmentID         string    `json:"segment_id,omitempty"`
 	}
 )
