@@ -52,6 +52,7 @@
 - Bump google.golang.org/protobuf from 1.30.0 to 1.33.0 ([#427](https://github.com/getsentry/vroom/pull/427))
 - Bump trufflesecurity/trufflehog from 3.69.0 to 3.70.2 ([#430](https://github.com/getsentry/vroom/pull/430))
 - Bump trufflesecurity/trufflehog from 3.70.2 to 3.70.3 ([#432](https://github.com/getsentry/vroom/pull/432))
+- Bump trufflesecurity/trufflehog from 3.70.3 to 3.71.0 ([#433](https://github.com/getsentry/vroom/pull/433))
 
 ## 23.12.0
 
