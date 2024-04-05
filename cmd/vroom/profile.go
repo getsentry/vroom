@@ -255,9 +255,10 @@ func extractFunctionsFromCallTrees(
 
 	functionsList := make([]nodetree.CallTreeFunction, 0, len(functions))
 	for _, function := range functions {
-		if function.SampleCount <= 1 {
+		if function.SampleCount <= 1 || !function.InApp {
 			// if there's only ever a single sample for this function in
-			// the profile, we skip over it to reduce the amount of data
+			// the profile, or this function is a system one,
+			// we skip over it to reduce the amount of data
 			continue
 		}
 		functionsList = append(functionsList, function)
