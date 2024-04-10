@@ -594,17 +594,6 @@ func (p *Profile) normalizeFrames() {
 		// Set Symbolicator status
 		if f.Status != "" {
 			f.Data.SymbolicatorStatus = f.Status
-		} else if f.Data.JsSymbolicated {
-			// when dealing with js/node_js, symbolicator status
-			// is not returned under the status field, but rather
-			// under the data.symbolicated field. Plus, its type
-			// is a bool and not a string.
-			// Here we do the required check and conversion to have
-			// a consistent experience across the different platforms
-			f.Data.SymbolicatorStatus = "symbolicated"
-			// set to false to avoid serializing it in the gcs file
-			// and showing redundant info
-			f.Data.JsSymbolicated = false
 		}
 
 		p.Trace.Frames[i] = f
