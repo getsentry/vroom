@@ -597,7 +597,7 @@ func (p *Profile) normalizeFrames() {
 		} else if f.Data.JsSymbolicated {
 			// when dealing with js/node_js, symbolicator status
 			// is not returned under the status field, but rather
-			// under the data.symbolicated field. Plus, it's type
+			// under the data.symbolicated field. Plus, its type
 			// is a bool and not a string.
 			// Here we do the required check and conversion to have
 			// a consistent experience across the different platforms
