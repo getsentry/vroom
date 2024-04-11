@@ -45,7 +45,7 @@ type (
 	Data struct {
 		DeobfuscationStatus string `json:"deobfuscation_status,omitempty"`
 		SymbolicatorStatus  string `json:"symbolicator_status,omitempty"`
-		JsSymbolicated      bool   `json:"symbolicated,omitempty"`
+		JsSymbolicated      *bool  `json:"symbolicated,omitempty"`
 	}
 )
 

@@ -18,7 +18,6 @@ import (
 
 	"github.com/getsentry/vroom/internal/nodetree"
 	"github.com/getsentry/vroom/internal/occurrence"
-	"github.com/getsentry/vroom/internal/platform"
 	"github.com/getsentry/vroom/internal/profile"
 	"github.com/getsentry/vroom/internal/storageutil"
 )
@@ -155,7 +154,7 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 		// Prepare call trees Kafka message
 		s = sentry.StartSpan(ctx, "processing")
 		s.Description = "Extract functions"
-		functions := extractFunctionsFromCallTrees(profilePlatform, callTrees)
+		functions := extractFunctionsFromCallTrees(callTrees)
 		s.Finish()
 
 		s = sentry.StartSpan(ctx, "json.marshal")
@@ -242,14 +241,13 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 }
 
 func extractFunctionsFromCallTrees(
-	profilePlatform platform.Platform,
 	callTrees map[uint64][]*nodetree.Node,
 ) []nodetree.CallTreeFunction {
 	functions := make(map[uint32]nodetree.CallTreeFunction, 0)
 
 	for _, callTreesForThread := range callTrees {
 		for _, callTree := range callTreesForThread {
-			callTree.CollectFunctions(profilePlatform, functions)
+			callTree.CollectFunctions(functions)
 		}
 	}
 

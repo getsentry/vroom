@@ -175,6 +175,7 @@ func TestNodeTreeCollectFunctions(t *testing.T) {
 				IsApplication: true,
 				Frame: frame.Frame{
 					Function: "main",
+					Platform: "python",
 					Package:  "main",
 				},
 				Children: []*Node{
@@ -184,6 +185,7 @@ func TestNodeTreeCollectFunctions(t *testing.T) {
 						Frame: frame.Frame{
 							Function: "foo",
 							Package:  "foo",
+							Platform: "python",
 						},
 						Children: []*Node{
 							{
@@ -192,6 +194,7 @@ func TestNodeTreeCollectFunctions(t *testing.T) {
 								Frame: frame.Frame{
 									Function: "bar",
 									Package:  "bar",
+									Platform: "python",
 								},
 								Children: []*Node{
 									{
@@ -200,6 +203,7 @@ func TestNodeTreeCollectFunctions(t *testing.T) {
 										Frame: frame.Frame{
 											Function: "baz",
 											Package:  "baz",
+											Platform: "python",
 										},
 									},
 								},
@@ -212,6 +216,7 @@ func TestNodeTreeCollectFunctions(t *testing.T) {
 						Frame: frame.Frame{
 							Function: "qux",
 							Package:  "qux",
+							Platform: "python",
 						},
 					},
 					{
@@ -220,6 +225,7 @@ func TestNodeTreeCollectFunctions(t *testing.T) {
 						Frame: frame.Frame{
 							Function: "foo",
 							Package:  "foo",
+							Platform: "python",
 						},
 						Children: []*Node{
 							{
@@ -228,6 +234,7 @@ func TestNodeTreeCollectFunctions(t *testing.T) {
 								Frame: frame.Frame{
 									Function: "bar",
 									Package:  "bar",
+									Platform: "python",
 								},
 								Children: []*Node{
 									{
@@ -236,6 +243,7 @@ func TestNodeTreeCollectFunctions(t *testing.T) {
 										Frame: frame.Frame{
 											Function: "baz",
 											Package:  "baz",
+											Platform: "python",
 										},
 									},
 								},
@@ -288,6 +296,10 @@ func TestNodeTreeCollectFunctions(t *testing.T) {
 				Frame: frame.Frame{
 					Function: "a.B()",
 					Package:  "a",
+					Platform: "android",
+					Data: frame.Data{
+						DeobfuscationStatus: "missing",
+					},
 				},
 				Children: []*Node{
 					{
@@ -296,6 +308,10 @@ func TestNodeTreeCollectFunctions(t *testing.T) {
 						Frame: frame.Frame{
 							Function: "com.example.Thing.doStuff()",
 							Package:  "com.example",
+							Platform: "android",
+							Data: frame.Data{
+								DeobfuscationStatus: "deobfuscated",
+							},
 						},
 					},
 					{
@@ -305,6 +321,7 @@ func TestNodeTreeCollectFunctions(t *testing.T) {
 							Data: frame.Data{
 								DeobfuscationStatus: "partial",
 							},
+							Platform: "android",
 							Function: "com.example.Thing.a()",
 							Package:  "com.example",
 						},
@@ -331,6 +348,7 @@ func TestNodeTreeCollectFunctions(t *testing.T) {
 				Frame: frame.Frame{
 					Function: "a.B()",
 					Package:  "a",
+					Platform: "java",
 				},
 				Children: []*Node{
 					{
@@ -339,6 +357,7 @@ func TestNodeTreeCollectFunctions(t *testing.T) {
 						Frame: frame.Frame{
 							Function: "com.example.Thing.doStuff()",
 							Package:  "com.example",
+							Platform: "java",
 						},
 					},
 				},
@@ -363,6 +382,7 @@ func TestNodeTreeCollectFunctions(t *testing.T) {
 				Frame: frame.Frame{
 					Function: "main",
 					Package:  "iOS-Swift",
+					Platform: "cocoa",
 				},
 			},
 			want: map[uint32]CallTreeFunction{},
@@ -372,7 +392,7 @@ func TestNodeTreeCollectFunctions(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			results := make(map[uint32]CallTreeFunction)
-			tt.node.CollectFunctions(tt.platform, results)
+			tt.node.CollectFunctions(results)
 			if diff := testutil.Diff(results, tt.want); diff != "" {
 				t.Fatalf("Result mismatch: got - want +\n%s", diff)
 			}
