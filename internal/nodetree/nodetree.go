@@ -278,8 +278,6 @@ func isSymbolicatedFrame(f frame.Frame) bool {
 			return *f.Data.JsSymbolicated
 		}
 		return true
-	} else if p == platform.Cocoa {
-		return f.Data.SymbolicatorStatus == "symbolicated"
 	}
-	return false
+	return f.Data.SymbolicatorStatus == "symbolicated"
 }
