@@ -9,6 +9,7 @@
 - Use profiles that were not dynamically sampled to enhance slowest functions aggregation ([#300](https://github.com/getsentry/vroom/pull/300))
 - Add support for writing function metrics to generic metrics platform ([#422](https://github.com/getsentry/vroom/pull/422))
 - Add support to ingest metric_summaries for profile functions ([#431](https://github.com/getsentry/vroom/pull/431))
+- Add platform field to android methods to align with the sample format ([#442](https://github.com/getsentry/vroom/pull/442))
 
 **Bug Fixes**:
 
