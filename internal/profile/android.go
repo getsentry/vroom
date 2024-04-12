@@ -33,6 +33,7 @@ type (
 		SourceLine   uint32          `json:"source_line,omitempty"`
 		SourceCol    uint32          `json:"-"`
 		InApp        *bool           `json:"in_app"`
+		Platform     string          `json:"platform,omitempty"`
 	}
 
 	Data struct {
@@ -74,6 +75,7 @@ func (m AndroidMethod) Frame() frame.Frame {
 		MethodID: m.ID,
 		Package:  className,
 		Path:     m.SourceFile,
+		Platform: m.Platform,
 	}
 }
 
