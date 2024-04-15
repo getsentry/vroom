@@ -199,7 +199,6 @@ func (n *Node) CollectFunctions(
 
 func shouldAggregateFrame(frame frame.Frame) bool {
 	frameFunction := frame.Function
-	platform := platform.Platform(frame.Platform)
 
 	// frames with no name are not valuable for aggregation
 	if frameFunction == "" {
@@ -207,13 +206,13 @@ func shouldAggregateFrame(frame frame.Frame) bool {
 	}
 
 	// hard coded list of functions that we should not aggregate by
-	if functionDenyList, exists := functionDenyListByPlatform[platform]; exists {
+	if functionDenyList, exists := functionDenyListByPlatform[frame.Platform]; exists {
 		if _, exists = functionDenyList[frameFunction]; exists {
 			return false
 		}
 	}
 
-	if _, obfuscationSupported := obfuscationSupportedPlatforms[platform]; obfuscationSupported {
+	if _, obfuscationSupported := obfuscationSupportedPlatforms[frame.Platform]; obfuscationSupported {
 		/*
 			There are 4 possible deobfuscation statuses
 			1. deobfuscated	- The frame was successfully deobfuscated.
@@ -237,7 +236,7 @@ func shouldAggregateFrame(frame frame.Frame) bool {
 		}
 	}
 
-	if _, symbolcationSupported := symbolicationSupportedPlatforms[platform]; symbolcationSupported {
+	if _, symbolcationSupported := symbolicationSupportedPlatforms[frame.Platform]; symbolcationSupported {
 		return isSymbolicatedFrame(frame)
 	}
 
@@ -272,8 +271,7 @@ func (n *Node) FindNodeByFingerprint(target uint32) *Node {
 }
 
 func isSymbolicatedFrame(f frame.Frame) bool {
-	p := platform.Platform(f.Platform)
-	if p == platform.JavaScript || p == platform.Node {
+	if f.Platform == platform.JavaScript || f.Platform == platform.Node {
 		if f.Data.JsSymbolicated != nil {
 			return *f.Data.JsSymbolicated
 		}
