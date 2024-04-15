@@ -1008,7 +1008,7 @@ func TestNormalizeFramesPerPlatform(t *testing.T) {
 			},
 		},
 		{
-			name: "react-native with cocoa",
+			name: "react-native with cocoa hermes frame",
 			input: Profile{
 				RawProfile: RawProfile{
 					Platform: platform.JavaScript,
@@ -1037,6 +1037,47 @@ func TestNormalizeFramesPerPlatform(t *testing.T) {
 								Data:     frame.Data{SymbolicatorStatus: "symbolicated"},
 								Function: "hermes::vm::Interpreter::createObjectFromBuffer(hermes::vm::Runtime\u0026, hermes::vm::CodeBlock*, unsigned int, unsigned int, unsigned int)",
 								Package:  "/private/var/containers/Bundle/Application/0DA082D7-05F5-413F-892B-642FD331230C/BIGW.app/Frameworks/hermes.framework/hermes",
+								InApp:    &testutil.False,
+								Platform: "cocoa",
+							},
+						},
+						Stacks: []Stack{
+							{0},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "react-native with cocoa system library",
+			input: Profile{
+				RawProfile: RawProfile{
+					Platform: platform.JavaScript,
+					Trace: Trace{
+						Frames: []frame.Frame{
+							{
+								Data:     frame.Data{SymbolicatorStatus: "symbolicated"},
+								Function: "swift_conformsToProtocolMaybeInstantiateSuperclasses(swift::TargetMetadata\u003cswift::InProcess\u003e const*, swift::TargetProtocolDescriptor\u003cswift::InProcess\u003e const*, bool)::$_8::operator()((anonymous namespace)::ConformanceSection const\u0026) const::{lambda(swift::TargetProtocolConformanceDescriptor\u003cswift::InProcess\u003e const\u0026)#1}::operator()(swift::TargetProtocolConformanceDescriptor\u003cswift::InProcess\u003e const\u0026) const",
+								Package:  "/usr/lib/swift/libswiftCore.dylib",
+								InApp:    &testutil.True,
+								Platform: "cocoa",
+							},
+						},
+						Stacks: []Stack{
+							{0},
+						},
+					},
+				},
+			},
+			output: Profile{
+				RawProfile: RawProfile{
+					Platform: platform.JavaScript,
+					Trace: Trace{
+						Frames: []frame.Frame{
+							{
+								Data:     frame.Data{SymbolicatorStatus: "symbolicated"},
+								Function: "swift_conformsToProtocolMaybeInstantiateSuperclasses(swift::TargetMetadata\u003cswift::InProcess\u003e const*, swift::TargetProtocolDescriptor\u003cswift::InProcess\u003e const*, bool)::$_8::operator()((anonymous namespace)::ConformanceSection const\u0026) const::{lambda(swift::TargetProtocolConformanceDescriptor\u003cswift::InProcess\u003e const\u0026)#1}::operator()(swift::TargetProtocolConformanceDescriptor\u003cswift::InProcess\u003e const\u0026) const",
+								Package:  "/usr/lib/swift/libswiftCore.dylib",
 								InApp:    &testutil.False,
 								Platform: "cocoa",
 							},
