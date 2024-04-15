@@ -18,6 +18,7 @@
 - Restrict max depth for android profiles ([#424](https://github.com/getsentry/vroom/pull/424)), ([#426](https://github.com/getsentry/vroom/pull/426))
 - Android enter/exit checks should be per thread ([#429](https://github.com/getsentry/vroom/pull/429))
 - Store js/node frames symbolicator status ([#439](https://github.com/getsentry/vroom/pull/439))
+- Fix react native (with cocoa) profile normalization ([#443](https://github.com/getsentry/vroom/pull/443))
 
 **Internal**:
 
