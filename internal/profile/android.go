@@ -13,6 +13,7 @@ import (
 	"github.com/getsentry/vroom/internal/frame"
 	"github.com/getsentry/vroom/internal/nodetree"
 	"github.com/getsentry/vroom/internal/packageutil"
+	"github.com/getsentry/vroom/internal/platform"
 	"github.com/getsentry/vroom/internal/speedscope"
 )
 
@@ -23,17 +24,17 @@ type (
 	}
 
 	AndroidMethod struct {
-		ClassName    string          `json:"class_name,omitempty"`
-		Data         Data            `json:"data"`
-		ID           uint64          `json:"id,omitempty"`
-		InlineFrames []AndroidMethod `json:"inline_frames,omitempty"`
-		Name         string          `json:"name,omitempty"`
-		Signature    string          `json:"signature,omitempty"`
-		SourceFile   string          `json:"source_file,omitempty"`
-		SourceLine   uint32          `json:"source_line,omitempty"`
-		SourceCol    uint32          `json:"-"`
-		InApp        *bool           `json:"in_app"`
-		Platform     string          `json:"platform,omitempty"`
+		ClassName    string            `json:"class_name,omitempty"`
+		Data         Data              `json:"data"`
+		ID           uint64            `json:"id,omitempty"`
+		InlineFrames []AndroidMethod   `json:"inline_frames,omitempty"`
+		Name         string            `json:"name,omitempty"`
+		Signature    string            `json:"signature,omitempty"`
+		SourceFile   string            `json:"source_file,omitempty"`
+		SourceLine   uint32            `json:"source_line,omitempty"`
+		SourceCol    uint32            `json:"-"`
+		InApp        *bool             `json:"in_app"`
+		Platform     platform.Platform `json:"platform,omitempty"`
 	}
 
 	Data struct {

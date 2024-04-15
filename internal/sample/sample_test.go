@@ -550,19 +550,23 @@ func TestTrimCocoaStacks(t *testing.T) {
 								Data:     frame.Data{SymbolicatorStatus: "symbolicated"},
 								Function: "function1",
 								InApp:    &testutil.True,
+								Platform: "cocoa",
 							},
 							{
 								Data:     frame.Data{SymbolicatorStatus: "symbolicated"},
 								Function: "function2",
 								InApp:    &testutil.True,
+								Platform: "cocoa",
 							},
 							{
 								Data:     frame.Data{SymbolicatorStatus: "symbolicated"},
 								Function: "main",
 								InApp:    &testutil.True,
+								Platform: "cocoa",
 							},
 							{
-								Data: frame.Data{SymbolicatorStatus: "missing"},
+								Data:     frame.Data{SymbolicatorStatus: "missing"},
+								Platform: "cocoa",
 							},
 						},
 						Stacks: []Stack{
@@ -580,20 +584,24 @@ func TestTrimCocoaStacks(t *testing.T) {
 								Data:     frame.Data{SymbolicatorStatus: "symbolicated"},
 								Function: "function1",
 								InApp:    &testutil.True,
+								Platform: "cocoa",
 							},
 							{
 								Data:     frame.Data{SymbolicatorStatus: "symbolicated"},
 								Function: "function2",
 								InApp:    &testutil.True,
+								Platform: "cocoa",
 							},
 							{
 								Data:     frame.Data{SymbolicatorStatus: "symbolicated"},
 								Function: "main",
 								InApp:    &testutil.True,
+								Platform: "cocoa",
 							},
 							{
-								Data:  frame.Data{SymbolicatorStatus: "missing"},
-								InApp: &testutil.False,
+								Data:     frame.Data{SymbolicatorStatus: "missing"},
+								InApp:    &testutil.False,
+								Platform: "cocoa",
 							},
 						},
 						Stacks: []Stack{
@@ -614,24 +622,29 @@ func TestTrimCocoaStacks(t *testing.T) {
 								Data:     frame.Data{SymbolicatorStatus: "symbolicated"},
 								Function: "function1",
 								InApp:    &testutil.True,
+								Platform: "cocoa",
 							},
 							{
 								Data:     frame.Data{SymbolicatorStatus: "symbolicated"},
 								Function: "function2",
 								InApp:    &testutil.True,
+								Platform: "cocoa",
 							},
 							{
 								Data:     frame.Data{SymbolicatorStatus: "symbolicated"},
 								Function: "main",
 								InApp:    &testutil.True,
+								Platform: "cocoa",
 							},
 							{
-								Data: frame.Data{SymbolicatorStatus: "missing"},
+								Data:     frame.Data{SymbolicatorStatus: "missing"},
+								Platform: "cocoa",
 							},
 							{
 								Data:     frame.Data{SymbolicatorStatus: "symbolicated"},
 								Function: "start_sim",
 								InApp:    &testutil.True,
+								Platform: "cocoa",
 							},
 						},
 						Stacks: []Stack{
@@ -649,25 +662,30 @@ func TestTrimCocoaStacks(t *testing.T) {
 								Data:     frame.Data{SymbolicatorStatus: "symbolicated"},
 								Function: "function1",
 								InApp:    &testutil.True,
+								Platform: "cocoa",
 							},
 							{
 								Data:     frame.Data{SymbolicatorStatus: "symbolicated"},
 								Function: "function2",
 								InApp:    &testutil.True,
+								Platform: "cocoa",
 							},
 							{
 								Data:     frame.Data{SymbolicatorStatus: "symbolicated"},
 								Function: "main",
 								InApp:    &testutil.True,
+								Platform: "cocoa",
 							},
 							{
-								Data:  frame.Data{SymbolicatorStatus: "missing"},
-								InApp: &testutil.False,
+								Data:     frame.Data{SymbolicatorStatus: "missing"},
+								InApp:    &testutil.False,
+								Platform: "cocoa",
 							},
 							{
 								Data:     frame.Data{SymbolicatorStatus: "symbolicated"},
 								Function: "start_sim",
 								InApp:    &testutil.True,
+								Platform: "cocoa",
 							},
 						},
 						Stacks: []Stack{
@@ -688,24 +706,29 @@ func TestTrimCocoaStacks(t *testing.T) {
 								Data:     frame.Data{SymbolicatorStatus: "symbolicated"},
 								Function: "function1",
 								InApp:    &testutil.True,
+								Platform: "cocoa",
 							},
 							{
 								Data:     frame.Data{SymbolicatorStatus: "symbolicated"},
 								Function: "function2",
 								InApp:    &testutil.True,
+								Platform: "cocoa",
 							},
 							{
 								Data:     frame.Data{SymbolicatorStatus: "missing"},
 								Function: "unsymbolicated_main",
 								InApp:    &testutil.True,
+								Platform: "cocoa",
 							},
 							{
-								Data: frame.Data{SymbolicatorStatus: "missing"},
+								Data:     frame.Data{SymbolicatorStatus: "missing"},
+								Platform: "cocoa",
 							},
 							{
 								Data:     frame.Data{SymbolicatorStatus: "symbolicated"},
 								Function: "start_sim",
 								InApp:    &testutil.True,
+								Platform: "cocoa",
 							},
 						},
 						Stacks: []Stack{
@@ -723,25 +746,30 @@ func TestTrimCocoaStacks(t *testing.T) {
 								Data:     frame.Data{SymbolicatorStatus: "symbolicated"},
 								Function: "function1",
 								InApp:    &testutil.True,
+								Platform: "cocoa",
 							},
 							{
 								Data:     frame.Data{SymbolicatorStatus: "symbolicated"},
 								Function: "function2",
 								InApp:    &testutil.True,
+								Platform: "cocoa",
 							},
 							{
 								Data:     frame.Data{SymbolicatorStatus: "missing"},
 								Function: "unsymbolicated_main",
 								InApp:    &testutil.True,
+								Platform: "cocoa",
 							},
 							{
-								Data:  frame.Data{SymbolicatorStatus: "missing"},
-								InApp: &testutil.False,
+								Data:     frame.Data{SymbolicatorStatus: "missing"},
+								InApp:    &testutil.False,
+								Platform: "cocoa",
 							},
 							{
 								Data:     frame.Data{SymbolicatorStatus: "symbolicated"},
 								Function: "start_sim",
 								InApp:    &testutil.True,
+								Platform: "cocoa",
 							},
 						},
 						Stacks: []Stack{
@@ -762,24 +790,29 @@ func TestTrimCocoaStacks(t *testing.T) {
 								Data:     frame.Data{SymbolicatorStatus: "symbolicated"},
 								Function: "function1",
 								InApp:    &testutil.True,
+								Platform: "cocoa",
 							},
 							{
 								Data:     frame.Data{SymbolicatorStatus: "symbolicated"},
 								Function: "function2",
 								InApp:    &testutil.True,
+								Platform: "cocoa",
 							},
 							{
 								Data:     frame.Data{SymbolicatorStatus: "symbolicated"},
 								Function: "main",
 								InApp:    &testutil.True,
+								Platform: "cocoa",
 							},
 							{
-								Data: frame.Data{SymbolicatorStatus: "missing"},
+								Data:     frame.Data{SymbolicatorStatus: "missing"},
+								Platform: "cocoa",
 							},
 							{
 								Data:     frame.Data{SymbolicatorStatus: "symbolicated"},
 								Function: "start_sim",
 								InApp:    &testutil.True,
+								Platform: "cocoa",
 							},
 						},
 						Stacks: []Stack{
@@ -801,25 +834,30 @@ func TestTrimCocoaStacks(t *testing.T) {
 								Data:     frame.Data{SymbolicatorStatus: "symbolicated"},
 								Function: "function1",
 								InApp:    &testutil.True,
+								Platform: "cocoa",
 							},
 							{
 								Data:     frame.Data{SymbolicatorStatus: "symbolicated"},
 								Function: "function2",
 								InApp:    &testutil.True,
+								Platform: "cocoa",
 							},
 							{
 								Data:     frame.Data{SymbolicatorStatus: "symbolicated"},
 								Function: "main",
 								InApp:    &testutil.True,
+								Platform: "cocoa",
 							},
 							{
-								Data:  frame.Data{SymbolicatorStatus: "missing"},
-								InApp: &testutil.False,
+								Data:     frame.Data{SymbolicatorStatus: "missing"},
+								InApp:    &testutil.False,
+								Platform: "cocoa",
 							},
 							{
 								Data:     frame.Data{SymbolicatorStatus: "symbolicated"},
 								Function: "start_sim",
 								InApp:    &testutil.True,
+								Platform: "cocoa",
 							},
 						},
 						Stacks: []Stack{
@@ -939,6 +977,7 @@ func TestNormalizeFramesPerPlatform(t *testing.T) {
 								File:     "threading.py",
 								Module:   "threading",
 								Path:     "/usr/local/lib/python3.8/threading.py",
+								Platform: "python",
 							},
 						},
 						Stacks: []Stack{
@@ -958,6 +997,89 @@ func TestNormalizeFramesPerPlatform(t *testing.T) {
 								Module:   "threading",
 								Path:     "/usr/local/lib/python3.8/threading.py",
 								InApp:    &testutil.False,
+								Platform: "python",
+							},
+						},
+						Stacks: []Stack{
+							{0},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "react-native with cocoa hermes frame",
+			input: Profile{
+				RawProfile: RawProfile{
+					Platform: platform.JavaScript,
+					Trace: Trace{
+						Frames: []frame.Frame{
+							{
+								Data:     frame.Data{SymbolicatorStatus: "symbolicated"},
+								Function: "hermes::vm::Interpreter::createObjectFromBuffer(hermes::vm::Runtime\u0026, hermes::vm::CodeBlock*, unsigned int, unsigned int, unsigned int)",
+								Package:  "/private/var/containers/Bundle/Application/0DA082D7-05F5-413F-892B-642FD331230C/BIGW.app/Frameworks/hermes.framework/hermes",
+								InApp:    &testutil.True,
+								Platform: "cocoa",
+							},
+						},
+						Stacks: []Stack{
+							{0},
+						},
+					},
+				},
+			},
+			output: Profile{
+				RawProfile: RawProfile{
+					Platform: platform.JavaScript,
+					Trace: Trace{
+						Frames: []frame.Frame{
+							{
+								Data:     frame.Data{SymbolicatorStatus: "symbolicated"},
+								Function: "hermes::vm::Interpreter::createObjectFromBuffer(hermes::vm::Runtime\u0026, hermes::vm::CodeBlock*, unsigned int, unsigned int, unsigned int)",
+								Package:  "/private/var/containers/Bundle/Application/0DA082D7-05F5-413F-892B-642FD331230C/BIGW.app/Frameworks/hermes.framework/hermes",
+								InApp:    &testutil.False,
+								Platform: "cocoa",
+							},
+						},
+						Stacks: []Stack{
+							{0},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "react-native with cocoa system library",
+			input: Profile{
+				RawProfile: RawProfile{
+					Platform: platform.JavaScript,
+					Trace: Trace{
+						Frames: []frame.Frame{
+							{
+								Data:     frame.Data{SymbolicatorStatus: "symbolicated"},
+								Function: "swift_conformsToProtocolMaybeInstantiateSuperclasses(swift::TargetMetadata\u003cswift::InProcess\u003e const*, swift::TargetProtocolDescriptor\u003cswift::InProcess\u003e const*, bool)::$_8::operator()((anonymous namespace)::ConformanceSection const\u0026) const::{lambda(swift::TargetProtocolConformanceDescriptor\u003cswift::InProcess\u003e const\u0026)#1}::operator()(swift::TargetProtocolConformanceDescriptor\u003cswift::InProcess\u003e const\u0026) const",
+								Package:  "/usr/lib/swift/libswiftCore.dylib",
+								InApp:    &testutil.True,
+								Platform: "cocoa",
+							},
+						},
+						Stacks: []Stack{
+							{0},
+						},
+					},
+				},
+			},
+			output: Profile{
+				RawProfile: RawProfile{
+					Platform: platform.JavaScript,
+					Trace: Trace{
+						Frames: []frame.Frame{
+							{
+								Data:     frame.Data{SymbolicatorStatus: "symbolicated"},
+								Function: "swift_conformsToProtocolMaybeInstantiateSuperclasses(swift::TargetMetadata\u003cswift::InProcess\u003e const*, swift::TargetProtocolDescriptor\u003cswift::InProcess\u003e const*, bool)::$_8::operator()((anonymous namespace)::ConformanceSection const\u0026) const::{lambda(swift::TargetProtocolConformanceDescriptor\u003cswift::InProcess\u003e const\u0026)#1}::operator()(swift::TargetProtocolConformanceDescriptor\u003cswift::InProcess\u003e const\u0026) const",
+								Package:  "/usr/lib/swift/libswiftCore.dylib",
+								InApp:    &testutil.False,
+								Platform: "cocoa",
 							},
 						},
 						Stacks: []Stack{
@@ -1101,6 +1223,7 @@ func TestCallTreesFingerprintPerPlatform(t *testing.T) {
 								File:     "threading.py",
 								Module:   "threading",
 								Path:     "/usr/local/lib/python3.8/threading.py",
+								Platform: "python",
 							},
 						},
 						Stacks: []Stack{
@@ -1139,6 +1262,7 @@ func TestCallTreesFingerprintPerPlatform(t *testing.T) {
 							Module:   "threading",
 							InApp:    &testutil.False,
 							Path:     "/usr/local/lib/python3.8/threading.py",
+							Platform: "python",
 						},
 					},
 				},
