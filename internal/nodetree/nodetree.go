@@ -236,7 +236,7 @@ func shouldAggregateFrame(frame frame.Frame) bool {
 		}
 	}
 
-	if _, symbolcationSupported := symbolicationSupportedPlatforms[frame.Platform]; symbolcationSupported {
+	if _, symbolicationSupported := symbolicationSupportedPlatforms[frame.Platform]; symbolicationSupported {
 		return isSymbolicatedFrame(frame)
 	}
 
