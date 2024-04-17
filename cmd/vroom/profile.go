@@ -155,11 +155,14 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 		s = sentry.StartSpan(ctx, "processing")
 		s.Description = "Extract functions"
 		functions := extractFunctionsFromCallTrees(callTrees)
+		// Cap but don't filter out system frames.
+		// Necessary until front end changes are in place.
+		functionsDataset := capAndFilterFunctions(functions, false)
 		s.Finish()
 
 		s = sentry.StartSpan(ctx, "json.marshal")
 		s.Description = "Marshal functions Kafka message"
-		b, err := json.Marshal(buildFunctionsKafkaMessage(p, functions))
+		b, err := json.Marshal(buildFunctionsKafkaMessage(p, functionsDataset))
 		s.Finish()
 		if err != nil {
 			hub.CaptureException(err)
@@ -182,7 +185,9 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 		if p.GetOptions().ProjectDSN != "" {
 			s = sentry.StartSpan(ctx, "processing")
 			s.Description = "Extract metrics from functions"
-			metrics, metricsSummary := extractMetricsFromFunctions(&p, functions)
+			// Cap and filter out system frames.
+			functionsMetricPlatform := capAndFilterFunctions(functions, true)
+			metrics, metricsSummary := extractMetricsFromFunctions(&p, functionsMetricPlatform)
 			s.Finish()
 
 			if len(metrics) > 0 {
@@ -265,11 +270,28 @@ func extractFunctionsFromCallTrees(
 	sort.SliceStable(functionsList, func(i, j int) bool {
 		return functionsList[i].SumSelfTimeNS > functionsList[j].SumSelfTimeNS
 	})
-	if len(functionsList) > maxUniqueFunctionsPerProfile {
-		functionsList = functionsList[:maxUniqueFunctionsPerProfile]
-	}
 
 	return functionsList
+}
+
+func capAndFilterFunctions(functions []nodetree.CallTreeFunction, filterSystemFrames bool) []nodetree.CallTreeFunction {
+	if !filterSystemFrames {
+		if len(functions) > maxUniqueFunctionsPerProfile {
+			return functions[:maxUniqueFunctionsPerProfile]
+		}
+		return functions
+	}
+	appFunctions := make([]nodetree.CallTreeFunction, 0, len(functions))
+	for _, f := range functions {
+		if !f.InApp {
+			continue
+		}
+		appFunctions = append(appFunctions, f)
+		if len(appFunctions) == maxUniqueFunctionsPerProfile {
+			break
+		}
+	}
+	return appFunctions
 }
 
 func (env *environment) getRawProfile(w http.ResponseWriter, r *http.Request) {

@@ -11,6 +11,7 @@
 - Add support to ingest metric_summaries for profile functions ([#431](https://github.com/getsentry/vroom/pull/431))
 - Add platform field to android methods to align with the sample format ([#442](https://github.com/getsentry/vroom/pull/442))
 - Exclude unsymbolicated frames from metrics ingestion ([#441](https://github.com/getsentry/vroom/pull/441))
+- Filter out system frames when ingesting functions into generic metrics ([#444](https://github.com/getsentry/vroom/pull/444))
 
 **Bug Fixes**:
 
