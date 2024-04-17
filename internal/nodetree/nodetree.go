@@ -14,6 +14,12 @@ var (
 		platform.Java:    {},
 	}
 
+	symbolicationSupportedPlatforms = map[platform.Platform]struct{}{
+		platform.JavaScript: {},
+		platform.Node:       {},
+		platform.Cocoa:      {},
+	}
+
 	functionDenyListByPlatform = map[platform.Platform]map[string]struct{}{
 		platform.Cocoa: {
 			"main": {},
@@ -117,7 +123,6 @@ type CallTreeFunction struct {
 // functions respectively, the self-time of `bar` will be 70ms because
 // 100ms - 30ms = 70ms.
 func (n *Node) CollectFunctions(
-	profilePlatform platform.Platform,
 	results map[uint32]CallTreeFunction,
 ) (uint64, uint64) {
 	var childrenApplicationDurationNS uint64
@@ -125,7 +130,7 @@ func (n *Node) CollectFunctions(
 
 	// determine the amount of time spent in application vs system functions in the children
 	for _, child := range n.Children {
-		applicationDurationNS, systemDurationNS := child.CollectFunctions(profilePlatform, results)
+		applicationDurationNS, systemDurationNS := child.CollectFunctions(results)
 		childrenApplicationDurationNS += applicationDurationNS
 		childrenSystemDurationNS += systemDurationNS
 	}
@@ -140,7 +145,7 @@ func (n *Node) CollectFunctions(
 
 	var selfTimeNS uint64
 
-	if shouldAggregateFrame(profilePlatform, n.Frame) {
+	if shouldAggregateFrame(n.Frame) {
 		if n.IsApplication {
 			// cannot use `n.DurationNS - childrenApplicationDurationNS > 0` in case it underflows
 			if n.DurationNS > childrenApplicationDurationNS {
@@ -192,7 +197,7 @@ func (n *Node) CollectFunctions(
 	return applicationDurationNS, n.DurationNS - applicationDurationNS
 }
 
-func shouldAggregateFrame(profilePlatform platform.Platform, frame frame.Frame) bool {
+func shouldAggregateFrame(frame frame.Frame) bool {
 	frameFunction := frame.Function
 
 	// frames with no name are not valuable for aggregation
@@ -201,13 +206,13 @@ func shouldAggregateFrame(profilePlatform platform.Platform, frame frame.Frame) 
 	}
 
 	// hard coded list of functions that we should not aggregate by
-	if functionDenyList, exists := functionDenyListByPlatform[profilePlatform]; exists {
+	if functionDenyList, exists := functionDenyListByPlatform[frame.Platform]; exists {
 		if _, exists = functionDenyList[frameFunction]; exists {
 			return false
 		}
 	}
 
-	if _, obfuscationSupported := obfuscationSupportedPlatforms[profilePlatform]; obfuscationSupported {
+	if _, obfuscationSupported := obfuscationSupportedPlatforms[frame.Platform]; obfuscationSupported {
 		/*
 			There are 4 possible deobfuscation statuses
 			1. deobfuscated	- The frame was successfully deobfuscated.
@@ -229,6 +234,10 @@ func shouldAggregateFrame(profilePlatform platform.Platform, frame frame.Frame) 
 		if !strings.Contains(framePackage, ".") {
 			return false
 		}
+	}
+
+	if _, symbolicationSupported := symbolicationSupportedPlatforms[frame.Platform]; symbolicationSupported {
+		return isSymbolicatedFrame(frame)
 	}
 
 	// all other frames are safe to aggregate
@@ -259,4 +268,14 @@ func (n *Node) FindNodeByFingerprint(target uint32) *Node {
 	}
 
 	return nil
+}
+
+func isSymbolicatedFrame(f frame.Frame) bool {
+	if f.Platform == platform.JavaScript || f.Platform == platform.Node {
+		if f.Data.JsSymbolicated != nil {
+			return *f.Data.JsSymbolicated
+		}
+		return true
+	}
+	return f.Data.SymbolicatorStatus == "symbolicated"
 }
