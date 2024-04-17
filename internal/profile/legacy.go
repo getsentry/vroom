@@ -440,7 +440,11 @@ func updateMethods(methodSet map[uint64]void, methods *[]AndroidMethod, fr frame
 		SourceLine: fr.Line,
 		SourceCol:  fr.Column,
 		InApp:      fr.InApp,
-		Platform:   fr.Platform,
+		Data: Data{
+			DeobfuscationStatus: fr.Data.DeobfuscationStatus,
+			JsSymbolicated:      fr.Data.JsSymbolicated,
+		},
+		Platform: fr.Platform,
 	}
 	*methods = append(*methods, method)
 	methodSet[offsetID] = member

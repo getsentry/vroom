@@ -39,6 +39,8 @@ type (
 
 	Data struct {
 		DeobfuscationStatus string `json:"deobfuscation_status,omitempty"`
+		// for react-native apps where we have js frames turned into android methods
+		JsSymbolicated *bool `json:"symbolicated,omitempty"`
 	}
 )
 
@@ -67,6 +69,7 @@ func (m AndroidMethod) Frame() frame.Frame {
 	return frame.Frame{
 		Data: frame.Data{
 			DeobfuscationStatus: m.Data.DeobfuscationStatus,
+			JsSymbolicated:      m.Data.JsSymbolicated,
 		},
 		File:     path.Base(m.SourceFile),
 		Function: methodName,
