@@ -198,7 +198,7 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 			}
 
 			// Only send a profile sample to the metrics_summary if it's an indexed profile
-			if p.IsSampled() {
+			if p.IsSampled() && len(metrics) > 0 {
 				kafkaMessages, err := generateMetricSummariesKafkaMessageBatch(&p, metrics, metricsSummary)
 				if err != nil {
 					hub.CaptureException(err)
