@@ -62,6 +62,7 @@
 - Bump trufflesecurity/trufflehog from 3.71.1 to 3.71.2 ([#435](https://github.com/getsentry/vroom/pull/435))
 - Bump trufflesecurity/trufflehog from 3.71.2 to 3.72.0 ([#436](https://github.com/getsentry/vroom/pull/436))
 - Bump trufflesecurity/trufflehog from 3.72.0 to 3.73.0 ([#440](https://github.com/getsentry/vroom/pull/440))
+- Skip metrics summary logic altogether if there are no metrics ([#445](https://github.com/getsentry/vroom/pull/445))
 
 ## 23.12.0
 
