@@ -63,6 +63,7 @@
 - Bump trufflesecurity/trufflehog from 3.71.2 to 3.72.0 ([#436](https://github.com/getsentry/vroom/pull/436))
 - Bump trufflesecurity/trufflehog from 3.72.0 to 3.73.0 ([#440](https://github.com/getsentry/vroom/pull/440))
 - Skip metrics summary logic altogether if there are no metrics ([#445](https://github.com/getsentry/vroom/pull/445))
+- Bump golang.org/x/net from 0.17.0 to 0.23.0 ([#446](https://github.com/getsentry/vroom/pull/446))
 
 ## 23.12.0
 
