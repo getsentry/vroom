@@ -2,11 +2,11 @@ steps:
 - name: 'gcr.io/cloud-builders/docker'
   args: [
     'build',
-    '-t', 'us-central1-docker.pkg.dev/sentryio/vroom:$COMMIT_SHA',
-    '-t', 'us-central1-docker.pkg.dev/sentryio/vroom:latest',
+    '-t', 'us-central1-docker.pkg.dev/sentryio/vroom/vroom:$COMMIT_SHA',
+    '-t', 'us-central1-docker.pkg.dev/sentryio/vroom/vroom:latest',
     '.',
   ]
 images: [
-  'us-central1-docker.pkg.dev/sentryio/vroom:$COMMIT_SHA',
-  'us-central1-docker.pkg.dev/sentryio/vroom:latest',
+  'us-central1-docker.pkg.dev/sentryio/vroom/vroom:$COMMIT_SHA',
+  'us-central1-docker.pkg.dev/sentryio/vroom/vroom:latest',
 ]
