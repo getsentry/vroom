@@ -70,11 +70,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - timeout-minutes: 20
-        run: until docker pull "us.gcr.io/sentryio/vroom:${{ github.sha }}" 2>/dev/null; do sleep 10; done
+        run: until docker pull "us-central1-docker.pkg.dev/sentryio/vroom/vroom:${{ github.sha }}" 2>/dev/null; do sleep 10; done
       - name: Push built docker image
         shell: bash
         run: |
-          IMAGE_URL="us.gcr.io/sentryio/vroom:${{ github.sha }}"
+          IMAGE_URL="us-central1-docker.pkg.dev/sentryio/vroom/vroom:${{ github.sha }}"
           docker login --username=sentrybuilder --password ${{ secrets.DOCKER_HUB_RW_TOKEN }}
           # We push 3 tags to Dockerhub:
           # first, the full sha of the commit
