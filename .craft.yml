@@ -11,11 +11,11 @@ targets:
   - name: github
   - id: release
     name: docker
-    source: us.gcr.io/sentryio/vroom
+    source: us-central1-docker.pkg.dev/sentryio/vroom/vroom
     target: getsentry/vroom
   - id: latest
     name: docker
-    source: us.gcr.io/sentryio/vroom
+    source: us-central1-docker.pkg.dev/sentryio/vroom/vroom
     target: getsentry/vroom
     targetFormat: '{{{target}}}:latest'
 preReleaseCommand: ""
