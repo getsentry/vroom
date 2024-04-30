@@ -6,7 +6,7 @@ statusProvider:
   name: github
   config:
     contexts:
-      - 'vroom-build-docker-image-commit (sentryio)'
+      - 'build-vroom (sentryio)'
 targets:
   - name: github
   - id: release
