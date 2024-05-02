@@ -22,6 +22,8 @@
 - Store js/node frames symbolicator status ([#439](https://github.com/getsentry/vroom/pull/439))
 - Fix react native (with cocoa) profile normalization ([#443](https://github.com/getsentry/vroom/pull/443))
 
+- Set 5s timeout for http client used to send metrics ([#457](https://github.com/getsentry/vroom/pull/457))
+
 **Internal**:
 
 - Bump trufflesecurity/trufflehog from 3.63.4 to 3.63.5 ([#381](https://github.com/getsentry/vroom/pull/381))
