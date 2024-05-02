@@ -281,7 +281,7 @@ func capAndFilterFunctions(functions []nodetree.CallTreeFunction, filterSystemFr
 		}
 		return functions
 	}
-	appFunctions := make([]nodetree.CallTreeFunction, 0, len(functions))
+	appFunctions := make([]nodetree.CallTreeFunction, 0, min(maxUniqueFunctionsPerProfile, len(functions)))
 	for _, f := range functions {
 		if !f.InApp {
 			continue

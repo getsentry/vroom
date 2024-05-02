@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
@@ -210,6 +211,7 @@ func sendMetrics(p *profile.Profile, metrics []sentry.Metric) {
 	e.Type = "statsd"
 	e.Metrics = metrics
 	tr := sentry.NewHTTPSyncTransport()
+	tr.Timeout = 5 * time.Second
 	tr.Configure(sentry.ClientOptions{
 		Dsn: p.GetOptions().ProjectDSN,
 	})
