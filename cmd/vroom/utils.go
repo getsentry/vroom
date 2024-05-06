@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"math"
+	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
@@ -204,7 +205,7 @@ func extractMetricsFromFunctions(p *profile.Profile, functions []nodetree.CallTr
 	return metrics, metricsSummary
 }
 
-func sendMetrics(p *profile.Profile, metrics []sentry.Metric) {
+func sendMetrics(p *profile.Profile, metrics []sentry.Metric, mClient *http.Client) {
 	id := strings.Replace(uuid.New().String(), "-", "", -1)
 	e := sentry.NewEvent()
 	e.EventID = sentry.EventID(id)
@@ -213,7 +214,9 @@ func sendMetrics(p *profile.Profile, metrics []sentry.Metric) {
 	tr := sentry.NewHTTPSyncTransport()
 	tr.Timeout = 5 * time.Second
 	tr.Configure(sentry.ClientOptions{
-		Dsn: p.GetOptions().ProjectDSN,
+		Dsn:           p.GetOptions().ProjectDSN,
+		HTTPTransport: mClient.Transport,
+		HTTPClient:    mClient,
 	})
 
 	tr.SendEvent(e)

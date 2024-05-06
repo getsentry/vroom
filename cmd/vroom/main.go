@@ -40,6 +40,8 @@ type environment struct {
 	metricSummaryWriter *kafka.Writer
 
 	storage *blob.Bucket
+
+	metricsClient *http.Client
 }
 
 var release string
@@ -94,6 +96,15 @@ func newEnvironment() (*environment, error) {
 		ReadTimeout:  3 * time.Second,
 		Topic:        e.config.MetricsSummaryKafkaTopic,
 		WriteTimeout: 3 * time.Second,
+	}
+	e.metricsClient = &http.Client{
+		Timeout: time.Second * 5,
+		Transport: &http.Transport{
+			MaxIdleConns:        100,
+			MaxIdleConnsPerHost: 100,
+			MaxConnsPerHost:     100,
+			IdleConnTimeout:     time.Second * 60,
+		},
 	}
 	return &e, nil
 }
