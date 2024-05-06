@@ -21,8 +21,8 @@
 - Android enter/exit checks should be per thread ([#429](https://github.com/getsentry/vroom/pull/429))
 - Store js/node frames symbolicator status ([#439](https://github.com/getsentry/vroom/pull/439))
 - Fix react native (with cocoa) profile normalization ([#443](https://github.com/getsentry/vroom/pull/443))
-
 - Set 5s timeout for http client used to send metrics ([#457](https://github.com/getsentry/vroom/pull/457))
+- Reuse one http client across different requests ([#458](https://github.com/getsentry/vroom/pull/458))
 
 **Internal**:
 
