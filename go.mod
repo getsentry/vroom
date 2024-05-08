@@ -6,13 +6,13 @@ require (
 	cloud.google.com/go/compute/metadata v0.2.3
 	cloud.google.com/go/storage v1.29.0
 	github.com/CAFxX/httpcompression v0.0.8
-	github.com/andybalholm/brotli v1.0.5
+	github.com/andybalholm/brotli v1.1.0
 	github.com/fsouza/fake-gcs-server v1.44.0
-	github.com/getsentry/sentry-go v0.27.1-0.20240306095720-d1aa56b3a38f
+	github.com/getsentry/sentry-go v0.27.1-0.20240506170555-3192e9fd92d7
 	github.com/goccy/go-json v0.10.0
 	github.com/gojek/heimdall/v7 v7.0.2
 	github.com/google/go-cmp v0.5.9
-	github.com/google/uuid v1.3.0
+	github.com/google/uuid v1.6.0
 	github.com/ilyakaznacheev/cleanenv v1.4.2
 	github.com/json-iterator/go v1.1.12
 	github.com/julienschmidt/httprouter v1.3.0
@@ -73,7 +73,7 @@ require (
 	github.com/gorilla/mux v1.8.0 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/joho/godotenv v1.4.0 // indirect
-	github.com/klauspost/compress v1.16.0 // indirect
+	github.com/klauspost/compress v1.17.7 // indirect
 	github.com/kylelemons/godebug v1.1.0 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect

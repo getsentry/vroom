@@ -205,7 +205,7 @@ func extractMetricsFromFunctions(p *profile.Profile, functions []nodetree.CallTr
 	return metrics, metricsSummary
 }
 
-func sendMetrics(p *profile.Profile, metrics []sentry.Metric, mClient *http.Client) {
+func sendMetrics(ctx context.Context, p *profile.Profile, metrics []sentry.Metric, mClient *http.Client) {
 	id := strings.Replace(uuid.New().String(), "-", "", -1)
 	e := sentry.NewEvent()
 	e.EventID = sentry.EventID(id)
@@ -219,7 +219,7 @@ func sendMetrics(p *profile.Profile, metrics []sentry.Metric, mClient *http.Clie
 		HTTPClient:    mClient,
 	})
 
-	tr.SendEvent(e)
+	tr.SendEventWithContext(ctx, e)
 }
 
 type MetricSummary struct {
