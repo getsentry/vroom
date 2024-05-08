@@ -68,6 +68,7 @@
 - Bump golang.org/x/net from 0.17.0 to 0.23.0 ([#446](https://github.com/getsentry/vroom/pull/446))
 - Bump trufflesecurity/trufflehog from 3.73.0 to 3.74.0 ([#452](https://github.com/getsentry/vroom/pull/452))
 - Bump golangci/golangci-lint-action from 4 to 5 ([#453](https://github.com/getsentry/vroom/pull/453))
+- Bump golangci/golangci-lint-action from 5 to 6 ([#459](https://github.com/getsentry/vroom/pull/459))
 - Use SendEventWithContext to bail out from requests when client disconnect ([#460](https://github.com/getsentry/vroom/pull/460))
 
 ## 23.12.0
