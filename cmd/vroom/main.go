@@ -125,6 +125,10 @@ func (e *environment) shutdown() {
 	if err != nil {
 		sentry.CaptureException(err)
 	}
+	err = e.metricSummaryWriter.Close()
+	if err != nil {
+		sentry.CaptureException(err)
+	}
 	sentry.Flush(5 * time.Second)
 }
 
@@ -220,7 +224,7 @@ func main() {
 	if err != nil {
 		log.Fatal("can't initialize sentry", err)
 	}
-	sentry.Logger = slog.NewLogLogger(slog.NewJSONHandler(os.Stderr, nil), slog.LevelError)
+	sentry.Logger = slog.NewLogLogger(slog.NewJSONHandler(os.Stdout, nil), slog.LevelError)
 
 	router, err := env.newRouter()
 	if err != nil {
@@ -251,6 +255,8 @@ func main() {
 		close(waitForShutdown)
 	}()
 
+	slog.Info("vroom started")
+
 	err = server.ListenAndServe()
 	if err != nil && err != http.ErrServerClosed {
 		sentry.CaptureException(err)
@@ -261,6 +267,7 @@ func main() {
 
 	// Shutdown the rest of the environment after the HTTP connections are closed
 	env.shutdown()
+	slog.Info("vroom graceful shutdown")
 }
 
 func (e *environment) getHealth(w http.ResponseWriter, _ *http.Request) {
