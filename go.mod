@@ -3,7 +3,6 @@ module github.com/getsentry/vroom
 go 1.21
 
 require (
-	cloud.google.com/go/compute/metadata v0.2.3
 	cloud.google.com/go/storage v1.29.0
 	github.com/CAFxX/httpcompression v0.0.8
 	github.com/andybalholm/brotli v1.1.0
@@ -28,6 +27,7 @@ require (
 require (
 	cloud.google.com/go v0.110.0 // indirect
 	cloud.google.com/go/compute v1.19.1 // indirect
+	cloud.google.com/go/compute/metadata v0.2.3 // indirect
 	cloud.google.com/go/iam v0.13.0 // indirect
 	cloud.google.com/go/pubsub v1.30.0 // indirect
 	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.3.1 // indirect
