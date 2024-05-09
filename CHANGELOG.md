@@ -71,6 +71,7 @@
 - Bump golangci/golangci-lint-action from 5 to 6 ([#459](https://github.com/getsentry/vroom/pull/459))
 - Use SendEventWithContext to bail out from requests when client disconnect ([#460](https://github.com/getsentry/vroom/pull/460))
 - Set logger for sentry client and replace zerolog with slog ([#461](https://github.com/getsentry/vroom/pull/461))
+- Rename logger msg key to message ([#462](https://github.com/getsentry/vroom/pull/462))
 
 ## 23.12.0
 
