@@ -224,7 +224,6 @@ func main() {
 	if err != nil {
 		log.Fatal("can't initialize sentry", err)
 	}
-	sentry.Logger = slog.NewLogLogger(slog.NewJSONHandler(os.Stdout, nil), slog.LevelError)
 
 	router, err := env.newRouter()
 	if err != nil {
