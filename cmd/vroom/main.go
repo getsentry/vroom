@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
@@ -16,7 +18,6 @@ import (
 	sentryhttp "github.com/getsentry/sentry-go/http"
 	"github.com/ilyakaznacheev/cleanenv"
 	"github.com/julienschmidt/httprouter"
-	"github.com/rs/zerolog/log"
 	"github.com/segmentio/kafka-go"
 	"gocloud.dev/blob"
 	_ "gocloud.dev/blob/azureblob"
@@ -44,7 +45,9 @@ type environment struct {
 	metricsClient *http.Client
 }
 
-var release string
+var (
+	release string
+)
 
 const (
 	KiB int64 = 1024
@@ -122,6 +125,10 @@ func (e *environment) shutdown() {
 	if err != nil {
 		sentry.CaptureException(err)
 	}
+	err = e.metricSummaryWriter.Close()
+	if err != nil {
+		sentry.CaptureException(err)
+	}
 	sentry.Flush(5 * time.Second)
 }
 
@@ -190,7 +197,7 @@ func main() {
 
 	env, err := newEnvironment()
 	if err != nil {
-		log.Fatal().Err(err).Msg("error setting up environment")
+		log.Fatal("error setting up environment", err)
 	}
 
 	err = sentry.Init(sentry.ClientOptions{
@@ -215,13 +222,14 @@ func main() {
 		},
 	})
 	if err != nil {
-		log.Fatal().Err(err).Msg("can't initialize sentry")
+		log.Fatal("can't initialize sentry", err)
 	}
+	sentry.Logger = slog.NewLogLogger(slog.NewJSONHandler(os.Stdout, nil), slog.LevelError)
 
 	router, err := env.newRouter()
 	if err != nil {
 		sentry.CaptureException(err)
-		log.Fatal().Err(err).Msg("error setting up the router")
+		log.Fatal("error setting up the router", err)
 	}
 
 	server := http.Server{
@@ -241,22 +249,25 @@ func main() {
 
 		if err := server.Shutdown(cctx); err != nil {
 			sentry.CaptureException(err)
-			log.Err(err).Msg("error shutting down server")
+			slog.Error("error shutting down server", "err", err)
 		}
 
 		close(waitForShutdown)
 	}()
 
+	slog.Info("vroom started")
+
 	err = server.ListenAndServe()
 	if err != nil && err != http.ErrServerClosed {
 		sentry.CaptureException(err)
-		log.Err(err).Msg("server failed")
+		slog.Error("server failed", "err", err)
 	}
 
 	<-waitForShutdown
 
 	// Shutdown the rest of the environment after the HTTP connections are closed
 	env.shutdown()
+	slog.Info("vroom graceful shutdown")
 }
 
 func (e *environment) getHealth(w http.ResponseWriter, _ *http.Request) {
