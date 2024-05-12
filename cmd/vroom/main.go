@@ -45,9 +45,7 @@ type environment struct {
 	metricsClient *http.Client
 }
 
-var (
-	release string
-)
+var release string
 
 const (
 	KiB int64 = 1024
@@ -65,8 +63,8 @@ func newEnvironment() (*environment, error) {
 	if err != nil {
 		return nil, err
 	}
-	ctx := context.Background()
 
+	ctx := context.Background()
 	e.storage, err = blob.OpenBucket(ctx, e.config.BucketURL)
 	if err != nil {
 		return nil, err
@@ -175,6 +173,7 @@ func (e *environment) newRouter() (*httprouter.Router, error) {
 			e.postFlamegraphFromProfileIDs,
 		},
 		{http.MethodGet, "/health", e.getHealth},
+		{http.MethodPost, "/chunk", e.postChunk},
 		{http.MethodPost, "/profile", e.postProfile},
 		{http.MethodPost, "/regressed", e.postRegressed},
 	}

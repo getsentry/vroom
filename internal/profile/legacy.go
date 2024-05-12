@@ -22,11 +22,16 @@ import (
 	"github.com/getsentry/vroom/internal/utils"
 )
 
-const maxProfileDurationForCallTrees = 15 * time.Second
+const (
+	maxProfileDurationForCallTrees = 15 * time.Second
+)
 
-var ErrProfileHasNoTrace = errors.New("profile has no trace")
-var ErrReactHasInvalidJsTrace = errors.New("react-android profile has invalid js trace")
-var member void
+var (
+	ErrProfileHasNoTrace      = errors.New("profile has no trace")
+	ErrReactHasInvalidJsTrace = errors.New("react-android profile has invalid js trace")
+
+	member void
+)
 
 type (
 	void struct{}
