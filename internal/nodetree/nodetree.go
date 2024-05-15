@@ -271,10 +271,16 @@ func (n *Node) FindNodeByFingerprint(target uint32) *Node {
 }
 
 func isSymbolicatedFrame(f frame.Frame) bool {
-	if f.Platform == platform.JavaScript || f.Platform == platform.Node {
-		if f.Data.JsSymbolicated != nil {
-			return *f.Data.JsSymbolicated
+	// React-native case
+	if f.Platform == platform.JavaScript && f.IsReactNativeFrame {
+		if f.Data.JsSymbolicated != nil && *f.Data.JsSymbolicated {
+			return true
 		}
+		return false
+	} else if f.Platform == platform.JavaScript || f.Platform == platform.Node {
+		// else, if it's not a react-native but simply a js frame from either
+		// browser js or node, for now we'll simply consider everything as symbolicated
+		// and just ingest into metrics
 		return true
 	}
 	return f.Data.SymbolicatorStatus == "symbolicated"
