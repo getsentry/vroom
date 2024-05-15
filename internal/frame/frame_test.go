@@ -249,6 +249,20 @@ func TestIsJavaScriptApplicationFrame(t *testing.T) {
 			},
 			isApplication: false,
 		},
+		{
+			name: "host_function",
+			frame: Frame{
+				Function: "[HostFunction] nativeCallSyncHook",
+			},
+			isApplication: false,
+		},
+		{
+			name: "gc",
+			frame: Frame{
+				Function: "[GC Young Gen]",
+			},
+			isApplication: false,
+		},
 	}
 
 	for _, tt := range tests {
