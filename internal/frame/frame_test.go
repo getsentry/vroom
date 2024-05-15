@@ -242,6 +242,13 @@ func TestIsJavaScriptApplicationFrame(t *testing.T) {
 			},
 			isApplication: false,
 		},
+		{
+			name: "native",
+			frame: Frame{
+				Function: "[Native] functionPrototypeApply",
+			},
+			isApplication: false,
+		},
 	}
 
 	for _, tt := range tests {

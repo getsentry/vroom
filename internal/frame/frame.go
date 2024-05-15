@@ -161,6 +161,10 @@ func (f Frame) IsNodeApplicationFrame() bool {
 }
 
 func (f Frame) IsJavaScriptApplicationFrame() bool {
+	if strings.HasPrefix(f.Function, "[Native]") {
+		return false
+	}
+
 	if len(f.Path) == 0 {
 		return true
 	}
