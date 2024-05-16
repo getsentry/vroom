@@ -15,9 +15,6 @@ local pipedream_config = {
     material_name: 'vroom_repo',
     stage: 'deploy-primary',
     elastic_profile_id: 'vroom',
-    // TODO: Remove the final_stage value once v2.3.1 a few goocd deploys are
-    // done with the pipeline-complete stage
-    final_stage: 'deploy-primary',
   },
 };
 
