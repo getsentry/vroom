@@ -23,6 +23,7 @@
 - Fix react native (with cocoa) profile normalization ([#443](https://github.com/getsentry/vroom/pull/443))
 - Set 5s timeout for http client used to send metrics ([#457](https://github.com/getsentry/vroom/pull/457))
 - Reuse one http client across different requests ([#458](https://github.com/getsentry/vroom/pull/458))
+- Fix correct in_app classification for `[Native]` js frames ([#464](https://github.com/getsentry/vroom/pull/464))
 - Ignore react-native js frame for metrics aggregation when not symbolicated ([#465](https://github.com/getsentry/vroom/pull/465))
 
 **Internal**:
