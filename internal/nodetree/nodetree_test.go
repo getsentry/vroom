@@ -409,18 +409,18 @@ func TestIsSymbolicated(t *testing.T) {
 		{
 			name: "react-native-symbolicated",
 			frame: frame.Frame{
-				IsReactNativeFrame: true,
-				Platform:           "javascript",
-				Data:               frame.Data{JsSymbolicated: &testutil.True},
+				IsReactNative: true,
+				Platform:      "javascript",
+				Data:          frame.Data{JsSymbolicated: &testutil.True},
 			},
 			want: true,
 		},
 		{
 			name: "react-native-not-symbolicated",
 			frame: frame.Frame{
-				IsReactNativeFrame: true,
-				Platform:           "javascript",
-				Data:               frame.Data{},
+				IsReactNative: true,
+				Platform:      "javascript",
+				Data:          frame.Data{},
 			},
 			want: false,
 		},

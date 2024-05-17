@@ -44,7 +44,7 @@ type (
 		// IsReactNativeFrame is not exported as json since we only
 		// need it at runtime to distinguish browser/node js frame
 		// from ReactNative js frame.
-		IsReactNativeFrame bool `json:"-"`
+		IsReactNative bool `json:"-"`
 	}
 
 	Data struct {

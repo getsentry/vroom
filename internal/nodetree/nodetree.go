@@ -272,7 +272,7 @@ func (n *Node) FindNodeByFingerprint(target uint32) *Node {
 
 func isSymbolicatedFrame(f frame.Frame) bool {
 	// React-native case
-	if f.Platform == platform.JavaScript && f.IsReactNativeFrame {
+	if f.Platform == platform.JavaScript && f.IsReactNative {
 		if f.Data.JsSymbolicated != nil && *f.Data.JsSymbolicated {
 			return true
 		}
