@@ -161,7 +161,7 @@ func (f Frame) IsNodeApplicationFrame() bool {
 }
 
 func (f Frame) IsJavaScriptApplicationFrame() bool {
-	if strings.HasPrefix(f.Function, "[Native]") || strings.HasPrefix(f.Function, "[HostFunction]") || strings.HasPrefix(f.Function, "[GC") {
+	if strings.HasPrefix(f.Function, "[") {
 		return false
 	}
 
