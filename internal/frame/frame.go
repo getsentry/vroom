@@ -25,23 +25,26 @@ var (
 
 type (
 	Frame struct {
-		Column             uint32            `json:"colno,omitempty"`
-		Data               Data              `json:"data"`
-		File               string            `json:"filename,omitempty"`
-		Function           string            `json:"function,omitempty"`
-		InApp              *bool             `json:"in_app"`
-		InstructionAddr    string            `json:"instruction_addr,omitempty"`
-		Lang               string            `json:"lang,omitempty"`
-		Line               uint32            `json:"lineno,omitempty"`
-		MethodID           uint64            `json:"-"`
-		Module             string            `json:"module,omitempty"`
-		Package            string            `json:"package,omitempty"`
-		Path               string            `json:"abs_path,omitempty"`
-		Status             string            `json:"status,omitempty"`
-		SymAddr            string            `json:"sym_addr,omitempty"`
-		Symbol             string            `json:"symbol,omitempty"`
-		Platform           platform.Platform `json:"platform,omitempty"`
-		IsReactNativeFrame bool              `json:"-"`
+		Column          uint32            `json:"colno,omitempty"`
+		Data            Data              `json:"data"`
+		File            string            `json:"filename,omitempty"`
+		Function        string            `json:"function,omitempty"`
+		InApp           *bool             `json:"in_app"`
+		InstructionAddr string            `json:"instruction_addr,omitempty"`
+		Lang            string            `json:"lang,omitempty"`
+		Line            uint32            `json:"lineno,omitempty"`
+		MethodID        uint64            `json:"-"`
+		Module          string            `json:"module,omitempty"`
+		Package         string            `json:"package,omitempty"`
+		Path            string            `json:"abs_path,omitempty"`
+		Status          string            `json:"status,omitempty"`
+		SymAddr         string            `json:"sym_addr,omitempty"`
+		Symbol          string            `json:"symbol,omitempty"`
+		Platform        platform.Platform `json:"platform,omitempty"`
+		// IsReactNativeFrame is not exported as json since we only
+		// need it at runtime to distinguish browser/node js frame
+		// from ReactNative js frame.
+		IsReactNativeFrame bool `json:"-"`
 	}
 
 	Data struct {
