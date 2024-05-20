@@ -41,6 +41,10 @@ type (
 		SymAddr         string            `json:"sym_addr,omitempty"`
 		Symbol          string            `json:"symbol,omitempty"`
 		Platform        platform.Platform `json:"platform,omitempty"`
+		// IsReactNativeFrame is not exported as json since we only
+		// need it at runtime to distinguish browser/node js frame
+		// from ReactNative js frame.
+		IsReactNative bool `json:"-"`
 	}
 
 	Data struct {

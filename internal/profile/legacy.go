@@ -164,6 +164,13 @@ func (p LegacyProfile) CallTrees() (map[uint64][]*nodetree.Node, error) {
 				Trace: st,
 			},
 		}
+		// if we're in this branch we know for sure that here
+		// we're dealing with a react-native profile so we can
+		// set the runtime for this profile to hermes.
+		// This way, we'll be able to differentiate in other parts
+		// of the codebase between normal js frames and react-native
+		// js frames when we traverse the call trees
+		jsProf.Runtime.Name = "hermes"
 		err = fillSampleProfileMetadata(&jsProf)
 		if err != nil {
 			return nil, err

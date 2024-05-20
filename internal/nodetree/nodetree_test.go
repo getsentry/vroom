@@ -399,3 +399,53 @@ func TestNodeTreeCollectFunctions(t *testing.T) {
 		})
 	}
 }
+
+func TestIsSymbolicated(t *testing.T) {
+	tests := []struct {
+		name  string
+		frame frame.Frame
+		want  bool
+	}{
+		{
+			name: "react-native-symbolicated",
+			frame: frame.Frame{
+				IsReactNative: true,
+				Platform:      "javascript",
+				Data:          frame.Data{JsSymbolicated: &testutil.True},
+			},
+			want: true,
+		},
+		{
+			name: "react-native-not-symbolicated",
+			frame: frame.Frame{
+				IsReactNative: true,
+				Platform:      "javascript",
+				Data:          frame.Data{},
+			},
+			want: false,
+		},
+		{
+			name: "browser-js",
+			frame: frame.Frame{
+				Platform: "javascript",
+				Data:     frame.Data{},
+			},
+			want: true,
+		},
+		{
+			name: "nodejs",
+			frame: frame.Frame{
+				Platform: "javascript",
+				Data:     frame.Data{},
+			},
+			want: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if diff := testutil.Diff(isSymbolicatedFrame(tt.frame), tt.want); diff != "" {
+				t.Fatalf("Result mismatch: got - want +\n%s", diff)
+			}
+		})
+	}
+}

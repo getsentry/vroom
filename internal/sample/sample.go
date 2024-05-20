@@ -227,6 +227,9 @@ func (p Profile) CallTrees() (map[uint64][]*nodetree.Node, error) {
 
 			for i := len(stack) - 1; i >= 0; i-- {
 				f := p.Trace.Frames[stack[i]]
+				if p.Runtime.Name == "hermes" {
+					f.IsReactNative = true
+				}
 				f.WriteToHash(h)
 				fingerprint := h.Sum64()
 				if current == nil {
