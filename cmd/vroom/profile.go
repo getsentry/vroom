@@ -40,10 +40,7 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-
-	hub.Scope().SetContext("Profile metadata", map[string]interface{}{
-		"Size": len(body),
-	})
+	defer r.Body.Close()
 
 	var p profile.Profile
 	s = sentry.StartSpan(ctx, "json.unmarshal")
@@ -55,17 +52,20 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	defer r.Body.Close()
 
 	orgID := p.OrganizationID()
+
+	hub.Scope().SetContext("Profile metadata", map[string]interface{}{
+		"organization_id": strconv.FormatUint(orgID, 10),
+		"profile_id":      p.ID(),
+		"project_id":      strconv.FormatUint(p.ProjectID(), 10),
+		"size":            len(body),
+	})
 
 	profilePlatform := p.Platform()
 
 	hub.Scope().SetTags(map[string]string{
-		"organization_id": strconv.FormatUint(orgID, 10),
-		"platform":        string(profilePlatform),
-		"profile_id":      p.ID(),
-		"project_id":      strconv.FormatUint(p.ProjectID(), 10),
+		"platform": string(profilePlatform),
 	})
 
 	s = sentry.StartSpan(ctx, "processing")
