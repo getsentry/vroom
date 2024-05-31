@@ -4,9 +4,16 @@ steps:
     'build',
     '-t', 'us-central1-docker.pkg.dev/sentryio/vroom/vroom:$COMMIT_SHA',
     '-t', 'us-central1-docker.pkg.dev/sentryio/vroom/vroom:latest',
+    '--cache-from', 'us-central1-docker.pkg.dev/sentryio/vroom/vroom:latest',
     '.',
   ]
+- name: 'gcr.io/cloud-builders/docker'
+  entrypoint: 'bash'
+  args:
+    - '-c'
+    - |
+      [ "$BRANCH_NAME" != "main" ] && exit 0
+      docker push us-central1-docker.pkg.dev/$PROJECT_ID/vroom/vroom:latest
 images: [
   'us-central1-docker.pkg.dev/sentryio/vroom/vroom:$COMMIT_SHA',
-  'us-central1-docker.pkg.dev/sentryio/vroom/vroom:latest',
 ]
