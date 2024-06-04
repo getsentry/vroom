@@ -41,9 +41,9 @@ type (
 	}
 
 	Sample struct {
-		StackID   int    `json:"stack_id"`
-		ThreadID  string `json:"thread_id"`
-		Timestamp float64
+		StackID   int     `json:"stack_id"`
+		ThreadID  string  `json:"thread_id"`
+		Timestamp float64 `json:"timestamp"`
 	}
 )
 
