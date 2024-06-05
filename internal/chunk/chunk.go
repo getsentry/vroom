@@ -48,8 +48,7 @@ type (
 )
 
 func (c *Chunk) StoragePath() string {
-	return fmt.Sprintf(
-		"%d/%d/%s/%s",
+	return StoragePath(
 		c.OrganizationID,
 		c.ProjectID,
 		c.ProfilerID,
