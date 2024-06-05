@@ -32,6 +32,8 @@ func MergeChunks(chunks []Chunk) Chunk {
 		}
 		chunk.Profile.Stacks = append(chunk.Profile.Stacks, c.Profile.Stacks...)
 		chunk.Profile.Samples = append(chunk.Profile.Samples, c.Profile.Samples...)
+
+		// TODO: take care of measurements
 	}
 	return chunk
 }
