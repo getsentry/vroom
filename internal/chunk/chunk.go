@@ -64,3 +64,13 @@ func (c *Chunk) StartEndTimestamps() (float64, float64) {
 	}
 	return c.Profile.Samples[0].Timestamp, c.Profile.Samples[count-1].Timestamp
 }
+
+func StoragePath(OrganizationID uint64, ProjectID uint64, ProfilerID string, ID string) string {
+	return fmt.Sprintf(
+		"%d/%d/%s/%s",
+		OrganizationID,
+		ProjectID,
+		ProfilerID,
+		ID,
+	)
+}
