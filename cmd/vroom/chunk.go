@@ -180,10 +180,10 @@ func (env *environment) postProfileFromChunkIDs(w http.ResponseWriter, r *http.R
 		}
 		chunks = append(chunks, res.Chunk)
 	}
+	s.Finish()
 	close(results)
 	if err != nil {
 		if errors.Is(err, storageutil.ErrObjectNotFound) {
-			s.Finish()
 			w.WriteHeader(http.StatusNotFound)
 			return
 		}
@@ -197,11 +197,9 @@ func (env *environment) postProfileFromChunkIDs(w http.ResponseWriter, r *http.R
 			})
 		}
 		hub.CaptureException(err)
-		s.Finish()
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	s.Finish()
 
 	s = sentry.StartSpan(ctx, "chunks.merge")
 	s.Description = "Merge profile chunks into a single one"
