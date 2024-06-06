@@ -205,8 +205,13 @@ func (env *environment) postProfileFromChunkIDs(w http.ResponseWriter, r *http.R
 
 	s = sentry.StartSpan(ctx, "chunks.merge")
 	s.Description = "Merge profile chunks into a single one"
-	chunk := chunk.MergeChunks(chunks)
+	chunk, err := chunk.MergeChunks(chunks)
 	s.Finish()
+	if err != nil {
+		hub.CaptureException(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 
 	s = sentry.StartSpan(ctx, "json.marshal")
 	defer s.Finish()

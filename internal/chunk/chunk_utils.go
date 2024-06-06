@@ -1,10 +1,15 @@
 package chunk
 
-import "sort"
+import (
+	"encoding/json"
+	"sort"
 
-func MergeChunks(chunks []Chunk) Chunk {
+	"github.com/getsentry/vroom/internal/measurements"
+)
+
+func MergeChunks(chunks []Chunk) (Chunk, error) {
 	if len(chunks) == 0 {
-		return Chunk{}
+		return Chunk{}, nil
 	}
 	sort.Slice(chunks, func(i, j int) bool {
 		_, endFirstChunk := chunks[i].StartEndTimestamps()
@@ -12,7 +17,16 @@ func MergeChunks(chunks []Chunk) Chunk {
 		return endFirstChunk <= startSecondChunk
 	})
 
+	var mergedMeasurement = make(map[string]measurements.Measurement)
+
 	chunk := chunks[0]
+	if len(chunk.Measurements) > 0 {
+		err := json.Unmarshal(chunk.Measurements, &mergedMeasurement)
+		if err != nil {
+			return Chunk{}, err
+		}
+	}
+
 	for i := 1; i < len(chunks); i++ {
 		c := chunks[i]
 		// Update all the frame indices of the chunk we're going to add/merge
@@ -33,7 +47,27 @@ func MergeChunks(chunks []Chunk) Chunk {
 		chunk.Profile.Stacks = append(chunk.Profile.Stacks, c.Profile.Stacks...)
 		chunk.Profile.Samples = append(chunk.Profile.Samples, c.Profile.Samples...)
 
-		// TODO: take care of measurements
+		// In case we have measurements, merge them too
+		var chunkMeasurements map[string]measurements.Measurement
+		if len(c.Measurements) > 0 {
+			err := json.Unmarshal(c.Measurements, &chunkMeasurements)
+			if err != nil {
+				return Chunk{}, err
+			}
+			for k, measurement := range chunkMeasurements {
+				if el, ok := mergedMeasurement[k]; ok {
+					el.Values = append(el.Values, measurement.Values...)
+					mergedMeasurement[k] = el
+				} else {
+					mergedMeasurement[k] = measurement
+				}
+			}
+		}
 	}
-	return chunk
+
+	if len(mergedMeasurement) > 0 {
+		chunk.Measurements, _ = json.Marshal(mergedMeasurement)
+	}
+
+	return chunk, nil
 }

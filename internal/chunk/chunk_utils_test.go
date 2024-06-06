@@ -1,6 +1,7 @@
 package chunk
 
 import (
+	"encoding/json"
 	"testing"
 
 	"github.com/getsentry/vroom/internal/frame"
@@ -31,6 +32,7 @@ func TestMergeChunks(t *testing.T) {
 							{0, 1},
 						},
 					},
+					Measurements: json.RawMessage(`{"first_metric":{"unit":"ms","values":[{"elapsed_since_start_ns":200,"value":1.2}]}}`),
 				},
 				// other chunk
 				{
@@ -48,6 +50,7 @@ func TestMergeChunks(t *testing.T) {
 							{0, 1},
 						},
 					},
+					Measurements: json.RawMessage(`{"first_metric":{"unit":"ms","values":[{"elapsed_since_start_ns":100,"value":1}]}}`),
 				},
 			},
 			want: Chunk{
@@ -71,13 +74,18 @@ func TestMergeChunks(t *testing.T) {
 						{2, 3},
 					},
 				},
+				Measurements: json.RawMessage(`{"first_metric":{"unit":"ms","values":[{"elapsed_since_start_ns":100,"value":1},{"elapsed_since_start_ns":200,"value":1.2}]}}`),
 			},
 		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			if diff := testutil.Diff(MergeChunks(test.have), test.want); diff != "" {
+			have, err := MergeChunks(test.have)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if diff := testutil.Diff(have, test.want); diff != "" {
 				t.Fatalf("Result mismatch: got - want +\n%s", diff)
 			}
 		})
