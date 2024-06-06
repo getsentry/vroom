@@ -51,9 +51,8 @@ var (
 )
 
 const (
-	KiB            int64 = 1024
-	MiB                  = 1024 * KiB
-	WorkerPoolSize       = 50
+	KiB int64 = 1024
+	MiB       = 1024 * KiB
 )
 
 func newEnvironment() (*environment, error) {
@@ -264,8 +263,8 @@ func main() {
 
 	slog.Info("vroom started")
 
-	jobs = make(chan TaskInput, WorkerPoolSize)
-	for i := 0; i < WorkerPoolSize; i++ {
+	jobs = make(chan TaskInput, env.config.WorkerPoolSize)
+	for i := 0; i < env.config.WorkerPoolSize; i++ {
 		go worker(jobs)
 	}
 
