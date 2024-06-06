@@ -48,8 +48,8 @@ func MergeChunks(chunks []Chunk) (Chunk, error) {
 		chunk.Profile.Samples = append(chunk.Profile.Samples, c.Profile.Samples...)
 
 		// In case we have measurements, merge them too
-		var chunkMeasurements map[string]measurements.Measurement
 		if len(c.Measurements) > 0 {
+			var chunkMeasurements map[string]measurements.Measurement
 			err := json.Unmarshal(c.Measurements, &chunkMeasurements)
 			if err != nil {
 				return Chunk{}, err
@@ -66,7 +66,11 @@ func MergeChunks(chunks []Chunk) (Chunk, error) {
 	}
 
 	if len(mergedMeasurement) > 0 {
-		chunk.Measurements, _ = json.Marshal(mergedMeasurement)
+		jsonRawMesaurement, err := json.Marshal(mergedMeasurement)
+		if err != nil {
+			return Chunk{}, err
+		}
+		chunk.Measurements = jsonRawMesaurement
 	}
 
 	return chunk, nil
