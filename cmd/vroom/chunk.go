@@ -103,9 +103,17 @@ func (env *environment) postChunk(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-type postProfileFromChunkIDs struct {
+type postProfileFromChunkIDsRequest struct {
 	ProfilerID string   `json:"profiler_id"`
 	ChunkIDs   []string `json:"chunk_ids"`
+}
+
+// Instead of returning Chunk directly, we'll return this struct
+// that wraps a chunk.
+// This way, if we decide to later add a few more utility fields
+// (for pagination, etc.) we won't have to change the Chunk struct.
+type postProfileFromChunkIDsResponse struct {
+	Chunk chunk.Chunk `json:"chunk"`
 }
 
 // This is more of a GET method, but since we're receeiving a list of chunk IDs as part of a
@@ -133,7 +141,7 @@ func (env *environment) postProfileFromChunkIDs(w http.ResponseWriter, r *http.R
 	}
 	hub.Scope().SetTag("project_id", rawProjectID)
 
-	var requestBody postProfileFromChunkIDs
+	var requestBody postProfileFromChunkIDsRequest
 	s := sentry.StartSpan(ctx, "processing")
 	s.Description = "Decoding data"
 	err = json.NewDecoder(r.Body).Decode(&requestBody)
@@ -213,7 +221,7 @@ func (env *environment) postProfileFromChunkIDs(w http.ResponseWriter, r *http.R
 
 	s = sentry.StartSpan(ctx, "json.marshal")
 	defer s.Finish()
-	b, err := json.Marshal(chunk)
+	b, err := json.Marshal(postProfileFromChunkIDsResponse{Chunk: chunk})
 	if err != nil {
 		hub.CaptureException(err)
 		w.WriteHeader(http.StatusInternalServerError)
