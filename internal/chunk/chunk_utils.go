@@ -47,6 +47,13 @@ func MergeChunks(chunks []Chunk) (Chunk, error) {
 		chunk.Profile.Stacks = append(chunk.Profile.Stacks, c.Profile.Stacks...)
 		chunk.Profile.Samples = append(chunk.Profile.Samples, c.Profile.Samples...)
 
+		// Update threadMetadata
+		for k, threadMetadata := range c.Profile.ThreadMetadata {
+			if _, ok := chunk.Profile.ThreadMetadata[k]; !ok {
+				chunk.Profile.ThreadMetadata[k] = threadMetadata
+			}
+		}
+
 		// In case we have measurements, merge them too
 		if len(c.Measurements) > 0 {
 			var chunkMeasurements map[string]measurements.Measurement
