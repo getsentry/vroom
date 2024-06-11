@@ -160,6 +160,7 @@ func (q *QueryBuilder) Do(r *sentry.Span) (io.ReadCloser, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer resp.Body.Close()
 	if resp.StatusCode >= 400 && resp.StatusCode <= 599 {
 		var errResponse ErrorResponse
 		_ = json.NewDecoder(resp.Body).Decode(&errResponse)
