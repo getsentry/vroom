@@ -17,7 +17,7 @@ func MergeChunks(chunks []Chunk) (Chunk, error) {
 		return endFirstChunk <= startSecondChunk
 	})
 
-	var mergedMeasurement = make(map[string]measurements.Measurement)
+	var mergedMeasurement = make(map[string]measurements.MeasurementV2)
 
 	chunk := chunks[0]
 	if len(chunk.Measurements) > 0 {
@@ -56,7 +56,7 @@ func MergeChunks(chunks []Chunk) (Chunk, error) {
 
 		// In case we have measurements, merge them too
 		if len(c.Measurements) > 0 {
-			var chunkMeasurements map[string]measurements.Measurement
+			var chunkMeasurements map[string]measurements.MeasurementV2
 			err := json.Unmarshal(c.Measurements, &chunkMeasurements)
 			if err != nil {
 				return Chunk{}, err

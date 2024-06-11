@@ -33,7 +33,7 @@ func TestMergeChunks(t *testing.T) {
 						},
 						ThreadMetadata: map[string]map[string]string{"0x000000016d8fb180": {"name": "com.apple.network.connections"}},
 					},
-					Measurements: json.RawMessage(`{"first_metric":{"unit":"ms","values":[{"elapsed_since_start_ns":200,"value":1.2}]}}`),
+					Measurements: json.RawMessage(`{"first_metric":{"unit":"ms","values":[{"timestamp":2.0,"value":1.2}]}}`),
 				},
 				// other chunk
 				{
@@ -52,7 +52,7 @@ func TestMergeChunks(t *testing.T) {
 						},
 						ThreadMetadata: map[string]map[string]string{"0x0000000102adc700": {"name": "com.apple.main-thread"}},
 					},
-					Measurements: json.RawMessage(`{"first_metric":{"unit":"ms","values":[{"elapsed_since_start_ns":100,"value":1}]}}`),
+					Measurements: json.RawMessage(`{"first_metric":{"unit":"ms","values":[{"timestamp":1.0,"value":1}]}}`),
 				},
 			},
 			want: Chunk{
@@ -77,7 +77,7 @@ func TestMergeChunks(t *testing.T) {
 					},
 					ThreadMetadata: map[string]map[string]string{"0x0000000102adc700": {"name": "com.apple.main-thread"}, "0x000000016d8fb180": {"name": "com.apple.network.connections"}},
 				},
-				Measurements: json.RawMessage(`{"first_metric":{"unit":"ms","values":[{"elapsed_since_start_ns":100,"value":1},{"elapsed_since_start_ns":200,"value":1.2}]}}`),
+				Measurements: json.RawMessage(`{"first_metric":{"unit":"ms","values":[{"timestamp":1,"value":1},{"timestamp":2,"value":1.2}]}}`),
 			},
 		},
 	}
