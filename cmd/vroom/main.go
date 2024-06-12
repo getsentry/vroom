@@ -163,11 +163,6 @@ func (e *environment) newRouter() (*httprouter.Router, error) {
 			e.getProfileIDByTransactionID,
 		},
 		{
-			http.MethodGet,
-			"/organizations/:organization_id/projects/:project_id/flamegraph",
-			e.getFlamegraph,
-		},
-		{
 			http.MethodPost,
 			"/organizations/:organization_id/projects/:project_id/flamegraph",
 			e.postFlamegraphFromProfileIDs,
