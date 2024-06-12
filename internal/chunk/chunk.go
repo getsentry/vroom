@@ -37,7 +37,7 @@ type (
 		Frames         []frame.Frame
 		Samples        []Sample
 		Stacks         [][]int
-		ThreadMetadata map[string]map[string]string `json:"thread_metadata"`
+		ThreadMetadata map[string]map[string]interface{} `json:"thread_metadata"`
 	}
 
 	Sample struct {
