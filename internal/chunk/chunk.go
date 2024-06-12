@@ -7,6 +7,7 @@ import (
 	"github.com/getsentry/vroom/internal/debugmeta"
 	"github.com/getsentry/vroom/internal/frame"
 	"github.com/getsentry/vroom/internal/platform"
+	"github.com/getsentry/vroom/internal/sample"
 )
 
 type (
@@ -37,7 +38,7 @@ type (
 		Frames         []frame.Frame
 		Samples        []Sample
 		Stacks         [][]int
-		ThreadMetadata map[string]map[string]interface{} `json:"thread_metadata"`
+		ThreadMetadata map[string]sample.ThreadMetadata `json:"thread_metadata"`
 	}
 
 	Sample struct {
