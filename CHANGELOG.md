@@ -75,6 +75,7 @@
 - Use SendEventWithContext to bail out from requests when client disconnect ([#460](https://github.com/getsentry/vroom/pull/460))
 - Set logger for sentry client and replace zerolog with slog ([#461](https://github.com/getsentry/vroom/pull/461))
 - Rename logger msg key to message ([#462](https://github.com/getsentry/vroom/pull/462))
+- Bump github.com/Azure/azure-sdk-for-go/sdk/azidentity from 1.2.1 to 1.6.0 ([#471](https://github.com/getsentry/vroom/pull/471))
 
 ## 23.12.0
 
