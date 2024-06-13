@@ -144,11 +144,6 @@ func (e *environment) newRouter() (*httprouter.Router, error) {
 		{http.MethodGet, "/organizations/:organization_id/filters", e.getFilters},
 		{
 			http.MethodGet,
-			"/organizations/:organization_id/projects/:project_id/functions",
-			e.getFunctions,
-		},
-		{
-			http.MethodGet,
 			"/organizations/:organization_id/projects/:project_id/profiles/:profile_id",
 			e.getProfile,
 		},
