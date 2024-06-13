@@ -44,25 +44,6 @@ var (
 		snubautil.MakeAndroidAPILevelFilter,
 		snubautil.MakeVersionNameAndCodeFilter,
 	}
-
-	functionFilterFields = map[string]string{
-		"device_os_name":    "os_name",
-		"device_os_version": "os_version",
-		"environment":       "environment",
-		"platform":          "platform",
-		"transaction_name":  "transaction_name",
-		"version":           "release",
-	}
-
-	functionsQueryFilterMakers = []func(url.Values) ([]string, error){
-		func(params url.Values) ([]string, error) {
-			return snubautil.MakeTimeRangeFilter("timestamp", params)
-		},
-		snubautil.MakeApplicationFilter,
-		func(params url.Values) ([]string, error) {
-			return snubautil.MakeFieldsFilter(functionFilterFields, params)
-		},
-	}
 )
 
 func setExtrasFromRequest(sqb *snubautil.QueryBuilder, p url.Values) error {
@@ -108,36 +89,6 @@ func (e *environment) profilesQueryBuilderFromRequest(
 	sqb.WhereConditions = make([]string, 0, 5)
 
 	for _, makeFilter := range profileQueryFilterMakers {
-		conditions, err := makeFilter(p)
-		if err != nil {
-			return snubautil.QueryBuilder{}, err
-		}
-		sqb.WhereConditions = append(sqb.WhereConditions, conditions...)
-	}
-
-	err = setExtrasFromRequest(&sqb, p)
-	if err != nil {
-		return snubautil.QueryBuilder{}, err
-	}
-
-	return sqb, nil
-}
-
-func (e *environment) functionsQueryBuilderFromRequest(
-	ctx context.Context,
-	p url.Values,
-	orgID uint64,
-) (snubautil.QueryBuilder, error) {
-	sqb, err := e.snuba.NewQuery(ctx, "functions", orgID)
-	if err != nil {
-		return snubautil.QueryBuilder{}, err
-	}
-	sqb.WhereConditions = make([]string, 0, 5)
-
-	// we do not want to show unknown functions, unknown package is okay
-	sqb.WhereConditions = append(sqb.WhereConditions, "name != ''")
-
-	for _, makeFilter := range functionsQueryFilterMakers {
 		conditions, err := makeFilter(p)
 		if err != nil {
 			return snubautil.QueryBuilder{}, err
