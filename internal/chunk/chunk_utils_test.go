@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/getsentry/vroom/internal/frame"
+	"github.com/getsentry/vroom/internal/sample"
 	"github.com/getsentry/vroom/internal/testutil"
 )
 
@@ -31,7 +32,7 @@ func TestMergeChunks(t *testing.T) {
 							{0, 1},
 							{0, 1},
 						},
-						ThreadMetadata: map[string]map[string]string{"0x000000016d8fb180": {"name": "com.apple.network.connections"}},
+						ThreadMetadata: map[string]sample.ThreadMetadata{"0x000000016d8fb180": {Name: "com.apple.network.connections"}},
 					},
 					Measurements: json.RawMessage(`{"first_metric":{"unit":"ms","values":[{"timestamp":2.0,"value":1.2}]}}`),
 				},
@@ -50,7 +51,7 @@ func TestMergeChunks(t *testing.T) {
 							{0, 1},
 							{0, 1},
 						},
-						ThreadMetadata: map[string]map[string]string{"0x0000000102adc700": {"name": "com.apple.main-thread"}},
+						ThreadMetadata: map[string]sample.ThreadMetadata{"0x0000000102adc700": {Name: "com.apple.main-thread"}},
 					},
 					Measurements: json.RawMessage(`{"first_metric":{"unit":"ms","values":[{"timestamp":1.0,"value":1}]}}`),
 				},
@@ -75,7 +76,7 @@ func TestMergeChunks(t *testing.T) {
 						{2, 3},
 						{2, 3},
 					},
-					ThreadMetadata: map[string]map[string]string{"0x0000000102adc700": {"name": "com.apple.main-thread"}, "0x000000016d8fb180": {"name": "com.apple.network.connections"}},
+					ThreadMetadata: map[string]sample.ThreadMetadata{"0x0000000102adc700": {Name: "com.apple.main-thread"}, "0x000000016d8fb180": {Name: "com.apple.network.connections"}},
 				},
 				Measurements: json.RawMessage(`{"first_metric":{"unit":"ms","values":[{"timestamp":1,"value":1},{"timestamp":2,"value":1.2}]}}`),
 			},
