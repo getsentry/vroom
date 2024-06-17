@@ -49,8 +49,7 @@ type (
 )
 
 func (c *Chunk) StoragePath() string {
-	return fmt.Sprintf(
-		"%d/%d/%s/%s",
+	return StoragePath(
 		c.OrganizationID,
 		c.ProjectID,
 		c.ProfilerID,
@@ -64,4 +63,14 @@ func (c *Chunk) StartEndTimestamps() (float64, float64) {
 		return 0, 0
 	}
 	return c.Profile.Samples[0].Timestamp, c.Profile.Samples[count-1].Timestamp
+}
+
+func StoragePath(OrganizationID uint64, ProjectID uint64, ProfilerID string, ID string) string {
+	return fmt.Sprintf(
+		"%d/%d/%s/%s",
+		OrganizationID,
+		ProjectID,
+		ProfilerID,
+		ID,
+	)
 }

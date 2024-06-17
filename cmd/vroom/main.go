@@ -45,7 +45,10 @@ type environment struct {
 	metricsClient *http.Client
 }
 
-var release string
+var (
+	release string
+	jobs    chan TaskInput
+)
 
 const (
 	KiB int64 = 1024
@@ -162,6 +165,11 @@ func (e *environment) newRouter() (*httprouter.Router, error) {
 			"/organizations/:organization_id/projects/:project_id/flamegraph",
 			e.postFlamegraphFromProfileIDs,
 		},
+		{
+			http.MethodPost,
+			"/organizations/:organization_id/projects/:project_id/chunks",
+			e.postProfileFromChunkIDs,
+		},
 		{http.MethodGet, "/health", e.getHealth},
 		{http.MethodPost, "/chunk", e.postChunk},
 		{http.MethodPost, "/profile", e.postProfile},
@@ -245,6 +253,11 @@ func main() {
 
 	slog.Info("vroom started")
 
+	jobs = make(chan TaskInput, env.config.WorkerPoolSize)
+	for i := 0; i < env.config.WorkerPoolSize; i++ {
+		go worker(jobs)
+	}
+
 	err = server.ListenAndServe()
 	if err != nil && err != http.ErrServerClosed {
 		sentry.CaptureException(err)
@@ -254,6 +267,7 @@ func main() {
 	<-waitForShutdown
 
 	// Shutdown the rest of the environment after the HTTP connections are closed
+	close(jobs)
 	env.shutdown()
 	slog.Info("vroom graceful shutdown")
 }
