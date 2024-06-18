@@ -75,7 +75,7 @@ func TestCallTrees(t *testing.T) {
 					},
 				},
 			},
-		}, // finish first test
+		}, // end first test
 		{
 			name: "call tree with single sample frames",
 			chunk: Chunk{
@@ -123,7 +123,7 @@ func TestCallTrees(t *testing.T) {
 					},
 				},
 			},
-		}, // finish first test
+		}, // end first test
 		{
 			name: "call tree with single samples",
 			chunk: Chunk{
@@ -171,7 +171,7 @@ func TestCallTrees(t *testing.T) {
 					},
 				},
 			},
-		}, // finish third test
+		}, // end third test
 	}
 
 	for _, test := range tests {
