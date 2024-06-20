@@ -14,6 +14,7 @@
 - Filter out system frames when ingesting functions into generic metrics ([#444](https://github.com/getsentry/vroom/pull/444))
 - Store profile chunks. ([#463](https://github.com/getsentry/vroom/pull/463))
 - Add endpoint to return a profile from a list of chunk IDs ([#470](https://github.com/getsentry/vroom/pull/470))
+- Add callTree generation for profile chunks ([#475](https://github.com/getsentry/vroom/pull/475))
 
 **Bug Fixes**:
 
