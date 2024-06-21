@@ -12,7 +12,6 @@ import (
 	"github.com/getsentry/sentry-go"
 	"github.com/julienschmidt/httprouter"
 	"github.com/segmentio/kafka-go"
-	"gocloud.dev/blob"
 	"gocloud.dev/gcerrors"
 	"google.golang.org/api/googleapi"
 
@@ -156,10 +155,10 @@ func (env *environment) postProfileFromChunkIDs(w http.ResponseWriter, r *http.R
 	s = sentry.StartSpan(ctx, "chunks.read")
 	s.Description = "Read profile chunks from GCS"
 
-	results := make(chan TaskOutput, len(requestBody.ChunkIDs))
+	results := make(chan chunk.TaskOutput, len(requestBody.ChunkIDs))
 	// send a task to the workers pool for each chunk
 	for _, ID := range requestBody.ChunkIDs {
-		jobs <- TaskInput{
+		jobs <- chunk.TaskInput{
 			Ctx:            ctx,
 			ProfilerID:     requestBody.ProfilerID,
 			ChunkID:        ID,
@@ -262,7 +261,7 @@ func buildChunkKafkaMessage(c *chunk.Chunk) *ChunkKafkaMessage {
 
 // A worker download a chunk and send it back through
 // the Result channel.
-func worker(jobs <-chan TaskInput) {
+func worker(jobs <-chan chunk.TaskInput) {
 	for task := range jobs {
 		var c chunk.Chunk
 		err := storageutil.UnmarshalCompressed(
@@ -271,25 +270,6 @@ func worker(jobs <-chan TaskInput) {
 			chunk.StoragePath(task.OrganizationID, task.ProjectID, task.ProfilerID, task.ChunkID),
 			&c,
 		)
-		task.Result <- TaskOutput{Chunk: c, Err: err}
+		task.Result <- chunk.TaskOutput{Chunk: c, Err: err}
 	}
-}
-
-// The task the workers expect as input.
-//
-// Result: the channel used to send back the output.
-type TaskInput struct {
-	Ctx            context.Context
-	ProfilerID     string
-	ChunkID        string
-	OrganizationID uint64
-	ProjectID      uint64
-	Storage        *blob.Bucket
-	Result         chan<- TaskOutput
-}
-
-// The output sent back by the worker.
-type TaskOutput struct {
-	Err   error
-	Chunk chunk.Chunk
 }
