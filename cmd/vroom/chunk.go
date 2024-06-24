@@ -157,6 +157,7 @@ func (env *environment) postProfileFromChunkIDs(w http.ResponseWriter, r *http.R
 	s.Description = "Read profile chunks from GCS"
 
 	results := make(chan TaskOutput, len(requestBody.ChunkIDs))
+	defer close(results)
 	// send a task to the workers pool for each chunk
 	for _, ID := range requestBody.ChunkIDs {
 		jobs <- TaskInput{
@@ -189,7 +190,6 @@ func (env *environment) postProfileFromChunkIDs(w http.ResponseWriter, r *http.R
 		chunks = append(chunks, res.Chunk)
 	}
 	s.Finish()
-	close(results)
 	if err != nil {
 		if errors.Is(err, storageutil.ErrObjectNotFound) {
 			w.WriteHeader(http.StatusNotFound)
@@ -202,6 +202,16 @@ func (env *environment) postProfileFromChunkIDs(w http.ResponseWriter, r *http.R
 				"code":    e.Code,
 				"details": e.Details,
 				"message": e.Message,
+			})
+		}
+		var ej *json.UnmarshalTypeError
+		if ok := errors.As(err, &ej); ok {
+			hub.Scope().SetContext("json.UnmarshalTypeError", map[string]interface{}{
+				"value":  ej.Value,
+				"type":   ej.Type,
+				"offset": ej.Offset,
+				"struct": ej.Struct,
+				"field":  ej.Field,
 			})
 		}
 		hub.CaptureException(err)
