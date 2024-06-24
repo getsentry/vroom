@@ -60,7 +60,7 @@ func (env *environment) postChunk(w http.ResponseWriter, r *http.Request) {
 
 	s = sentry.StartSpan(ctx, "gcs.write")
 	s.Description = "Write profile to GCS"
-	err = storageutil.CompressedWrite(ctx, env.storage, c.StoragePath(), body)
+	err = storageutil.CompressedWrite(ctx, env.storage, c.StoragePath(), c)
 	s.Finish()
 	if err != nil {
 		if errors.Is(err, context.DeadlineExceeded) {
