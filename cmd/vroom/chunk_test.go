@@ -19,7 +19,6 @@ import (
 	"github.com/segmentio/kafka-go"
 	"gocloud.dev/blob"
 	_ "gocloud.dev/blob/fileblob"
-	_ "gocloud.dev/blob/gcsblob"
 )
 
 var fileBlobBucket *blob.Bucket
@@ -128,7 +127,7 @@ func TestPostAndReadChunk(t *testing.T) {
 				t.Fatalf("Expected status code 204. Found: %d", resp.StatusCode)
 			}
 
-			// read the chunk with UnmarshalCompressed and make check that we can unmarshal
+			// read the chunk with UnmarshalCompressed and make sure that we can unmarshal
 			// the data into the Chunk struct and that it matches the original
 			var c chunk.Chunk
 			err = storageutil.UnmarshalCompressed(
