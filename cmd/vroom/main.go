@@ -37,7 +37,7 @@ type environment struct {
 	snuba snubautil.Client
 
 	occurrencesWriter   *kafka.Writer
-	profilingWriter     *kafka.Writer
+	profilingWriter     KafkaWriter
 	metricSummaryWriter *kafka.Writer
 
 	storage *blob.Bucket

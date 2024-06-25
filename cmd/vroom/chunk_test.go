@@ -9,7 +9,6 @@ import (
 	"net/http/httptest"
 	"os"
 	"testing"
-	"time"
 
 	"github.com/getsentry/vroom/internal/chunk"
 	"github.com/getsentry/vroom/internal/frame"
@@ -96,17 +95,8 @@ func TestPostAndReadChunk(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			env := environment{
-				storage: test.blobBucket,
-				profilingWriter: &kafka.Writer{
-					Addr:         kafka.TCP("localhost:9092"),
-					Async:        true,
-					Balancer:     kafka.CRC32Balancer{},
-					BatchBytes:   20 * MiB,
-					BatchSize:    10,
-					Compression:  kafka.Lz4,
-					ReadTimeout:  3 * time.Second,
-					WriteTimeout: 3 * time.Second,
-				},
+				storage:         test.blobBucket,
+				profilingWriter: KafkaWriterMock{},
 				config: ServiceConfig{
 					ProfileChunksKafkaTopic: "snuba-profile-chunks",
 				},
@@ -144,4 +134,13 @@ func TestPostAndReadChunk(t *testing.T) {
 			}
 		})
 	}
+}
+
+type KafkaWriterMock struct{}
+
+func (k KafkaWriterMock) WriteMessages(_ context.Context, _ ...kafka.Message) error {
+	return nil
+}
+func (k KafkaWriterMock) Close() error {
+	return nil
 }
