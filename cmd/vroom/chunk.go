@@ -80,6 +80,7 @@ func (env *environment) postChunk(w http.ResponseWriter, r *http.Request) {
 			if code := gcerrors.Code(err); code == gcerrors.FailedPrecondition {
 				w.WriteHeader(http.StatusPreconditionFailed)
 			} else {
+				fmt.Printf("Debug Print: %v", err)
 				w.WriteHeader(http.StatusInternalServerError)
 			}
 		}
@@ -94,6 +95,7 @@ func (env *environment) postChunk(w http.ResponseWriter, r *http.Request) {
 		if hub != nil {
 			hub.CaptureException(err)
 		}
+		fmt.Printf("Debug Print: %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -107,6 +109,7 @@ func (env *environment) postChunk(w http.ResponseWriter, r *http.Request) {
 		if hub != nil {
 			hub.CaptureException(err)
 		}
+		fmt.Printf("Debug Print: %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
