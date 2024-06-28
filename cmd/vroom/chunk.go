@@ -59,7 +59,7 @@ func (env *environment) postChunk(w http.ResponseWriter, r *http.Request) {
 
 	s = sentry.StartSpan(ctx, "gcs.write")
 	s.Description = "Write profile to GCS"
-	err = storageutil.CompressedWrite(ctx, env.storage, c.StoragePath(), body)
+	err = storageutil.CompressedWrite(ctx, env.storage, c.StoragePath(), c)
 	s.Finish()
 	if err != nil {
 		if errors.Is(err, context.DeadlineExceeded) {
@@ -155,7 +155,8 @@ func (env *environment) postProfileFromChunkIDs(w http.ResponseWriter, r *http.R
 	s = sentry.StartSpan(ctx, "chunks.read")
 	s.Description = "Read profile chunks from GCS"
 
-	results := make(chan chunk.TaskOutput, len(requestBody.ChunkIDs))
+	results := make(chan TaskOutput, len(requestBody.ChunkIDs))
+	defer close(results)
 	// send a task to the workers pool for each chunk
 	for _, ID := range requestBody.ChunkIDs {
 		jobs <- chunk.TaskInput{
@@ -188,7 +189,6 @@ func (env *environment) postProfileFromChunkIDs(w http.ResponseWriter, r *http.R
 		chunks = append(chunks, res.Chunk)
 	}
 	s.Finish()
-	close(results)
 	if err != nil {
 		if errors.Is(err, storageutil.ErrObjectNotFound) {
 			w.WriteHeader(http.StatusNotFound)
