@@ -155,7 +155,7 @@ func (env *environment) postProfileFromChunkIDs(w http.ResponseWriter, r *http.R
 	s = sentry.StartSpan(ctx, "chunks.read")
 	s.Description = "Read profile chunks from GCS"
 
-	results := make(chan TaskOutput, len(requestBody.ChunkIDs))
+	results := make(chan chunk.TaskOutput, len(requestBody.ChunkIDs))
 	defer close(results)
 	// send a task to the workers pool for each chunk
 	for _, ID := range requestBody.ChunkIDs {
