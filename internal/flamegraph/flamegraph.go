@@ -28,9 +28,11 @@ type (
 	CallTrees map[uint64][]*nodetree.Node
 
 	ChunkMetadata struct {
-		ProfilerID     string  `json:"profiler_id"`
-		ChunkID        string  `json:"chunk_id"`
-		ActiveThreadID *string `json:"active_thread_id,omitempty"`
+		ProfilerID       string  `json:"profiler_id"`
+		ChunkID          string  `json:"chunk_id"`
+		ActiveThreadID   *string `json:"active_thread_id,omitempty"`
+		StartTimestampNS *uint64 `json:"start_timestamp,omitempty"`
+		EndTimestampNS   *uint64 `json:"end_timestamp,omitempty"`
 	}
 )
 
@@ -341,9 +343,9 @@ func GetFlamegraphFromChunks(
 	results := make(chan chunk.TaskOutput, len(chunksMetadata))
 	defer close(results)
 
-	chunkToThreadID := make(map[string]*string)
+	chunkIDToMetadata := make(map[string]ChunkMetadata)
 	for _, chunkMetadata := range chunksMetadata {
-		chunkToThreadID[chunkMetadata.ChunkID] = chunkMetadata.ActiveThreadID
+		chunkIDToMetadata[chunkMetadata.ChunkID] = chunkMetadata
 		jobs <- chunk.TaskInput{
 			Ctx:            ctx,
 			ProfilerID:     chunkMetadata.ProfilerID,
@@ -370,10 +372,17 @@ func GetFlamegraphFromChunks(
 			hub.CaptureException(res.Err)
 			continue
 		}
-		callTrees, err := res.Chunk.CallTrees(chunkToThreadID[res.Chunk.ID])
+		cm := chunkIDToMetadata[res.Chunk.ID]
+		callTrees, err := res.Chunk.CallTrees(cm.ActiveThreadID)
 		if err != nil {
 			hub.CaptureException(err)
 			continue
+		}
+		if cm.StartTimestampNS != nil && cm.EndTimestampNS != nil {
+			for tid, callTree := range callTrees {
+				intervals := []SpanInterval{{Start: *cm.StartTimestampNS, End: *cm.EndTimestampNS}}
+				callTrees[tid] = sliceCallTree(&callTree, &intervals)
+			}
 		}
 		for _, callTree := range callTrees {
 			addCallTreeToFlamegraph(&flamegraphTree, callTree, res.Chunk.ID)
