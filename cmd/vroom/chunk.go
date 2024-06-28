@@ -204,16 +204,6 @@ func (env *environment) postProfileFromChunkIDs(w http.ResponseWriter, r *http.R
 				"message": e.Message,
 			})
 		}
-		var ej *json.UnmarshalTypeError
-		if ok := errors.As(err, &ej); ok {
-			hub.Scope().SetContext("json.UnmarshalTypeError", map[string]interface{}{
-				"value":  ej.Value,
-				"type":   ej.Type,
-				"offset": ej.Offset,
-				"struct": ej.Struct,
-				"field":  ej.Field,
-			})
-		}
 		hub.CaptureException(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
