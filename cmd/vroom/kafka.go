@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -167,4 +168,9 @@ func generateMetricSummariesKafkaMessageBatch(p *profile.Profile, metrics []sent
 		messages = append(messages, msg)
 	}
 	return messages, nil
+}
+
+type KafkaWriter interface {
+	WriteMessages(ctx context.Context, msgs ...kafka.Message) error
+	Close() error
 }

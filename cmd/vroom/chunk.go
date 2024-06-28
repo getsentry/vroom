@@ -29,7 +29,9 @@ func (env *environment) postChunk(w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(r.Body)
 	s.Finish()
 	if err != nil {
-		hub.CaptureException(err)
+		if hub != nil {
+			hub.CaptureException(err)
+		}
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -41,22 +43,26 @@ func (env *environment) postChunk(w http.ResponseWriter, r *http.Request) {
 	err = json.Unmarshal(body, c)
 	s.Finish()
 	if err != nil {
-		hub.CaptureException(err)
+		if hub != nil {
+			hub.CaptureException(err)
+		}
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	hub.Scope().SetContext("Profile metadata", map[string]interface{}{
-		"chunk_id":        c.ID,
-		"organization_id": strconv.FormatUint(c.OrganizationID, 10),
-		"profiler_id":     c.ProfilerID,
-		"project_id":      strconv.FormatUint(c.ProjectID, 10),
-		"size":            len(body),
-	})
+	if hub != nil {
+		hub.Scope().SetContext("Profile metadata", map[string]interface{}{
+			"chunk_id":        c.ID,
+			"organization_id": strconv.FormatUint(c.OrganizationID, 10),
+			"profiler_id":     c.ProfilerID,
+			"project_id":      strconv.FormatUint(c.ProjectID, 10),
+			"size":            len(body),
+		})
 
-	hub.Scope().SetTags(map[string]string{
-		"platform": string(c.Platform),
-	})
+		hub.Scope().SetTags(map[string]string{
+			"platform": string(c.Platform),
+		})
+	}
 
 	s = sentry.StartSpan(ctx, "gcs.write")
 	s.Description = "Write profile to GCS"
@@ -68,7 +74,9 @@ func (env *environment) postChunk(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusTooManyRequests)
 		} else {
 			// These errors won't be retried
-			hub.CaptureException(err)
+			if hub != nil {
+				hub.CaptureException(err)
+			}
 			if code := gcerrors.Code(err); code == gcerrors.FailedPrecondition {
 				w.WriteHeader(http.StatusPreconditionFailed)
 			} else {
@@ -83,7 +91,9 @@ func (env *environment) postChunk(w http.ResponseWriter, r *http.Request) {
 	b, err := json.Marshal(buildChunkKafkaMessage(c))
 	s.Finish()
 	if err != nil {
-		hub.CaptureException(err)
+		if hub != nil {
+			hub.CaptureException(err)
+		}
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -94,7 +104,9 @@ func (env *environment) postChunk(w http.ResponseWriter, r *http.Request) {
 		Value: b,
 	})
 	if err != nil {
-		hub.CaptureException(err)
+		if hub != nil {
+			hub.CaptureException(err)
+		}
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
