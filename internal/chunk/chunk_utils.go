@@ -1,10 +1,12 @@
 package chunk
 
 import (
+	"context"
 	"encoding/json"
 	"sort"
 
 	"github.com/getsentry/vroom/internal/measurements"
+	"gocloud.dev/blob"
 )
 
 func MergeChunks(chunks []Chunk) (Chunk, error) {
@@ -81,4 +83,23 @@ func MergeChunks(chunks []Chunk) (Chunk, error) {
 	}
 
 	return chunk, nil
+}
+
+// The task the workers expect as input.
+//
+// Result: the channel used to send back the output.
+type TaskInput struct {
+	Ctx            context.Context
+	ProfilerID     string
+	ChunkID        string
+	OrganizationID uint64
+	ProjectID      uint64
+	Storage        *blob.Bucket
+	Result         chan<- TaskOutput
+}
+
+// The output sent back by the worker.
+type TaskOutput struct {
+	Err   error
+	Chunk Chunk
 }

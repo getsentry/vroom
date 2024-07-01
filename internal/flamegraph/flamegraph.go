@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/getsentry/sentry-go"
+	"github.com/getsentry/vroom/internal/chunk"
 	"github.com/getsentry/vroom/internal/nodetree"
 	"github.com/getsentry/vroom/internal/profile"
 	"github.com/getsentry/vroom/internal/speedscope"
@@ -25,6 +26,13 @@ type (
 	}
 
 	CallTrees map[uint64][]*nodetree.Node
+
+	ChunkMetadata struct {
+		ProfilerID     string          `json:"profiler_id"`
+		ChunkID        string          `json:"chunk_id"`
+		ActiveThreadID *string         `json:"active_thread_id,omitempty"`
+		SpanIntervals  *[]SpanInterval `json:"span_intervals,omitempty"`
+	}
 )
 
 var (
@@ -321,4 +329,70 @@ func (f *flamegraph) getProfileIDsIndices(profileIDs map[string]struct{}) []int 
 		}
 	}
 	return indices
+}
+
+func GetFlamegraphFromChunks(
+	ctx context.Context,
+	organizationID uint64,
+	projectID uint64,
+	storage *blob.Bucket,
+	chunksMetadata []ChunkMetadata,
+	jobs chan chunk.TaskInput) (speedscope.Output, error) {
+	hub := sentry.GetHubFromContext(ctx)
+	results := make(chan chunk.TaskOutput, len(chunksMetadata))
+	defer close(results)
+
+	chunkIDToMetadata := make(map[string]ChunkMetadata)
+	for _, chunkMetadata := range chunksMetadata {
+		chunkIDToMetadata[chunkMetadata.ChunkID] = chunkMetadata
+		jobs <- chunk.TaskInput{
+			Ctx:            ctx,
+			ProfilerID:     chunkMetadata.ProfilerID,
+			ChunkID:        chunkMetadata.ChunkID,
+			OrganizationID: organizationID,
+			ProjectID:      projectID,
+			Storage:        storage,
+			Result:         results,
+		}
+	}
+
+	var flamegraphTree []*nodetree.Node
+	countChunksAggregated := 0
+	// read the output of each tasks
+	for i := 0; i < len(chunksMetadata); i++ {
+		res := <-results
+		if res.Err != nil {
+			if errors.Is(res.Err, storageutil.ErrObjectNotFound) {
+				continue
+			}
+			if errors.Is(res.Err, context.DeadlineExceeded) {
+				return speedscope.Output{}, nil
+			}
+			hub.CaptureException(res.Err)
+			continue
+		}
+		cm := chunkIDToMetadata[res.Chunk.ID]
+		callTrees, err := res.Chunk.CallTrees(cm.ActiveThreadID)
+		if err != nil {
+			hub.CaptureException(err)
+			continue
+		}
+		// if the chunk has a list of intervals, instead of using all the
+		// chunk data to compute the flamegraph, we only use slices of data
+		// that fall within those ranges.
+		if cm.SpanIntervals != nil {
+			for tid, callTree := range callTrees {
+				sortedMergedIntervals := mergeIntervals(cm.SpanIntervals)
+				callTrees[tid] = sliceCallTree(&callTree, &sortedMergedIntervals)
+			}
+		}
+		for _, callTree := range callTrees {
+			addCallTreeToFlamegraph(&flamegraphTree, callTree, res.Chunk.ID)
+		}
+		countChunksAggregated++
+	}
+
+	sp := toSpeedscope(flamegraphTree, 4, projectID)
+	hub.Scope().SetTag("processed_chunks", strconv.Itoa(countChunksAggregated))
+	return sp, nil
 }

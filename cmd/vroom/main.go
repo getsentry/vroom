@@ -26,6 +26,7 @@ import (
 	_ "gocloud.dev/blob/s3blob"
 	"gocloud.dev/gcerrors"
 
+	"github.com/getsentry/vroom/internal/chunk"
 	"github.com/getsentry/vroom/internal/httputil"
 	"github.com/getsentry/vroom/internal/logutil"
 	"github.com/getsentry/vroom/internal/snubautil"
@@ -47,7 +48,7 @@ type environment struct {
 
 var (
 	release string
-	jobs    chan TaskInput
+	jobs    chan chunk.TaskInput
 )
 
 const (
@@ -253,7 +254,7 @@ func main() {
 
 	slog.Info("vroom started")
 
-	jobs = make(chan TaskInput, env.config.WorkerPoolSize)
+	jobs = make(chan chunk.TaskInput, env.config.WorkerPoolSize)
 	for i := 0; i < env.config.WorkerPoolSize; i++ {
 		go worker(jobs)
 	}

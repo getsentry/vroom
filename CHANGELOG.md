@@ -15,6 +15,7 @@
 - Store profile chunks. ([#463](https://github.com/getsentry/vroom/pull/463))
 - Add endpoint to return a profile from a list of chunk IDs ([#470](https://github.com/getsentry/vroom/pull/470))
 - Add callTree generation for profile chunks ([#475](https://github.com/getsentry/vroom/pull/475))
+- Support generating a flamegraph from a list of chunk IDs ([#476](https://github.com/getsentry/vroom/pull/476))
 
 **Bug Fixes**:
 
