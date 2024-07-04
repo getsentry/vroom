@@ -365,7 +365,7 @@ func GetFlamegraphFromChunks(
 				continue
 			}
 			if errors.Is(res.Err, context.DeadlineExceeded) {
-				return speedscope.Output{}, nil
+				return speedscope.Output{}, res.Err
 			}
 			if hub != nil {
 				hub.CaptureException(res.Err)
