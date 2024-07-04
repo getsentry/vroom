@@ -28,10 +28,9 @@ type (
 	CallTrees map[uint64][]*nodetree.Node
 
 	ChunkMetadata struct {
-		ProfilerID     string          `json:"profiler_id"`
-		ChunkID        string          `json:"chunk_id"`
-		ActiveThreadID *string         `json:"active_thread_id,omitempty"`
-		SpanIntervals  *[]SpanInterval `json:"span_intervals,omitempty"`
+		ProfilerID    string         `json:"profiler_id"`
+		ChunkID       string         `json:"chunk_id"`
+		SpanIntervals []SpanInterval `json:"span_intervals,omitempty"`
 	}
 )
 
@@ -372,22 +371,17 @@ func GetFlamegraphFromChunks(
 			continue
 		}
 		cm := chunkIDToMetadata[res.Chunk.ID]
-		callTrees, err := res.Chunk.CallTrees(cm.ActiveThreadID)
-		if err != nil {
-			hub.CaptureException(err)
-			continue
-		}
-		// if the chunk has a list of intervals, instead of using all the
-		// chunk data to compute the flamegraph, we only use slices of data
-		// that fall within those ranges.
-		if cm.SpanIntervals != nil {
-			for tid, callTree := range callTrees {
-				sortedMergedIntervals := mergeIntervals(cm.SpanIntervals)
-				callTrees[tid] = sliceCallTree(&callTree, &sortedMergedIntervals)
+		for _, interval := range cm.SpanIntervals {
+			callTrees, err := res.Chunk.CallTrees(&interval.ActiveThreadID)
+			if err != nil {
+				hub.CaptureException(err)
+				continue
 			}
-		}
-		for _, callTree := range callTrees {
-			addCallTreeToFlamegraph(&flamegraphTree, callTree, res.Chunk.ID)
+			intervals := []SpanInterval{interval}
+			for _, callTree := range callTrees {
+				slicedTree := sliceCallTree(&callTree, &intervals)
+				addCallTreeToFlamegraph(&flamegraphTree, slicedTree, res.Chunk.ID)
+			}
 		}
 		countChunksAggregated++
 	}
