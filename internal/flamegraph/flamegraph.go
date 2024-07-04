@@ -367,14 +367,18 @@ func GetFlamegraphFromChunks(
 			if errors.Is(res.Err, context.DeadlineExceeded) {
 				return speedscope.Output{}, nil
 			}
-			hub.CaptureException(res.Err)
+			if hub != nil {
+				hub.CaptureException(res.Err)
+			}
 			continue
 		}
 		cm := chunkIDToMetadata[res.Chunk.ID]
 		for _, interval := range cm.SpanIntervals {
 			callTrees, err := res.Chunk.CallTrees(&interval.ActiveThreadID)
 			if err != nil {
-				hub.CaptureException(err)
+				if hub != nil {
+					hub.CaptureException(err)
+				}
 				continue
 			}
 			intervals := []SpanInterval{interval}
@@ -387,6 +391,8 @@ func GetFlamegraphFromChunks(
 	}
 
 	sp := toSpeedscope(flamegraphTree, 4, projectID)
-	hub.Scope().SetTag("processed_chunks", strconv.Itoa(countChunksAggregated))
+	if hub != nil {
+		hub.Scope().SetTag("processed_chunks", strconv.Itoa(countChunksAggregated))
+	}
 	return sp, nil
 }
