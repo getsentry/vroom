@@ -9,8 +9,9 @@ import (
 )
 
 type SpanInterval struct {
-	Start uint64 `json:"start,string"`
-	End   uint64 `json:"end,string"`
+	Start          uint64 `json:"start,string"`
+	End            uint64 `json:"end,string"`
+	ActiveThreadID string `json:"active_thread_id"`
 }
 
 func mergeIntervals(intervals *[]SpanInterval) []SpanInterval {
