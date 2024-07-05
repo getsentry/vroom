@@ -94,3 +94,78 @@ func (env *environment) postFlamegraphFromProfileIDs(w http.ResponseWriter, r *h
 	w.WriteHeader(http.StatusOK)
 	_, _ = w.Write(b)
 }
+
+type postFlamegraphFromChunksMetadataBody struct {
+	ChunksMetadata []flamegraph.ChunkMetadata `json:"chunks_metadata"`
+}
+
+func (env *environment) postFlamegraphFromChunksMetadata(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	hub := sentry.GetHubFromContext(ctx)
+	ps := httprouter.ParamsFromContext(ctx)
+	rawOrganizationID := ps.ByName("organization_id")
+	organizationID, err := strconv.ParseUint(rawOrganizationID, 10, 64)
+	if err != nil {
+		if hub != nil {
+			hub.CaptureException(err)
+		}
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	hub.Scope().SetTag("organization_id", rawOrganizationID)
+
+	rawProjectID := ps.ByName("project_id")
+	projectID, err := strconv.ParseUint(rawProjectID, 10, 64)
+	if err != nil {
+		sentry.CaptureException(err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	if hub != nil {
+		hub.Scope().SetTag("project_id", rawProjectID)
+	}
+
+	var body postFlamegraphFromChunksMetadataBody
+	s := sentry.StartSpan(ctx, "processing")
+	s.Description = "Decoding data"
+	err = json.NewDecoder(r.Body).Decode(&body)
+	s.Finish()
+	if err != nil {
+		if hub != nil {
+			hub.CaptureException(err)
+		}
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	s = sentry.StartSpan(ctx, "processing")
+	speedscope, err := flamegraph.GetFlamegraphFromChunks(ctx, organizationID, projectID, env.storage, body.ChunksMetadata, jobs)
+	s.Finish()
+	if err != nil {
+		if hub != nil {
+			hub.CaptureException(err)
+		}
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	if hub != nil {
+		hub.Scope().SetTag("requested_chunks", strconv.Itoa(len(body.ChunksMetadata)))
+	}
+
+	s = sentry.StartSpan(ctx, "json.marshal")
+	defer s.Finish()
+	b, err := json.Marshal(speedscope)
+	if err != nil {
+		if hub != nil {
+			hub.CaptureException(err)
+		}
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write(b)
+}
