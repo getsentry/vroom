@@ -9,8 +9,8 @@ import (
 )
 
 type SpanInterval struct {
-	Start          uint64 `json:"start"`
-	End            uint64 `json:"end"`
+	Start          uint64 `json:"start,string"`
+	End            uint64 `json:"end,string"`
 	ActiveThreadID string `json:"active_thread_id"`
 }
 
