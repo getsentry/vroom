@@ -40,13 +40,13 @@ type (
 		Received       float64 `json:"received"`
 		RetentionDays  int     `json:"retention_days"`
 
-		Measurements json.RawMessage
+		Measurements json.RawMessage `json:"measurements"`
 	}
 
 	Data struct {
-		Frames         []frame.Frame
-		Samples        []Sample
-		Stacks         [][]int
+		Frames         []frame.Frame                    `json:"frames"`
+		Samples        []Sample                         `json:"samples"`
+		Stacks         [][]int                          `json:"stacks"`
 		ThreadMetadata map[string]sample.ThreadMetadata `json:"thread_metadata"`
 	}
 

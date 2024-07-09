@@ -81,6 +81,7 @@
 - Bump github.com/Azure/azure-sdk-for-go/sdk/azidentity from 1.2.1 to 1.6.0 ([#471](https://github.com/getsentry/vroom/pull/471))
 - Remove unused flamegraph endpoint (dead code) ([#472](https://github.com/getsentry/vroom/pull/472))
 - Remove unused functions endpoint (dead code) ([#474](https://github.com/getsentry/vroom/pull/474))
+- Serialize chunk fields with lower case ([#483](https://github.com/getsentry/vroom/pull/483))
 
 ## 23.12.0
 
