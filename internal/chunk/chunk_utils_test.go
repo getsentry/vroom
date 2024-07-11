@@ -11,9 +11,11 @@ import (
 
 func TestMergeChunks(t *testing.T) {
 	tests := []struct {
-		name string
-		have []Chunk
-		want Chunk
+		name  string
+		have  []Chunk
+		want  Chunk
+		start float64
+		end   float64
 	}{
 		{
 			name: "contiguous chunks",
@@ -25,8 +27,9 @@ func TestMergeChunks(t *testing.T) {
 							{Function: "d"},
 						},
 						Samples: []Sample{
-							{StackID: 0, Timestamp: 2.0},
-							{StackID: 1, Timestamp: 3.0},
+							{StackID: 0, Timestamp: 3.0},
+							{StackID: 1, Timestamp: 4.0},
+							{StackID: 1, Timestamp: 5.0}, // outside range, will be dropped
 						},
 						Stacks: [][]int{
 							{0, 1},
@@ -45,7 +48,8 @@ func TestMergeChunks(t *testing.T) {
 						},
 						Samples: []Sample{
 							{StackID: 0, Timestamp: 0.0},
-							{StackID: 1, Timestamp: 1.0},
+							{StackID: 0, Timestamp: 1.0},
+							{StackID: 1, Timestamp: 2.0},
 						},
 						Stacks: [][]int{
 							{0, 1},
@@ -65,10 +69,10 @@ func TestMergeChunks(t *testing.T) {
 						{Function: "d"},
 					},
 					Samples: []Sample{
-						{StackID: 0, Timestamp: 0.0},
-						{StackID: 1, Timestamp: 1.0},
-						{StackID: 2, Timestamp: 2.0},
-						{StackID: 3, Timestamp: 3.0},
+						{StackID: 0, Timestamp: 1.0},
+						{StackID: 1, Timestamp: 2.0},
+						{StackID: 2, Timestamp: 3.0},
+						{StackID: 3, Timestamp: 4.0},
 					},
 					Stacks: [][]int{
 						{0, 1},
@@ -80,12 +84,14 @@ func TestMergeChunks(t *testing.T) {
 				},
 				Measurements: json.RawMessage(`{"first_metric":{"unit":"ms","values":[{"timestamp":1,"value":1},{"timestamp":2,"value":1.2}]}}`),
 			},
+			start: 1e9,
+			end:   4e9,
 		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			have, err := MergeChunks(test.have)
+			have, err := MergeChunks(test.have, test.start, test.end)
 			if err != nil {
 				t.Fatal(err)
 			}
