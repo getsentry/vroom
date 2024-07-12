@@ -14,8 +14,8 @@ func TestMergeChunks(t *testing.T) {
 		name  string
 		have  []Chunk
 		want  Chunk
-		start float64
-		end   float64
+		start uint64
+		end   uint64
 	}{
 		{
 			name: "contiguous chunks",
@@ -84,8 +84,8 @@ func TestMergeChunks(t *testing.T) {
 				},
 				Measurements: json.RawMessage(`{"first_metric":{"unit":"ms","values":[{"timestamp":1,"value":1},{"timestamp":2,"value":1.2}]}}`),
 			},
-			start: 1e9,
-			end:   4e9,
+			start: uint64(1e9),
+			end:   uint64(4e9),
 		},
 	}
 

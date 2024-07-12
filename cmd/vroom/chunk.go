@@ -224,7 +224,7 @@ func (env *environment) postProfileFromChunkIDs(w http.ResponseWriter, r *http.R
 
 	s = sentry.StartSpan(ctx, "chunks.merge")
 	s.Description = "Merge profile chunks into a single one"
-	chunk, err := chunk.MergeChunks(chunks, float64(requestBody.Start), float64(requestBody.End))
+	chunk, err := chunk.MergeChunks(chunks, requestBody.Start, requestBody.End)
 	s.Finish()
 	if err != nil {
 		hub.CaptureException(err)
