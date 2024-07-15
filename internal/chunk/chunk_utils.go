@@ -9,7 +9,7 @@ import (
 	"gocloud.dev/blob"
 )
 
-func MergeChunks(chunks []Chunk) (Chunk, error) {
+func MergeChunks(chunks []Chunk, startTs, endTs uint64) (Chunk, error) {
 	if len(chunks) == 0 {
 		return Chunk{}, nil
 	}
@@ -21,12 +21,25 @@ func MergeChunks(chunks []Chunk) (Chunk, error) {
 
 	var mergedMeasurement = make(map[string]measurements.MeasurementV2)
 
+	start := float64(startTs) / 1e9
+	end := float64(endTs) / 1e9
+
 	chunk := chunks[0]
 	if len(chunk.Measurements) > 0 {
 		err := json.Unmarshal(chunk.Measurements, &mergedMeasurement)
 		if err != nil {
 			return Chunk{}, err
 		}
+	}
+
+	// clean up the samples in the first chunk
+	samples := make([]Sample, 0, len(chunk.Profile.Samples))
+	for _, sample := range chunk.Profile.Samples {
+		if sample.Timestamp < start || sample.Timestamp > end {
+			// sample from chunk lies outside start/end range so skip it
+			continue
+		}
+		samples = append(samples, sample)
 	}
 
 	for i := 1; i < len(chunks); i++ {
@@ -47,7 +60,13 @@ func MergeChunks(chunks []Chunk) (Chunk, error) {
 			c.Profile.Samples[j].StackID = sample.StackID + len(chunk.Profile.Stacks)
 		}
 		chunk.Profile.Stacks = append(chunk.Profile.Stacks, c.Profile.Stacks...)
-		chunk.Profile.Samples = append(chunk.Profile.Samples, c.Profile.Samples...)
+		for _, sample := range c.Profile.Samples {
+			if sample.Timestamp < start || sample.Timestamp > end {
+				// sample from chunk lies outside start/end range so skip it
+				continue
+			}
+			samples = append(samples, sample)
+		}
 
 		// Update threadMetadata
 		for k, threadMetadata := range c.Profile.ThreadMetadata {
@@ -73,6 +92,8 @@ func MergeChunks(chunks []Chunk) (Chunk, error) {
 			}
 		}
 	}
+
+	chunk.Profile.Samples = samples
 
 	if len(mergedMeasurement) > 0 {
 		jsonRawMesaurement, err := json.Marshal(mergedMeasurement)

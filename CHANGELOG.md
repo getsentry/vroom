@@ -82,6 +82,7 @@
 - Remove unused flamegraph endpoint (dead code) ([#472](https://github.com/getsentry/vroom/pull/472))
 - Remove unused functions endpoint (dead code) ([#474](https://github.com/getsentry/vroom/pull/474))
 - Serialize chunk fields with lower case ([#483](https://github.com/getsentry/vroom/pull/483))
+- Filter out samples before start and after end ([#484](https://github.com/getsentry/vroom/pull/484))
 
 ## 23.12.0
 
