@@ -117,6 +117,8 @@ func (env *environment) postChunk(w http.ResponseWriter, r *http.Request) {
 type postProfileFromChunkIDsRequest struct {
 	ProfilerID string   `json:"profiler_id"`
 	ChunkIDs   []string `json:"chunk_ids"`
+	Start      uint64   `json:"start,string"`
+	End        uint64   `json:"end,string"`
 }
 
 // Instead of returning Chunk directly, we'll return this struct
@@ -127,7 +129,7 @@ type postProfileFromChunkIDsResponse struct {
 	Chunk chunk.Chunk `json:"chunk"`
 }
 
-// This is more of a GET method, but since we're receeiving a list of chunk IDs as part of a
+// This is more of a GET method, but since we're receiving a list of chunk IDs as part of a
 // body request, we use a POST method instead (similarly to the flamegraph endpoint).
 func (env *environment) postProfileFromChunkIDs(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
@@ -222,7 +224,7 @@ func (env *environment) postProfileFromChunkIDs(w http.ResponseWriter, r *http.R
 
 	s = sentry.StartSpan(ctx, "chunks.merge")
 	s.Description = "Merge profile chunks into a single one"
-	chunk, err := chunk.MergeChunks(chunks)
+	chunk, err := chunk.MergeChunks(chunks, requestBody.Start, requestBody.End)
 	s.Finish()
 	if err != nil {
 		hub.CaptureException(err)
