@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/getsentry/sentry-go"
@@ -71,63 +70,6 @@ func GetProfiles(sqb QueryBuilder) ([]profile.Profile, error) {
 	}
 
 	return sr.Profiles, err
-}
-
-type SnubaFiltersResponse struct {
-	Filters []map[string][]interface{} `json:"data"`
-}
-
-func GetFilters(sqb QueryBuilder) (map[string][]interface{}, error) {
-	t := sentry.TransactionFromContext(sqb.ctx)
-	rs := t.StartChild("snuba")
-	defer rs.Finish()
-
-	sqb.SelectCols = []string{
-		"arraySort(groupUniqArray(android_api_level)) AS _android_api_level",
-		"arraySort(groupUniqArray(device_model)) AS _device_model",
-		"arraySort(groupUniqArray(device_classification)) AS _device_classification",
-		"arraySort(groupUniqArray(device_locale)) AS _device_locale",
-		"arraySort(groupUniqArray(device_manufacturer)) AS _device_manufacturer",
-		"arraySort(groupUniqArray(device_os_build_number)) AS _device_os_build_number",
-		"arraySort(groupUniqArray(device_os_name)) AS _device_os_name",
-		"arraySort(groupUniqArray(device_os_version)) AS _device_os_version",
-		"arraySort(groupUniqArray(platform)) AS _platform",
-		"arraySort(groupUniqArray(transaction_name)) AS _transaction_name",
-		"arraySort(groupUniqArray(tuple(version_name, version_code))) AS _version",
-	}
-
-	rb, err := sqb.Do(rs)
-	if err != nil {
-		return nil, err
-	}
-	defer rb.Close()
-
-	s := rs.StartChild("json.unmarshal")
-	s.Description = "Decode response from Snuba"
-	defer s.Finish()
-
-	var sr SnubaFiltersResponse
-	err = json.NewDecoder(rb).Decode(&sr)
-	if err != nil {
-		return nil, err
-	}
-	filters := make(map[string][]interface{})
-	for k, values := range sr.Filters[0] {
-		k = strings.TrimPrefix(k, "_")
-		switch k {
-		case "version":
-			filters[k] = make([]interface{}, 0, len(values))
-			for _, v := range values {
-				if versions, ok := v.([]interface{}); ok {
-					filters[k] = append(filters[k], profile.FormatVersion(versions[0], versions[1]))
-				}
-			}
-		default:
-			filters[k] = values
-		}
-	}
-
-	return filters, err
 }
 
 func GetProfileIDByTransactionID(organizationID, projectID uint64, transactionID string, sqb QueryBuilder) (string, error) {
