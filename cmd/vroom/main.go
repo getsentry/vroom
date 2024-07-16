@@ -2,14 +2,12 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
 	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
-	"strconv"
 	"syscall"
 	"time"
 
@@ -145,7 +143,6 @@ func (e *environment) newRouter() (*httprouter.Router, error) {
 		path    string
 		handler http.HandlerFunc
 	}{
-		{http.MethodGet, "/organizations/:organization_id/filters", e.getFilters},
 		{
 			http.MethodGet,
 			"/organizations/:organization_id/projects/:project_id/profiles/:profile_id",
@@ -284,62 +281,4 @@ func (e *environment) getHealth(w http.ResponseWriter, _ *http.Request) {
 	} else {
 		w.WriteHeader(http.StatusBadGateway)
 	}
-}
-
-type Filter struct {
-	Key    string        `json:"key"`
-	Name   string        `json:"name"`
-	Values []interface{} `json:"values"`
-}
-
-func (e *environment) getFilters(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	hub := sentry.GetHubFromContext(ctx)
-	ps := httprouter.ParamsFromContext(ctx)
-	rawOrganizationID := ps.ByName("organization_id")
-	organizationID, err := strconv.ParseUint(rawOrganizationID, 10, 64)
-	if err != nil {
-		hub.CaptureException(err)
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-
-	hub.Scope().SetTag("organization_id", rawOrganizationID)
-
-	sqb, err := e.profilesQueryBuilderFromRequest(ctx, r.URL.Query(), organizationID)
-	if err != nil {
-		hub.CaptureException(err)
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-
-	sqb.WhereConditions = append(
-		sqb.WhereConditions,
-		fmt.Sprintf("organization_id = %d", organizationID),
-	)
-
-	filters, err := snubautil.GetFilters(sqb)
-	if err != nil {
-		hub.CaptureException(err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	s := sentry.StartSpan(ctx, "json.marshal")
-	defer s.Finish()
-
-	response := make([]Filter, 0, len(filters))
-	for k, v := range filters {
-		response = append(response, Filter{Key: k, Name: k, Values: v})
-	}
-
-	b, err := json.Marshal(response)
-	if err != nil {
-		hub.CaptureException(err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	_, _ = w.Write(b)
 }
