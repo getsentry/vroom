@@ -16,6 +16,7 @@
 - Add endpoint to return a profile from a list of chunk IDs ([#470](https://github.com/getsentry/vroom/pull/470))
 - Add callTree generation for profile chunks ([#475](https://github.com/getsentry/vroom/pull/475))
 - Support generating a flamegraph from a list of chunk IDs ([#476](https://github.com/getsentry/vroom/pull/476))
+- Dual mode flamegraph endpoint ([#487](https://github.com/getsentry/vroom/pull/487))
 
 **Bug Fixes**:
 
@@ -85,7 +86,6 @@
 - Filter out samples before start and after end ([#484](https://github.com/getsentry/vroom/pull/484))
 - Remove unused endpoint for profiling filters ([#485](https://github.com/getsentry/vroom/pull/485))
 - Generalize chunk task input ([#486](https://github.com/getsentry/vroom/pull/486))
-- Dual mode flamegraph endpoint ([#487](https://github.com/getsentry/vroom/pull/487))
 
 ## 23.12.0
 
