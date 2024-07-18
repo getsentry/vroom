@@ -173,6 +173,11 @@ func (e *environment) newRouter() (*httprouter.Router, error) {
 			"/organizations/:organization_id/projects/:project_id/chunks",
 			e.postProfileFromChunkIDs,
 		},
+		{
+			http.MethodPost,
+			"/organizations/:organization_id/flamegraph",
+			e.postFlamegraph,
+		},
 		{http.MethodGet, "/health", e.getHealth},
 		{http.MethodPost, "/chunk", e.postChunk},
 		{http.MethodPost, "/profile", e.postProfile},
