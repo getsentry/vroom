@@ -85,6 +85,7 @@
 - Filter out samples before start and after end ([#484](https://github.com/getsentry/vroom/pull/484))
 - Remove unused endpoint for profiling filters ([#485](https://github.com/getsentry/vroom/pull/485))
 - Generalize chunk task input ([#486](https://github.com/getsentry/vroom/pull/486))
+- Dual mode flamegraph endpoint ([#487](https://github.com/getsentry/vroom/pull/487))
 
 ## 23.12.0
 
