@@ -24,7 +24,7 @@ type (
 	}
 )
 
-func (job *ReadJob) Read() {
+func (job ReadJob) Read() {
 	var chunk Chunk
 
 	err := storageutil.UnmarshalCompressed(

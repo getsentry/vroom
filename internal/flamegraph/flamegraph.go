@@ -344,7 +344,7 @@ func GetFlamegraphFromChunks(
 	chunkIDToMetadata := make(map[string]ChunkMetadata)
 	for _, chunkMetadata := range chunksMetadata {
 		chunkIDToMetadata[chunkMetadata.ChunkID] = chunkMetadata
-		jobs <- &chunk.ReadJob{
+		jobs <- chunk.ReadJob{
 			Ctx:            ctx,
 			ProfilerID:     chunkMetadata.ProfilerID,
 			ChunkID:        chunkMetadata.ChunkID,

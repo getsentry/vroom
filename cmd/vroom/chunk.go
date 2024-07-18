@@ -173,7 +173,7 @@ func (env *environment) postProfileFromChunkIDs(w http.ResponseWriter, r *http.R
 	defer close(results)
 	// send a task to the workers pool for each chunk
 	for _, ID := range requestBody.ChunkIDs {
-		readJobs <- &chunk.ReadJob{
+		readJobs <- chunk.ReadJob{
 			Ctx:            ctx,
 			Storage:        env.storage,
 			OrganizationID: organizationID,
