@@ -80,3 +80,13 @@ func UnmarshalCompressed(
 	}
 	return nil
 }
+
+type ReadJob interface {
+	Read()
+}
+
+func ReadWorker(jobs <-chan ReadJob) {
+	for job := range jobs {
+		job.Read()
+	}
+}

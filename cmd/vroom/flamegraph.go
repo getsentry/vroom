@@ -140,7 +140,7 @@ func (env *environment) postFlamegraphFromChunksMetadata(w http.ResponseWriter, 
 	}
 
 	s = sentry.StartSpan(ctx, "processing")
-	speedscope, err := flamegraph.GetFlamegraphFromChunks(ctx, organizationID, projectID, env.storage, body.ChunksMetadata, jobs)
+	speedscope, err := flamegraph.GetFlamegraphFromChunks(ctx, organizationID, projectID, env.storage, body.ChunksMetadata, readJobs)
 	s.Finish()
 	if err != nil {
 		if hub != nil {

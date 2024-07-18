@@ -169,17 +169,17 @@ func (env *environment) postProfileFromChunkIDs(w http.ResponseWriter, r *http.R
 	s = sentry.StartSpan(ctx, "chunks.read")
 	s.Description = "Read profile chunks from GCS"
 
-	results := make(chan chunk.TaskOutput, len(requestBody.ChunkIDs))
+	results := make(chan chunk.ReadJobResult, len(requestBody.ChunkIDs))
 	defer close(results)
 	// send a task to the workers pool for each chunk
 	for _, ID := range requestBody.ChunkIDs {
-		jobs <- chunk.TaskInput{
+		readJobs <- &chunk.ReadJob{
 			Ctx:            ctx,
-			ProfilerID:     requestBody.ProfilerID,
-			ChunkID:        ID,
+			Storage:        env.storage,
 			OrganizationID: organizationID,
 			ProjectID:      projectID,
-			Storage:        env.storage,
+			ProfilerID:     requestBody.ProfilerID,
+			ChunkID:        ID,
 			Result:         results,
 		}
 	}
@@ -270,20 +270,5 @@ func buildChunkKafkaMessage(c *chunk.Chunk) *ChunkKafkaMessage {
 		EndTimestamp:   end,
 		Received:       c.Received,
 		RetentionDays:  c.RetentionDays,
-	}
-}
-
-// A worker download a chunk and send it back through
-// the Result channel.
-func worker(jobs <-chan chunk.TaskInput) {
-	for task := range jobs {
-		var c chunk.Chunk
-		err := storageutil.UnmarshalCompressed(
-			task.Ctx,
-			task.Storage,
-			chunk.StoragePath(task.OrganizationID, task.ProjectID, task.ProfilerID, task.ChunkID),
-			&c,
-		)
-		task.Result <- chunk.TaskOutput{Chunk: c, Err: err}
 	}
 }
