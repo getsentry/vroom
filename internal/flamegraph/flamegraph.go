@@ -336,15 +336,15 @@ func GetFlamegraphFromChunks(
 	projectID uint64,
 	storage *blob.Bucket,
 	chunksMetadata []ChunkMetadata,
-	jobs chan chunk.TaskInput) (speedscope.Output, error) {
+	jobs chan storageutil.ReadJob) (speedscope.Output, error) {
 	hub := sentry.GetHubFromContext(ctx)
-	results := make(chan chunk.TaskOutput, len(chunksMetadata))
+	results := make(chan chunk.ReadJobResult, len(chunksMetadata))
 	defer close(results)
 
 	chunkIDToMetadata := make(map[string]ChunkMetadata)
 	for _, chunkMetadata := range chunksMetadata {
 		chunkIDToMetadata[chunkMetadata.ChunkID] = chunkMetadata
-		jobs <- chunk.TaskInput{
+		jobs <- chunk.ReadJob{
 			Ctx:            ctx,
 			ProfilerID:     chunkMetadata.ProfilerID,
 			ChunkID:        chunkMetadata.ChunkID,

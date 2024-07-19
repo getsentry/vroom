@@ -24,10 +24,10 @@ import (
 	_ "gocloud.dev/blob/s3blob"
 	"gocloud.dev/gcerrors"
 
-	"github.com/getsentry/vroom/internal/chunk"
 	"github.com/getsentry/vroom/internal/httputil"
 	"github.com/getsentry/vroom/internal/logutil"
 	"github.com/getsentry/vroom/internal/snubautil"
+	"github.com/getsentry/vroom/internal/storageutil"
 )
 
 type environment struct {
@@ -45,8 +45,8 @@ type environment struct {
 }
 
 var (
-	release string
-	jobs    chan chunk.TaskInput
+	release  string
+	readJobs chan storageutil.ReadJob
 )
 
 const (
@@ -256,9 +256,9 @@ func main() {
 
 	slog.Info("vroom started")
 
-	jobs = make(chan chunk.TaskInput, env.config.WorkerPoolSize)
+	readJobs = make(chan storageutil.ReadJob, env.config.WorkerPoolSize)
 	for i := 0; i < env.config.WorkerPoolSize; i++ {
-		go worker(jobs)
+		go storageutil.ReadWorker(readJobs)
 	}
 
 	err = server.ListenAndServe()
@@ -270,7 +270,7 @@ func main() {
 	<-waitForShutdown
 
 	// Shutdown the rest of the environment after the HTTP connections are closed
-	close(jobs)
+	close(readJobs)
 	env.shutdown()
 	slog.Info("vroom graceful shutdown")
 }
