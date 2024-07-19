@@ -32,6 +32,19 @@ type (
 		ChunkID       string         `json:"chunk_id"`
 		SpanIntervals []SpanInterval `json:"span_intervals,omitempty"`
 	}
+
+	TransactionProfileCandidate struct {
+		ProjectID uint64 `json:"project_id"`
+		ProfileID string `json:"profile_id"`
+	}
+
+	ContinuousProfileCandidate struct {
+		ProjectID  uint64 `json:"project_id"`
+		ProfilerID string `json:"profiler_id"`
+		ChunkID    string `json:"chunk_id"`
+		Start      uint64 `json:"start,string"`
+		End        uint64 `json:"end,string"`
+	}
 )
 
 var (
@@ -338,7 +351,7 @@ func GetFlamegraphFromChunks(
 	chunksMetadata []ChunkMetadata,
 	jobs chan storageutil.ReadJob) (speedscope.Output, error) {
 	hub := sentry.GetHubFromContext(ctx)
-	results := make(chan chunk.ReadJobResult, len(chunksMetadata))
+	results := make(chan storageutil.ReadJobResult, len(chunksMetadata))
 	defer close(results)
 
 	chunkIDToMetadata := make(map[string]ChunkMetadata)
@@ -360,21 +373,25 @@ func GetFlamegraphFromChunks(
 	// read the output of each tasks
 	for i := 0; i < len(chunksMetadata); i++ {
 		res := <-results
-		if res.Err != nil {
-			if errors.Is(res.Err, storageutil.ErrObjectNotFound) {
+		result, ok := res.(chunk.ReadJobResult)
+		if !ok {
+			continue
+		}
+		if result.Err != nil {
+			if errors.Is(result.Err, storageutil.ErrObjectNotFound) {
 				continue
 			}
-			if errors.Is(res.Err, context.DeadlineExceeded) {
-				return speedscope.Output{}, res.Err
+			if errors.Is(result.Err, context.DeadlineExceeded) {
+				return speedscope.Output{}, result.Err
 			}
 			if hub != nil {
-				hub.CaptureException(res.Err)
+				hub.CaptureException(result.Err)
 			}
 			continue
 		}
-		cm := chunkIDToMetadata[res.Chunk.ID]
+		cm := chunkIDToMetadata[result.Chunk.ID]
 		for _, interval := range cm.SpanIntervals {
-			callTrees, err := res.Chunk.CallTrees(&interval.ActiveThreadID)
+			callTrees, err := result.Chunk.CallTrees(&interval.ActiveThreadID)
 			if err != nil {
 				if hub != nil {
 					hub.CaptureException(err)
@@ -384,7 +401,7 @@ func GetFlamegraphFromChunks(
 			intervals := []SpanInterval{interval}
 			for _, callTree := range callTrees {
 				slicedTree := sliceCallTree(&callTree, &intervals)
-				addCallTreeToFlamegraph(&flamegraphTree, slicedTree, res.Chunk.ID)
+				addCallTreeToFlamegraph(&flamegraphTree, slicedTree, result.Chunk.ID)
 			}
 		}
 		countChunksAggregated++
@@ -395,4 +412,99 @@ func GetFlamegraphFromChunks(
 		hub.Scope().SetTag("processed_chunks", strconv.Itoa(countChunksAggregated))
 	}
 	return sp, nil
+}
+
+func GetFlamegraphFromCandidates(
+	ctx context.Context,
+	storage *blob.Bucket,
+	organizationID uint64,
+	transactionProfileCandidates []TransactionProfileCandidate,
+	continuousProfileCandidates []ContinuousProfileCandidate,
+	jobs chan storageutil.ReadJob,
+) (speedscope.Output, error) {
+	hub := sentry.GetHubFromContext(ctx)
+
+	results := make(chan storageutil.ReadJobResult, len(transactionProfileCandidates)+len(transactionProfileCandidates))
+	defer close(results)
+
+	for _, candidate := range transactionProfileCandidates {
+		jobs <- profile.ReadJob{
+			Ctx:            ctx,
+			OrganizationID: organizationID,
+			ProjectID:      candidate.ProjectID,
+			ProfileID:      candidate.ProfileID,
+			Storage:        storage,
+			Result:         results,
+		}
+	}
+
+	for _, candidate := range continuousProfileCandidates {
+		jobs <- chunk.ReadJob{
+			Ctx:            ctx,
+			OrganizationID: organizationID,
+			ProjectID:      candidate.ProjectID,
+			ProfilerID:     candidate.ProfilerID,
+			ChunkID:        candidate.ChunkID,
+			Start:          candidate.Start,
+			End:            candidate.End,
+			Storage:        storage,
+			Result:         results,
+		}
+	}
+
+	var flamegraphTree []*nodetree.Node
+
+	for res := range results {
+		err := res.Error()
+		if err != nil {
+			if errors.Is(err, storageutil.ErrObjectNotFound) {
+				continue
+			}
+			if errors.Is(err, context.DeadlineExceeded) {
+				return speedscope.Output{}, err
+			}
+			if hub != nil {
+				hub.CaptureException(err)
+			}
+			continue
+		}
+
+		if result, ok := res.(profile.ReadJobResult); ok {
+			profileCallTrees, err := result.Profile.CallTrees()
+			if err != nil {
+				hub.CaptureException(err)
+				continue
+			}
+
+			for _, callTree := range profileCallTrees {
+				// TODO: properly pass the profile ID around
+				addCallTreeToFlamegraph(&flamegraphTree, callTree, "")
+			}
+		} else if result, ok := res.(chunk.ReadJobResult); ok {
+			// TODO: this takes all threads, make sure to pass a thread id
+			// at some point to only get call trees for that thread
+			chunkCallTrees, err := result.Chunk.CallTrees(nil)
+			if err != nil {
+				hub.CaptureException(err)
+				continue
+			}
+
+			for _, callTree := range chunkCallTrees {
+				if result.Start > 0 && result.End > 0 {
+					interval := SpanInterval{
+						Start: result.Start,
+						End:   result.End,
+					}
+					callTree = sliceCallTree(&callTree, &[]SpanInterval{interval})
+				}
+				// TODO: properly pass the profile ID around
+				addCallTreeToFlamegraph(&flamegraphTree, callTree, "")
+			}
+		} else {
+			// this should never happen
+			return speedscope.Output{}, errors.New("Unexpected result from storage")
+		}
+	}
+
+	return toSpeedscope(flamegraphTree, 4, 0), nil
 }

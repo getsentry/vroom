@@ -1,4 +1,4 @@
-package chunk
+package profile
 
 import (
 	"context"
@@ -13,37 +13,27 @@ type (
 		Storage        *blob.Bucket
 		OrganizationID uint64
 		ProjectID      uint64
-		ProfilerID     string
-		ChunkID        string
-		Start          uint64
-		End            uint64
+		ProfileID      string
 		Result         chan<- storageutil.ReadJobResult
 	}
 
 	ReadJobResult struct {
-		Err   error
-		Chunk Chunk
-		Start uint64
-		End   uint64
+		Err     error
+		Profile Profile
 	}
 )
 
 func (job ReadJob) Read() {
-	var chunk Chunk
+	var profile Profile
 
 	err := storageutil.UnmarshalCompressed(
 		job.Ctx,
 		job.Storage,
-		StoragePath(job.OrganizationID, job.ProjectID, job.ProfilerID, job.ChunkID),
-		&chunk,
+		StoragePath(job.OrganizationID, job.ProjectID, job.ProfileID),
+		&profile,
 	)
 
-	job.Result <- ReadJobResult{
-		Err:   err,
-		Chunk: chunk,
-		Start: job.Start,
-		End:   job.End,
-	}
+	job.Result <- ReadJobResult{Profile: profile, Err: err}
 }
 
 func (result ReadJobResult) Error() error {

@@ -169,7 +169,7 @@ func (env *environment) postProfileFromChunkIDs(w http.ResponseWriter, r *http.R
 	s = sentry.StartSpan(ctx, "chunks.read")
 	s.Description = "Read profile chunks from GCS"
 
-	results := make(chan chunk.ReadJobResult, len(requestBody.ChunkIDs))
+	results := make(chan storageutil.ReadJobResult, len(requestBody.ChunkIDs))
 	defer close(results)
 	// send a task to the workers pool for each chunk
 	for _, ID := range requestBody.ChunkIDs {
@@ -188,11 +188,15 @@ func (env *environment) postProfileFromChunkIDs(w http.ResponseWriter, r *http.R
 	// read the output of each tasks
 	for i := 0; i < len(requestBody.ChunkIDs); i++ {
 		res := <-results
+		result, ok := res.(chunk.ReadJobResult)
+		if !ok {
+			continue
+		}
 		// if there was an error we assign it to the global error
 		// so that we can later handle the response appropriately
 		// and then we skip
-		if res.Err != nil {
-			err = res.Err
+		if result.Err != nil {
+			err = result.Err
 			continue
 		} else if err != nil {
 			// if this specific chunk download did not produce an error,
@@ -200,7 +204,7 @@ func (env *environment) postProfileFromChunkIDs(w http.ResponseWriter, r *http.R
 			// sense to have a final profile with missing chunks
 			continue
 		}
-		chunks = append(chunks, res.Chunk)
+		chunks = append(chunks, result.Chunk)
 	}
 	s.Finish()
 	if err != nil {
