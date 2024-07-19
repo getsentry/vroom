@@ -291,7 +291,7 @@ func (f *Frame) SetApplicationFrame(p platform.Platform) {
 	if f.InApp != nil && (p == f.Platform) {
 		return
 	}
-	isApplication := true
+	var isApplication bool
 	switch f.Platform {
 	case platform.Node:
 		isApplication = f.IsNodeApplicationFrame()
