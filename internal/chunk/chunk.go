@@ -75,8 +75,10 @@ func (c *Chunk) StartEndTimestamps() (float64, float64) {
 }
 
 func (c *Chunk) Normalize() {
-	for _, f := range c.Profile.Frames {
-		f.SetApplicationFrame(c.Platform)
+	for i := range c.Profile.Frames {
+		f := c.Profile.Frames[i]
+		f.Normalize(c.Platform)
+		c.Profile.Frames[i] = f
 	}
 }
 

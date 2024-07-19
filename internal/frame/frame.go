@@ -201,7 +201,8 @@ func (f Frame) IsPythonApplicationFrame() bool {
 	if strings.Contains(f.Path, "/site-packages/") ||
 		strings.Contains(f.Path, "/dist-packages/") ||
 		strings.Contains(f.Path, "\\site-packages\\") ||
-		strings.Contains(f.Path, "\\dist-packages\\") {
+		strings.Contains(f.Path, "\\dist-packages\\") ||
+		strings.HasPrefix(f.Path, "/usr/local/") {
 		return false
 	}
 
@@ -279,7 +280,7 @@ func (f Frame) FullyQualifiedName(p platform.Platform) string {
 	return formatter(f)
 }
 
-func (f *Frame) SetApplicationFrame(p platform.Platform) {
+func (f *Frame) SetInApp(p platform.Platform) {
 	// for react-native the in_app field seems to be messed up most of the times,
 	// with system libraries and other frames that are clearly system frames
 	// labelled as `in_app`.
@@ -314,4 +315,23 @@ func (f *Frame) IsInApp() bool {
 		return false
 	}
 	return *f.InApp
+}
+
+func (f *Frame) SetPlatform(p platform.Platform) {
+	if f.Platform == "" {
+		f.Platform = p
+	}
+}
+
+func (f *Frame) SetStatus() {
+	if f.Data.SymbolicatorStatus != "" {
+		f.Status = f.Data.SymbolicatorStatus
+	}
+}
+
+func (f *Frame) Normalize(p platform.Platform) {
+	// Call order is important since SetInApp uses Status and Platform
+	f.SetStatus()
+	f.SetPlatform(p)
+	f.SetInApp(p)
 }

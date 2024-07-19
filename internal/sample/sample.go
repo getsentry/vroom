@@ -423,7 +423,11 @@ func (p *Profile) Metadata() metadata.Metadata {
 }
 
 func (p *Profile) Normalize() {
-	p.normalizeFrames()
+	for i := range p.Trace.Frames {
+		f := p.Trace.Frames[i]
+		f.Normalize(p.Platform)
+		p.Trace.Frames[i] = f
+	}
 
 	if p.Platform == platform.Cocoa {
 		p.Trace.trimCocoaStacks()
@@ -563,22 +567,6 @@ func (t Trace) CollectFrames(stackID int) []frame.Frame {
 		frames = append(frames, t.Frames[frameID])
 	}
 	return frames
-}
-
-func (p *Profile) normalizeFrames() {
-	for i := range p.Trace.Frames {
-		f := p.Trace.Frames[i]
-
-		// Set if frame is in application
-		f.SetApplicationFrame(p.Platform)
-
-		// Set Symbolicator status
-		if f.Status != "" {
-			f.Data.SymbolicatorStatus = f.Status
-		}
-
-		p.Trace.Frames[i] = f
-	}
 }
 
 func (p *RawProfile) moveTransaction() {
