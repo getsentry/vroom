@@ -74,6 +74,12 @@ func (c *Chunk) StartEndTimestamps() (float64, float64) {
 	return c.Profile.Samples[0].Timestamp, c.Profile.Samples[count-1].Timestamp
 }
 
+func (c *Chunk) Normalize() {
+	for _, f := range c.Profile.Frames {
+		f.SetApplicationFrame(c.Platform)
+	}
+}
+
 func StoragePath(OrganizationID uint64, ProjectID uint64, ProfilerID string, ID string) string {
 	return fmt.Sprintf(
 		"%d/%d/%s/%s",

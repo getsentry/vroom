@@ -344,7 +344,7 @@ func (p *Profile) Speedscope() (speedscope.Output, error) {
 					// it alone for now
 					Image:         fr.ModuleOrPackage(),
 					Inline:        fr.IsInline(),
-					IsApplication: p.IsApplicationFrame(fr),
+					IsApplication: fr.IsInApp(),
 					Line:          fr.Line,
 					Name:          symbolName,
 					Path:          fr.Path,
@@ -400,35 +400,6 @@ func (p *Profile) Speedscope() (speedscope.Output, error) {
 		Version:         p.Release,
 		Measurements:    p.Measurements,
 	}, nil
-}
-
-func (p *Profile) IsApplicationFrame(f frame.Frame) bool {
-	// for react-native the in_app field seems to be messed up most of the times,
-	// with system libraries and other frames that are clearly system frames
-	// labelled as `in_app`.
-	// This is likely because RN uses static libraries which are bundled into the app binary.
-	// When symbolicated they are marked in_app.
-	//
-	// For this reason, for react-native app (p.Platform != f.Platform), we skip the f.InApp!=nil
-	// check as this field would be highly unreliable, and rely on our rules instead
-	if f.InApp != nil && (p.Platform == f.Platform) {
-		return *f.InApp
-	}
-	switch f.Platform {
-	case platform.Node:
-		return f.IsNodeApplicationFrame()
-	case platform.JavaScript:
-		return f.IsJavaScriptApplicationFrame()
-	case platform.Cocoa:
-		return f.IsCocoaApplicationFrame()
-	case platform.Rust:
-		return f.IsRustApplicationFrame()
-	case platform.Python:
-		return f.IsPythonApplicationFrame()
-	case platform.PHP:
-		return f.IsPHPApplicationFrame()
-	}
-	return true
 }
 
 func (p *Profile) Metadata() metadata.Metadata {
@@ -599,8 +570,7 @@ func (p *Profile) normalizeFrames() {
 		f := p.Trace.Frames[i]
 
 		// Set if frame is in application
-		inApp := p.IsApplicationFrame(f)
-		f.InApp = &inApp
+		f.SetApplicationFrame(p.Platform)
 
 		// Set Symbolicator status
 		if f.Status != "" {

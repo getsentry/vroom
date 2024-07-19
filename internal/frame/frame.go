@@ -278,3 +278,40 @@ func (f Frame) FullyQualifiedName(p platform.Platform) string {
 	}
 	return formatter(f)
 }
+
+func (f *Frame) SetApplicationFrame(p platform.Platform) {
+	// for react-native the in_app field seems to be messed up most of the times,
+	// with system libraries and other frames that are clearly system frames
+	// labelled as `in_app`.
+	// This is likely because RN uses static libraries which are bundled into the app binary.
+	// When symbolicated they are marked in_app.
+	//
+	// For this reason, for react-native app (p.Platform != f.Platform), we skip the f.InApp!=nil
+	// check as this field would be highly unreliable, and rely on our rules instead
+	if f.InApp != nil && (p == f.Platform) {
+		return
+	}
+	isApplication := true
+	switch f.Platform {
+	case platform.Node:
+		isApplication = f.IsNodeApplicationFrame()
+	case platform.JavaScript:
+		isApplication = f.IsJavaScriptApplicationFrame()
+	case platform.Cocoa:
+		isApplication = f.IsCocoaApplicationFrame()
+	case platform.Rust:
+		isApplication = f.IsRustApplicationFrame()
+	case platform.Python:
+		isApplication = f.IsPythonApplicationFrame()
+	case platform.PHP:
+		isApplication = f.IsPHPApplicationFrame()
+	}
+	f.InApp = &isApplication
+}
+
+func (f *Frame) IsInApp() bool {
+	if f.InApp == nil {
+		return false
+	}
+	return *f.InApp
+}
