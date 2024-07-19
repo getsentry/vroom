@@ -15,16 +15,16 @@ type (
 		ProjectID      uint64
 		ProfilerID     string
 		ChunkID        string
-		Start          *uint64
-		End            *uint64
+		Start          uint64
+		End            uint64
 		Result         chan<- storageutil.ReadJobResult
 	}
 
 	ReadJobResult struct {
 		Err   error
 		Chunk Chunk
-		Start *uint64
-		End   *uint64
+		Start uint64
+		End   uint64
 	}
 )
 

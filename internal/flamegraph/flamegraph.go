@@ -445,8 +445,8 @@ func GetFlamegraphFromCandidates(
 			ProjectID:      candidate.ProjectID,
 			ProfilerID:     candidate.ProfilerID,
 			ChunkID:        candidate.ChunkID,
-			Start:          &candidate.Start,
-			End:            &candidate.End,
+			Start:          candidate.Start,
+			End:            candidate.End,
 			Storage:        storage,
 			Result:         results,
 		}
@@ -490,10 +490,10 @@ func GetFlamegraphFromCandidates(
 			}
 
 			for _, callTree := range chunkCallTrees {
-				if result.Start != nil && result.End != nil {
+				if result.Start > 0 && result.End > 0 {
 					interval := SpanInterval{
-						Start: *result.Start,
-						End:   *result.End,
+						Start: result.Start,
+						End:   result.End,
 					}
 					callTree = sliceCallTree(&callTree, &[]SpanInterval{interval})
 				}
