@@ -30,6 +30,7 @@
 - Reuse one http client across different requests ([#458](https://github.com/getsentry/vroom/pull/458))
 - Fix correct in_app classification for `[Native]` js frames ([#464](https://github.com/getsentry/vroom/pull/464))
 - Ignore react-native js frame for metrics aggregation when not symbolicated ([#465](https://github.com/getsentry/vroom/pull/465))
+- Do not iterate unclosed channel ([#489](https://github.com/getsentry/vroom/pull/489))
 
 **Internal**:
 

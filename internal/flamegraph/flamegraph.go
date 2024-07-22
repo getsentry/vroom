@@ -424,7 +424,9 @@ func GetFlamegraphFromCandidates(
 ) (speedscope.Output, error) {
 	hub := sentry.GetHubFromContext(ctx)
 
-	results := make(chan storageutil.ReadJobResult, len(transactionProfileCandidates)+len(transactionProfileCandidates))
+	numCandidates := len(transactionProfileCandidates) + len(continuousProfileCandidates)
+
+	results := make(chan storageutil.ReadJobResult, numCandidates)
 	defer close(results)
 
 	for _, candidate := range transactionProfileCandidates {
@@ -454,7 +456,9 @@ func GetFlamegraphFromCandidates(
 
 	var flamegraphTree []*nodetree.Node
 
-	for res := range results {
+	for i := 0; i < numCandidates; i++ {
+		res := <-results
+
 		err := res.Error()
 		if err != nil {
 			if errors.Is(err, storageutil.ErrObjectNotFound) {
