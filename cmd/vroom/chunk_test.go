@@ -12,6 +12,7 @@ import (
 
 	"github.com/getsentry/vroom/internal/chunk"
 	"github.com/getsentry/vroom/internal/frame"
+	"github.com/getsentry/vroom/internal/platform"
 	"github.com/getsentry/vroom/internal/storageutil"
 	"github.com/getsentry/vroom/internal/testutil"
 	"github.com/google/uuid"
@@ -60,7 +61,11 @@ func TestPostAndReadChunk(t *testing.T) {
 		ProjectID:      1,
 		Profile: chunk.Data{
 			Frames: []frame.Frame{
-				{Function: "test"},
+				{
+					Function: "test",
+					InApp:    &testutil.True,
+					Platform: platform.Python,
+				},
 			},
 			Stacks: [][]int{
 				{0},
@@ -141,6 +146,7 @@ type KafkaWriterMock struct{}
 func (k KafkaWriterMock) WriteMessages(_ context.Context, _ ...kafka.Message) error {
 	return nil
 }
+
 func (k KafkaWriterMock) Close() error {
 	return nil
 }

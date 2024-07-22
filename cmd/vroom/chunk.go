@@ -49,6 +49,8 @@ func (env *environment) postChunk(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	c.Normalize()
+
 	if hub != nil {
 		hub.Scope().SetContext("Profile metadata", map[string]interface{}{
 			"chunk_id":        c.ID,
