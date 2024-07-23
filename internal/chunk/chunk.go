@@ -12,6 +12,7 @@ import (
 	"github.com/getsentry/vroom/internal/nodetree"
 	"github.com/getsentry/vroom/internal/platform"
 	"github.com/getsentry/vroom/internal/sample"
+	"github.com/getsentry/vroom/internal/utils"
 )
 
 var (
@@ -41,6 +42,8 @@ type (
 		RetentionDays  int     `json:"retention_days"`
 
 		Measurements json.RawMessage `json:"measurements"`
+
+		Options utils.Options `json:"options,omitempty"`
 	}
 
 	Data struct {
