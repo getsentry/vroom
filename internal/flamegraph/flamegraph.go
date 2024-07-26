@@ -39,11 +39,12 @@ type (
 	}
 
 	ContinuousProfileCandidate struct {
-		ProjectID  uint64 `json:"project_id"`
-		ProfilerID string `json:"profiler_id"`
-		ChunkID    string `json:"chunk_id"`
-		Start      uint64 `json:"start,string"`
-		End        uint64 `json:"end,string"`
+		ProjectID  uint64  `json:"project_id"`
+		ProfilerID string  `json:"profiler_id"`
+		ChunkID    string  `json:"chunk_id"`
+		ThreadID   *string `json:"thread_id"`
+		Start      uint64  `json:"start,string"`
+		End        uint64  `json:"end,string"`
 	}
 )
 
@@ -447,6 +448,7 @@ func GetFlamegraphFromCandidates(
 			ProjectID:      candidate.ProjectID,
 			ProfilerID:     candidate.ProfilerID,
 			ChunkID:        candidate.ChunkID,
+			ThreadID:       candidate.ThreadID,
 			Start:          candidate.Start,
 			End:            candidate.End,
 			Storage:        storage,
@@ -485,9 +487,7 @@ func GetFlamegraphFromCandidates(
 				addCallTreeToFlamegraph(&flamegraphTree, callTree, "")
 			}
 		} else if result, ok := res.(chunk.ReadJobResult); ok {
-			// TODO: this takes all threads, make sure to pass a thread id
-			// at some point to only get call trees for that thread
-			chunkCallTrees, err := result.Chunk.CallTrees(nil)
+			chunkCallTrees, err := result.Chunk.CallTrees(result.ThreadID)
 			if err != nil {
 				hub.CaptureException(err)
 				continue
