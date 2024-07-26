@@ -1,6 +1,7 @@
 package metrics
 
 import (
+	"sort"
 	"testing"
 
 	"github.com/getsentry/vroom/internal/nodetree"
@@ -144,6 +145,9 @@ func TestAggregatorToMetrics(t *testing.T) {
 
 	for _, test := range tests {
 		metrics := test.Aggregator.ToMetrics()
+		sort.Slice(metrics, func(i, j int) bool {
+			return metrics[i].Name < metrics[j].Name
+		})
 		if diff := testutil.Diff(metrics, test.want); diff != "" {
 			t.Fatalf("Result mismatch: got - want +\n%s", diff)
 		}

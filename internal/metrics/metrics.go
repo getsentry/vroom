@@ -8,40 +8,55 @@ import (
 
 	"github.com/getsentry/sentry-go"
 	"github.com/getsentry/vroom/internal/chunk"
-	"github.com/getsentry/vroom/internal/flamegraph"
 	"github.com/getsentry/vroom/internal/nodetree"
 	"github.com/getsentry/vroom/internal/profile"
 	"github.com/getsentry/vroom/internal/storageutil"
 	"gocloud.dev/blob"
 )
 
-type FunctionsMetadata struct {
-	MaxVal   uint64
-	WorstID  string
-	Examples []string
-}
+type (
+	FunctionsMetadata struct {
+		MaxVal   uint64
+		WorstID  string
+		Examples []string
+	}
 
-type Aggregator struct {
-	MaxUniqueFunctions uint
-	MaxNumOfExamples   uint
-	CallTreeFunctions  map[uint32]nodetree.CallTreeFunction
-	FunctionsMetadata  map[uint32]FunctionsMetadata
-}
+	Aggregator struct {
+		MaxUniqueFunctions uint
+		MaxNumOfExamples   uint
+		CallTreeFunctions  map[uint32]nodetree.CallTreeFunction
+		FunctionsMetadata  map[uint32]FunctionsMetadata
+	}
 
-type FunctionMetrics struct {
-	Name        string   `json:"name"`
-	Package     string   `json:"package"`
-	Fingerprint uint64   `json:"fingerprint"`
-	InApp       bool     `json:"in_app"`
-	P75         uint64   `json:"p75"`
-	P95         uint64   `json:"p95"`
-	P99         uint64   `json:"p99"`
-	Avg         float64  `json:"avg"`
-	Sum         uint64   `json:"sum"`
-	Count       uint64   `json:"count"`
-	Worst       string   `json:"worst"`
-	Examples    []string `json:"examples"`
-}
+	FunctionMetrics struct {
+		Name        string   `json:"name"`
+		Package     string   `json:"package"`
+		Fingerprint uint64   `json:"fingerprint"`
+		InApp       bool     `json:"in_app"`
+		P75         uint64   `json:"p75"`
+		P95         uint64   `json:"p95"`
+		P99         uint64   `json:"p99"`
+		Avg         float64  `json:"avg"`
+		Sum         uint64   `json:"sum"`
+		Count       uint64   `json:"count"`
+		Worst       string   `json:"worst"`
+		Examples    []string `json:"examples"`
+	}
+
+	TransactionProfileCandidate struct {
+		ProjectID uint64 `json:"project_id"`
+		ProfileID string `json:"profile_id"`
+	}
+
+	ContinuousProfileCandidate struct {
+		ProjectID  uint64  `json:"project_id"`
+		ProfilerID string  `json:"profiler_id"`
+		ChunkID    string  `json:"chunk_id"`
+		ThreadID   *string `json:"thread_id"`
+		Start      uint64  `json:"start,string"`
+		End        uint64  `json:"end,string"`
+	}
+)
 
 func NewAggregator(MaxUniqueFunctions uint, MaxNumOfExamples uint) Aggregator {
 	return Aggregator{
@@ -117,7 +132,7 @@ func quantile(values []uint64, q float64) (uint64, error) {
 	if len(values) == 0 {
 		return 0, errors.New("cannot compute percentile from empty list")
 	}
-	if q <= 0 || q > 100 {
+	if q <= 0 || q > 1.0 {
 		return 0, errors.New("q must be a value between 0 and 1.0")
 	}
 	index := int(math.Ceil(float64(len(values))*q)) - 1
@@ -177,8 +192,8 @@ func GetMetricsFromCandidates(
 	ctx context.Context,
 	storage *blob.Bucket,
 	organizationID uint64,
-	transactionProfileCandidates []flamegraph.TransactionProfileCandidate,
-	continuousProfileCandidates []flamegraph.ContinuousProfileCandidate,
+	transactionProfileCandidates []TransactionProfileCandidate,
+	continuousProfileCandidates []ContinuousProfileCandidate,
 	jobs chan storageutil.ReadJob,
 	maxUniqueFunctions uint,
 	maxNumOfExamples uint,
