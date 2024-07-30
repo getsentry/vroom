@@ -253,7 +253,7 @@ func GetMetricsFromCandidates(
 				continue
 			}
 			intChunkCallTrees := make(map[uint64][]*nodetree.Node)
-			i := uint64(0)
+			var i uint64
 			for _, v := range chunkCallTrees {
 				// reald TID here doesn't really matter as it's then
 				// discarded (not used) by ExtractFunctionsFromCallTrees.
