@@ -16,10 +16,16 @@ import (
 )
 
 type (
+	ExampleMetadata struct {
+		ProfileID  string  `json:"profile_id,omitempty"`
+		ProfilerID string  `json:"profiler_id,omitempty"`
+		ChunkID    string  `json:"chunk_id,omitempty"`
+		ThreadID   *string `json:"thread_id,omitempty"`
+	}
 	FunctionsMetadata struct {
 		MaxVal   uint64
-		WorstID  string
-		Examples []string
+		Worst    ExampleMetadata
+		Examples []ExampleMetadata
 	}
 
 	Aggregator struct {
@@ -30,18 +36,18 @@ type (
 	}
 
 	FunctionMetrics struct {
-		Name        string   `json:"name"`
-		Package     string   `json:"package"`
-		Fingerprint uint64   `json:"fingerprint"`
-		InApp       bool     `json:"in_app"`
-		P75         uint64   `json:"p75"`
-		P95         uint64   `json:"p95"`
-		P99         uint64   `json:"p99"`
-		Avg         float64  `json:"avg"`
-		Sum         uint64   `json:"sum"`
-		Count       uint64   `json:"count"`
-		Worst       string   `json:"worst"`
-		Examples    []string `json:"examples"`
+		Name        string            `json:"name"`
+		Package     string            `json:"package"`
+		Fingerprint uint64            `json:"fingerprint"`
+		InApp       bool              `json:"in_app"`
+		P75         uint64            `json:"p75"`
+		P95         uint64            `json:"p95"`
+		P99         uint64            `json:"p99"`
+		Avg         float64           `json:"avg"`
+		Sum         uint64            `json:"sum"`
+		Count       uint64            `json:"count"`
+		Worst       ExampleMetadata   `json:"worst"`
+		Examples    []ExampleMetadata `json:"examples"`
 	}
 )
 
@@ -54,7 +60,7 @@ func NewAggregator(MaxUniqueFunctions uint, MaxNumOfExamples uint) Aggregator {
 	}
 }
 
-func (ma *Aggregator) AddFunctions(functions []nodetree.CallTreeFunction, ID string) {
+func (ma *Aggregator) AddFunctions(functions []nodetree.CallTreeFunction, resultMetadata ExampleMetadata) {
 	for _, f := range functions {
 		if fn, ok := ma.CallTreeFunctions[f.Fingerprint]; ok {
 			fn.SampleCount += f.SampleCount
@@ -63,10 +69,10 @@ func (ma *Aggregator) AddFunctions(functions []nodetree.CallTreeFunction, ID str
 			funcMetadata := ma.FunctionsMetadata[f.Fingerprint]
 			if f.SumSelfTimeNS > funcMetadata.MaxVal {
 				funcMetadata.MaxVal = f.SumSelfTimeNS
-				funcMetadata.WorstID = ID
+				funcMetadata.Worst = resultMetadata
 			}
 			if len(funcMetadata.Examples) < int(ma.MaxNumOfExamples) {
-				funcMetadata.Examples = append(funcMetadata.Examples, ID)
+				funcMetadata.Examples = append(funcMetadata.Examples, resultMetadata)
 			}
 			ma.FunctionsMetadata[f.Fingerprint] = funcMetadata
 			ma.CallTreeFunctions[f.Fingerprint] = fn
@@ -74,8 +80,8 @@ func (ma *Aggregator) AddFunctions(functions []nodetree.CallTreeFunction, ID str
 			ma.CallTreeFunctions[f.Fingerprint] = f
 			ma.FunctionsMetadata[f.Fingerprint] = FunctionsMetadata{
 				MaxVal:   f.SumSelfTimeNS,
-				WorstID:  ID,
-				Examples: []string{ID},
+				Worst:    resultMetadata,
+				Examples: []ExampleMetadata{resultMetadata},
 			}
 		}
 	}
@@ -102,7 +108,7 @@ func (ma *Aggregator) ToMetrics() []FunctionMetrics {
 			Avg:         float64(f.SumSelfTimeNS) / float64(len(f.SelfTimesNS)),
 			Sum:         f.SumSelfTimeNS,
 			Count:       uint64(f.SampleCount),
-			Worst:       ma.FunctionsMetadata[f.Fingerprint].WorstID,
+			Worst:       ma.FunctionsMetadata[f.Fingerprint].Worst,
 			Examples:    ma.FunctionsMetadata[f.Fingerprint].Examples,
 		})
 	}
@@ -237,15 +243,18 @@ func GetMetricsFromCandidates(
 			continue
 		}
 
+		var resultMetadata ExampleMetadata
 		if result, ok := res.(profile.ReadJobResult); ok {
 			profileCallTrees, err := result.Profile.CallTrees()
 			if err != nil {
 				hub.CaptureException(err)
 				continue
 			}
-
+			resultMetadata = ExampleMetadata{
+				ProfileID: resultMetadata.ProfileID,
+			}
 			functions := CapAndFilterFunctions(ExtractFunctionsFromCallTrees(profileCallTrees), int(ma.MaxUniqueFunctions), true)
-			ma.AddFunctions(functions, result.Profile.ID())
+			ma.AddFunctions(functions, resultMetadata)
 		} else if result, ok := res.(chunk.ReadJobResult); ok {
 			chunkCallTrees, err := result.Chunk.CallTrees(result.ThreadID)
 			if err != nil {
@@ -269,8 +278,13 @@ func GetMetricsFromCandidates(
 				intChunkCallTrees[i] = v
 				i++
 			}
+			resultMetadata = ExampleMetadata{
+				ProfilerID: resultMetadata.ProfilerID,
+				ChunkID:    result.Chunk.ID,
+				ThreadID:   result.ThreadID,
+			}
 			functions := CapAndFilterFunctions(ExtractFunctionsFromCallTrees(intChunkCallTrees), int(ma.MaxUniqueFunctions), true)
-			ma.AddFunctions(functions, result.Chunk.ID)
+			ma.AddFunctions(functions, resultMetadata)
 		} else {
 			// this should never happen
 			return nil, errors.New("unexpected result from storage")
