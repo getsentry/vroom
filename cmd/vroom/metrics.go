@@ -9,12 +9,13 @@ import (
 	"github.com/julienschmidt/httprouter"
 
 	"github.com/getsentry/vroom/internal/metrics"
+	"github.com/getsentry/vroom/internal/utils"
 )
 
 type (
 	postMetricsRequestBody struct {
-		Transaction []metrics.TransactionProfileCandidate `json:"transaction"`
-		Continuous  []metrics.ContinuousProfileCandidate  `json:"continuous"`
+		Transaction []utils.TransactionProfileCandidate `json:"transaction"`
+		Continuous  []utils.ContinuousProfileCandidate  `json:"continuous"`
 	}
 
 	postMetricsResponse struct {

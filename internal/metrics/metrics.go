@@ -11,6 +11,7 @@ import (
 	"github.com/getsentry/vroom/internal/nodetree"
 	"github.com/getsentry/vroom/internal/profile"
 	"github.com/getsentry/vroom/internal/storageutil"
+	"github.com/getsentry/vroom/internal/utils"
 	"gocloud.dev/blob"
 )
 
@@ -41,20 +42,6 @@ type (
 		Count       uint64   `json:"count"`
 		Worst       string   `json:"worst"`
 		Examples    []string `json:"examples"`
-	}
-
-	TransactionProfileCandidate struct {
-		ProjectID uint64 `json:"project_id"`
-		ProfileID string `json:"profile_id"`
-	}
-
-	ContinuousProfileCandidate struct {
-		ProjectID  uint64  `json:"project_id"`
-		ProfilerID string  `json:"profiler_id"`
-		ChunkID    string  `json:"chunk_id"`
-		ThreadID   *string `json:"thread_id"`
-		Start      uint64  `json:"start,string"`
-		End        uint64  `json:"end,string"`
 	}
 )
 
@@ -192,8 +179,8 @@ func GetMetricsFromCandidates(
 	ctx context.Context,
 	storage *blob.Bucket,
 	organizationID uint64,
-	transactionProfileCandidates []TransactionProfileCandidate,
-	continuousProfileCandidates []ContinuousProfileCandidate,
+	transactionProfileCandidates []utils.TransactionProfileCandidate,
+	continuousProfileCandidates []utils.ContinuousProfileCandidate,
 	jobs chan storageutil.ReadJob,
 	maxUniqueFunctions uint,
 	maxNumOfExamples uint,
