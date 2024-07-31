@@ -19,6 +19,7 @@
 - Dual mode flamegraph endpoint ([#487](https://github.com/getsentry/vroom/pull/487))
 - Pass thread id to calltree generation ([#492](https://github.com/getsentry/vroom/pull/492))
 - Dual mode metrics endpoint ([#493](https://github.com/getsentry/vroom/pull/493))
+- Add optional generation of metrics during flamegraph aggregation ([#494](https://github.com/getsentry/vroom/pull/494))
 
 **Bug Fixes**:
 
