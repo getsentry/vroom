@@ -16,6 +16,7 @@ import (
 	"github.com/getsentry/vroom/internal/profile"
 	"github.com/getsentry/vroom/internal/speedscope"
 	"github.com/getsentry/vroom/internal/storageutil"
+	"github.com/getsentry/vroom/internal/utils"
 	"gocloud.dev/blob"
 )
 
@@ -31,19 +32,6 @@ type (
 		ProfilerID    string         `json:"profiler_id"`
 		ChunkID       string         `json:"chunk_id"`
 		SpanIntervals []SpanInterval `json:"span_intervals,omitempty"`
-	}
-
-	TransactionProfileCandidate struct {
-		ProjectID uint64 `json:"project_id"`
-		ProfileID string `json:"profile_id"`
-	}
-
-	ContinuousProfileCandidate struct {
-		ProjectID  uint64 `json:"project_id"`
-		ProfilerID string `json:"profiler_id"`
-		ChunkID    string `json:"chunk_id"`
-		Start      uint64 `json:"start,string"`
-		End        uint64 `json:"end,string"`
 	}
 )
 
@@ -418,8 +406,8 @@ func GetFlamegraphFromCandidates(
 	ctx context.Context,
 	storage *blob.Bucket,
 	organizationID uint64,
-	transactionProfileCandidates []TransactionProfileCandidate,
-	continuousProfileCandidates []ContinuousProfileCandidate,
+	transactionProfileCandidates []utils.TransactionProfileCandidate,
+	continuousProfileCandidates []utils.ContinuousProfileCandidate,
 	jobs chan storageutil.ReadJob,
 ) (speedscope.Output, error) {
 	hub := sentry.GetHubFromContext(ctx)
@@ -447,6 +435,7 @@ func GetFlamegraphFromCandidates(
 			ProjectID:      candidate.ProjectID,
 			ProfilerID:     candidate.ProfilerID,
 			ChunkID:        candidate.ChunkID,
+			ThreadID:       candidate.ThreadID,
 			Start:          candidate.Start,
 			End:            candidate.End,
 			Storage:        storage,
@@ -485,9 +474,7 @@ func GetFlamegraphFromCandidates(
 				addCallTreeToFlamegraph(&flamegraphTree, callTree, "")
 			}
 		} else if result, ok := res.(chunk.ReadJobResult); ok {
-			// TODO: this takes all threads, make sure to pass a thread id
-			// at some point to only get call trees for that thread
-			chunkCallTrees, err := result.Chunk.CallTrees(nil)
+			chunkCallTrees, err := result.Chunk.CallTrees(result.ThreadID)
 			if err != nil {
 				hub.CaptureException(err)
 				continue

@@ -6,7 +6,6 @@ import (
 	"errors"
 	"io"
 	"net/http"
-	"sort"
 	"strconv"
 
 	"github.com/getsentry/sentry-go"
@@ -16,7 +15,7 @@ import (
 	"gocloud.dev/gcerrors"
 	"google.golang.org/api/googleapi"
 
-	"github.com/getsentry/vroom/internal/nodetree"
+	"github.com/getsentry/vroom/internal/metrics"
 	"github.com/getsentry/vroom/internal/occurrence"
 	"github.com/getsentry/vroom/internal/profile"
 	"github.com/getsentry/vroom/internal/storageutil"
@@ -154,10 +153,10 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 		// Prepare call trees Kafka message
 		s = sentry.StartSpan(ctx, "processing")
 		s.Description = "Extract functions"
-		functions := extractFunctionsFromCallTrees(callTrees)
+		functions := metrics.ExtractFunctionsFromCallTrees(callTrees)
 		// Cap but don't filter out system frames.
 		// Necessary until front end changes are in place.
-		functionsDataset := capAndFilterFunctions(functions, false)
+		functionsDataset := metrics.CapAndFilterFunctions(functions, maxUniqueFunctionsPerProfile, false)
 		s.Finish()
 
 		s = sentry.StartSpan(ctx, "json.marshal")
@@ -186,7 +185,7 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 			s = sentry.StartSpan(ctx, "processing")
 			s.Description = "Extract metrics from functions"
 			// Cap and filter out system frames.
-			functionsMetricPlatform := capAndFilterFunctions(functions, true)
+			functionsMetricPlatform := metrics.CapAndFilterFunctions(functions, maxUniqueFunctionsPerProfile, true)
 			metrics, metricsSummary := extractMetricsFromFunctions(&p, functionsMetricPlatform)
 			s.Finish()
 
@@ -243,55 +242,6 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusNoContent)
-}
-
-func extractFunctionsFromCallTrees(
-	callTrees map[uint64][]*nodetree.Node,
-) []nodetree.CallTreeFunction {
-	functions := make(map[uint32]nodetree.CallTreeFunction, 0)
-
-	for _, callTreesForThread := range callTrees {
-		for _, callTree := range callTreesForThread {
-			callTree.CollectFunctions(functions)
-		}
-	}
-
-	functionsList := make([]nodetree.CallTreeFunction, 0, len(functions))
-	for _, function := range functions {
-		if function.SampleCount <= 1 {
-			// if there's only ever a single sample for this function in
-			// the profile, we skip over it to reduce the amount of data
-			continue
-		}
-		functionsList = append(functionsList, function)
-	}
-
-	// sort the list in descending order, and take the top N results
-	sort.SliceStable(functionsList, func(i, j int) bool {
-		return functionsList[i].SumSelfTimeNS > functionsList[j].SumSelfTimeNS
-	})
-
-	return functionsList
-}
-
-func capAndFilterFunctions(functions []nodetree.CallTreeFunction, filterSystemFrames bool) []nodetree.CallTreeFunction {
-	if !filterSystemFrames {
-		if len(functions) > maxUniqueFunctionsPerProfile {
-			return functions[:maxUniqueFunctionsPerProfile]
-		}
-		return functions
-	}
-	appFunctions := make([]nodetree.CallTreeFunction, 0, min(maxUniqueFunctionsPerProfile, len(functions)))
-	for _, f := range functions {
-		if !f.InApp {
-			continue
-		}
-		appFunctions = append(appFunctions, f)
-		if len(appFunctions) == maxUniqueFunctionsPerProfile {
-			break
-		}
-	}
-	return appFunctions
 }
 
 func (env *environment) getRawProfile(w http.ResponseWriter, r *http.Request) {

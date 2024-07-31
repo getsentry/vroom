@@ -11,6 +11,7 @@ import (
 	"github.com/julienschmidt/httprouter"
 
 	"github.com/getsentry/vroom/internal/flamegraph"
+	"github.com/getsentry/vroom/internal/utils"
 )
 
 const (
@@ -172,8 +173,8 @@ func (env *environment) postFlamegraphFromChunksMetadata(w http.ResponseWriter, 
 
 type (
 	postFlamegraphBody struct {
-		Transaction []flamegraph.TransactionProfileCandidate `json:"transaction"`
-		Continuous  []flamegraph.ContinuousProfileCandidate  `json:"continuous"`
+		Transaction []utils.TransactionProfileCandidate `json:"transaction"`
+		Continuous  []utils.ContinuousProfileCandidate  `json:"continuous"`
 	}
 )
 
