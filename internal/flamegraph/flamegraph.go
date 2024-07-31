@@ -16,6 +16,7 @@ import (
 	"github.com/getsentry/vroom/internal/profile"
 	"github.com/getsentry/vroom/internal/speedscope"
 	"github.com/getsentry/vroom/internal/storageutil"
+	"github.com/getsentry/vroom/internal/utils"
 	"gocloud.dev/blob"
 )
 
@@ -31,20 +32,6 @@ type (
 		ProfilerID    string         `json:"profiler_id"`
 		ChunkID       string         `json:"chunk_id"`
 		SpanIntervals []SpanInterval `json:"span_intervals,omitempty"`
-	}
-
-	TransactionProfileCandidate struct {
-		ProjectID uint64 `json:"project_id"`
-		ProfileID string `json:"profile_id"`
-	}
-
-	ContinuousProfileCandidate struct {
-		ProjectID  uint64  `json:"project_id"`
-		ProfilerID string  `json:"profiler_id"`
-		ChunkID    string  `json:"chunk_id"`
-		ThreadID   *string `json:"thread_id"`
-		Start      uint64  `json:"start,string"`
-		End        uint64  `json:"end,string"`
 	}
 )
 
@@ -419,8 +406,8 @@ func GetFlamegraphFromCandidates(
 	ctx context.Context,
 	storage *blob.Bucket,
 	organizationID uint64,
-	transactionProfileCandidates []TransactionProfileCandidate,
-	continuousProfileCandidates []ContinuousProfileCandidate,
+	transactionProfileCandidates []utils.TransactionProfileCandidate,
+	continuousProfileCandidates []utils.ContinuousProfileCandidate,
 	jobs chan storageutil.ReadJob,
 ) (speedscope.Output, error) {
 	hub := sentry.GetHubFromContext(ctx)
