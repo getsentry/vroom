@@ -19,7 +19,7 @@ type (
 	}
 
 	postMetricsResponse struct {
-		FunctionsMetrics []metrics.FunctionMetrics `json:"functions_metrics"`
+		FunctionsMetrics []utils.FunctionMetrics `json:"functions_metrics"`
 	}
 )
 
@@ -53,15 +53,14 @@ func (env *environment) postMetrics(w http.ResponseWriter, r *http.Request) {
 	}
 
 	s = sentry.StartSpan(ctx, "processing")
-	functionsMetrics, err := metrics.GetMetricsFromCandidates(
+	ma := metrics.NewAggregator(maxUniqueFunctionsPerProfile, 5)
+	functionsMetrics, err := ma.GetMetricsFromCandidates(
 		ctx,
 		env.storage,
 		organizationID,
 		body.Transaction,
 		body.Continuous,
 		readJobs,
-		maxUniqueFunctionsPerProfile,
-		5, // max num of examples (profile/chunk IDs) for each given function
 	)
 	s.Finish()
 	if err != nil {

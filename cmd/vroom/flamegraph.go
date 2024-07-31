@@ -11,6 +11,7 @@ import (
 	"github.com/julienschmidt/httprouter"
 
 	"github.com/getsentry/vroom/internal/flamegraph"
+	"github.com/getsentry/vroom/internal/metrics"
 	"github.com/getsentry/vroom/internal/utils"
 )
 
@@ -173,8 +174,9 @@ func (env *environment) postFlamegraphFromChunksMetadata(w http.ResponseWriter, 
 
 type (
 	postFlamegraphBody struct {
-		Transaction []utils.TransactionProfileCandidate `json:"transaction"`
-		Continuous  []utils.ContinuousProfileCandidate  `json:"continuous"`
+		Transaction     []utils.TransactionProfileCandidate `json:"transaction"`
+		Continuous      []utils.ContinuousProfileCandidate  `json:"continuous"`
+		GenerateMetrics bool                                `json:"generate_metrics"`
 	}
 )
 
@@ -208,6 +210,11 @@ func (env *environment) postFlamegraph(w http.ResponseWriter, r *http.Request) {
 	}
 
 	s = sentry.StartSpan(ctx, "processing")
+	var ma *metrics.Aggregator
+	if body.GenerateMetrics {
+		agg := metrics.NewAggregator(maxUniqueFunctionsPerProfile, 5)
+		ma = &agg
+	}
 	speedscope, err := flamegraph.GetFlamegraphFromCandidates(
 		ctx,
 		env.storage,
@@ -215,6 +222,7 @@ func (env *environment) postFlamegraph(w http.ResponseWriter, r *http.Request) {
 		body.Transaction,
 		body.Continuous,
 		readJobs,
+		ma,
 	)
 	s.Finish()
 	if err != nil {
