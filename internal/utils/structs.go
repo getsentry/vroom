@@ -18,7 +18,7 @@ type (
 	// ExampleMetadata and FunctionMetrics have been moved here, although they'd
 	// belong more to the metrics package, in order to avoid the circular dependency
 	// hell that'd be introduced following the optimization to support metrics
-	// generation within the flamegrapg logic.
+	// generation within the flamegraph logic.
 	ExampleMetadata struct {
 		ProfileID  string  `json:"profile_id,omitempty"`
 		ProfilerID string  `json:"profiler_id,omitempty"`
