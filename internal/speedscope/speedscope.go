@@ -98,6 +98,7 @@ type (
 		Shared             SharedData                          `json:"shared"`
 		TransactionName    string                              `json:"transactionName"`
 		Version            string                              `json:"version,omitempty"`
+		Metrics            *[]utils.FunctionMetrics            `json:"metrics"`
 	}
 
 	ProfileMetadata struct {

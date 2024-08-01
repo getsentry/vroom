@@ -12,6 +12,7 @@ import (
 
 	"github.com/getsentry/sentry-go"
 	"github.com/getsentry/vroom/internal/chunk"
+	"github.com/getsentry/vroom/internal/metrics"
 	"github.com/getsentry/vroom/internal/nodetree"
 	"github.com/getsentry/vroom/internal/profile"
 	"github.com/getsentry/vroom/internal/speedscope"
@@ -409,6 +410,7 @@ func GetFlamegraphFromCandidates(
 	transactionProfileCandidates []utils.TransactionProfileCandidate,
 	continuousProfileCandidates []utils.ContinuousProfileCandidate,
 	jobs chan storageutil.ReadJob,
+	ma *metrics.Aggregator,
 ) (speedscope.Output, error) {
 	hub := sentry.GetHubFromContext(ctx)
 
@@ -461,6 +463,7 @@ func GetFlamegraphFromCandidates(
 			}
 			continue
 		}
+		var resultMetadata utils.ExampleMetadata
 
 		if result, ok := res.(profile.ReadJobResult); ok {
 			profileCallTrees, err := result.Profile.CallTrees()
@@ -472,6 +475,15 @@ func GetFlamegraphFromCandidates(
 			for _, callTree := range profileCallTrees {
 				// TODO: properly pass the profile ID around
 				addCallTreeToFlamegraph(&flamegraphTree, callTree, "")
+			}
+			// if metrics aggregator is not null, while we're at it,
+			// compute the metrics as well
+			if ma != nil {
+				resultMetadata = utils.ExampleMetadata{
+					ProfileID: resultMetadata.ProfileID,
+				}
+				functions := metrics.CapAndFilterFunctions(metrics.ExtractFunctionsFromCallTrees(profileCallTrees), int(ma.MaxUniqueFunctions), true)
+				ma.AddFunctions(functions, resultMetadata)
 			}
 		} else if result, ok := res.(chunk.ReadJobResult); ok {
 			chunkCallTrees, err := result.Chunk.CallTrees(result.ThreadID)
@@ -491,11 +503,44 @@ func GetFlamegraphFromCandidates(
 				// TODO: properly pass the profile ID around
 				addCallTreeToFlamegraph(&flamegraphTree, callTree, "")
 			}
+			// if metrics aggregator is not null, while we're at it,
+			// compute the metrics as well
+			if ma != nil {
+				resultMetadata = utils.ExampleMetadata{
+					ProfilerID: resultMetadata.ProfilerID,
+					ChunkID:    result.Chunk.ID,
+					ThreadID:   result.ThreadID,
+				}
+				intChunkCallTrees := make(map[uint64][]*nodetree.Node)
+				var i uint64
+				for _, v := range chunkCallTrees {
+					// real TID here doesn't really matter as it's then
+					// discarded (not used) by ExtractFunctionsFromCallTrees.
+					// Here we're only assigning a random uint to make it compatible
+					// with ExtractFunctionsFromCallTrees which expects an
+					// uint64 -> []*nodetree.Node based on sample V1 int tid
+					// the TID.
+					//
+					// We could even refactor ExtractFunctionsFromCallTrees
+					// to simply accept []*nodetree.Node instead of a map
+					// but we'd end up moving the iteration from map to a slice
+					// somewhere else in the code.
+					intChunkCallTrees[i] = v
+					i++
+				}
+				functions := metrics.CapAndFilterFunctions(metrics.ExtractFunctionsFromCallTrees(intChunkCallTrees), int(ma.MaxUniqueFunctions), true)
+				ma.AddFunctions(functions, resultMetadata)
+			}
 		} else {
-			// this should never happen
-			return speedscope.Output{}, errors.New("Unexpected result from storage")
+			// This should never happen
+			return speedscope.Output{}, errors.New("unexpected result from storage")
 		}
 	}
 
-	return toSpeedscope(flamegraphTree, 4, 0), nil
+	sp := toSpeedscope(flamegraphTree, 4, 0)
+	if ma != nil {
+		fm := ma.ToMetrics()
+		sp.Metrics = &fm
+	}
+	return sp, nil
 }
