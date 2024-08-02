@@ -46,30 +46,16 @@ func relativeIntervalsFromAbsoluteTimestamp(intervals *[]SpanInterval, t uint64)
 	}
 }
 
-func max(a, b uint64) uint64 {
-	if a > b {
-		return a
-	}
-	return b
-}
-
-func min(a, b uint64) uint64 {
-	if a < b {
-		return a
-	}
-	return b
-}
-
 func sliceCallTree(callTree *[]*nodetree.Node, intervals *[]SpanInterval) []*nodetree.Node {
 	slicedTree := make([]*nodetree.Node, 0)
 	for _, node := range *callTree {
 		if duration := getTotalOverlappingDuration(node, intervals); duration > 0 {
-			sampleCount := math.Ceil(float64(duration) / float64(time.Millisecond*10))
+			sampleCount := int(math.Ceil(float64(duration) / float64(time.Millisecond*10)))
 			// here we take the minimum between the node sample count and the estimated
 			// sample count to mitigate the case when we make a wrong estimation due
 			// to sampling frequency not being respected. (Python native code holding
 			// the GIL, php, etc.)
-			node.SampleCount = int(min(uint64(sampleCount), uint64(node.SampleCount)))
+			node.SampleCount = min(sampleCount, node.SampleCount)
 			node.DurationNS = duration
 			if children := sliceCallTree(&node.Children, intervals); len(children) > 0 {
 				node.Children = children
@@ -91,9 +77,7 @@ func getTotalOverlappingDuration(node *nodetree.Node, intervals *[]SpanInterval)
 			// therefeore we can bail out early
 			break
 		}
-		if d := overlappingDuration(node, &interval); d > 0 {
-			duration += d
-		}
+		duration += overlappingDuration(node, &interval)
 	}
 	return duration
 }
