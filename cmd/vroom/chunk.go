@@ -16,6 +16,8 @@ import (
 	"google.golang.org/api/googleapi"
 
 	"github.com/getsentry/vroom/internal/chunk"
+	"github.com/getsentry/vroom/internal/metrics"
+	"github.com/getsentry/vroom/internal/nodetree"
 	"github.com/getsentry/vroom/internal/storageutil"
 )
 
@@ -112,6 +114,58 @@ func (env *environment) postChunk(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	s.Finish()
+
+	if c.Options.ProjectDSN != "" {
+		// nb.: here we don't have a specific thread ID, so we're going to ingest
+		// functions metrics from all the thread.
+		// That's ok as this data is not supposed to be transaction/span scoped,
+		// plus, we'll only retain application frames, so much of the system functions
+		// chaff will be dropped.
+		s = sentry.StartSpan(ctx, "processing")
+		callTrees, err := c.CallTrees(nil)
+		s.Finish()
+		if err != nil {
+			hub.CaptureException(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		intChunkCallTrees := make(map[uint64][]*nodetree.Node)
+		var i uint64
+		for _, v := range callTrees {
+			intChunkCallTrees[i] = v
+			i++
+		}
+
+		s = sentry.StartSpan(ctx, "processing")
+		s.Description = "Extract functions"
+		functions := metrics.ExtractFunctionsFromCallTrees(intChunkCallTrees)
+		functions = metrics.CapAndFilterFunctions(functions, maxUniqueFunctionsPerProfile, true)
+		s.Finish()
+
+		s = sentry.StartSpan(ctx, "processing")
+		s.Description = "Extract metrics from functions"
+		metrics, metricsSummary := extractMetricsFromChunkFunctions(c, functions)
+		s.Finish()
+
+		if len(metrics) > 0 {
+			s = sentry.StartSpan(ctx, "processing")
+			s.Description = "Send functions metrics to generic metrics platform"
+			sendMetrics(ctx, c.Options.ProjectDSN, metrics, env.metricsClient)
+			s.Finish()
+
+			kafkaMessages, err := generateChunkMetricSummariesKafkaMessageBatch(c, metrics, metricsSummary)
+			if err != nil {
+				hub.CaptureException(err)
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
+			err = env.metricSummaryWriter.WriteMessages(ctx, kafkaMessages...)
+			if err != nil {
+				hub.CaptureException(err)
+			}
+		}
+	}
 
 	w.WriteHeader(http.StatusNoContent)
 }
