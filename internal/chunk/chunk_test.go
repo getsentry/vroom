@@ -5,6 +5,7 @@ import (
 
 	"github.com/getsentry/vroom/internal/frame"
 	"github.com/getsentry/vroom/internal/nodetree"
+	"github.com/getsentry/vroom/internal/platform"
 	"github.com/getsentry/vroom/internal/testutil"
 )
 
@@ -181,6 +182,83 @@ func TestCallTrees(t *testing.T) {
 				t.Fatalf("error while generating call trees: %+v\n", err)
 			}
 			if diff := testutil.Diff(callTrees, test.want); diff != "" {
+				t.Fatalf("Result mismatch: got - want +\n%s", diff)
+			}
+		})
+	}
+}
+
+func TestTrimPythonStacks(t *testing.T) {
+	tests := []struct {
+		name   string
+		input  Chunk
+		output Chunk
+	}{
+		{
+			name: "Remove module frame at the end of a stack",
+			input: Chunk{
+				Platform: platform.Python,
+				Profile: Data{
+					Frames: []frame.Frame{
+						{
+							File:     "<string>",
+							Module:   "__main__",
+							InApp:    &testutil.True,
+							Line:     11,
+							Function: "<module>",
+							Path:     "/usr/src/app/<string>",
+							Platform: "python",
+						},
+						{
+							File:     "app/util.py",
+							Module:   "app.util",
+							InApp:    &testutil.True,
+							Line:     98,
+							Function: "foobar",
+							Path:     "/usr/src/app/util.py",
+							Platform: "python",
+						},
+					},
+					Stacks: [][]int{
+						{1, 0},
+					},
+				},
+			},
+			output: Chunk{
+				Platform: platform.Python,
+				Profile: Data{
+					Frames: []frame.Frame{
+						{
+							File:     "<string>",
+							Module:   "__main__",
+							InApp:    &testutil.True,
+							Line:     11,
+							Function: "<module>",
+							Path:     "/usr/src/app/<string>",
+							Platform: "python",
+						},
+						{
+							File:     "app/util.py",
+							Module:   "app.util",
+							InApp:    &testutil.True,
+							Line:     98,
+							Function: "foobar",
+							Path:     "/usr/src/app/util.py",
+							Platform: "python",
+						},
+					},
+					Stacks: [][]int{
+						{1},
+					},
+				},
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			test.input.Normalize()
+			if diff := testutil.Diff(test.input, test.output); diff != "" {
 				t.Fatalf("Result mismatch: got - want +\n%s", diff)
 			}
 		})
