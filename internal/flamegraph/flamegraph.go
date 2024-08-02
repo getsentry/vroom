@@ -30,9 +30,9 @@ type (
 	CallTrees map[uint64][]*nodetree.Node
 
 	ChunkMetadata struct {
-		ProfilerID    string         `json:"profiler_id"`
-		ChunkID       string         `json:"chunk_id"`
-		SpanIntervals []SpanInterval `json:"span_intervals,omitempty"`
+		ProfilerID    string           `json:"profiler_id"`
+		ChunkID       string           `json:"chunk_id"`
+		SpanIntervals []utils.Interval `json:"span_intervals,omitempty"`
 	}
 )
 
@@ -46,7 +46,7 @@ func GetFlamegraphFromProfiles(
 	organizationID uint64,
 	projectID uint64,
 	profileIDs []string,
-	spans *[][]SpanInterval,
+	spans *[][]utils.Interval,
 	numWorkers int,
 	timeout time.Duration) (speedscope.Output, error) {
 	if numWorkers < 1 {
@@ -55,7 +55,7 @@ func GetFlamegraphFromProfiles(
 	var wg sync.WaitGroup
 	var flamegraphTree []*nodetree.Node
 	callTreesQueue := make(chan Pair[string, CallTrees], numWorkers)
-	profileIDsChan := make(chan Pair[string, []SpanInterval], numWorkers)
+	profileIDsChan := make(chan Pair[string, []utils.Interval], numWorkers)
 	hub := sentry.GetHubFromContext(ctx)
 	timeoutContext, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
@@ -63,7 +63,7 @@ func GetFlamegraphFromProfiles(
 	for i := 0; i < numWorkers; i++ {
 		wg.Add(1)
 		go func(
-			profIDsChan chan Pair[string, []SpanInterval],
+			profIDsChan chan Pair[string, []utils.Interval],
 			callTreesQueue chan Pair[string, CallTrees],
 			ctx context.Context) {
 			defer wg.Done()
@@ -104,14 +104,14 @@ func GetFlamegraphFromProfiles(
 		}(profileIDsChan, callTreesQueue, timeoutContext)
 	}
 
-	go func(profIDsChan chan Pair[string, []SpanInterval], profileIDs []string, ctx context.Context) {
+	go func(profIDsChan chan Pair[string, []utils.Interval], profileIDs []string, ctx context.Context) {
 		for i, profileID := range profileIDs {
 			select {
 			case <-ctx.Done():
 				close(profIDsChan)
 				return
 			default:
-				profilePair := Pair[string, []SpanInterval]{First: profileID, Second: nil}
+				profilePair := Pair[string, []utils.Interval]{First: profileID, Second: nil}
 				if spans != nil {
 					profilePair.Second = (*spans)[i]
 				}
@@ -387,7 +387,7 @@ func GetFlamegraphFromChunks(
 				}
 				continue
 			}
-			intervals := []SpanInterval{interval}
+			intervals := []utils.Interval{interval}
 			for _, callTree := range callTrees {
 				slicedTree := sliceCallTree(&callTree, &intervals)
 				addCallTreeToFlamegraph(&flamegraphTree, slicedTree, result.Chunk.ID)
@@ -494,11 +494,11 @@ func GetFlamegraphFromCandidates(
 
 			for _, callTree := range chunkCallTrees {
 				if result.Start > 0 && result.End > 0 {
-					interval := SpanInterval{
+					interval := utils.Interval{
 						Start: result.Start,
 						End:   result.End,
 					}
-					callTree = sliceCallTree(&callTree, &[]SpanInterval{interval})
+					callTree = sliceCallTree(&callTree, &[]utils.Interval{interval})
 				}
 				// TODO: properly pass the profile ID around
 				addCallTreeToFlamegraph(&flamegraphTree, callTree, "")

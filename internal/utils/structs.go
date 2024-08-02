@@ -1,6 +1,12 @@
 package utils
 
 type (
+	Interval struct {
+		Start          uint64 `json:"start,string"`
+		End            uint64 `json:"end,string"`
+		ActiveThreadID string `json:"active_thread_id,omitempty"`
+	}
+
 	TransactionProfileCandidate struct {
 		ProjectID uint64 `json:"project_id"`
 		ProfileID string `json:"profile_id"`

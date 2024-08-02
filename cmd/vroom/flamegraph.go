@@ -26,7 +26,7 @@ type postFlamegraphFromProfileIDs struct {
 	// then at Span[i] we'll find a
 	// list of span intervals for the
 	// profile ProfileIDs[i]
-	Spans *[][]flamegraph.SpanInterval `json:"spans,omitempty"`
+	Spans *[][]utils.Interval `json:"spans,omitempty"`
 }
 
 func (env *environment) postFlamegraphFromProfileIDs(w http.ResponseWriter, r *http.Request) {
