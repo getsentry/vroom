@@ -431,6 +431,8 @@ func (p *Profile) Normalize() {
 
 	if p.Platform == platform.Cocoa {
 		p.Trace.trimCocoaStacks()
+	} else if p.Platform == platform.Python {
+		p.Trace.trimPythonStacks()
 	}
 
 	p.Trace.ReplaceIdleStacks()
@@ -619,6 +621,35 @@ func (t *Trace) trimCocoaStacks() {
 			}
 		}
 		t.Stacks[si] = t.Stacks[si][:ci]
+	}
+}
+
+func (t *Trace) trimPythonStacks() {
+	// Find the module frame index in frames
+	mfi := -1
+	for i, f := range t.Frames {
+		if f.File == "<string>" && f.Function == "<module>" {
+			mfi = i
+		}
+	}
+
+	// We do nothing if we don't find it
+	if mfi == -1 {
+		return
+	}
+
+	for si, s := range t.Stacks {
+		l := len(s)
+
+		// ignore empty stacks
+		if l == 0 {
+			continue
+		}
+
+		// found the module frame so trim it
+		if s[l-1] == mfi {
+			t.Stacks[si] = t.Stacks[si][:l-1]
+		}
 	}
 }
 
