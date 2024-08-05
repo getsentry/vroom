@@ -92,9 +92,8 @@ type MetricSummary struct {
 	Count uint64
 }
 
-func extractMetricsFromChunkFunctions(c *chunk.Chunk, functions []nodetree.CallTreeFunction) ([]sentry.Metric, []MetricSummary) {
+func extractMetricsFromChunkFunctions(c *chunk.Chunk, functions []nodetree.CallTreeFunction) []sentry.Metric {
 	metrics := make([]sentry.Metric, 0, len(functions))
-	metricsSummary := make([]MetricSummary, 0, len(functions))
 
 	for _, function := range functions {
 		if len(function.SelfTimesNS) == 0 {
@@ -111,24 +110,13 @@ func extractMetricsFromChunkFunctions(c *chunk.Chunk, functions []nodetree.CallT
 			"release":        c.Release,
 		}
 		duration := float64(function.SelfTimesNS[0] / 1e6)
-		summary := MetricSummary{
-			Min:   duration,
-			Max:   duration,
-			Sum:   duration,
-			Count: 1,
-		}
 		dm := sentry.NewDistributionMetric("profiles/function.duration", sentry.MilliSecond(), tags, int64(c.Received), duration)
 		// loop remaining selfTime durations
 		for i := 1; i < len(function.SelfTimesNS); i++ {
 			duration := float64(function.SelfTimesNS[i] / 1e6)
 			dm.Add(duration)
-			summary.Min = min(summary.Min, duration)
-			summary.Max = max(summary.Max, duration)
-			summary.Sum = summary.Sum + duration
-			summary.Count = summary.Count + 1
 		}
 		metrics = append(metrics, dm)
-		metricsSummary = append(metricsSummary, summary)
 	}
-	return metrics, metricsSummary
+	return metrics
 }

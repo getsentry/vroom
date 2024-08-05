@@ -145,7 +145,7 @@ func (env *environment) postChunk(w http.ResponseWriter, r *http.Request) {
 
 		s = sentry.StartSpan(ctx, "processing")
 		s.Description = "Extract metrics from functions"
-		metrics, metricsSummary := extractMetricsFromChunkFunctions(c, functions)
+		metrics := extractMetricsFromChunkFunctions(c, functions)
 		s.Finish()
 
 		if len(metrics) > 0 {
@@ -153,17 +153,6 @@ func (env *environment) postChunk(w http.ResponseWriter, r *http.Request) {
 			s.Description = "Send functions metrics to generic metrics platform"
 			sendMetrics(ctx, c.Options.ProjectDSN, metrics, env.metricsClient)
 			s.Finish()
-
-			kafkaMessages, err := generateChunkMetricSummariesKafkaMessageBatch(c, metrics, metricsSummary)
-			if err != nil {
-				hub.CaptureException(err)
-				w.WriteHeader(http.StatusInternalServerError)
-				return
-			}
-			err = env.metricSummaryWriter.WriteMessages(ctx, kafkaMessages...)
-			if err != nil {
-				hub.CaptureException(err)
-			}
 		}
 	}
 

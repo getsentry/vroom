@@ -9,7 +9,6 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/getsentry/sentry-go"
-	"github.com/getsentry/vroom/internal/chunk"
 	"github.com/getsentry/vroom/internal/nodetree"
 	"github.com/getsentry/vroom/internal/platform"
 	"github.com/getsentry/vroom/internal/profile"
@@ -158,58 +157,6 @@ func generateMetricSummariesKafkaMessageBatch(p *profile.Profile, metrics []sent
 			SpanID:    strings.Replace(uuid.New().String(), "-", "", -1)[16:],
 			IsSegment: true,
 			SegmentID: p.Transaction().SegmentID,
-		}
-		b, err := json.Marshal(ms)
-		if err != nil {
-			return nil, err
-		}
-		msg := kafka.Message{
-			Value: b,
-		}
-		messages = append(messages, msg)
-	}
-	return messages, nil
-}
-
-func generateChunkMetricSummariesKafkaMessageBatch(c *chunk.Chunk, metrics []sentry.Metric, metricsSummary []MetricSummary) ([]kafka.Message, error) {
-	if len(metrics) != len(metricsSummary) {
-		return nil, fmt.Errorf("len(metrics): %d - len(metrics_summary): %d", len(metrics), len(metricsSummary))
-	}
-	messages := make([]kafka.Message, 0, len(metrics))
-	randomUUID := strings.Replace(uuid.New().String(), "-", "", -1)
-	for i, metric := range metrics {
-		spanID := strings.Replace(uuid.New().String(), "-", "", -1)[16:]
-		// add profile_id to the metrics_summary tags
-		tags := metric.GetTags()
-		tags["profiler_id"] = c.ProfilerID
-		tags["chunk_id"] = c.ID
-		start, end := c.StartEndTimestamps()
-		startMS, endMS := (start * 1e3), (end * 1e3)
-		ms := MetricsSummaryKafkaMessage{
-			Count:         metricsSummary[i].Count,
-			DurationMs:    uint32(endMS - startMS),
-			EndTimestamp:  end,
-			Max:           metricsSummary[i].Max,
-			Min:           metricsSummary[i].Min,
-			Sum:           metricsSummary[i].Sum,
-			Mri:           profilesFunctionMri,
-			ProjectID:     c.ProjectID,
-			Received:      int64(c.Received),
-			RetentionDays: c.RetentionDays,
-			Tags:          tags,
-			TraceID:       randomUUID, // ??
-			// currently we need to set this to a randomly generated span_id because
-			// the metrics_summaries dataset is defined with a ReplaceMergingTree engine
-			// and given its ORDER BY definition we would not be able to store samples
-			// with the same span_id.
-			// see: https://github.com/getsentry/snuba/blob/master/snuba/snuba_migrations/metrics_summaries/0001_metrics_summaries_create_table.py#L44-L45
-			//
-			// That's ok for our use case as we currently don't need span_id for profile function,
-			// but, once we'll recreate the table and get rid of the ReplaceMergineTree
-			// we can set it back to p.Transaction().SegmentID for the sake of consistency
-			SpanID:    spanID,
-			IsSegment: true,
-			SegmentID: spanID, // ??
 		}
 		b, err := json.Marshal(ms)
 		if err != nil {
