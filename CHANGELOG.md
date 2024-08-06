@@ -2,10 +2,6 @@
 
 ## Unreleased
 
-**Bug Fixes**:
-
-- Handle js profile normalization for react+android profiles ([#499]https://github.com/getsentry/vroom/pull/)
-
 **Features**:
 
 - Add support for speedscope rendering of Android reactnative profiles ([#386](https://github.com/getsentry/vroom/pull/386))
@@ -39,6 +35,7 @@
 - Ignore react-native js frame for metrics aggregation when not symbolicated ([#465](https://github.com/getsentry/vroom/pull/465))
 - Do not iterate unclosed channel ([#489](https://github.com/getsentry/vroom/pull/489))
 - Remove module frame in python ([#496](https://github.com/getsentry/vroom/pull/496))
+- Handle js profile normalization for react+android profiles ([#499]https://github.com/getsentry/vroom/pull/)
 
 **Internal**:
 
