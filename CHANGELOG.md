@@ -35,7 +35,7 @@
 - Ignore react-native js frame for metrics aggregation when not symbolicated ([#465](https://github.com/getsentry/vroom/pull/465))
 - Do not iterate unclosed channel ([#489](https://github.com/getsentry/vroom/pull/489))
 - Remove module frame in python ([#496](https://github.com/getsentry/vroom/pull/496))
-- Handle js profile normalization for react+android profiles ([#499](https://github.com/getsentry/vroom/pull/))
+- Handle js profile normalization for react+android profiles ([#499](https://github.com/getsentry/vroom/pull/499))
 
 **Internal**:
 
