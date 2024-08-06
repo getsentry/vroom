@@ -33,16 +33,13 @@ func extractMetricsFromFunctions(p *profile.Profile, functions []nodetree.CallTr
 		}
 		tags := map[string]string{
 			"project_id":     strconv.FormatUint(p.ProjectID(), 10),
-			"transaction":    p.Transaction().Name,
 			"fingerprint":    strconv.FormatUint(uint64(function.Fingerprint), 10),
-			"name":           function.Function,
+			"function":       function.Function,
 			"package":        function.Package,
 			"is_application": strconv.FormatBool(function.InApp),
 			"platform":       string(p.Platform()),
 			"environment":    p.Environment(),
 			"release":        p.Release(),
-			"os_name":        p.Metadata().DeviceOSName,
-			"os_version":     p.Metadata().DeviceOSVersion,
 		}
 		duration := float64(function.SelfTimesNS[0] / 1e6)
 		summary := MetricSummary{
