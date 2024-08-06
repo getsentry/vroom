@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+**Bug Fixes**:
+
+- Handle js profile normalization for react+android profiles ([#499]https://github.com/getsentry/vroom/pull/)
+
 **Features**:
 
 - Add support for speedscope rendering of Android reactnative profiles ([#386](https://github.com/getsentry/vroom/pull/386))
