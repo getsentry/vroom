@@ -41,6 +41,7 @@ func extractMetricsFromFunctions(p *profile.Profile, functions []nodetree.CallTr
 			"platform":       string(p.Platform()),
 			"environment":    p.Environment(),
 			"release":        p.Release(),
+			"profile_type":   "transaction",
 		}
 		duration := float64(function.SelfTimesNS[0] / 1e6)
 		summary := MetricSummary{
@@ -99,12 +100,13 @@ func extractMetricsFromChunkFunctions(c *chunk.Chunk, functions []nodetree.CallT
 		tags := map[string]string{
 			"project_id":     strconv.FormatUint(c.ProjectID, 10),
 			"fingerprint":    strconv.FormatUint(uint64(function.Fingerprint), 10),
-			"name":           function.Function,
+			"function":       function.Function,
 			"package":        function.Package,
 			"is_application": strconv.FormatBool(function.InApp),
 			"platform":       string(c.Platform),
 			"environment":    c.Environment,
 			"release":        c.Release,
+			"profile_type":   "continuous",
 		}
 		duration := float64(function.SelfTimesNS[0] / 1e6)
 		dm := sentry.NewDistributionMetric("profiles/function.duration", sentry.MilliSecond(), tags, int64(c.Received), duration)
