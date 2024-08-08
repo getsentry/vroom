@@ -34,6 +34,8 @@
 - Fix correct in_app classification for `[Native]` js frames ([#464](https://github.com/getsentry/vroom/pull/464))
 - Ignore react-native js frame for metrics aggregation when not symbolicated ([#465](https://github.com/getsentry/vroom/pull/465))
 - Do not iterate unclosed channel ([#489](https://github.com/getsentry/vroom/pull/489))
+- Remove module frame in python ([#496](https://github.com/getsentry/vroom/pull/496))
+- Handle js profile normalization for react+android profiles ([#499](https://github.com/getsentry/vroom/pull/499))
 
 **Internal**:
 
@@ -90,6 +92,8 @@
 - Filter out samples before start and after end ([#484](https://github.com/getsentry/vroom/pull/484))
 - Remove unused endpoint for profiling filters ([#485](https://github.com/getsentry/vroom/pull/485))
 - Generalize chunk task input ([#486](https://github.com/getsentry/vroom/pull/486))
+- Use builtin min/max functions ([#497](https://github.com/getsentry/vroom/pull/497))
+- Lift Intervals struct to utils ([#498](https://github.com/getsentry/vroom/pull/498))
 
 ## 23.12.0
 

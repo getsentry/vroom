@@ -6,17 +6,18 @@ import (
 
 	"github.com/getsentry/vroom/internal/nodetree"
 	"github.com/getsentry/vroom/internal/testutil"
+	"github.com/getsentry/vroom/internal/utils"
 )
 
 func TestMergeIntervals(t *testing.T) {
-	inputIntervals := []SpanInterval{
+	inputIntervals := []utils.Interval{
 		{Start: 8, End: 11},
 		{Start: 3, End: 6},
 		{Start: 7, End: 12},
 		{Start: 1, End: 3},
 	}
 
-	expectedResult := []SpanInterval{
+	expectedResult := []utils.Interval{
 		{Start: 1, End: 6},
 		{Start: 7, End: 12},
 	}
@@ -32,7 +33,7 @@ func TestGetTotalOvelappingDuration(t *testing.T) {
 	tests := []struct {
 		name      string
 		node      nodetree.Node
-		intervals []SpanInterval
+		intervals []utils.Interval
 		output    uint64
 	}{
 		{
@@ -46,7 +47,7 @@ func TestGetTotalOvelappingDuration(t *testing.T) {
 				StartNS: 0,
 				EndNS:   uint64(60 * time.Millisecond),
 			},
-			intervals: []SpanInterval{
+			intervals: []utils.Interval{
 				{Start: 0, End: uint64(20 * time.Millisecond)},
 				{Start: uint64(20 * time.Millisecond), End: uint64(40 * time.Millisecond)},
 			},
@@ -63,7 +64,7 @@ func TestGetTotalOvelappingDuration(t *testing.T) {
 				StartNS: uint64(30 * time.Millisecond),
 				EndNS:   uint64(90 * time.Millisecond),
 			},
-			intervals: []SpanInterval{
+			intervals: []utils.Interval{
 				{Start: uint64(20 * time.Millisecond), End: uint64(40 * time.Millisecond)},
 				{Start: uint64(80 * time.Millisecond), End: uint64(100 * time.Millisecond)},
 			},
@@ -80,7 +81,7 @@ func TestGetTotalOvelappingDuration(t *testing.T) {
 				StartNS: 0,
 				EndNS:   uint64(80 * time.Millisecond),
 			},
-			intervals: []SpanInterval{
+			intervals: []utils.Interval{
 				{Start: uint64(20 * time.Millisecond), End: uint64(40 * time.Millisecond)},
 				{Start: uint64(90 * time.Millisecond), End: uint64(100 * time.Millisecond)},
 			},
@@ -104,7 +105,7 @@ func TestSliceCallTree(t *testing.T) {
 	tests := []struct {
 		name      string
 		callTree  []*nodetree.Node
-		intervals []SpanInterval
+		intervals []utils.Interval
 		output    []*nodetree.Node
 	}{
 		{
@@ -126,7 +127,7 @@ func TestSliceCallTree(t *testing.T) {
 					},
 				},
 			},
-			intervals: []SpanInterval{
+			intervals: []utils.Interval{
 				{Start: 0, End: uint64(100 * time.Millisecond)},
 			},
 			output: []*nodetree.Node{
@@ -170,7 +171,7 @@ func TestSliceCallTree(t *testing.T) {
 					},
 				},
 			},
-			intervals: []SpanInterval{
+			intervals: []utils.Interval{
 				{Start: uint64(10 * time.Millisecond), End: uint64(60 * time.Millisecond)},
 			},
 			output: []*nodetree.Node{
@@ -210,7 +211,7 @@ func TestSliceCallTree(t *testing.T) {
 					},
 				},
 			},
-			intervals: []SpanInterval{
+			intervals: []utils.Interval{
 				{Start: uint64(80 * time.Millisecond), End: uint64(100 * time.Millisecond)},
 			},
 			output: []*nodetree.Node{
@@ -248,7 +249,7 @@ func TestSliceCallTree(t *testing.T) {
 					},
 				},
 			},
-			intervals: []SpanInterval{
+			intervals: []utils.Interval{
 				{Start: uint64(10 * time.Millisecond), End: uint64(30 * time.Millisecond)},
 				{Start: uint64(40 * time.Millisecond), End: uint64(60 * time.Millisecond)},
 			},
@@ -285,7 +286,7 @@ func TestSliceCallTree(t *testing.T) {
 					SampleCount: 2,
 				},
 			},
-			intervals: []SpanInterval{
+			intervals: []utils.Interval{
 				{Start: uint64(250 * time.Millisecond), End: uint64(750 * time.Millisecond)},
 			},
 			output: []*nodetree.Node{

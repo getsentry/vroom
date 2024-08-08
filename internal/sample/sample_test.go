@@ -902,6 +902,87 @@ func TestTrimCocoaStacks(t *testing.T) {
 	}
 }
 
+func TestTrimPythonStacks(t *testing.T) {
+	tests := []struct {
+		name   string
+		input  Profile
+		output Profile
+	}{
+		{
+			name: "Remove module frame at the end of a stack",
+			input: Profile{
+				RawProfile: RawProfile{
+					Platform: platform.Python,
+					Trace: Trace{
+						Frames: []frame.Frame{
+							{
+								File:     "<string>",
+								Module:   "__main__",
+								InApp:    &testutil.True,
+								Line:     11,
+								Function: "<module>",
+								Path:     "/usr/src/app/<string>",
+								Platform: "python",
+							},
+							{
+								File:     "app/util.py",
+								Module:   "app.util",
+								InApp:    &testutil.True,
+								Line:     98,
+								Function: "foobar",
+								Path:     "/usr/src/app/util.py",
+								Platform: "python",
+							},
+						},
+						Stacks: []Stack{
+							{1, 0},
+						},
+					},
+				},
+			},
+			output: Profile{
+				RawProfile: RawProfile{
+					Platform: platform.Python,
+					Trace: Trace{
+						Frames: []frame.Frame{
+							{
+								File:     "<string>",
+								Module:   "__main__",
+								InApp:    &testutil.True,
+								Line:     11,
+								Function: "<module>",
+								Path:     "/usr/src/app/<string>",
+								Platform: "python",
+							},
+							{
+								File:     "app/util.py",
+								Module:   "app.util",
+								InApp:    &testutil.True,
+								Line:     98,
+								Function: "foobar",
+								Path:     "/usr/src/app/util.py",
+								Platform: "python",
+							},
+						},
+						Stacks: []Stack{
+							{1},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			test.input.Normalize()
+			if diff := testutil.Diff(test.input, test.output); diff != "" {
+				t.Fatalf("Result mismatch: got - want +\n%s", diff)
+			}
+		})
+	}
+}
+
 func TestNormalizeFramesPerPlatform(t *testing.T) {
 	tests := []struct {
 		name   string

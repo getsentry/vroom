@@ -83,6 +83,10 @@ func (c *Chunk) Normalize() {
 		f.Normalize(c.Platform)
 		c.Profile.Frames[i] = f
 	}
+
+	if c.Platform == platform.Python {
+		c.Profile.trimPythonStacks()
+	}
 }
 
 func StoragePath(OrganizationID uint64, ProjectID uint64, ProfilerID string, ID string) string {
@@ -167,4 +171,33 @@ func (c Chunk) CallTrees(activeThreadID *string) (map[string][]*nodetree.Node, e
 	}
 
 	return treesByThreadID, nil
+}
+
+func (d *Data) trimPythonStacks() {
+	// Find the module frame index in frames
+	mfi := -1
+	for i, f := range d.Frames {
+		if f.File == "<string>" && f.Function == "<module>" {
+			mfi = i
+		}
+	}
+
+	// We do nothing if we don't find it
+	if mfi == -1 {
+		return
+	}
+
+	for si, s := range d.Stacks {
+		l := len(s)
+
+		// ignore empty stacks
+		if l == 0 {
+			continue
+		}
+
+		// found the module frame so trim it
+		if s[l-1] == mfi {
+			d.Stacks[si] = d.Stacks[si][:l-1]
+		}
+	}
 }
