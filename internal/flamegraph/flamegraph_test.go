@@ -295,7 +295,30 @@ func TestAnnotatingWithExamples(t *testing.T) {
 		},
 	}
 
-	options := cmp.Options{}
+	options := cmp.Options{
+		// This option will order profile IDs since we only want to compare values and not order.
+		cmpopts.SortSlices(func(a, b utils.ExampleMetadata) bool {
+			if a.ProjectID != b.ProjectID {
+				return a.ProjectID < b.ProjectID
+			}
+			if a.ProfilerID != b.ProfilerID {
+				return a.ProfilerID < b.ProfilerID
+			}
+			if a.ChunkID != b.ChunkID {
+				return a.ChunkID < b.ChunkID
+			}
+			if a.TransactionID != b.TransactionID {
+				return a.TransactionID < b.TransactionID
+			}
+			if a.Start != b.Start {
+				return a.Start < b.Start
+			}
+			if a.End != b.End {
+				return a.End < b.End
+			}
+			return a.ProfileID < b.ProfileID
+		}),
+	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
