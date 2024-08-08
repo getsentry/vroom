@@ -245,6 +245,7 @@ func toSpeedscope(trees []*nodetree.Node, minFreq int, projectID uint64) speedsc
 	aggProfiles[0] = speedscope.SampledProfile{
 		Samples:           fd.samples,
 		SamplesProfiles:   fd.samplesProfileIDs,
+		SamplesExamples:   fd.samplesProfiles,
 		Weights:           fd.sampleCounts,
 		SampleCounts:      fd.sampleCounts,
 		SampleDurationsNs: fd.sampleDurationsNs,
