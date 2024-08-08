@@ -192,7 +192,7 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 			if len(metrics) > 0 {
 				s = sentry.StartSpan(ctx, "processing")
 				s.Description = "Send functions metrics to generic metrics platform"
-				sendMetrics(ctx, &p, metrics, env.metricsClient)
+				sendMetrics(ctx, p.GetOptions().ProjectDSN, metrics, env.metricsClient)
 				s.Finish()
 			}
 
