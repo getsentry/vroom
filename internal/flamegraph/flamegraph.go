@@ -438,9 +438,21 @@ func GetFlamegraphFromChunks(
 				continue
 			}
 			intervals := []utils.Interval{interval}
+
+			annotate := annotateWithProfileExample(
+				utils.NewExampleFromProfilerChunk(
+					result.Chunk.ProjectID,
+					result.Chunk.ProfilerID,
+					result.Chunk.ID,
+					result.TransactionID,
+					result.ThreadID,
+					result.Start,
+					result.End,
+				),
+			)
 			for _, callTree := range callTrees {
 				slicedTree := sliceCallTree(&callTree, &intervals)
-				addCallTreeToFlamegraph(&flamegraphTree, slicedTree, annotateWithProfileID(result.Chunk.ID))
+				addCallTreeToFlamegraph(&flamegraphTree, slicedTree, annotate)
 			}
 		}
 		countChunksAggregated++
