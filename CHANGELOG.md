@@ -17,6 +17,7 @@
 - Add callTree generation for profile chunks ([#475](https://github.com/getsentry/vroom/pull/475))
 - Support generating a flamegraph from a list of chunk IDs ([#476](https://github.com/getsentry/vroom/pull/476))
 - Dual mode flamegraph endpoint ([#487](https://github.com/getsentry/vroom/pull/487))
+- Remove getProfileIDFromTransaction endpoint ([#491](https://github.com/getsentry/vroom/pull/491))
 - Pass thread id to calltree generation ([#492](https://github.com/getsentry/vroom/pull/492))
 - Dual mode metrics endpoint ([#493](https://github.com/getsentry/vroom/pull/493))
 - Add optional generation of metrics during flamegraph aggregation ([#494](https://github.com/getsentry/vroom/pull/494))
@@ -36,6 +37,7 @@
 - Ignore react-native js frame for metrics aggregation when not symbolicated ([#465](https://github.com/getsentry/vroom/pull/465))
 - Do not iterate unclosed channel ([#489](https://github.com/getsentry/vroom/pull/489))
 - Remove module frame in python ([#496](https://github.com/getsentry/vroom/pull/496))
+- Handle js profile normalization for react+android profiles ([#499](https://github.com/getsentry/vroom/pull/499))
 
 **Internal**:
 

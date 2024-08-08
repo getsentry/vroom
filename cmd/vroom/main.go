@@ -26,14 +26,11 @@ import (
 
 	"github.com/getsentry/vroom/internal/httputil"
 	"github.com/getsentry/vroom/internal/logutil"
-	"github.com/getsentry/vroom/internal/snubautil"
 	"github.com/getsentry/vroom/internal/storageutil"
 )
 
 type environment struct {
 	config ServiceConfig
-
-	snuba snubautil.Client
 
 	occurrencesWriter   KafkaWriter
 	profilingWriter     KafkaWriter
@@ -57,11 +54,6 @@ const (
 func newEnvironment() (*environment, error) {
 	var e environment
 	err := cleanenv.ReadEnv(&e.config)
-	if err != nil {
-		return nil, err
-	}
-
-	e.snuba, err = snubautil.NewClient(e.config.SnubaHost, "profiles")
 	if err != nil {
 		return nil, err
 	}
@@ -152,11 +144,6 @@ func (e *environment) newRouter() (*httprouter.Router, error) {
 			http.MethodGet,
 			"/organizations/:organization_id/projects/:project_id/raw_profiles/:profile_id",
 			e.getRawProfile,
-		},
-		{
-			http.MethodGet,
-			"/organizations/:organization_id/projects/:project_id/transactions/:transaction_id",
-			e.getProfileIDByTransactionID,
 		},
 		{
 			http.MethodPost,
