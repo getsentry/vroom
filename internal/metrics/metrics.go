@@ -193,6 +193,7 @@ func (ma *Aggregator) GetMetricsFromCandidates(
 			ProjectID:      candidate.ProjectID,
 			ProfilerID:     candidate.ProfilerID,
 			ChunkID:        candidate.ChunkID,
+			TransactionID:  candidate.TransactionID,
 			ThreadID:       candidate.ThreadID,
 			Start:          candidate.Start,
 			End:            candidate.End,
@@ -225,9 +226,7 @@ func (ma *Aggregator) GetMetricsFromCandidates(
 				hub.CaptureException(err)
 				continue
 			}
-			resultMetadata = utils.ExampleMetadata{
-				ProfileID: resultMetadata.ProfileID,
-			}
+			resultMetadata = utils.NewExampleFromProfileID(result.Profile.ProjectID(), result.Profile.ID())
 			functions := CapAndFilterFunctions(ExtractFunctionsFromCallTrees(profileCallTrees), int(ma.MaxUniqueFunctions), true)
 			ma.AddFunctions(functions, resultMetadata)
 		} else if result, ok := res.(chunk.ReadJobResult); ok {
@@ -253,11 +252,15 @@ func (ma *Aggregator) GetMetricsFromCandidates(
 				intChunkCallTrees[i] = v
 				i++
 			}
-			resultMetadata = utils.ExampleMetadata{
-				ProfilerID: resultMetadata.ProfilerID,
-				ChunkID:    result.Chunk.ID,
-				ThreadID:   result.ThreadID,
-			}
+			resultMetadata = utils.NewExampleFromProfilerChunk(
+				result.Chunk.ProjectID,
+				result.Chunk.ProfilerID,
+				result.Chunk.ID,
+				result.TransactionID,
+				result.ThreadID,
+				result.Start,
+				result.End,
+			)
 			functions := CapAndFilterFunctions(ExtractFunctionsFromCallTrees(intChunkCallTrees), int(ma.MaxUniqueFunctions), true)
 			ma.AddFunctions(functions, resultMetadata)
 		} else {

@@ -76,8 +76,9 @@ type (
 	}
 
 	SharedData struct {
-		Frames     []Frame  `json:"frames"`
-		ProfileIDs []string `json:"profile_ids,omitempty"`
+		Frames     []Frame                 `json:"frames"`
+		ProfileIDs []string                `json:"profile_ids,omitempty"`
+		Profiles   []utils.ExampleMetadata `json:"profiles,omitempty"`
 	}
 
 	EventType   string
