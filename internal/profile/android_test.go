@@ -700,7 +700,7 @@ func TestCallTrees(t *testing.T) {
 	}
 
 	options := cmp.Options{
-		cmpopts.IgnoreFields(nodetree.Node{}, "Fingerprint", "ProfileIDs"),
+		cmpopts.IgnoreFields(nodetree.Node{}, "Fingerprint", "ProfileIDs", "Profiles"),
 		cmpopts.IgnoreFields(frame.Frame{}, "File"),
 	}
 

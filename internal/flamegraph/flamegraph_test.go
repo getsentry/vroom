@@ -14,6 +14,7 @@ import (
 	"github.com/getsentry/vroom/internal/speedscope"
 	"github.com/getsentry/vroom/internal/testutil"
 	"github.com/getsentry/vroom/internal/timeutil"
+	"github.com/getsentry/vroom/internal/utils"
 )
 
 func TestFlamegraphAggregation(t *testing.T) {
@@ -141,6 +142,7 @@ func TestFlamegraphAggregation(t *testing.T) {
 							{0},
 							{1},
 						},
+						SamplesExamples:   [][]int{{}, {}, {}, {}},
 						Type:              "sampled",
 						Unit:              "count",
 						Weights:           []uint64{2, 1, 1, 1},
@@ -194,9 +196,138 @@ func TestFlamegraphAggregation(t *testing.T) {
 				if err != nil {
 					t.Fatalf("error when generating calltrees: %v", err)
 				}
-				addCallTreeToFlamegraph(&ft, callTrees[0], p.ID())
+				addCallTreeToFlamegraph(&ft, callTrees[0], annotateWithProfileID(p.ID()))
 			}
 
+			if diff := testutil.Diff(toSpeedscope(ft, 1, 99), test.output, options); diff != "" {
+				t.Fatalf("Result mismatch: got - want +\n%s", diff)
+			}
+		})
+	}
+}
+
+func TestAnnotatingWithExamples(t *testing.T) {
+	threadID := "0"
+
+	tests := []struct {
+		name      string
+		callTrees []*nodetree.Node
+		examples  []utils.ExampleMetadata
+		output    speedscope.Output
+	}{
+		{
+			name: "Annotate with profile id",
+			callTrees: []*nodetree.Node{
+				{
+					DurationNS:    40_000_000,
+					EndNS:         50_000_000,
+					StartNS:       10_000_000,
+					Fingerprint:   14164357600995800812,
+					IsApplication: true,
+					Name:          "function1",
+					SampleCount:   2,
+					Frame:         frame.Frame{Function: "function1"},
+					ProfileIDs:    make(map[string]struct{}),
+					Profiles:      make(map[utils.ExampleMetadata]struct{}),
+					Children: []*nodetree.Node{
+						{
+							DurationNS:    10_000_000,
+							EndNS:         50_000_000,
+							Fingerprint:   9531802423075301657,
+							IsApplication: true,
+							Name:          "function2",
+							SampleCount:   1,
+							StartNS:       40_000_000,
+							Frame:         frame.Frame{Function: "function2"},
+							ProfileIDs:    make(map[string]struct{}),
+							Profiles:      make(map[utils.ExampleMetadata]struct{}),
+						},
+					},
+				},
+			},
+			examples: []utils.ExampleMetadata{
+				utils.NewExampleFromProfileID(1, "2"),
+				utils.NewExampleFromProfilerChunk(3, "4", "5", "6", &threadID, 10_000_000, 50_000_000),
+			},
+			output: speedscope.Output{
+				Metadata: speedscope.ProfileMetadata{
+					ProfileView: speedscope.ProfileView{
+						ProjectID: 99,
+					},
+				},
+				Profiles: []interface{}{
+					speedscope.SampledProfile{
+						EndValue:     4,
+						IsMainThread: true,
+						Samples: [][]int{
+							{0, 1},
+							{0},
+						},
+						SamplesProfiles:   [][]int{{}, {}},
+						SamplesExamples:   [][]int{{0, 1}, {0, 1}},
+						Type:              "sampled",
+						Unit:              "count",
+						Weights:           []uint64{2, 2},
+						SampleCounts:      []uint64{2, 2},
+						SampleDurationsNs: []uint64{20_000_000, 60_000_000},
+					},
+				},
+				Shared: speedscope.SharedData{
+					Frames: []speedscope.Frame{
+						{Name: "function1", IsApplication: true},
+						{Name: "function2", IsApplication: true},
+					},
+					Profiles: []utils.ExampleMetadata{
+						{
+							ProjectID: 1,
+							ProfileID: "2",
+						},
+						{
+							ProjectID:     3,
+							ProfilerID:    "4",
+							ChunkID:       "5",
+							TransactionID: "6",
+							ThreadID:      &threadID,
+							Start:         0.01,
+							End:           0.05,
+						},
+					},
+				},
+			},
+		},
+	}
+
+	options := cmp.Options{
+		// This option will order profile IDs since we only want to compare values and not order.
+		cmpopts.SortSlices(func(a, b utils.ExampleMetadata) bool {
+			if a.ProjectID != b.ProjectID {
+				return a.ProjectID < b.ProjectID
+			}
+			if a.ProfilerID != b.ProfilerID {
+				return a.ProfilerID < b.ProfilerID
+			}
+			if a.ChunkID != b.ChunkID {
+				return a.ChunkID < b.ChunkID
+			}
+			if a.TransactionID != b.TransactionID {
+				return a.TransactionID < b.TransactionID
+			}
+			if a.Start != b.Start {
+				return a.Start < b.Start
+			}
+			if a.End != b.End {
+				return a.End < b.End
+			}
+			return a.ProfileID < b.ProfileID
+		}),
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			var ft []*nodetree.Node
+			for _, example := range test.examples {
+				addCallTreeToFlamegraph(&ft, test.callTrees, annotateWithProfileExample(example))
+			}
 			if diff := testutil.Diff(toSpeedscope(ft, 1, 99), test.output, options); diff != "" {
 				t.Fatalf("Result mismatch: got - want +\n%s", diff)
 			}

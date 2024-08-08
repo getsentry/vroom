@@ -65,6 +65,7 @@ type (
 		Queues            map[string]Queue `json:"queues,omitempty"`
 		Samples           [][]int          `json:"samples"`
 		SamplesProfiles   [][]int          `json:"samples_profiles,omitempty"`
+		SamplesExamples   [][]int          `json:"samples_examples,omitempty"`
 		StartValue        uint64           `json:"startValue"`
 		State             string           `json:"state,omitempty"`
 		ThreadID          uint64           `json:"threadID"`
@@ -76,8 +77,9 @@ type (
 	}
 
 	SharedData struct {
-		Frames     []Frame  `json:"frames"`
-		ProfileIDs []string `json:"profile_ids,omitempty"`
+		Frames     []Frame                 `json:"frames"`
+		ProfileIDs []string                `json:"profile_ids,omitempty"`
+		Profiles   []utils.ExampleMetadata `json:"profiles,omitempty"`
 	}
 
 	EventType   string
