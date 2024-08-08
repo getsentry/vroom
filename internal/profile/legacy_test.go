@@ -1,6 +1,7 @@
 package profile
 
 import (
+	"encoding/json"
 	"testing"
 
 	"github.com/getsentry/vroom/internal/frame"
@@ -298,6 +299,39 @@ func TestSampleToAndroidFormat(t *testing.T) {
 			convertedProfile := sampleToAndroidFormat(test.input, 1, map[uint64]void{1: {}})
 
 			if diff := testutil.Diff(convertedProfile, test.output); diff != "" {
+				t.Fatalf("Result mismatch: got - want +\n%s", diff)
+			}
+		})
+	}
+}
+
+func TestNormalizeLegacyAndroidProfile(t *testing.T) {
+	tests := []struct {
+		name   string
+		input  LegacyProfile
+		output LegacyProfile
+	}{
+		{
+			name: "Classify [Native] frames as system frames",
+			input: LegacyProfile{
+				RawProfile: RawProfile{
+					JsProfile: json.RawMessage(`{"profile":{"frames":[{"function":"[Native] functionPrototypeApply"}]}}`),
+				},
+				Trace: &Android{},
+			},
+			output: LegacyProfile{
+				RawProfile: RawProfile{
+					JsProfile: json.RawMessage(`{"profile":{"frames":[{"data":{},"function":"[Native] functionPrototypeApply","in_app":false,"platform":"javascript"}],"queue_metadata":null,"samples":null,"stacks":null,"thread_metadata":null}}`),
+				},
+				Trace: &Android{},
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			test.input.Normalize()
+			if diff := testutil.Diff(test.input, test.output); diff != "" {
 				t.Fatalf("Result mismatch: got - want +\n%s", diff)
 			}
 		})

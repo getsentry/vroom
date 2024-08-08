@@ -166,7 +166,7 @@ func (p LegacyProfile) CallTrees() (map[uint64][]*nodetree.Node, error) {
 		}
 		jsProf := sample.Profile{
 			RawProfile: sample.RawProfile{
-				Trace: st,
+				Trace: st.Profile,
 			},
 		}
 		// if we're in this branch we know for sure that here
@@ -206,7 +206,7 @@ func (p *LegacyProfile) Speedscope() (speedscope.Output, error) {
 				}
 			}
 
-			ap := sampleToAndroidFormat(st, uint64(len(t.Methods)), tidSet)
+			ap := sampleToAndroidFormat(st.Profile, uint64(len(t.Methods)), tidSet)
 			t.Events = append(t.Events, ap.Events...)
 			t.Methods = append(t.Methods, ap.Methods...)
 			t.Threads = append(t.Threads, ap.Threads...)
@@ -295,6 +295,23 @@ func (p *LegacyProfile) Normalize() {
 	switch t := p.Trace.(type) {
 	case *Android:
 		t.NormalizeMethods(p)
+		if p.JsProfile != nil && len(p.JsProfile) > 0 {
+			st, err := unmarshalSampleProfile(p.JsProfile)
+			if err == nil {
+				jsProf := sample.Profile{
+					RawProfile: sample.RawProfile{
+						Platform: "javascript",
+						Trace:    st.Profile,
+					},
+				}
+				jsProf.Normalize()
+				st.Profile = jsProf.Trace
+				jsonRawJsProfile, err := json.Marshal(st)
+				if err == nil {
+					p.JsProfile = jsonRawJsProfile
+				}
+			}
+		}
 	}
 
 	if p.BuildID != "" {
@@ -519,16 +536,17 @@ func getEventTimeFromElapsedNanoseconds(ns uint64) EventTime {
 }
 
 type NestedProfile struct {
-	Profile sample.Trace `json:"profile"`
+	Profile                 sample.Trace `json:"profile"`
+	ProcessedBySymbolicator *bool        `json:"processed_by_symbolicator,omitempty"`
 }
 
-func unmarshalSampleProfile(p json.RawMessage) (sample.Trace, error) {
+func unmarshalSampleProfile(p json.RawMessage) (NestedProfile, error) {
 	var np NestedProfile
 	err := json.Unmarshal(p, &np)
 	if err != nil {
-		return sample.Trace{}, err
+		return NestedProfile{}, err
 	}
-	return np.Profile, nil
+	return np, nil
 }
 
 // CallTree generation expect activeThreadID to be set in
