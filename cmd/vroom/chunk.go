@@ -17,7 +17,6 @@ import (
 
 	"github.com/getsentry/vroom/internal/chunk"
 	"github.com/getsentry/vroom/internal/metrics"
-	"github.com/getsentry/vroom/internal/nodetree"
 	"github.com/getsentry/vroom/internal/storageutil"
 )
 
@@ -130,16 +129,9 @@ func (env *environment) postChunk(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		intChunkCallTrees := make(map[uint64][]*nodetree.Node)
-		var i uint64
-		for _, v := range callTrees {
-			intChunkCallTrees[i] = v
-			i++
-		}
-
 		s = sentry.StartSpan(ctx, "processing")
 		s.Description = "Extract functions"
-		functions := metrics.ExtractFunctionsFromCallTrees(intChunkCallTrees)
+		functions := metrics.ExtractFunctionsFromCallTrees(callTrees)
 		functions = metrics.CapAndFilterFunctions(functions, maxUniqueFunctionsPerProfile, true)
 		s.Finish()
 
