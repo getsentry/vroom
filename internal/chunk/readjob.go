@@ -43,11 +43,12 @@ func (job ReadJob) Read() {
 	)
 
 	job.Result <- ReadJobResult{
-		Err:      err,
-		Chunk:    chunk,
-		ThreadID: job.ThreadID,
-		Start:    job.Start,
-		End:      job.End,
+		Err:           err,
+		Chunk:         chunk,
+		TransactionID: job.TransactionID,
+		ThreadID:      job.ThreadID,
+		Start:         job.Start,
+		End:           job.End,
 	}
 }
 
