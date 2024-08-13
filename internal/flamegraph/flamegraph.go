@@ -527,7 +527,6 @@ func GetFlamegraphFromCandidates(
 			}
 			continue
 		}
-		var resultMetadata utils.ExampleMetadata
 
 		if result, ok := res.(profile.ReadJobResult); ok {
 			profileCallTrees, err := result.Profile.CallTrees()
@@ -536,9 +535,8 @@ func GetFlamegraphFromCandidates(
 				continue
 			}
 
-			annotate := annotateWithProfileExample(
-				utils.NewExampleFromProfileID(result.Profile.ProjectID(), result.Profile.ID()),
-			)
+			example := utils.NewExampleFromProfileID(result.Profile.ProjectID(), result.Profile.ID())
+			annotate := annotateWithProfileExample(example)
 
 			for _, callTree := range profileCallTrees {
 				addCallTreeToFlamegraph(&flamegraphTree, callTree, annotate)
@@ -546,11 +544,8 @@ func GetFlamegraphFromCandidates(
 			// if metrics aggregator is not null, while we're at it,
 			// compute the metrics as well
 			if ma != nil {
-				resultMetadata = utils.ExampleMetadata{
-					ProfileID: resultMetadata.ProfileID,
-				}
 				functions := metrics.CapAndFilterFunctions(metrics.ExtractFunctionsFromCallTrees(profileCallTrees), int(ma.MaxUniqueFunctions), true)
-				ma.AddFunctions(functions, resultMetadata)
+				ma.AddFunctions(functions, example)
 			}
 		} else if result, ok := res.(chunk.ReadJobResult); ok {
 			chunkCallTrees, err := result.Chunk.CallTrees(result.ThreadID)
@@ -559,17 +554,16 @@ func GetFlamegraphFromCandidates(
 				continue
 			}
 
-			annotate := annotateWithProfileExample(
-				utils.NewExampleFromProfilerChunk(
-					result.Chunk.ProjectID,
-					result.Chunk.ProfilerID,
-					result.Chunk.ID,
-					result.TransactionID,
-					result.ThreadID,
-					result.Start,
-					result.End,
-				),
+			example := utils.NewExampleFromProfilerChunk(
+				result.Chunk.ProjectID,
+				result.Chunk.ProfilerID,
+				result.Chunk.ID,
+				result.TransactionID,
+				result.ThreadID,
+				result.Start,
+				result.End,
 			)
+			annotate := annotateWithProfileExample(example)
 
 			for _, callTree := range chunkCallTrees {
 				if result.Start > 0 && result.End > 0 {
@@ -584,11 +578,6 @@ func GetFlamegraphFromCandidates(
 			// if metrics aggregator is not null, while we're at it,
 			// compute the metrics as well
 			if ma != nil {
-				resultMetadata = utils.ExampleMetadata{
-					ProfilerID: resultMetadata.ProfilerID,
-					ChunkID:    result.Chunk.ID,
-					ThreadID:   result.ThreadID,
-				}
 				intChunkCallTrees := make(map[uint64][]*nodetree.Node)
 				var i uint64
 				for _, v := range chunkCallTrees {
@@ -607,7 +596,7 @@ func GetFlamegraphFromCandidates(
 					i++
 				}
 				functions := metrics.CapAndFilterFunctions(metrics.ExtractFunctionsFromCallTrees(intChunkCallTrees), int(ma.MaxUniqueFunctions), true)
-				ma.AddFunctions(functions, resultMetadata)
+				ma.AddFunctions(functions, example)
 			}
 		} else {
 			// This should never happen

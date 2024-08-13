@@ -38,6 +38,7 @@
 - Do not iterate unclosed channel ([#489](https://github.com/getsentry/vroom/pull/489))
 - Remove module frame in python ([#496](https://github.com/getsentry/vroom/pull/496))
 - Handle js profile normalization for react+android profiles ([#499](https://github.com/getsentry/vroom/pull/499))
+- Fix metrics example list ([#505](https://github.com/getsentry/vroom/pull/505))
 
 **Internal**:
 
