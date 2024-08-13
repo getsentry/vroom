@@ -21,7 +21,11 @@
 - Pass thread id to calltree generation ([#492](https://github.com/getsentry/vroom/pull/492))
 - Dual mode metrics endpoint ([#493](https://github.com/getsentry/vroom/pull/493))
 - Add optional generation of metrics during flamegraph aggregation ([#494](https://github.com/getsentry/vroom/pull/494))
+<<<<<<< HEAD
 - Ingest function metrics from profile chunks ([#495](https://github.com/getsentry/vroom/pull/495))
+=======
+- Annotate flamegraph with profile data ([#501](https://github.com/getsentry/vroom/pull/501)), ([#502](https://github.com/getsentry/vroom/pull/502)), ([#503](https://github.com/getsentry/vroom/pull/503))
+>>>>>>> origin
 
 **Bug Fixes**:
 
@@ -38,6 +42,7 @@
 - Do not iterate unclosed channel ([#489](https://github.com/getsentry/vroom/pull/489))
 - Remove module frame in python ([#496](https://github.com/getsentry/vroom/pull/496))
 - Handle js profile normalization for react+android profiles ([#499](https://github.com/getsentry/vroom/pull/499))
+- Fix metrics example list ([#505](https://github.com/getsentry/vroom/pull/505))
 
 **Internal**:
 
@@ -96,6 +101,7 @@
 - Generalize chunk task input ([#486](https://github.com/getsentry/vroom/pull/486))
 - Use builtin min/max functions ([#497](https://github.com/getsentry/vroom/pull/497))
 - Lift Intervals struct to utils ([#498](https://github.com/getsentry/vroom/pull/498))
+- Fix flakey test for profile examples ([#504](https://github.com/getsentry/vroom/pull/504))
 
 ## 23.12.0
 

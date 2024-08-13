@@ -15,6 +15,7 @@ type (
 		ProjectID      uint64
 		ProfilerID     string
 		ChunkID        string
+		TransactionID  string
 		ThreadID       *string
 		Start          uint64
 		End            uint64
@@ -22,11 +23,12 @@ type (
 	}
 
 	ReadJobResult struct {
-		Err      error
-		Chunk    Chunk
-		ThreadID *string
-		Start    uint64
-		End      uint64
+		Err           error
+		Chunk         Chunk
+		TransactionID string
+		ThreadID      *string
+		Start         uint64
+		End           uint64
 	}
 )
 
@@ -41,11 +43,12 @@ func (job ReadJob) Read() {
 	)
 
 	job.Result <- ReadJobResult{
-		Err:      err,
-		Chunk:    chunk,
-		ThreadID: job.ThreadID,
-		Start:    job.Start,
-		End:      job.End,
+		Err:           err,
+		Chunk:         chunk,
+		TransactionID: job.TransactionID,
+		ThreadID:      job.ThreadID,
+		Start:         job.Start,
+		End:           job.End,
 	}
 }
 

@@ -130,7 +130,7 @@ func GetFlamegraphFromProfiles(
 	for pair := range callTreesQueue {
 		profileID := pair.First
 		for _, callTree := range pair.Second {
-			addCallTreeToFlamegraph(&flamegraphTree, callTree, profileID)
+			addCallTreeToFlamegraph(&flamegraphTree, callTree, annotateWithProfileID(profileID))
 		}
 		countProfAggregated++
 	}
@@ -157,14 +157,26 @@ func sumNodesSampleCount(nodes []*nodetree.Node) int {
 	return c
 }
 
-func addCallTreeToFlamegraph(flamegraphTree *[]*nodetree.Node, callTree []*nodetree.Node, profileID string) {
+func annotateWithProfileID(profileID string) func(n *nodetree.Node) {
+	return func(n *nodetree.Node) {
+		n.ProfileIDs[profileID] = void
+	}
+}
+
+func annotateWithProfileExample(example utils.ExampleMetadata) func(n *nodetree.Node) {
+	return func(n *nodetree.Node) {
+		n.Profiles[example] = void
+	}
+}
+
+func addCallTreeToFlamegraph(flamegraphTree *[]*nodetree.Node, callTree []*nodetree.Node, annotate func(n *nodetree.Node)) {
 	for _, node := range callTree {
 		if existingNode := getMatchingNode(flamegraphTree, node); existingNode != nil {
 			existingNode.SampleCount += node.SampleCount
 			existingNode.DurationNS += node.DurationNS
-			addCallTreeToFlamegraph(&existingNode.Children, node.Children, profileID)
+			addCallTreeToFlamegraph(&existingNode.Children, node.Children, annotate)
 			if node.SampleCount > sumNodesSampleCount(node.Children) {
-				existingNode.ProfileIDs[profileID] = void
+				annotate(existingNode)
 			}
 		} else {
 			*flamegraphTree = append(*flamegraphTree, node)
@@ -173,27 +185,27 @@ func addCallTreeToFlamegraph(flamegraphTree *[]*nodetree.Node, callTree []*nodet
 			// to the right children along the branch yet,
 			// therefore we call a utility that walk the branch
 			// and does it
-			expandCallTreeWithProfileID(node, profileID)
+			expandCallTreeWithProfileID(node, annotate)
 		}
 	}
 }
 
-func expandCallTreeWithProfileID(node *nodetree.Node, profileID string) {
+func expandCallTreeWithProfileID(node *nodetree.Node, annotate func(n *nodetree.Node)) {
 	// leaf frames: we  must add the profileID
 	if node.Children == nil {
-		node.ProfileIDs[profileID] = void
+		annotate(node)
 	} else {
 		childrenSampleCount := 0
 		for _, child := range node.Children {
 			childrenSampleCount += child.SampleCount
-			expandCallTreeWithProfileID(child, profileID)
+			expandCallTreeWithProfileID(child, annotate)
 		}
 		// If the children's sample count is less than the current
 		// nodes sample count, it means there are some samples
 		// ending at the current node. In this case, this node
 		// should also contain the profile ID
 		if node.SampleCount > childrenSampleCount {
-			node.ProfileIDs[profileID] = void
+			annotate(node)
 		}
 	}
 }
@@ -201,12 +213,15 @@ func expandCallTreeWithProfileID(node *nodetree.Node, profileID string) {
 type flamegraph struct {
 	samples           [][]int
 	samplesProfileIDs [][]int
+	samplesProfiles   [][]int
 	sampleCounts      []uint64
 	sampleDurationsNs []uint64
 	frames            []speedscope.Frame
 	framesIndex       map[string]int
 	profilesIDsIndex  map[string]int
 	profilesIDs       []string
+	profilesIndex     map[utils.ExampleMetadata]int
+	profiles          []utils.ExampleMetadata
 	endValue          uint64
 	minFreq           int
 }
@@ -217,6 +232,7 @@ func toSpeedscope(trees []*nodetree.Node, minFreq int, projectID uint64) speedsc
 		framesIndex:      make(map[string]int),
 		minFreq:          minFreq,
 		profilesIDsIndex: make(map[string]int),
+		profilesIndex:    make(map[utils.ExampleMetadata]int),
 		samples:          make([][]int, 0),
 		sampleCounts:     make([]uint64, 0),
 	}
@@ -229,6 +245,7 @@ func toSpeedscope(trees []*nodetree.Node, minFreq int, projectID uint64) speedsc
 	aggProfiles[0] = speedscope.SampledProfile{
 		Samples:           fd.samples,
 		SamplesProfiles:   fd.samplesProfileIDs,
+		SamplesExamples:   fd.samplesProfiles,
 		Weights:           fd.sampleCounts,
 		SampleCounts:      fd.sampleCounts,
 		SampleDurationsNs: fd.sampleDurationsNs,
@@ -247,6 +264,7 @@ func toSpeedscope(trees []*nodetree.Node, minFreq int, projectID uint64) speedsc
 		Shared: speedscope.SharedData{
 			Frames:     fd.frames,
 			ProfileIDs: fd.profilesIDs,
+			Profiles:   fd.profiles,
 		},
 		Profiles: aggProfiles,
 	}
@@ -284,7 +302,13 @@ func (f *flamegraph) visitCalltree(node *nodetree.Node, currentStack *[]int) {
 
 	// base case (when we reach leaf frames)
 	if node.Children == nil {
-		f.addSample(currentStack, uint64(node.SampleCount), node.DurationNS, node.ProfileIDs)
+		f.addSample(
+			currentStack,
+			uint64(node.SampleCount),
+			node.DurationNS,
+			node.ProfileIDs,
+			node.Profiles,
+		)
 	} else {
 		totChildrenSampleCount := 0
 		var totChildrenDuration uint64
@@ -301,20 +325,33 @@ func (f *flamegraph) visitCalltree(node *nodetree.Node, currentStack *[]int) {
 		diffCount := node.SampleCount - totChildrenSampleCount
 		diffDuration := node.DurationNS - totChildrenDuration
 		if diffCount >= f.minFreq {
-			f.addSample(currentStack, uint64(diffCount), diffDuration, node.ProfileIDs)
+			f.addSample(
+				currentStack,
+				uint64(diffCount),
+				diffDuration,
+				node.ProfileIDs,
+				node.Profiles,
+			)
 		}
 	}
 	// pop last element before returning
 	*currentStack = (*currentStack)[:len(*currentStack)-1]
 }
 
-func (f *flamegraph) addSample(stack *[]int, count uint64, duration uint64, profileIDs map[string]struct{}) {
+func (f *flamegraph) addSample(
+	stack *[]int,
+	count uint64,
+	duration uint64,
+	profileIDs map[string]struct{},
+	profiles map[utils.ExampleMetadata]struct{},
+) {
 	cp := make([]int, len(*stack))
 	copy(cp, *stack)
 	f.samples = append(f.samples, cp)
 	f.sampleCounts = append(f.sampleCounts, count)
 	f.sampleDurationsNs = append(f.sampleDurationsNs, duration)
 	f.samplesProfileIDs = append(f.samplesProfileIDs, f.getProfileIDsIndices(profileIDs))
+	f.samplesProfiles = append(f.samplesProfiles, f.getProfilesIndices(profiles))
 	f.endValue += count
 }
 
@@ -327,6 +364,20 @@ func (f *flamegraph) getProfileIDsIndices(profileIDs map[string]struct{}) []int 
 			indices = append(indices, len(f.profilesIDs))
 			f.profilesIDsIndex[id] = len(f.profilesIDs)
 			f.profilesIDs = append(f.profilesIDs, id)
+		}
+	}
+	return indices
+}
+
+func (f *flamegraph) getProfilesIndices(profiles map[utils.ExampleMetadata]struct{}) []int {
+	indices := make([]int, 0, len(profiles))
+	for i := range profiles {
+		if idx, ok := f.profilesIndex[i]; ok {
+			indices = append(indices, idx)
+		} else {
+			indices = append(indices, len(f.profiles))
+			f.profilesIndex[i] = len(f.profiles)
+			f.profiles = append(f.profiles, i)
 		}
 	}
 	return indices
@@ -388,9 +439,21 @@ func GetFlamegraphFromChunks(
 				continue
 			}
 			intervals := []utils.Interval{interval}
+
+			annotate := annotateWithProfileExample(
+				utils.NewExampleFromProfilerChunk(
+					result.Chunk.ProjectID,
+					result.Chunk.ProfilerID,
+					result.Chunk.ID,
+					result.TransactionID,
+					result.ThreadID,
+					result.Start,
+					result.End,
+				),
+			)
 			for _, callTree := range callTrees {
 				slicedTree := sliceCallTree(&callTree, &intervals)
-				addCallTreeToFlamegraph(&flamegraphTree, slicedTree, result.Chunk.ID)
+				addCallTreeToFlamegraph(&flamegraphTree, slicedTree, annotate)
 			}
 		}
 		countChunksAggregated++
@@ -437,6 +500,7 @@ func GetFlamegraphFromCandidates(
 			ProjectID:      candidate.ProjectID,
 			ProfilerID:     candidate.ProfilerID,
 			ChunkID:        candidate.ChunkID,
+			TransactionID:  candidate.TransactionID,
 			ThreadID:       candidate.ThreadID,
 			Start:          candidate.Start,
 			End:            candidate.End,
@@ -463,7 +527,6 @@ func GetFlamegraphFromCandidates(
 			}
 			continue
 		}
-		var resultMetadata utils.ExampleMetadata
 
 		if result, ok := res.(profile.ReadJobResult); ok {
 			profileCallTrees, err := result.Profile.CallTrees()
@@ -472,18 +535,17 @@ func GetFlamegraphFromCandidates(
 				continue
 			}
 
+			example := utils.NewExampleFromProfileID(result.Profile.ProjectID(), result.Profile.ID())
+			annotate := annotateWithProfileExample(example)
+
 			for _, callTree := range profileCallTrees {
-				// TODO: properly pass the profile ID around
-				addCallTreeToFlamegraph(&flamegraphTree, callTree, "")
+				addCallTreeToFlamegraph(&flamegraphTree, callTree, annotate)
 			}
 			// if metrics aggregator is not null, while we're at it,
 			// compute the metrics as well
 			if ma != nil {
-				resultMetadata = utils.ExampleMetadata{
-					ProfileID: resultMetadata.ProfileID,
-				}
 				functions := metrics.CapAndFilterFunctions(metrics.ExtractFunctionsFromCallTrees(profileCallTrees), int(ma.MaxUniqueFunctions), true)
-				ma.AddFunctions(functions, resultMetadata)
+				ma.AddFunctions(functions, example)
 			}
 		} else if result, ok := res.(chunk.ReadJobResult); ok {
 			chunkCallTrees, err := result.Chunk.CallTrees(result.ThreadID)
@@ -491,6 +553,17 @@ func GetFlamegraphFromCandidates(
 				hub.CaptureException(err)
 				continue
 			}
+
+			example := utils.NewExampleFromProfilerChunk(
+				result.Chunk.ProjectID,
+				result.Chunk.ProfilerID,
+				result.Chunk.ID,
+				result.TransactionID,
+				result.ThreadID,
+				result.Start,
+				result.End,
+			)
+			annotate := annotateWithProfileExample(example)
 
 			for _, callTree := range chunkCallTrees {
 				if result.Start > 0 && result.End > 0 {
@@ -500,19 +573,13 @@ func GetFlamegraphFromCandidates(
 					}
 					callTree = sliceCallTree(&callTree, &[]utils.Interval{interval})
 				}
-				// TODO: properly pass the profile ID around
-				addCallTreeToFlamegraph(&flamegraphTree, callTree, "")
+				addCallTreeToFlamegraph(&flamegraphTree, callTree, annotate)
 			}
 			// if metrics aggregator is not null, while we're at it,
 			// compute the metrics as well
 			if ma != nil {
-				resultMetadata = utils.ExampleMetadata{
-					ProfilerID: resultMetadata.ProfilerID,
-					ChunkID:    result.Chunk.ID,
-					ThreadID:   result.ThreadID,
-				}
 				functions := metrics.CapAndFilterFunctions(metrics.ExtractFunctionsFromCallTrees(chunkCallTrees), int(ma.MaxUniqueFunctions), true)
-				ma.AddFunctions(functions, resultMetadata)
+				ma.AddFunctions(functions, example)
 			}
 		} else {
 			// This should never happen
