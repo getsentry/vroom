@@ -111,8 +111,8 @@ func quantile(values []uint64, q float64) (uint64, error) {
 	return values[index], nil
 }
 
-func ExtractFunctionsFromCallTrees(
-	callTrees map[uint64][]*nodetree.Node,
+func ExtractFunctionsFromCallTrees[T comparable](
+	callTrees map[T][]*nodetree.Node,
 ) []nodetree.CallTreeFunction {
 	functions := make(map[uint32]nodetree.CallTreeFunction, 0)
 
@@ -235,23 +235,7 @@ func (ma *Aggregator) GetMetricsFromCandidates(
 				hub.CaptureException(err)
 				continue
 			}
-			intChunkCallTrees := make(map[uint64][]*nodetree.Node)
-			var i uint64
-			for _, v := range chunkCallTrees {
-				// real TID here doesn't really matter as it's then
-				// discarded (not used) by ExtractFunctionsFromCallTrees.
-				// Here we're only assigning a random uint to make it compatible
-				// with ExtractFunctionsFromCallTrees which expects an
-				// uint64 -> []*nodetree.Node based on sample V1 int tid
-				// the TID.
-				//
-				// We could even refactor ExtractFunctionsFromCallTrees
-				// to simply accept []*nodetree.Node instead of a map
-				// but we'd end up moving the iteration from map to a slice
-				// somewhere else in the code.
-				intChunkCallTrees[i] = v
-				i++
-			}
+
 			resultMetadata = utils.NewExampleFromProfilerChunk(
 				result.Chunk.ProjectID,
 				result.Chunk.ProfilerID,
@@ -261,7 +245,7 @@ func (ma *Aggregator) GetMetricsFromCandidates(
 				result.Start,
 				result.End,
 			)
-			functions := CapAndFilterFunctions(ExtractFunctionsFromCallTrees(intChunkCallTrees), int(ma.MaxUniqueFunctions), true)
+			functions := CapAndFilterFunctions(ExtractFunctionsFromCallTrees(chunkCallTrees), int(ma.MaxUniqueFunctions), true)
 			ma.AddFunctions(functions, resultMetadata)
 		} else {
 			// this should never happen

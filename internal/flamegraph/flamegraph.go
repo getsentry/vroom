@@ -578,24 +578,7 @@ func GetFlamegraphFromCandidates(
 			// if metrics aggregator is not null, while we're at it,
 			// compute the metrics as well
 			if ma != nil {
-				intChunkCallTrees := make(map[uint64][]*nodetree.Node)
-				var i uint64
-				for _, v := range chunkCallTrees {
-					// real TID here doesn't really matter as it's then
-					// discarded (not used) by ExtractFunctionsFromCallTrees.
-					// Here we're only assigning a random uint to make it compatible
-					// with ExtractFunctionsFromCallTrees which expects an
-					// uint64 -> []*nodetree.Node based on sample V1 int tid
-					// the TID.
-					//
-					// We could even refactor ExtractFunctionsFromCallTrees
-					// to simply accept []*nodetree.Node instead of a map
-					// but we'd end up moving the iteration from map to a slice
-					// somewhere else in the code.
-					intChunkCallTrees[i] = v
-					i++
-				}
-				functions := metrics.CapAndFilterFunctions(metrics.ExtractFunctionsFromCallTrees(intChunkCallTrees), int(ma.MaxUniqueFunctions), true)
+				functions := metrics.CapAndFilterFunctions(metrics.ExtractFunctionsFromCallTrees(chunkCallTrees), int(ma.MaxUniqueFunctions), true)
 				ma.AddFunctions(functions, example)
 			}
 		} else {

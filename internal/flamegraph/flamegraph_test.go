@@ -302,6 +302,9 @@ func TestAnnotatingWithExamples(t *testing.T) {
 		cmpopts.SortSlices(func(a, b string) bool {
 			return a < b
 		}),
+		cmpopts.SortSlices(func(a, b int) bool {
+			return a < b
+		}),
 		// This option will order profile IDs since we only want to compare values and not order.
 		cmpopts.SortSlices(func(a, b utils.ExampleMetadata) bool {
 			if a.ProjectID != b.ProjectID {
