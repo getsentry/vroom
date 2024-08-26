@@ -12,6 +12,8 @@ type Metadata struct {
 	DeviceOSVersion      string  `json:"device_os_version"`
 	ID                   string  `json:"id"`
 	ProjectID            string  `json:"project_id"`
+	SDKName              string  `json:"sdk_name"`
+	SDKVersion           string  `json:"sdk_version"`
 	Timestamp            int64   `json:"timestamp"`
 	TraceDurationMs      float64 `json:"trace_duration_ms"`
 	TransactionID        string  `json:"transaction_id"`

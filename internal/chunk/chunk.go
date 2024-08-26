@@ -7,6 +7,7 @@ import (
 	"hash/fnv"
 	"sort"
 
+	"github.com/getsentry/vroom/internal/clientsdk"
 	"github.com/getsentry/vroom/internal/debugmeta"
 	"github.com/getsentry/vroom/internal/frame"
 	"github.com/getsentry/vroom/internal/nodetree"
@@ -28,9 +29,10 @@ type (
 
 		DebugMeta debugmeta.DebugMeta `json:"debug_meta"`
 
-		Environment string            `json:"environment"`
-		Platform    platform.Platform `json:"platform"`
-		Release     string            `json:"release"`
+		ClientSDK   clientsdk.ClientSDK `json:"client_sdk"`
+		Environment string              `json:"environment"`
+		Platform    platform.Platform   `json:"platform"`
+		Release     string              `json:"release"`
 
 		Version string `json:"version"`
 

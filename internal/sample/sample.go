@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/getsentry/vroom/internal/clientsdk"
 	"github.com/getsentry/vroom/internal/debugmeta"
 	"github.com/getsentry/vroom/internal/frame"
 	"github.com/getsentry/vroom/internal/measurements"
@@ -79,21 +80,22 @@ type (
 	}
 
 	RawProfile struct {
-		Sampled             bool                                `json:"sampled"`
+		ClientSDK           clientsdk.ClientSDK                 `json:"client_sdk"`
 		DebugMeta           debugmeta.DebugMeta                 `json:"debug_meta"`
 		Device              Device                              `json:"device"`
 		Environment         string                              `json:"environment,omitempty"`
 		EventID             string                              `json:"event_id"`
 		Measurements        map[string]measurements.Measurement `json:"measurements,omitempty"`
 		OS                  OS                                  `json:"os"`
-		OrganizationID      uint64                              `json:"organization_id"`
 		Options             utils.Options                       `json:"options,omitempty"`
+		OrganizationID      uint64                              `json:"organization_id"`
 		Platform            platform.Platform                   `json:"platform"`
 		ProjectID           uint64                              `json:"project_id"`
 		Received            timeutil.Time                       `json:"received"`
 		Release             string                              `json:"release"`
 		RetentionDays       int                                 `json:"retention_days"`
 		Runtime             Runtime                             `json:"runtime"`
+		Sampled             bool                                `json:"sampled"`
 		Timestamp           time.Time                           `json:"timestamp"`
 		Trace               Trace                               `json:"profile"`
 		Transaction         transaction.Transaction             `json:"transaction"`
@@ -412,6 +414,8 @@ func (p *Profile) Metadata() metadata.Metadata {
 		DeviceOSBuildNumber:  p.OS.BuildNumber,
 		DeviceOSName:         p.OS.Name,
 		DeviceOSVersion:      p.OS.Version,
+		SDKName:              p.ClientSDK.Name,
+		SDKVersion:           p.ClientSDK.Version,
 		ID:                   p.EventID,
 		ProjectID:            strconv.FormatUint(p.ProjectID, 10),
 		Timestamp:            p.Timestamp.Unix(),
