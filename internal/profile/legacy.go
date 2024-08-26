@@ -295,7 +295,7 @@ func (p *LegacyProfile) Normalize() {
 	switch t := p.Trace.(type) {
 	case *Android:
 		t.NormalizeMethods(p)
-		if p.JsProfile != nil && len(p.JsProfile) > 0 {
+		if len(p.JsProfile) > 0 {
 			st, err := unmarshalSampleProfile(p.JsProfile)
 			if err == nil {
 				jsProf := sample.Profile{
