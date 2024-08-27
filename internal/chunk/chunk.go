@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"hash/fnv"
+	"math"
 	"sort"
 
 	"github.com/getsentry/vroom/internal/clientsdk"
@@ -89,6 +90,11 @@ func (c *Chunk) Normalize() {
 	if c.Platform == platform.Python {
 		c.Profile.trimPythonStacks()
 	}
+}
+
+func (c Chunk) DurationMS() uint64 {
+	start, end := c.StartEndTimestamps()
+	return uint64(math.Round((end - start) * 1e3))
 }
 
 func StoragePath(OrganizationID uint64, ProjectID uint64, ProfilerID string, ID string) string {
