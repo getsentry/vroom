@@ -5,8 +5,10 @@ import (
 	"errors"
 	"fmt"
 	"hash/fnv"
+	"math"
 	"sort"
 
+	"github.com/getsentry/vroom/internal/clientsdk"
 	"github.com/getsentry/vroom/internal/debugmeta"
 	"github.com/getsentry/vroom/internal/frame"
 	"github.com/getsentry/vroom/internal/nodetree"
@@ -28,9 +30,10 @@ type (
 
 		DebugMeta debugmeta.DebugMeta `json:"debug_meta"`
 
-		Environment string            `json:"environment"`
-		Platform    platform.Platform `json:"platform"`
-		Release     string            `json:"release"`
+		ClientSDK   clientsdk.ClientSDK `json:"client_sdk"`
+		Environment string              `json:"environment"`
+		Platform    platform.Platform   `json:"platform"`
+		Release     string              `json:"release"`
 
 		Version string `json:"version"`
 
@@ -87,6 +90,11 @@ func (c *Chunk) Normalize() {
 	if c.Platform == platform.Python {
 		c.Profile.trimPythonStacks()
 	}
+}
+
+func (c Chunk) DurationMS() uint64 {
+	start, end := c.StartEndTimestamps()
+	return uint64(math.Round((end - start) * 1e3))
 }
 
 func StoragePath(OrganizationID uint64, ProjectID uint64, ProfilerID string, ID string) string {

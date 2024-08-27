@@ -51,6 +51,8 @@ type (
 		ProjectID            uint64            `json:"project_id"`
 		Received             int64             `json:"received"`
 		RetentionDays        int               `json:"retention_days"`
+		SDKName              string            `json:"sdk_name,omitempty"`
+		SDKVersion           string            `json:"sdk_version,omitempty"`
 		TraceID              string            `json:"trace_id"`
 		TransactionID        string            `json:"transaction_id"`
 		TransactionName      string            `json:"transaction_name"`
@@ -115,6 +117,8 @@ func buildProfileKafkaMessage(p profile.Profile) ProfileKafkaMessage {
 		ProjectID:            p.ProjectID(),
 		Received:             p.Received().Unix(),
 		RetentionDays:        p.RetentionDays(),
+		SDKName:              m.SDKName,
+		SDKVersion:           m.SDKVersion,
 		TraceID:              t.TraceID,
 		TransactionID:        t.ID,
 		TransactionName:      t.Name,

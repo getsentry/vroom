@@ -295,9 +295,13 @@ type (
 
 		StartTimestamp float64 `json:"start_timestamp"`
 		EndTimestamp   float64 `json:"end_timestamp"`
+		DurationMS     uint64  `json:"duration_ms"`
 
 		Received      float64 `json:"received"`
 		RetentionDays int     `json:"retention_days"`
+
+		SDKName    string `json:"sdk_name"`
+		SDKVersion string `json:"sdk_version"`
 	}
 )
 
@@ -305,11 +309,14 @@ func buildChunkKafkaMessage(c *chunk.Chunk) *ChunkKafkaMessage {
 	start, end := c.StartEndTimestamps()
 	return &ChunkKafkaMessage{
 		ChunkID:        c.ID,
-		ProjectID:      c.ProjectID,
-		ProfilerID:     c.ProfilerID,
-		StartTimestamp: start,
+		DurationMS:     c.DurationMS(),
 		EndTimestamp:   end,
+		ProfilerID:     c.ProfilerID,
+		ProjectID:      c.ProjectID,
 		Received:       c.Received,
 		RetentionDays:  c.RetentionDays,
+		SDKName:        c.ClientSDK.Name,
+		SDKVersion:     c.ClientSDK.Version,
+		StartTimestamp: start,
 	}
 }
