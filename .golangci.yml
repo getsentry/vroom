@@ -2,11 +2,11 @@ linters:
   disable-all: true
   enable:
     - bodyclose
+    - copyloopvar
     #- depguard
     - dogsled
     #- dupl
     - errcheck
-    - exportloopref
     - forbidigo
     - gochecknoinits
     #- goconst
