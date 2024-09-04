@@ -223,6 +223,7 @@ func (env *environment) postFlamegraph(w http.ResponseWriter, r *http.Request) {
 		body.Continuous,
 		readJobs,
 		ma,
+		s,
 	)
 	s.Finish()
 	if err != nil {
