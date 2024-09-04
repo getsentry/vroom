@@ -100,6 +100,7 @@
 - Use builtin min/max functions ([#497](https://github.com/getsentry/vroom/pull/497))
 - Lift Intervals struct to utils ([#498](https://github.com/getsentry/vroom/pull/498))
 - Fix flakey test for profile examples ([#504](https://github.com/getsentry/vroom/pull/504))
+- Instrument flamegraph generation with spans ([#510](https://github.com/getsentry/vroom/pull/510))
 
 ## 23.12.0
 
