@@ -13,13 +13,14 @@ type (
 	}
 
 	ContinuousProfileCandidate struct {
-		ProjectID     uint64  `json:"project_id"`
-		ProfilerID    string  `json:"profiler_id"`
-		ChunkID       string  `json:"chunk_id"`
-		TransactionID string  `json:"transaction_id"`
-		ThreadID      *string `json:"thread_id"`
-		Start         uint64  `json:"start,string"`
-		End           uint64  `json:"end,string"`
+		ProjectID     uint64                `json:"project_id"`
+		ProfilerID    string                `json:"profiler_id"`
+		ChunkID       string                `json:"chunk_id"`
+		TransactionID string                `json:"transaction_id"`
+		ThreadID      *string               `json:"thread_id"`
+		Start         uint64                `json:"start,string"`
+		End           uint64                `json:"end,string"`
+		Intervals     map[string][]Interval `json:"-"`
 	}
 
 	// ExampleMetadata and FunctionMetrics have been moved here, although they'd
@@ -81,4 +82,39 @@ func NewExampleFromProfilerChunk(
 		Start:         float64(start) / 1e9,
 		End:           float64(end) / 1e9,
 	}
+}
+
+func MergeContinuousProfileCandidate(candidates []ContinuousProfileCandidate) []ContinuousProfileCandidate {
+	chunkToIdx := map[string]int{}
+	newCandidates := []ContinuousProfileCandidate{}
+	for _, c := range candidates {
+		newInterval := Interval{
+			Start: c.Start,
+			End:   c.End,
+		}
+		// if we already have a candidate with such chunkID, add the interval
+		if idx, ok := chunkToIdx[c.ChunkID]; ok {
+			// if there is already an interval for a given thread ID
+			// add the interval to that list
+			if _, ok := newCandidates[idx].Intervals[*c.ThreadID]; ok {
+				intervals := newCandidates[idx].Intervals[*c.ThreadID]
+				intervals = append(intervals, newInterval)
+				newCandidates[idx].Intervals[*c.ThreadID] = intervals
+			} else {
+				// else add a new list of intervals for such threadID
+				newCandidates[idx].Intervals[*c.ThreadID] = []Interval{newInterval}
+			}
+		} else {
+			// else add a new candidate
+			chunkToIdx[c.ChunkID] = len(newCandidates)
+			newCandidates = append(newCandidates, ContinuousProfileCandidate{
+				ProjectID:     c.ProjectID,
+				ProfilerID:    c.ProfilerID,
+				ChunkID:       c.ChunkID,
+				TransactionID: c.TransactionID,
+				Intervals:     map[string][]Interval{*c.ThreadID: {newInterval}},
+			})
+		}
+	}
+	return newCandidates
 }

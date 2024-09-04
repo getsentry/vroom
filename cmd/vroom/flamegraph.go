@@ -215,12 +215,13 @@ func (env *environment) postFlamegraph(w http.ResponseWriter, r *http.Request) {
 		agg := metrics.NewAggregator(maxUniqueFunctionsPerProfile, 5)
 		ma = &agg
 	}
+	continuousCandidates := utils.MergeContinuousProfileCandidate(body.Continuous)
 	speedscope, err := flamegraph.GetFlamegraphFromCandidates(
 		ctx,
 		env.storage,
 		organizationID,
 		body.Transaction,
-		body.Continuous,
+		continuousCandidates,
 		readJobs,
 		ma,
 	)

@@ -504,6 +504,7 @@ func GetFlamegraphFromCandidates(
 			ThreadID:       candidate.ThreadID,
 			Start:          candidate.Start,
 			End:            candidate.End,
+			Intervals:      candidate.Intervals,
 			Storage:        storage,
 			Result:         results,
 		}
@@ -548,44 +549,42 @@ func GetFlamegraphFromCandidates(
 				ma.AddFunctions(functions, example)
 			}
 		} else if result, ok := res.(chunk.ReadJobResult); ok {
-			chunkCallTrees, err := result.Chunk.CallTrees(result.ThreadID)
-			if err != nil {
-				hub.CaptureException(err)
-				continue
-			}
-
-			example := utils.NewExampleFromProfilerChunk(
-				result.Chunk.ProjectID,
-				result.Chunk.ProfilerID,
-				result.Chunk.ID,
-				result.TransactionID,
-				result.ThreadID,
-				result.Start,
-				result.End,
-			)
-			annotate := annotateWithProfileExample(example)
-
-			for _, callTree := range chunkCallTrees {
-				if result.Start > 0 && result.End > 0 {
-					interval := utils.Interval{
-						Start: result.Start,
-						End:   result.End,
-					}
-					callTree = sliceCallTree(&callTree, &[]utils.Interval{interval})
+			for tid, intervals := range result.Intervals {
+				chunkCallTrees, err := result.Chunk.CallTrees(&tid)
+				if err != nil {
+					hub.CaptureException(err)
+					continue
 				}
-				addCallTreeToFlamegraph(&flamegraphTree, callTree, annotate)
-			}
-			// if metrics aggregator is not null, while we're at it,
-			// compute the metrics as well
-			if ma != nil {
-				functions := metrics.CapAndFilterFunctions(metrics.ExtractFunctionsFromCallTrees(chunkCallTrees), int(ma.MaxUniqueFunctions), true)
-				ma.AddFunctions(functions, example)
-			}
+				sortedAndMergedIntervals := mergeIntervals(&intervals)
+				example := utils.NewExampleFromProfilerChunk(
+					result.Chunk.ProjectID,
+					result.Chunk.ProfilerID,
+					result.Chunk.ID,
+					result.TransactionID,
+					&tid,
+					sortedAndMergedIntervals[0].Start,
+					sortedAndMergedIntervals[len(sortedAndMergedIntervals)-1].End,
+				)
+				annotate := annotateWithProfileExample(example)
+
+				for _, callTree := range chunkCallTrees {
+					if len(sortedAndMergedIntervals) > 0 {
+						callTree = sliceCallTree(&callTree, &sortedAndMergedIntervals)
+					}
+					addCallTreeToFlamegraph(&flamegraphTree, callTree, annotate)
+				}
+				// if metrics aggregator is not null, while we're at it,
+				// compute the metrics as well
+				if ma != nil {
+					functions := metrics.CapAndFilterFunctions(metrics.ExtractFunctionsFromCallTrees(chunkCallTrees), int(ma.MaxUniqueFunctions), true)
+					ma.AddFunctions(functions, example)
+				}
+			} // end --> for tid, intervals := range result.Intervals
 		} else {
 			// This should never happen
 			return speedscope.Output{}, errors.New("unexpected result from storage")
 		}
-	}
+	} // end --> for i := 0; i < numCandidates; i++ {
 
 	sp := toSpeedscope(flamegraphTree, 4, 0)
 	if ma != nil {

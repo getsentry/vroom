@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/getsentry/vroom/internal/storageutil"
+	"github.com/getsentry/vroom/internal/utils"
 	"gocloud.dev/blob"
 )
 
@@ -19,6 +20,7 @@ type (
 		ThreadID       *string
 		Start          uint64
 		End            uint64
+		Intervals      map[string][]utils.Interval
 		Result         chan<- storageutil.ReadJobResult
 	}
 
@@ -29,6 +31,7 @@ type (
 		ThreadID      *string
 		Start         uint64
 		End           uint64
+		Intervals     map[string][]utils.Interval
 	}
 )
 
@@ -49,6 +52,7 @@ func (job ReadJob) Read() {
 		ThreadID:      job.ThreadID,
 		Start:         job.Start,
 		End:           job.End,
+		Intervals:     job.Intervals,
 	}
 }
 
