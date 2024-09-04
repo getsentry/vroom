@@ -16,14 +16,14 @@ linters:
     - gofmt
     - goimports
     #- gosec
-    #- gosimple
-    #- govet
+    - gosimple
+    - govet
     - ineffassign
     - misspell
     - nakedret
     - prealloc
     - revive
-    #- staticcheck
+    - staticcheck
     - typecheck
     - unconvert
     - unparam
