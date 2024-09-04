@@ -41,7 +41,7 @@
 - Remove module frame in python ([#496](https://github.com/getsentry/vroom/pull/496))
 - Handle js profile normalization for react+android profiles ([#499](https://github.com/getsentry/vroom/pull/499))
 - Fix metrics example list ([#505](https://github.com/getsentry/vroom/pull/505))
-- Increase readjob channel size  ([#512](https://github.com/getsentry/vroom/pull/512))
+- Increase readjob channel size ([#512](https://github.com/getsentry/vroom/pull/512))
 
 **Internal**:
 
@@ -102,6 +102,7 @@
 - Lift Intervals struct to utils ([#498](https://github.com/getsentry/vroom/pull/498))
 - Fix flakey test for profile examples ([#504](https://github.com/getsentry/vroom/pull/504))
 - Instrument flamegraph generation with spans ([#510](https://github.com/getsentry/vroom/pull/510)), ([#511](https://github.com/getsentry/vroom/pull/511))
+- Dispatch candidates using goroutine ([#513](https://github.com/getsentry/vroom/pull/513))
 
 ## 23.12.0
 
