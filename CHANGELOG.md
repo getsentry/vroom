@@ -41,6 +41,7 @@
 - Remove module frame in python ([#496](https://github.com/getsentry/vroom/pull/496))
 - Handle js profile normalization for react+android profiles ([#499](https://github.com/getsentry/vroom/pull/499))
 - Fix metrics example list ([#505](https://github.com/getsentry/vroom/pull/505))
+- Optimize chunks download and fix flamegraph aggregation ([#508](https://github.com/getsentry/vroom/pull/508))
 
 **Internal**:
 
