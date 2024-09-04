@@ -517,7 +517,7 @@ func GetFlamegraphFromCandidates(
 
 	var flamegraphTree []*nodetree.Node
 
-	flamegraphSpan := span.StartChild("dispatch candidates")
+	flamegraphSpan := span.StartChild("processing candidates")
 
 	for i := 0; i < numCandidates; i++ {
 		res := <-results
