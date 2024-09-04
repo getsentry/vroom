@@ -483,6 +483,8 @@ func GetFlamegraphFromCandidates(
 	results := make(chan storageutil.ReadJobResult, numCandidates)
 	defer close(results)
 
+	// We dispatch the read jobs within a goroutine so we can start reading the results
+	// immediately and NOT block until all the candidates have been dispatched.
 	go func() {
 		dispatchSpan := span.StartChild("dispatch candidates")
 		dispatchSpan.SetData("transaction_candidates", len(transactionProfileCandidates))
