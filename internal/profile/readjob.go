@@ -3,6 +3,7 @@ package profile
 import (
 	"context"
 
+	"github.com/getsentry/vroom/internal/nodetree"
 	"github.com/getsentry/vroom/internal/storageutil"
 	"gocloud.dev/blob"
 )
@@ -37,5 +38,43 @@ func (job ReadJob) Read() {
 }
 
 func (result ReadJobResult) Error() error {
+	return result.Err
+}
+
+type (
+	CallTreesReadJob ReadJob
+
+	CallTreesReadJobResult struct {
+		Err       error
+		CallTrees map[uint64][]*nodetree.Node
+		Profile   Profile
+	}
+)
+
+func (job CallTreesReadJob) Read() {
+	var profile Profile
+
+	err := storageutil.UnmarshalCompressed(
+		job.Ctx,
+		job.Storage,
+		StoragePath(job.OrganizationID, job.ProjectID, job.ProfileID),
+		&profile,
+	)
+
+	if err != nil {
+		job.Result <- CallTreesReadJobResult{Err: err}
+		return
+	}
+
+	callTrees, err := profile.CallTrees()
+
+	job.Result <- CallTreesReadJobResult{
+		CallTrees: callTrees,
+		Profile:   profile,
+		Err:       err,
+	}
+}
+
+func (result CallTreesReadJobResult) Error() error {
 	return result.Err
 }
