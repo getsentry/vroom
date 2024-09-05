@@ -42,6 +42,7 @@
 - Handle js profile normalization for react+android profiles ([#499](https://github.com/getsentry/vroom/pull/499))
 - Fix metrics example list ([#505](https://github.com/getsentry/vroom/pull/505))
 - Optimize chunks download and fix flamegraph aggregation ([#508](https://github.com/getsentry/vroom/pull/508))
+- Increase readjob channel size  ([#512](https://github.com/getsentry/vroom/pull/512))
 
 **Internal**:
 
@@ -101,6 +102,7 @@
 - Use builtin min/max functions ([#497](https://github.com/getsentry/vroom/pull/497))
 - Lift Intervals struct to utils ([#498](https://github.com/getsentry/vroom/pull/498))
 - Fix flakey test for profile examples ([#504](https://github.com/getsentry/vroom/pull/504))
+- Instrument flamegraph generation with spans ([#510](https://github.com/getsentry/vroom/pull/510)), ([#511](https://github.com/getsentry/vroom/pull/511))
 
 ## 23.12.0
 

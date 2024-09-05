@@ -253,7 +253,7 @@ func main() {
 
 	slog.Info("vroom started")
 
-	readJobs = make(chan storageutil.ReadJob, env.config.WorkerPoolSize)
+	readJobs = make(chan storageutil.ReadJob, 10*env.config.WorkerPoolSize)
 	for i := 0; i < env.config.WorkerPoolSize; i++ {
 		go storageutil.ReadWorker(readJobs)
 	}

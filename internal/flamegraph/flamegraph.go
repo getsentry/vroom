@@ -474,6 +474,7 @@ func GetFlamegraphFromCandidates(
 	continuousProfileCandidates []utils.ContinuousProfileCandidate,
 	jobs chan storageutil.ReadJob,
 	ma *metrics.Aggregator,
+	span *sentry.Span,
 ) (speedscope.Output, error) {
 	hub := sentry.GetHubFromContext(ctx)
 
@@ -481,6 +482,10 @@ func GetFlamegraphFromCandidates(
 
 	results := make(chan storageutil.ReadJobResult, numCandidates)
 	defer close(results)
+
+	dispatchSpan := span.StartChild("dispatch candidates")
+	dispatchSpan.SetData("transaction_candidates", len(transactionProfileCandidates))
+	dispatchSpan.SetData("continuous_candidates", len(continuousProfileCandidates))
 
 	for _, candidate := range transactionProfileCandidates {
 		jobs <- profile.ReadJob{
@@ -509,8 +514,11 @@ func GetFlamegraphFromCandidates(
 			Result:         results,
 		}
 	}
+	dispatchSpan.Finish()
 
 	var flamegraphTree []*nodetree.Node
+
+	flamegraphSpan := span.StartChild("processing candidates")
 
 	for i := 0; i < numCandidates; i++ {
 		res := <-results
@@ -530,9 +538,13 @@ func GetFlamegraphFromCandidates(
 		}
 
 		if result, ok := res.(profile.ReadJobResult); ok {
+			transactionProfileSpan := span.StartChild("calltree")
+			transactionProfileSpan.Description = "transaction profile"
+
 			profileCallTrees, err := result.Profile.CallTrees()
 			if err != nil {
 				hub.CaptureException(err)
+				transactionProfileSpan.Finish()
 				continue
 			}
 
@@ -548,7 +560,12 @@ func GetFlamegraphFromCandidates(
 				functions := metrics.CapAndFilterFunctions(metrics.ExtractFunctionsFromCallTrees(profileCallTrees), int(ma.MaxUniqueFunctions), true)
 				ma.AddFunctions(functions, example)
 			}
+
+			transactionProfileSpan.Finish()
 		} else if result, ok := res.(chunk.ReadJobResult); ok {
+			chunkProfileSpan := span.StartChild("calltree")
+			chunkProfileSpan.Description = "continuous profile"
+
 			for tid, intervals := range result.Intervals {
 				chunkCallTrees, err := result.Chunk.CallTrees(&tid)
 				if err != nil {
@@ -580,11 +597,17 @@ func GetFlamegraphFromCandidates(
 					ma.AddFunctions(functions, example)
 				}
 			} // end --> for tid, intervals := range result.Intervals
+			chunkProfileSpan.Finish()
 		} else {
 			// This should never happen
 			return speedscope.Output{}, errors.New("unexpected result from storage")
 		}
 	} // end --> for i := 0; i < numCandidates; i++ {
+
+	flamegraphSpan.Finish()
+
+	serializeSpan := span.StartChild("serialize")
+	defer serializeSpan.Finish()
 
 	sp := toSpeedscope(flamegraphTree, 4, 0)
 	if ma != nil {

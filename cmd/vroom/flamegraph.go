@@ -224,6 +224,7 @@ func (env *environment) postFlamegraph(w http.ResponseWriter, r *http.Request) {
 		continuousCandidates,
 		readJobs,
 		ma,
+		s,
 	)
 	s.Finish()
 	if err != nil {
