@@ -488,7 +488,7 @@ func GetFlamegraphFromCandidates(
 	dispatchSpan.SetData("continuous_candidates", len(continuousProfileCandidates))
 
 	for _, candidate := range transactionProfileCandidates {
-		jobs <- profile.ReadJob{
+		jobs <- profile.CallTreesReadJob{
 			Ctx:            ctx,
 			OrganizationID: organizationID,
 			ProjectID:      candidate.ProjectID,
@@ -499,7 +499,7 @@ func GetFlamegraphFromCandidates(
 	}
 
 	for _, candidate := range continuousProfileCandidates {
-		jobs <- chunk.ReadJob{
+		jobs <- chunk.CallTreesReadJob{
 			Ctx:            ctx,
 			OrganizationID: organizationID,
 			ProjectID:      candidate.ProjectID,
@@ -514,6 +514,7 @@ func GetFlamegraphFromCandidates(
 			Result:         results,
 		}
 	}
+
 	dispatchSpan.Finish()
 
 	var flamegraphTree []*nodetree.Node
@@ -537,32 +538,25 @@ func GetFlamegraphFromCandidates(
 			continue
 		}
 
-		if result, ok := res.(profile.ReadJobResult); ok {
+		if result, ok := res.(profile.CallTreesReadJobResult); ok {
 			transactionProfileSpan := span.StartChild("calltree")
 			transactionProfileSpan.Description = "transaction profile"
-
-			profileCallTrees, err := result.Profile.CallTrees()
-			if err != nil {
-				hub.CaptureException(err)
-				transactionProfileSpan.Finish()
-				continue
-			}
 
 			example := utils.NewExampleFromProfileID(result.Profile.ProjectID(), result.Profile.ID())
 			annotate := annotateWithProfileExample(example)
 
-			for _, callTree := range profileCallTrees {
+			for _, callTree := range result.CallTrees {
 				addCallTreeToFlamegraph(&flamegraphTree, callTree, annotate)
 			}
 			// if metrics aggregator is not null, while we're at it,
 			// compute the metrics as well
 			if ma != nil {
-				functions := metrics.CapAndFilterFunctions(metrics.ExtractFunctionsFromCallTrees(profileCallTrees), int(ma.MaxUniqueFunctions), true)
+				functions := metrics.CapAndFilterFunctions(metrics.ExtractFunctionsFromCallTrees(result.CallTrees), int(ma.MaxUniqueFunctions), true)
 				ma.AddFunctions(functions, example)
 			}
 
 			transactionProfileSpan.Finish()
-		} else if result, ok := res.(chunk.ReadJobResult); ok {
+		} else if result, ok := res.(chunk.CallTreesReadJobResult); ok {
 			chunkProfileSpan := span.StartChild("calltree")
 			chunkProfileSpan.Description = "continuous profile"
 

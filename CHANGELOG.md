@@ -103,6 +103,7 @@
 - Lift Intervals struct to utils ([#498](https://github.com/getsentry/vroom/pull/498))
 - Fix flakey test for profile examples ([#504](https://github.com/getsentry/vroom/pull/504))
 - Instrument flamegraph generation with spans ([#510](https://github.com/getsentry/vroom/pull/510)), ([#511](https://github.com/getsentry/vroom/pull/511))
+- Move calltree generation into readjob ([#514](https://github.com/getsentry/vroom/pull/514))
 
 ## 23.12.0
 
