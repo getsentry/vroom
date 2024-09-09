@@ -2,9 +2,9 @@ package utils
 
 type (
 	Interval struct {
-		Start          uint64 `json:"start,string"`
-		End            uint64 `json:"end,string"`
-		ActiveThreadID string `json:"active_thread_id,omitempty"`
+		Start          uint64  `json:"start,string"`
+		End            uint64  `json:"end,string"`
+		ActiveThreadID *string `json:"active_thread_id,omitempty"`
 	}
 
 	TransactionProfileCandidate struct {
@@ -92,29 +92,41 @@ func MergeContinuousProfileCandidate(candidates []ContinuousProfileCandidate) []
 			Start: c.Start,
 			End:   c.End,
 		}
+		tid := ""
+		if c.ThreadID != nil {
+			tid = *c.ThreadID
+		}
 		// if we already have a candidate with such chunkID, add the interval
 		if idx, ok := chunkToIdx[c.ChunkID]; ok {
 			// if there is already an interval for a given thread ID
 			// add the interval to that list
-			if _, ok := newCandidates[idx].Intervals[*c.ThreadID]; ok {
-				intervals := newCandidates[idx].Intervals[*c.ThreadID]
+			if _, ok := newCandidates[idx].Intervals[tid]; ok {
+				intervals := newCandidates[idx].Intervals[tid]
 				intervals = append(intervals, newInterval)
-				newCandidates[idx].Intervals[*c.ThreadID] = intervals
+				if c.Start != 0 && c.End != 0 {
+					newCandidates[idx].Intervals[tid] = intervals
+				}
 			} else {
 				// else add a new list of intervals for such threadID
-				newCandidates[idx].Intervals[*c.ThreadID] = []Interval{newInterval}
+				if c.Start != 0 && c.End != 0 {
+					newCandidates[idx].Intervals[tid] = []Interval{newInterval}
+				}
 			}
 		} else {
 			// else add a new candidate
 			chunkToIdx[c.ChunkID] = len(newCandidates)
-			newCandidates = append(newCandidates, ContinuousProfileCandidate{
+			candidate := ContinuousProfileCandidate{
 				ProjectID:     c.ProjectID,
 				ProfilerID:    c.ProfilerID,
 				ChunkID:       c.ChunkID,
 				TransactionID: c.TransactionID,
-				Intervals:     map[string][]Interval{*c.ThreadID: {newInterval}},
-			})
+				Intervals:     map[string][]Interval{},
+			}
+			if c.Start != 0 && c.End != 0 {
+				candidate.Intervals[tid] = []Interval{newInterval}
+			}
+			newCandidates = append(newCandidates, candidate)
 		}
-	}
+	} // end loop candidates
 	return newCandidates
 }

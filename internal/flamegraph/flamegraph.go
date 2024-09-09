@@ -431,7 +431,7 @@ func GetFlamegraphFromChunks(
 		}
 		cm := chunkIDToMetadata[result.Chunk.ID]
 		for _, interval := range cm.SpanIntervals {
-			callTrees, err := result.Chunk.CallTrees(&interval.ActiveThreadID)
+			callTrees, err := result.Chunk.CallTrees(interval.ActiveThreadID)
 			if err != nil {
 				if hub != nil {
 					hub.CaptureException(err)
@@ -560,37 +560,44 @@ func GetFlamegraphFromCandidates(
 			chunkProfileSpan := span.StartChild("calltree")
 			chunkProfileSpan.Description = "continuous profile"
 
-			for tid, intervals := range result.Intervals {
-				chunkCallTrees, err := result.Chunk.CallTrees(&tid)
-				if err != nil {
-					hub.CaptureException(err)
-					continue
-				}
-				sortedAndMergedIntervals := mergeIntervals(&intervals)
-				example := utils.NewExampleFromProfilerChunk(
-					result.Chunk.ProjectID,
-					result.Chunk.ProfilerID,
-					result.Chunk.ID,
-					result.TransactionID,
-					&tid,
-					sortedAndMergedIntervals[0].Start,
-					sortedAndMergedIntervals[len(sortedAndMergedIntervals)-1].End,
-				)
-				annotate := annotateWithProfileExample(example)
+			example := utils.NewExampleFromProfilerChunk(
+				result.Chunk.ProjectID,
+				result.Chunk.ProfilerID,
+				result.Chunk.ID,
+				result.TransactionID,
+				result.ThreadID,
+				result.Start,
+				result.End,
+			)
 
-				for _, callTree := range chunkCallTrees {
-					if len(sortedAndMergedIntervals) > 0 {
-						callTree = sliceCallTree(&callTree, &sortedAndMergedIntervals)
-					}
+			for tid, callTree := range result.CallTrees {
+				if intervals, ok := result.Intervals[tid]; ok {
+					for _, interval := range intervals {
+						intervalExample := utils.NewExampleFromProfilerChunk(
+							result.Chunk.ProjectID,
+							result.Chunk.ProfilerID,
+							result.Chunk.ID,
+							result.TransactionID,
+							&tid,
+							interval.Start,
+							interval.End,
+						)
+						annotate := annotateWithProfileExample(intervalExample)
+						slicedTree := sliceCallTree(&callTree, &[]utils.Interval{interval})
+						addCallTreeToFlamegraph(&flamegraphTree, slicedTree, annotate)
+					} // end loop intervals for a given tid
+				} else { // !intervals for a tid
+					annotate := annotateWithProfileExample(example)
 					addCallTreeToFlamegraph(&flamegraphTree, callTree, annotate)
 				}
-				// if metrics aggregator is not null, while we're at it,
-				// compute the metrics as well
-				if ma != nil {
-					functions := metrics.CapAndFilterFunctions(metrics.ExtractFunctionsFromCallTrees(chunkCallTrees), int(ma.MaxUniqueFunctions), true)
-					ma.AddFunctions(functions, example)
-				}
-			} // end --> for tid, intervals := range result.Intervals
+			} // end callTree loop
+
+			// if metrics aggregator is not null, while we're at it,
+			// compute the metrics as well
+			if ma != nil {
+				functions := metrics.CapAndFilterFunctions(metrics.ExtractFunctionsFromCallTrees(result.CallTrees), int(ma.MaxUniqueFunctions), true)
+				ma.AddFunctions(functions, example)
+			}
 			chunkProfileSpan.Finish()
 		} else {
 			// This should never happen
