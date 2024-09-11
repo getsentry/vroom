@@ -572,7 +572,8 @@ func GetFlamegraphFromCandidates(
 
 			for tid, callTree := range result.CallTrees {
 				if intervals, ok := result.Intervals[tid]; ok {
-					for _, interval := range intervals {
+					sortedAndMergedIntervals := mergeIntervals(&intervals)
+					for _, interval := range sortedAndMergedIntervals {
 						intervalExample := utils.NewExampleFromProfilerChunk(
 							result.Chunk.ProjectID,
 							result.Chunk.ProfilerID,
