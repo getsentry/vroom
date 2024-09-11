@@ -97,6 +97,25 @@ func (n *Node) WriteToHash(h hash.Hash) {
 	}
 }
 
+func (n *Node) GetShallowCopy() Node {
+	return Node{
+		Children:      n.Children,
+		DurationNS:    n.DurationNS,
+		Fingerprint:   n.Fingerprint,
+		IsApplication: n.IsApplication,
+		Line:          n.Line,
+		Name:          n.Name,
+		Package:       n.Package,
+		Path:          n.Path,
+		EndNS:         n.EndNS,
+		Frame:         n.Frame,
+		SampleCount:   n.SampleCount,
+		StartNS:       n.StartNS,
+		ProfileIDs:    n.ProfileIDs,
+		Profiles:      n.Profiles,
+	}
+}
+
 type CallTreeFunction struct {
 	Fingerprint   uint32   `json:"fingerprint"`
 	Function      string   `json:"function"`

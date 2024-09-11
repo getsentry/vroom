@@ -44,20 +44,21 @@ func relativeIntervalsFromAbsoluteTimestamp(intervals *[]utils.Interval, t uint6
 func sliceCallTree(callTree *[]*nodetree.Node, intervals *[]utils.Interval) []*nodetree.Node {
 	slicedTree := make([]*nodetree.Node, 0)
 	for _, node := range *callTree {
+		newNode := node.GetShallowCopy()
 		if duration := getTotalOverlappingDuration(node, intervals); duration > 0 {
 			sampleCount := int(math.Ceil(float64(duration) / float64(time.Millisecond*10)))
 			// here we take the minimum between the node sample count and the estimated
 			// sample count to mitigate the case when we make a wrong estimation due
 			// to sampling frequency not being respected. (Python native code holding
 			// the GIL, php, etc.)
-			node.SampleCount = min(sampleCount, node.SampleCount)
-			node.DurationNS = duration
+			newNode.SampleCount = min(sampleCount, node.SampleCount)
+			newNode.DurationNS = duration
 			if children := sliceCallTree(&node.Children, intervals); len(children) > 0 {
-				node.Children = children
+				newNode.Children = children
 			} else {
-				node.Children = nil
+				newNode.Children = nil
 			}
-			slicedTree = append(slicedTree, node)
+			slicedTree = append(slicedTree, &newNode)
 		}
 	} // end range callTree
 	return slicedTree
