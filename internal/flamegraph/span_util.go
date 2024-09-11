@@ -44,7 +44,7 @@ func relativeIntervalsFromAbsoluteTimestamp(intervals *[]utils.Interval, t uint6
 func sliceCallTree(callTree *[]*nodetree.Node, intervals *[]utils.Interval) []*nodetree.Node {
 	slicedTree := make([]*nodetree.Node, 0)
 	for _, node := range *callTree {
-		newNode := node.GetShallowCopy()
+		newNode := *node
 		if duration := getTotalOverlappingDuration(node, intervals); duration > 0 {
 			sampleCount := int(math.Ceil(float64(duration) / float64(time.Millisecond*10)))
 			// here we take the minimum between the node sample count and the estimated
