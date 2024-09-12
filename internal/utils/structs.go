@@ -1,5 +1,9 @@
 package utils
 
+import (
+	"sort"
+)
+
 type (
 	Interval struct {
 		Start          uint64  `json:"start,string"`
@@ -128,5 +132,36 @@ func MergeContinuousProfileCandidate(candidates []ContinuousProfileCandidate) []
 			newCandidates = append(newCandidates, candidate)
 		}
 	} // end loop candidates
+	for i, candidate := range newCandidates {
+		if len(candidate.Intervals) > 0 {
+			for tid, intervals := range candidate.Intervals {
+				sortedMergedIntervals := MergeIntervals(&intervals)
+				newCandidates[i].Intervals[tid] = sortedMergedIntervals
+			}
+		}
+	}
 	return newCandidates
+}
+
+func MergeIntervals(intervals *[]Interval) []Interval {
+	if len(*intervals) == 0 {
+		return *intervals
+	}
+	sort.SliceStable((*intervals), func(i, j int) bool {
+		if (*intervals)[i].Start == (*intervals)[j].Start {
+			return (*intervals)[i].End < (*intervals)[j].End
+		}
+		return (*intervals)[i].Start < (*intervals)[j].Start
+	})
+
+	newIntervals := []Interval{(*intervals)[0]}
+	for _, interval := range (*intervals)[1:] {
+		if interval.Start <= newIntervals[len(newIntervals)-1].End {
+			newIntervals[len(newIntervals)-1].End = max(newIntervals[len(newIntervals)-1].End, interval.End)
+		} else {
+			newIntervals = append(newIntervals, interval)
+		}
+	}
+
+	return newIntervals
 }

@@ -94,7 +94,7 @@ func GetFlamegraphFromProfiles(
 					// the profile.timestamps to be consistent with the sample/node
 					// 'start' and 'end'
 					relativeIntervalsFromAbsoluteTimestamp(&spans, uint64(p.Timestamp().UnixNano()))
-					sortedSpans := mergeIntervals(&spans)
+					sortedSpans := utils.MergeIntervals(&spans)
 					for tid, callTree := range callTrees {
 						callTrees[tid] = sliceCallTree(&callTree, &sortedSpans)
 					}
@@ -572,8 +572,7 @@ func GetFlamegraphFromCandidates(
 
 			for tid, callTree := range result.CallTrees {
 				if intervals, ok := result.Intervals[tid]; ok {
-					sortedAndMergedIntervals := mergeIntervals(&intervals)
-					for _, interval := range sortedAndMergedIntervals {
+					for _, interval := range intervals {
 						intervalExample := utils.NewExampleFromProfilerChunk(
 							result.Chunk.ProjectID,
 							result.Chunk.ProfilerID,

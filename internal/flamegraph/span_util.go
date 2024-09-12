@@ -2,35 +2,11 @@ package flamegraph
 
 import (
 	"math"
-	"sort"
 	"time"
 
 	"github.com/getsentry/vroom/internal/nodetree"
 	"github.com/getsentry/vroom/internal/utils"
 )
-
-func mergeIntervals(intervals *[]utils.Interval) []utils.Interval {
-	if len(*intervals) == 0 {
-		return *intervals
-	}
-	sort.SliceStable((*intervals), func(i, j int) bool {
-		if (*intervals)[i].Start == (*intervals)[j].Start {
-			return (*intervals)[i].End < (*intervals)[j].End
-		}
-		return (*intervals)[i].Start < (*intervals)[j].Start
-	})
-
-	newIntervals := []utils.Interval{(*intervals)[0]}
-	for _, interval := range (*intervals)[1:] {
-		if interval.Start <= newIntervals[len(newIntervals)-1].End {
-			newIntervals[len(newIntervals)-1].End = max(newIntervals[len(newIntervals)-1].End, interval.End)
-		} else {
-			newIntervals = append(newIntervals, interval)
-		}
-	}
-
-	return newIntervals
-}
 
 func relativeIntervalsFromAbsoluteTimestamp(intervals *[]utils.Interval, t uint64) {
 	for i, v := range *intervals {
