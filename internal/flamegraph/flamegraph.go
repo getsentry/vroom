@@ -586,7 +586,20 @@ func GetFlamegraphFromCandidates(
 						slicedTree := sliceCallTree(&callTree, &[]utils.Interval{interval})
 						addCallTreeToFlamegraph(&flamegraphTree, slicedTree, annotate)
 					} // end loop intervals for a given tid
-				} else { // !intervals for a tid
+				} else {
+					// if we're here it means that we don't have an interval for a given
+					// thread_id for which we generated a callTree anyway.
+					// This would happen if we received a candidate without thread_id info.
+					// In that case the call to the CallTree functions would generate a
+					// callTree for all the thread.
+					// In this case we shouldn't have any intervals (we usually receive
+					// them from chunk for which we have a transasctions) and slicing
+					// shouldn't be necessary, but for consistency and to avoid future
+					// bugs we check anyway. If there are any intervals for unspecified
+					// TIDs, those we'll be under the empty tid string "".
+					if intervals, ok := result.Intervals[""]; ok {
+						callTree = sliceCallTree(&callTree, &intervals)
+					}
 					annotate := annotateWithProfileExample(example)
 					addCallTreeToFlamegraph(&flamegraphTree, callTree, annotate)
 				}
