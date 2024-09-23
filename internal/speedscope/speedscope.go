@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"time"
 
+	"github.com/getsentry/vroom/internal/clientsdk"
 	"github.com/getsentry/vroom/internal/debugmeta"
 	"github.com/getsentry/vroom/internal/measurements"
 	"github.com/getsentry/vroom/internal/platform"
@@ -110,10 +111,10 @@ type (
 	}
 
 	ProfileView struct {
-		Sampled              bool                                `json:"sampled"`                       //nolint:unused
-		AndroidAPILevel      uint32                              `json:"androidAPILevel,omitempty"`     //nolint:unused
-		Architecture         string                              `json:"architecture,omitempty"`        //nolint:unused
-		BuildID              string                              `json:"-"`                             //nolint:unused
+		AndroidAPILevel      uint32                              `json:"androidAPILevel,omitempty"` //nolint:unused
+		Architecture         string                              `json:"architecture,omitempty"`    //nolint:unused
+		BuildID              string                              `json:"-"`                         //nolint:unused
+		ClientSDK            clientsdk.ClientSDK                 `json:"-"`
 		DebugMeta            debugmeta.DebugMeta                 `json:"-"`                             //nolint:unused
 		DeviceClassification string                              `json:"deviceClassification"`          //nolint:unused
 		DeviceLocale         string                              `json:"deviceLocale"`                  //nolint:unused
@@ -124,16 +125,17 @@ type (
 		DeviceOSVersion      string                              `json:"deviceOSVersion"`               //nolint:unused
 		DurationNS           uint64                              `json:"durationNS"`                    //nolint:unused
 		Environment          string                              `json:"environment,omitempty"`         //nolint:unused
+		JsProfile            json.RawMessage                     `json:"-"`                             //nolint:unused
 		Measurements         map[string]measurements.Measurement `json:"-"`                             //nolint:unused
+		Options              utils.Options                       `json:"-"`                             //nolint:unused
 		OrganizationID       uint64                              `json:"organizationID"`
-		Options              utils.Options                       `json:"-"`                   //nolint:unused
 		Platform             platform.Platform                   `json:"platform"`            //nolint:unused
 		Profile              json.RawMessage                     `json:"-"`                   //nolint:unused
-		JsProfile            json.RawMessage                     `json:"-"`                   //nolint:unused
 		ProfileID            string                              `json:"profileID"`           //nolint:unused
 		ProjectID            uint64                              `json:"projectID"`           //nolint:unused
 		Received             timeutil.Time                       `json:"received"`            //nolint:unused
 		RetentionDays        int                                 `json:"-"`                   //nolint:unused
+		Sampled              bool                                `json:"sampled"`             //nolint:unused
 		Timestamp            time.Time                           `json:"timestamp,omitempty"` //nolint:unused
 		TraceID              string                              `json:"traceID"`             //nolint:unused
 		TransactionID        string                              `json:"transactionID"`       //nolint:unused

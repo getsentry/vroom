@@ -23,7 +23,8 @@
 - Add optional generation of metrics during flamegraph aggregation ([#494](https://github.com/getsentry/vroom/pull/494))
 - Ingest function metrics from profile chunks ([#495](https://github.com/getsentry/vroom/pull/495))
 - Annotate flamegraph with profile data ([#501](https://github.com/getsentry/vroom/pull/501)), ([#502](https://github.com/getsentry/vroom/pull/502)), ([#503](https://github.com/getsentry/vroom/pull/503))
-- Forward SDK info to Kafka. ([#507](https://github.com/getsentry/vroom/pull/507))
+- Forward SDK info for sample profiles to Kafka. ([#507](https://github.com/getsentry/vroom/pull/507))
+- Forward SDK info for legacy profiles to Kafka. ([#515](https://github.com/getsentry/vroom/pull/515))
 
 **Bug Fixes**:
 

@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/getsentry/vroom/internal/clientsdk"
 	"github.com/getsentry/vroom/internal/debugmeta"
 	"github.com/getsentry/vroom/internal/frame"
 	"github.com/getsentry/vroom/internal/measurements"
@@ -43,10 +44,10 @@ type (
 	}
 
 	RawProfile struct {
-		Sampled              bool                                `json:"sampled"`
 		AndroidAPILevel      uint32                              `json:"android_api_level,omitempty"`
 		Architecture         string                              `json:"architecture,omitempty"`
 		BuildID              string                              `json:"build_id,omitempty"`
+		ClientSDK            clientsdk.ClientSDK                 `json:"client_sdk"`
 		DebugMeta            debugmeta.DebugMeta                 `json:"debug_meta,omitempty"`
 		DeviceClassification string                              `json:"device_classification"`
 		DeviceLocale         string                              `json:"device_locale"`
@@ -57,16 +58,17 @@ type (
 		DeviceOSVersion      string                              `json:"device_os_version"`
 		DurationNS           uint64                              `json:"duration_ns"`
 		Environment          string                              `json:"environment,omitempty"`
+		JsProfile            json.RawMessage                     `json:"js_profile,omitempty"`
 		Measurements         map[string]measurements.Measurement `json:"measurements,omitempty"`
-		OrganizationID       uint64                              `json:"organization_id"`
 		Options              utils.Options                       `json:"options,omitempty"`
+		OrganizationID       uint64                              `json:"organization_id"`
 		Platform             platform.Platform                   `json:"platform"`
 		Profile              json.RawMessage                     `json:"profile,omitempty"`
-		JsProfile            json.RawMessage                     `json:"js_profile,omitempty"`
 		ProfileID            string                              `json:"profile_id"`
 		ProjectID            uint64                              `json:"project_id"`
 		Received             timeutil.Time                       `json:"received"`
 		RetentionDays        int                                 `json:"retention_days"`
+		Sampled              bool                                `json:"sampled"`
 		Timestamp            time.Time                           `json:"timestamp"`
 		TraceID              string                              `json:"trace_id"`
 		TransactionID        string                              `json:"transaction_id"`
@@ -248,6 +250,8 @@ func (p *LegacyProfile) Metadata() metadata.Metadata {
 		DeviceOSVersion:      p.DeviceOSVersion,
 		ID:                   p.ProfileID,
 		ProjectID:            strconv.FormatUint(p.GetProjectID(), 10),
+		SDKName:              p.ClientSDK.Name,
+		SDKVersion:           p.ClientSDK.Version,
 		Timestamp:            p.Timestamp.Unix(),
 		TraceDurationMs:      float64(p.DurationNS) / 1_000_000,
 		TransactionID:        p.TransactionID,
@@ -364,10 +368,10 @@ func (p LegacyProfile) GetOptions() utils.Options {
 // for ReactNative.
 // See: https://github.com/facebook/react-native-website/blob/43bc708c784be56b68a4d74711dd8824851b38f9/website/architecture/threading-model.md
 func sampleToAndroidFormat(p sample.Trace, offset uint64, usedTids map[uint64]void) Android {
-	//var Clock Clock
+	// var Clock Clock
 	var events []AndroidEvent
 	var methods []AndroidMethod
-	//var StartTime uint64
+	// var StartTime uint64
 	var threads []AndroidThread
 
 	var lastStack []int
