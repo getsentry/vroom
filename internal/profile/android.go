@@ -155,11 +155,12 @@ type AndroidEvent struct {
 
 type (
 	Android struct {
-		Clock     Clock           `json:"clock"`
-		Events    []AndroidEvent  `json:"events,omitempty"`
-		Methods   []AndroidMethod `json:"methods,omitempty"`
-		StartTime uint64          `json:"start_time,omitempty"`
-		Threads   []AndroidThread `json:"threads,omitempty"`
+		Clock         Clock           `json:"clock"`
+		ElapsedTimeUS uint64          `json:"elapsed_time,omitempty"`
+		Events        []AndroidEvent  `json:"events,omitempty"`
+		Methods       []AndroidMethod `json:"methods,omitempty"`
+		StartTime     uint64          `json:"start_time,omitempty"`
+		Threads       []AndroidThread `json:"threads,omitempty"`
 	}
 
 	Clock string
@@ -355,16 +356,6 @@ func (p Android) CallTreesWithMaxDepth(maxDepth int) map[uint64][]*nodetree.Node
 		}
 	}
 	return treesByThreadID
-}
-
-func (p Android) DurationNS() uint64 {
-	if len(p.Events) == 0 {
-		return 0
-	}
-	buildTimestamp := p.TimestampGetter()
-	startTS := buildTimestamp(p.Events[0].Time)
-	endTS := buildTimestamp(p.Events[len(p.Events)-1].Time)
-	return endTS - startTS
 }
 
 func generateFingerprint(stack []*nodetree.Node) uint64 {

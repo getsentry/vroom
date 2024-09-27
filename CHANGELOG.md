@@ -43,6 +43,7 @@
 - Handle js profile normalization for react+android profiles ([#499](https://github.com/getsentry/vroom/pull/499))
 - Fix metrics example list ([#505](https://github.com/getsentry/vroom/pull/505))
 - Increase readjob channel size  ([#512](https://github.com/getsentry/vroom/pull/512))
+- Return the duration measured by the profiler. ([#516](https://github.com/getsentry/vroom/pull/516))
 
 **Internal**:
 

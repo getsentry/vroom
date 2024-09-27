@@ -336,7 +336,7 @@ func (p LegacyProfile) GetRetentionDays() int {
 }
 
 func (p LegacyProfile) GetDurationNS() uint64 {
-	return p.Trace.DurationNS()
+	return p.DurationNS
 }
 
 func (p LegacyProfile) GetTransactionMetadata() transaction.Metadata {
