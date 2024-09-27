@@ -358,13 +358,6 @@ func (p Android) CallTreesWithMaxDepth(maxDepth int) map[uint64][]*nodetree.Node
 	return treesByThreadID
 }
 
-func (p Android) DurationNS() uint64 {
-	if len(p.Events) == 0 {
-		return 0
-	}
-	return p.ElapsedTimeUS * 1e3
-}
-
 func generateFingerprint(stack []*nodetree.Node) uint64 {
 	h := fnv.New64()
 	for _, n := range stack {
