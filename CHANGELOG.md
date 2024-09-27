@@ -25,7 +25,6 @@
 - Annotate flamegraph with profile data ([#501](https://github.com/getsentry/vroom/pull/501)), ([#502](https://github.com/getsentry/vroom/pull/502)), ([#503](https://github.com/getsentry/vroom/pull/503))
 - Forward SDK info for sample profiles to Kafka. ([#507](https://github.com/getsentry/vroom/pull/507))
 - Forward SDK info for legacy profiles to Kafka. ([#515](https://github.com/getsentry/vroom/pull/515))
-- Return the duration measured by the profiler. ([#516](https://github.com/getsentry/vroom/pull/516))
 
 **Bug Fixes**:
 
@@ -44,6 +43,7 @@
 - Handle js profile normalization for react+android profiles ([#499](https://github.com/getsentry/vroom/pull/499))
 - Fix metrics example list ([#505](https://github.com/getsentry/vroom/pull/505))
 - Increase readjob channel size  ([#512](https://github.com/getsentry/vroom/pull/512))
+- Return the duration measured by the profiler. ([#516](https://github.com/getsentry/vroom/pull/516))
 
 **Internal**:
 
