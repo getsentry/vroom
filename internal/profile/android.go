@@ -155,12 +155,11 @@ type AndroidEvent struct {
 
 type (
 	Android struct {
-		Clock         Clock           `json:"clock"`
-		ElapsedTimeUS uint64          `json:"elapsed_time,omitempty"`
-		Events        []AndroidEvent  `json:"events,omitempty"`
-		Methods       []AndroidMethod `json:"methods,omitempty"`
-		StartTime     uint64          `json:"start_time,omitempty"`
-		Threads       []AndroidThread `json:"threads,omitempty"`
+		Clock     Clock           `json:"clock"`
+		Events    []AndroidEvent  `json:"events,omitempty"`
+		Methods   []AndroidMethod `json:"methods,omitempty"`
+		StartTime uint64          `json:"start_time,omitempty"`
+		Threads   []AndroidThread `json:"threads,omitempty"`
 	}
 
 	Clock string
