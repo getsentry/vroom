@@ -155,12 +155,12 @@ type AndroidEvent struct {
 
 type (
 	Android struct {
-		Clock       Clock           `json:"clock"`
-		ElapsedTime uint64          `json:"elapsed_time,omitempty"`
-		Events      []AndroidEvent  `json:"events,omitempty"`
-		Methods     []AndroidMethod `json:"methods,omitempty"`
-		StartTime   uint64          `json:"start_time,omitempty"`
-		Threads     []AndroidThread `json:"threads,omitempty"`
+		Clock         Clock           `json:"clock"`
+		ElapsedTimeUS uint64          `json:"elapsed_time,omitempty"`
+		Events        []AndroidEvent  `json:"events,omitempty"`
+		Methods       []AndroidMethod `json:"methods,omitempty"`
+		StartTime     uint64          `json:"start_time,omitempty"`
+		Threads       []AndroidThread `json:"threads,omitempty"`
 	}
 
 	Clock string
@@ -362,7 +362,7 @@ func (p Android) DurationNS() uint64 {
 	if len(p.Events) == 0 {
 		return 0
 	}
-	return p.ElapsedTime
+	return p.ElapsedTimeUS * 1e3
 }
 
 func generateFingerprint(stack []*nodetree.Node) uint64 {
