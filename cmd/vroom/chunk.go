@@ -17,6 +17,7 @@ import (
 
 	"github.com/getsentry/vroom/internal/chunk"
 	"github.com/getsentry/vroom/internal/metrics"
+	"github.com/getsentry/vroom/internal/platform"
 	"github.com/getsentry/vroom/internal/storageutil"
 )
 
@@ -300,8 +301,11 @@ type (
 		Received      float64 `json:"received"`
 		RetentionDays int     `json:"retention_days"`
 
-		SDKName    string `json:"sdk_name"`
-		SDKVersion string `json:"sdk_version"`
+		Environment string            `json:"environment"`
+		Platform    platform.Platform `json:"platform"`
+		Release     string            `json:"release"`
+		SDKName     string            `json:"sdk_name"`
+		SDKVersion  string            `json:"sdk_version"`
 	}
 )
 
@@ -311,9 +315,12 @@ func buildChunkKafkaMessage(c *chunk.Chunk) *ChunkKafkaMessage {
 		ChunkID:        c.ID,
 		DurationMS:     c.DurationMS(),
 		EndTimestamp:   end,
+		Environment:    c.Environment,
+		Platform:       c.Platform,
 		ProfilerID:     c.ProfilerID,
 		ProjectID:      c.ProjectID,
 		Received:       c.Received,
+		Release:        c.Release,
 		RetentionDays:  c.RetentionDays,
 		SDKName:        c.ClientSDK.Name,
 		SDKVersion:     c.ClientSDK.Version,
