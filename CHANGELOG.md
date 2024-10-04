@@ -25,6 +25,7 @@
 - Annotate flamegraph with profile data ([#501](https://github.com/getsentry/vroom/pull/501)), ([#502](https://github.com/getsentry/vroom/pull/502)), ([#503](https://github.com/getsentry/vroom/pull/503))
 - Forward SDK info for sample profiles to Kafka. ([#507](https://github.com/getsentry/vroom/pull/507))
 - Forward SDK info for legacy profiles to Kafka. ([#515](https://github.com/getsentry/vroom/pull/515))
+- Add more metadata fields to Chunk Kafka message. ([#518](https://github.com/getsentry/vroom/pull/518))
 
 **Bug Fixes**:
 
