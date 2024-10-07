@@ -1,10 +1,14 @@
 package utils
 
+import (
+	"sort"
+)
+
 type (
 	Interval struct {
-		Start          uint64 `json:"start,string"`
-		End            uint64 `json:"end,string"`
-		ActiveThreadID string `json:"active_thread_id,omitempty"`
+		Start          uint64  `json:"start,string"`
+		End            uint64  `json:"end,string"`
+		ActiveThreadID *string `json:"active_thread_id,omitempty"`
 	}
 
 	TransactionProfileCandidate struct {
@@ -13,13 +17,14 @@ type (
 	}
 
 	ContinuousProfileCandidate struct {
-		ProjectID     uint64  `json:"project_id"`
-		ProfilerID    string  `json:"profiler_id"`
-		ChunkID       string  `json:"chunk_id"`
-		TransactionID string  `json:"transaction_id"`
-		ThreadID      *string `json:"thread_id"`
-		Start         uint64  `json:"start,string"`
-		End           uint64  `json:"end,string"`
+		ProjectID     uint64                `json:"project_id"`
+		ProfilerID    string                `json:"profiler_id"`
+		ChunkID       string                `json:"chunk_id"`
+		TransactionID string                `json:"transaction_id"`
+		ThreadID      *string               `json:"thread_id"`
+		Start         uint64                `json:"start,string"`
+		End           uint64                `json:"end,string"`
+		Intervals     map[string][]Interval `json:"-"`
 	}
 
 	// ExampleMetadata and FunctionMetrics have been moved here, although they'd
@@ -81,4 +86,82 @@ func NewExampleFromProfilerChunk(
 		Start:         float64(start) / 1e9,
 		End:           float64(end) / 1e9,
 	}
+}
+
+func MergeContinuousProfileCandidate(candidates []ContinuousProfileCandidate) []ContinuousProfileCandidate {
+	chunkToIdx := map[string]int{}
+	newCandidates := []ContinuousProfileCandidate{}
+	for _, c := range candidates {
+		newInterval := Interval{
+			Start: c.Start,
+			End:   c.End,
+		}
+		tid := ""
+		if c.ThreadID != nil {
+			tid = *c.ThreadID
+		}
+		// if we already have a candidate with such chunkID, add the interval
+		if idx, ok := chunkToIdx[c.ChunkID]; ok {
+			// if there is already an interval for a given thread ID
+			// add the interval to that list
+			if _, ok := newCandidates[idx].Intervals[tid]; ok {
+				intervals := newCandidates[idx].Intervals[tid]
+				intervals = append(intervals, newInterval)
+				if c.Start != 0 && c.End != 0 {
+					newCandidates[idx].Intervals[tid] = intervals
+				}
+			} else {
+				// else add a new list of intervals for such threadID
+				if c.Start != 0 && c.End != 0 {
+					newCandidates[idx].Intervals[tid] = []Interval{newInterval}
+				}
+			}
+		} else {
+			// else add a new candidate
+			chunkToIdx[c.ChunkID] = len(newCandidates)
+			candidate := ContinuousProfileCandidate{
+				ProjectID:     c.ProjectID,
+				ProfilerID:    c.ProfilerID,
+				ChunkID:       c.ChunkID,
+				TransactionID: c.TransactionID,
+				Intervals:     map[string][]Interval{},
+			}
+			if c.Start != 0 && c.End != 0 {
+				candidate.Intervals[tid] = []Interval{newInterval}
+			}
+			newCandidates = append(newCandidates, candidate)
+		}
+	} // end loop candidates
+	for i, candidate := range newCandidates {
+		if len(candidate.Intervals) > 0 {
+			for tid, intervals := range candidate.Intervals {
+				sortedMergedIntervals := MergeIntervals(&intervals)
+				newCandidates[i].Intervals[tid] = sortedMergedIntervals
+			}
+		}
+	}
+	return newCandidates
+}
+
+func MergeIntervals(intervals *[]Interval) []Interval {
+	if len(*intervals) == 0 {
+		return *intervals
+	}
+	sort.SliceStable((*intervals), func(i, j int) bool {
+		if (*intervals)[i].Start == (*intervals)[j].Start {
+			return (*intervals)[i].End < (*intervals)[j].End
+		}
+		return (*intervals)[i].Start < (*intervals)[j].Start
+	})
+
+	newIntervals := []Interval{(*intervals)[0]}
+	for _, interval := range (*intervals)[1:] {
+		if interval.Start <= newIntervals[len(newIntervals)-1].End {
+			newIntervals[len(newIntervals)-1].End = max(newIntervals[len(newIntervals)-1].End, interval.End)
+		} else {
+			newIntervals = append(newIntervals, interval)
+		}
+	}
+
+	return newIntervals
 }

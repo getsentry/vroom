@@ -94,7 +94,7 @@ func GetFlamegraphFromProfiles(
 					// the profile.timestamps to be consistent with the sample/node
 					// 'start' and 'end'
 					relativeIntervalsFromAbsoluteTimestamp(&spans, uint64(p.Timestamp().UnixNano()))
-					sortedSpans := mergeIntervals(&spans)
+					sortedSpans := utils.MergeIntervals(&spans)
 					for tid, callTree := range callTrees {
 						callTrees[tid] = sliceCallTree(&callTree, &sortedSpans)
 					}
@@ -431,7 +431,7 @@ func GetFlamegraphFromChunks(
 		}
 		cm := chunkIDToMetadata[result.Chunk.ID]
 		for _, interval := range cm.SpanIntervals {
-			callTrees, err := result.Chunk.CallTrees(&interval.ActiveThreadID)
+			callTrees, err := result.Chunk.CallTrees(interval.ActiveThreadID)
 			if err != nil {
 				if hub != nil {
 					hub.CaptureException(err)
@@ -509,6 +509,7 @@ func GetFlamegraphFromCandidates(
 			ThreadID:       candidate.ThreadID,
 			Start:          candidate.Start,
 			End:            candidate.End,
+			Intervals:      candidate.Intervals,
 			Storage:        storage,
 			Result:         results,
 		}
@@ -568,18 +569,42 @@ func GetFlamegraphFromCandidates(
 				result.Start,
 				result.End,
 			)
-			annotate := annotateWithProfileExample(example)
 
-			for _, callTree := range result.CallTrees {
-				if result.Start > 0 && result.End > 0 {
-					interval := utils.Interval{
-						Start: result.Start,
-						End:   result.End,
+			for tid, callTree := range result.CallTrees {
+				if intervals, ok := result.Intervals[tid]; ok {
+					for _, interval := range intervals {
+						intervalExample := utils.NewExampleFromProfilerChunk(
+							result.Chunk.ProjectID,
+							result.Chunk.ProfilerID,
+							result.Chunk.ID,
+							result.TransactionID,
+							&tid,
+							interval.Start,
+							interval.End,
+						)
+						annotate := annotateWithProfileExample(intervalExample)
+						slicedTree := sliceCallTree(&callTree, &[]utils.Interval{interval})
+						addCallTreeToFlamegraph(&flamegraphTree, slicedTree, annotate)
+					} // end loop intervals for a given tid
+				} else {
+					// if we're here it means that we don't have an interval for a given
+					// thread_id for which we generated a callTree anyway.
+					// This would happen if we received a candidate without thread_id info.
+					// In that case the call to the CallTree functions would generate a
+					// callTree for all the thread.
+					// In this case we shouldn't have any intervals (we usually receive
+					// them from chunk for which we have a transasctions) and slicing
+					// shouldn't be necessary, but for consistency and to avoid future
+					// bugs we check anyway. If there are any intervals for unspecified
+					// TIDs, those we'll be under the empty tid string "".
+					if intervals, ok := result.Intervals[""]; ok {
+						callTree = sliceCallTree(&callTree, &intervals)
 					}
-					callTree = sliceCallTree(&callTree, &[]utils.Interval{interval})
+					annotate := annotateWithProfileExample(example)
+					addCallTreeToFlamegraph(&flamegraphTree, callTree, annotate)
 				}
-				addCallTreeToFlamegraph(&flamegraphTree, callTree, annotate)
-			}
+			} // end callTree loop
+
 			// if metrics aggregator is not null, while we're at it,
 			// compute the metrics as well
 			if ma != nil {
@@ -591,7 +616,7 @@ func GetFlamegraphFromCandidates(
 			// This should never happen
 			return speedscope.Output{}, errors.New("unexpected result from storage")
 		}
-	}
+	} // end --> for i := 0; i < numCandidates; i++ {
 
 	flamegraphSpan.Finish()
 

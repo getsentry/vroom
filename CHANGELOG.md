@@ -43,6 +43,7 @@
 - Remove module frame in python ([#496](https://github.com/getsentry/vroom/pull/496))
 - Handle js profile normalization for react+android profiles ([#499](https://github.com/getsentry/vroom/pull/499))
 - Fix metrics example list ([#505](https://github.com/getsentry/vroom/pull/505))
+- Optimize chunks download and fix flamegraph aggregation ([#508](https://github.com/getsentry/vroom/pull/508))
 - Increase readjob channel size  ([#512](https://github.com/getsentry/vroom/pull/512))
 - Return the duration measured by the profiler. ([#516](https://github.com/getsentry/vroom/pull/516), [#517](https://github.com/getsentry/vroom/pull/517))
 

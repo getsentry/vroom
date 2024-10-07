@@ -9,26 +9,6 @@ import (
 	"github.com/getsentry/vroom/internal/utils"
 )
 
-func TestMergeIntervals(t *testing.T) {
-	inputIntervals := []utils.Interval{
-		{Start: 8, End: 11},
-		{Start: 3, End: 6},
-		{Start: 7, End: 12},
-		{Start: 1, End: 3},
-	}
-
-	expectedResult := []utils.Interval{
-		{Start: 1, End: 6},
-		{Start: 7, End: 12},
-	}
-
-	result := mergeIntervals(&inputIntervals)
-
-	if diff := testutil.Diff(result, expectedResult); diff != "" {
-		t.Fatalf("Result mismatch: got - want +\n%s", diff)
-	}
-}
-
 func TestGetTotalOvelappingDuration(t *testing.T) {
 	tests := []struct {
 		name      string
@@ -91,7 +71,7 @@ func TestGetTotalOvelappingDuration(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			intervals := mergeIntervals(&test.intervals)
+			intervals := utils.MergeIntervals(&test.intervals)
 			result := getTotalOverlappingDuration(&test.node, &intervals)
 
 			if diff := testutil.Diff(result, test.output); diff != "" {
@@ -302,7 +282,7 @@ func TestSliceCallTree(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			intervals := mergeIntervals(&test.intervals)
+			intervals := utils.MergeIntervals(&test.intervals)
 			result := sliceCallTree(&test.callTree, &intervals)
 			if diff := testutil.Diff(result, test.output); diff != "" {
 				t.Fatalf("Result mismatch: got - want +\n%s", diff)
