@@ -186,7 +186,7 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 			s.Description = "Extract metrics from functions"
 			// Cap and filter out system frames.
 			functionsMetricPlatform := metrics.CapAndFilterFunctions(functions, maxUniqueFunctionsPerProfile, true)
-			metrics, metricsSummary := extractMetricsFromFunctions(&p, functionsMetricPlatform)
+			metrics, _ := extractMetricsFromFunctions(&p, functionsMetricPlatform)
 			s.Finish()
 
 			if len(metrics) > 0 {
@@ -194,20 +194,6 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 				s.Description = "Send functions metrics to generic metrics platform"
 				sendMetrics(ctx, p.GetOptions().ProjectDSN, metrics, env.metricsClient)
 				s.Finish()
-			}
-
-			// Only send a profile sample to the metrics_summary if it's an indexed profile
-			if p.IsSampled() && len(metrics) > 0 {
-				kafkaMessages, err := generateMetricSummariesKafkaMessageBatch(&p, metrics, metricsSummary)
-				if err != nil {
-					hub.CaptureException(err)
-					w.WriteHeader(http.StatusInternalServerError)
-					return
-				}
-				err = env.metricSummaryWriter.WriteMessages(ctx, kafkaMessages...)
-				if err != nil {
-					hub.CaptureException(err)
-				}
 			}
 		}
 	}
