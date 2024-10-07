@@ -106,6 +106,7 @@
 - Fix flakey test for profile examples ([#504](https://github.com/getsentry/vroom/pull/504))
 - Instrument flamegraph generation with spans ([#510](https://github.com/getsentry/vroom/pull/510)), ([#511](https://github.com/getsentry/vroom/pull/511))
 - Move calltree generation into readjob ([#514](https://github.com/getsentry/vroom/pull/514))
+- Stop writing profile examples to metrics_summary ([#519](https://github.com/getsentry/vroom/pull/519))
 
 ## 23.12.0
 
