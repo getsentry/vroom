@@ -25,7 +25,7 @@ type (
 
 	ReadJobResult struct {
 		Err           error
-		Chunk         Chunk
+		Chunk         SampleChunk
 		TransactionID string
 		ThreadID      *string
 		Start         uint64
@@ -34,7 +34,7 @@ type (
 )
 
 func (job ReadJob) Read() {
-	var chunk Chunk
+	var chunk SampleChunk
 
 	err := storageutil.UnmarshalCompressed(
 		job.Ctx,
@@ -63,7 +63,7 @@ type (
 	CallTreesReadJobResult struct {
 		Err           error
 		CallTrees     map[string][]*nodetree.Node
-		Chunk         Chunk
+		Chunk         SampleChunk
 		TransactionID string
 		ThreadID      *string
 		Start         uint64
@@ -72,7 +72,7 @@ type (
 )
 
 func (job CallTreesReadJob) Read() {
-	var chunk Chunk
+	var chunk SampleChunk
 
 	err := storageutil.UnmarshalCompressed(
 		job.Ctx,
@@ -80,7 +80,6 @@ func (job CallTreesReadJob) Read() {
 		StoragePath(job.OrganizationID, job.ProjectID, job.ProfilerID, job.ChunkID),
 		&chunk,
 	)
-
 	if err != nil {
 		job.Result <- CallTreesReadJobResult{Err: err}
 		return
