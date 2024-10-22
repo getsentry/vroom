@@ -141,6 +141,8 @@ func (env *environment) postChunk(w http.ResponseWriter, r *http.Request) {
 	options := c.GetOptions()
 	sc, ok := c.(*chunk.SampleChunk)
 
+	// Metrics extraction is only supported for sample chunks right now.
+	// TODO: support metrics extraction for Android chunks.
 	if options.ProjectDSN != "" && c.GetPlatform() != platform.Android && ok {
 		// nb.: here we don't have a specific thread ID, so we're going to ingest
 		// functions metrics from all the thread.
