@@ -74,9 +74,7 @@ func (env *environment) postChunk(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if p.Platform != platform.Android {
-		c.(*chunk.SampleChunk).Normalize()
-	}
+	c.Normalize()
 
 	if hub != nil {
 		hub.Scope().SetContext("Profile metadata", map[string]interface{}{
@@ -141,7 +139,7 @@ func (env *environment) postChunk(w http.ResponseWriter, r *http.Request) {
 	s.Finish()
 
 	options := c.GetOptions()
-	sc, ok := c.(chunk.SampleChunk)
+	sc, ok := c.(*chunk.SampleChunk)
 
 	if options.ProjectDSN != "" && c.GetPlatform() != platform.Android && ok {
 		// nb.: here we don't have a specific thread ID, so we're going to ingest
@@ -166,7 +164,7 @@ func (env *environment) postChunk(w http.ResponseWriter, r *http.Request) {
 
 		s = sentry.StartSpan(ctx, "processing")
 		s.Description = "Extract metrics from functions"
-		metrics := extractMetricsFromSampleChunkFunctions(&sc, functions)
+		metrics := extractMetricsFromSampleChunkFunctions(sc, functions)
 		s.Finish()
 
 		if len(metrics) > 0 {

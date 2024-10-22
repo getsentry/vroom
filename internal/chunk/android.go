@@ -111,3 +111,6 @@ func (c AndroidChunk) GetOrganizationID() uint64 {
 func (c AndroidChunk) GetOptions() utils.Options {
 	return c.Options
 }
+
+func (c *AndroidChunk) Normalize() {
+}

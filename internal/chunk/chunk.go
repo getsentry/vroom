@@ -26,6 +26,8 @@ type (
 		SDKVersion() string
 		StartTimestamp() float64
 		StoragePath() string
+
+		Normalize()
 	}
 )
 
