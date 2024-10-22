@@ -65,7 +65,7 @@ func (c AndroidChunk) SDKVersion() string {
 }
 
 func (c AndroidChunk) EndTimestamp() float64 {
-	return 0
+	return c.Timestamp + float64(c.DurationNS)*1e-9
 }
 
 func (c AndroidChunk) GetEnvironment() string {
@@ -101,7 +101,7 @@ func (c AndroidChunk) GetRetentionDays() int {
 }
 
 func (c AndroidChunk) StartTimestamp() float64 {
-	return 0
+	return c.Timestamp
 }
 
 func (c AndroidChunk) GetOrganizationID() uint64 {
