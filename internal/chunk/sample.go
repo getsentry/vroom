@@ -208,7 +208,11 @@ func (c SampleChunk) SDKVersion() string {
 }
 
 func (c SampleChunk) EndTimestamp() float64 {
-	return 0
+	count := len(c.Profile.Samples)
+	if count == 0 {
+		return 0
+	}
+	return c.Profile.Samples[count-1].Timestamp
 }
 
 func (c SampleChunk) GetEnvironment() string {
@@ -244,7 +248,10 @@ func (c SampleChunk) GetRetentionDays() int {
 }
 
 func (c SampleChunk) StartTimestamp() float64 {
-	return 0
+	if len(c.Profile.Samples) == 0 {
+		return 0
+	}
+	return c.Profile.Samples[0].Timestamp
 }
 
 func (c SampleChunk) GetOrganizationID() uint64 {
