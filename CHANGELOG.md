@@ -107,6 +107,7 @@
 - Instrument flamegraph generation with spans ([#510](https://github.com/getsentry/vroom/pull/510)), ([#511](https://github.com/getsentry/vroom/pull/511))
 - Move calltree generation into readjob ([#514](https://github.com/getsentry/vroom/pull/514))
 - Stop writing profile examples to metrics_summary ([#519](https://github.com/getsentry/vroom/pull/519))
+- Update materialized_version for profile functions metrics ([#522](https://github.com/getsentry/vroom/pull/522))
 
 ## 23.12.0
 
