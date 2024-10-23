@@ -71,14 +71,6 @@ func (c SampleChunk) StoragePath() string {
 	)
 }
 
-func (c SampleChunk) StartEndTimestamps() (float64, float64) {
-	count := len(c.Profile.Samples)
-	if count == 0 {
-		return 0, 0
-	}
-	return c.Profile.Samples[0].Timestamp, c.Profile.Samples[count-1].Timestamp
-}
-
 func (c *SampleChunk) Normalize() {
 	for i := range c.Profile.Frames {
 		f := c.Profile.Frames[i]
@@ -195,8 +187,7 @@ func (d *SampleData) trimPythonStacks() {
 }
 
 func (c SampleChunk) DurationMS() uint64 {
-	start, end := c.StartEndTimestamps()
-	return uint64(math.Round((end - start) * 1e3))
+	return uint64(math.Round((c.EndTimestamp() - c.StartTimestamp()) * 1e3))
 }
 
 func (c SampleChunk) SDKName() string {

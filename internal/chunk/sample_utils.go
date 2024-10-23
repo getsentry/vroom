@@ -9,20 +9,18 @@ import (
 	"gocloud.dev/blob"
 )
 
-func MergeSampleChunks(chunks []SampleChunk, startTs, endTs uint64) (SampleChunk, error) {
+func MergeSampleChunks(chunks []SampleChunk, startTS, endTS uint64) (SampleChunk, error) {
 	if len(chunks) == 0 {
 		return SampleChunk{}, nil
 	}
 	sort.Slice(chunks, func(i, j int) bool {
-		_, endFirstChunk := chunks[i].StartEndTimestamps()
-		startSecondChunk, _ := chunks[j].StartEndTimestamps()
-		return endFirstChunk <= startSecondChunk
+		return chunks[i].EndTimestamp() <= chunks[j].StartTimestamp()
 	})
 
 	mergedMeasurement := make(map[string]measurements.MeasurementV2)
 
-	start := float64(startTs) / 1e9
-	end := float64(endTs) / 1e9
+	start := float64(startTS) / 1e9
+	end := float64(endTS) / 1e9
 
 	chunk := chunks[0]
 	if len(chunk.Measurements) > 0 {
