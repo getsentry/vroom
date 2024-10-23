@@ -12,16 +12,17 @@ import (
 type (
 	// FunctionsKafkaMessage is representing the struct we send to Kafka to insert functions in ClickHouse.
 	FunctionsKafkaMessage struct {
-		Environment     string                      `json:"environment,omitempty"`
-		Functions       []nodetree.CallTreeFunction `json:"functions"`
-		ID              string                      `json:"profile_id"`
-		Platform        platform.Platform           `json:"platform"`
-		ProjectID       uint64                      `json:"project_id"`
-		Received        int64                       `json:"received"`
-		Release         string                      `json:"release,omitempty"`
-		RetentionDays   int                         `json:"retention_days"`
-		Timestamp       int64                       `json:"timestamp"`
-		TransactionName string                      `json:"transaction_name"`
+		Environment         string                      `json:"environment,omitempty"`
+		Functions           []nodetree.CallTreeFunction `json:"functions"`
+		ID                  string                      `json:"profile_id"`
+		Platform            platform.Platform           `json:"platform"`
+		ProjectID           uint64                      `json:"project_id"`
+		Received            int64                       `json:"received"`
+		Release             string                      `json:"release,omitempty"`
+		RetentionDays       int                         `json:"retention_days"`
+		Timestamp           int64                       `json:"timestamp"`
+		TransactionName     string                      `json:"transaction_name"`
+		MaterializedVersion uint8                       `json:"materialization_version"`
 	}
 
 	// ProfileKafkaMessage is representing the struct we send to Kafka to insert a profile in ClickHouse.
@@ -75,16 +76,17 @@ type (
 
 func buildFunctionsKafkaMessage(p profile.Profile, functions []nodetree.CallTreeFunction) FunctionsKafkaMessage {
 	return FunctionsKafkaMessage{
-		Environment:     p.Environment(),
-		Functions:       functions,
-		ID:              p.ID(),
-		Platform:        p.Platform(),
-		ProjectID:       p.ProjectID(),
-		Received:        p.Received().Unix(),
-		Release:         p.Release(),
-		RetentionDays:   p.RetentionDays(),
-		Timestamp:       p.Timestamp().Unix(),
-		TransactionName: p.Transaction().Name,
+		Environment:         p.Environment(),
+		Functions:           functions,
+		ID:                  p.ID(),
+		Platform:            p.Platform(),
+		ProjectID:           p.ProjectID(),
+		Received:            p.Received().Unix(),
+		Release:             p.Release(),
+		RetentionDays:       p.RetentionDays(),
+		Timestamp:           p.Timestamp().Unix(),
+		TransactionName:     p.Transaction().Name,
+		MaterializedVersion: 1,
 	}
 }
 
