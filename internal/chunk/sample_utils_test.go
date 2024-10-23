@@ -9,19 +9,19 @@ import (
 	"github.com/getsentry/vroom/internal/testutil"
 )
 
-func TestMergeChunks(t *testing.T) {
+func TestMergeSampleChunks(t *testing.T) {
 	tests := []struct {
 		name  string
-		have  []Chunk
-		want  Chunk
+		have  []SampleChunk
+		want  SampleChunk
 		start uint64
 		end   uint64
 	}{
 		{
 			name: "contiguous chunks",
-			have: []Chunk{
+			have: []SampleChunk{
 				{
-					Profile: Data{
+					Profile: SampleData{
 						Frames: []frame.Frame{
 							{Function: "c"},
 							{Function: "d"},
@@ -41,7 +41,7 @@ func TestMergeChunks(t *testing.T) {
 				},
 				// other chunk
 				{
-					Profile: Data{
+					Profile: SampleData{
 						Frames: []frame.Frame{
 							{Function: "a"},
 							{Function: "b"},
@@ -60,8 +60,8 @@ func TestMergeChunks(t *testing.T) {
 					Measurements: json.RawMessage(`{"first_metric":{"unit":"ms","values":[{"timestamp":1.0,"value":1}]}}`),
 				},
 			},
-			want: Chunk{
-				Profile: Data{
+			want: SampleChunk{
+				Profile: SampleData{
 					Frames: []frame.Frame{
 						{Function: "a"},
 						{Function: "b"},
@@ -91,7 +91,7 @@ func TestMergeChunks(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			have, err := MergeChunks(test.have, test.start, test.end)
+			have, err := MergeSampleChunks(test.have, test.start, test.end)
 			if err != nil {
 				t.Fatal(err)
 			}

@@ -17,6 +17,7 @@ import (
 	"github.com/getsentry/vroom/internal/testutil"
 	"github.com/google/uuid"
 	"github.com/segmentio/kafka-go"
+
 	"gocloud.dev/blob"
 	_ "gocloud.dev/blob/fileblob"
 )
@@ -48,10 +49,10 @@ func TestMain(m *testing.M) {
 	os.Exit(code)
 }
 
-func TestPostAndReadChunk(t *testing.T) {
+func TestPostAndReadSampleChunk(t *testing.T) {
 	profilerID := uuid.New().String()
 	chunkID := uuid.New().String()
-	chunkData := chunk.Chunk{
+	chunkData := chunk.SampleChunk{
 		ID:             chunkID,
 		ProfilerID:     profilerID,
 		Environment:    "dev",
@@ -59,7 +60,7 @@ func TestPostAndReadChunk(t *testing.T) {
 		Release:        "1.2",
 		OrganizationID: 1,
 		ProjectID:      1,
-		Profile: chunk.Data{
+		Profile: chunk.SampleData{
 			Frames: []frame.Frame{
 				{
 					Function: "test",
@@ -124,7 +125,7 @@ func TestPostAndReadChunk(t *testing.T) {
 
 			// read the chunk with UnmarshalCompressed and make sure that we can unmarshal
 			// the data into the Chunk struct and that it matches the original
-			var c chunk.Chunk
+			var c chunk.SampleChunk
 			err = storageutil.UnmarshalCompressed(
 				context.Background(),
 				test.blobBucket,

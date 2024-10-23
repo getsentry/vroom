@@ -9,26 +9,24 @@ import (
 	"gocloud.dev/blob"
 )
 
-func MergeChunks(chunks []Chunk, startTs, endTs uint64) (Chunk, error) {
+func MergeSampleChunks(chunks []SampleChunk, startTS, endTS uint64) (SampleChunk, error) {
 	if len(chunks) == 0 {
-		return Chunk{}, nil
+		return SampleChunk{}, nil
 	}
 	sort.Slice(chunks, func(i, j int) bool {
-		_, endFirstChunk := chunks[i].StartEndTimestamps()
-		startSecondChunk, _ := chunks[j].StartEndTimestamps()
-		return endFirstChunk <= startSecondChunk
+		return chunks[i].EndTimestamp() <= chunks[j].StartTimestamp()
 	})
 
-	var mergedMeasurement = make(map[string]measurements.MeasurementV2)
+	mergedMeasurement := make(map[string]measurements.MeasurementV2)
 
-	start := float64(startTs) / 1e9
-	end := float64(endTs) / 1e9
+	start := float64(startTS) / 1e9
+	end := float64(endTS) / 1e9
 
 	chunk := chunks[0]
 	if len(chunk.Measurements) > 0 {
 		err := json.Unmarshal(chunk.Measurements, &mergedMeasurement)
 		if err != nil {
-			return Chunk{}, err
+			return SampleChunk{}, err
 		}
 	}
 
@@ -80,7 +78,7 @@ func MergeChunks(chunks []Chunk, startTs, endTs uint64) (Chunk, error) {
 			var chunkMeasurements map[string]measurements.MeasurementV2
 			err := json.Unmarshal(c.Measurements, &chunkMeasurements)
 			if err != nil {
-				return Chunk{}, err
+				return SampleChunk{}, err
 			}
 			for k, measurement := range chunkMeasurements {
 				if el, ok := mergedMeasurement[k]; ok {
@@ -98,7 +96,7 @@ func MergeChunks(chunks []Chunk, startTs, endTs uint64) (Chunk, error) {
 	if len(mergedMeasurement) > 0 {
 		jsonRawMesaurement, err := json.Marshal(mergedMeasurement)
 		if err != nil {
-			return Chunk{}, err
+			return SampleChunk{}, err
 		}
 		chunk.Measurements = jsonRawMesaurement
 	}
@@ -116,11 +114,11 @@ type TaskInput struct {
 	OrganizationID uint64
 	ProjectID      uint64
 	Storage        *blob.Bucket
-	Result         chan<- TaskOutput
+	Result         chan<- SampleTaskOutput
 }
 
 // The output sent back by the worker.
-type TaskOutput struct {
+type SampleTaskOutput struct {
 	Err   error
-	Chunk Chunk
+	Chunk SampleChunk
 }

@@ -90,7 +90,7 @@ type MetricSummary struct {
 	Count uint64
 }
 
-func extractMetricsFromChunkFunctions(c *chunk.Chunk, functions []nodetree.CallTreeFunction) []sentry.Metric {
+func extractMetricsFromSampleChunkFunctions(c *chunk.SampleChunk, functions []nodetree.CallTreeFunction) []sentry.Metric {
 	metrics := make([]sentry.Metric, 0, len(functions))
 
 	for _, function := range functions {

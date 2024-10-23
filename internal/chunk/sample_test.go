@@ -13,13 +13,13 @@ import (
 func TestCallTrees(t *testing.T) {
 	tests := []struct {
 		name  string
-		chunk Chunk
+		chunk SampleChunk
 		want  map[string][]*nodetree.Node
 	}{
 		{
 			name: "call tree with multiple samples per frame",
-			chunk: Chunk{
-				Profile: Data{
+			chunk: SampleChunk{
+				Profile: SampleData{
 					Samples: []Sample{
 						{StackID: 0, Timestamp: 0.010, ThreadID: "1"},
 						{StackID: 1, Timestamp: 0.040, ThreadID: "1"},
@@ -83,8 +83,8 @@ func TestCallTrees(t *testing.T) {
 		}, // end first test
 		{
 			name: "call tree with single sample frames",
-			chunk: Chunk{
-				Profile: Data{
+			chunk: SampleChunk{
+				Profile: SampleData{
 					Samples: []Sample{
 						{StackID: 0, Timestamp: 0.010, ThreadID: "1"},
 						{StackID: 1, Timestamp: 0.040, ThreadID: "1"},
@@ -133,8 +133,8 @@ func TestCallTrees(t *testing.T) {
 		}, // end first test
 		{
 			name: "call tree with single samples",
-			chunk: Chunk{
-				Profile: Data{
+			chunk: SampleChunk{
+				Profile: SampleData{
 					Samples: []Sample{
 						{StackID: 0, Timestamp: 0.010, ThreadID: "1"},
 						{StackID: 1, Timestamp: 0.020, ThreadID: "1"},
@@ -199,14 +199,14 @@ func TestCallTrees(t *testing.T) {
 func TestTrimPythonStacks(t *testing.T) {
 	tests := []struct {
 		name   string
-		input  Chunk
-		output Chunk
+		input  SampleChunk
+		output SampleChunk
 	}{
 		{
 			name: "Remove module frame at the end of a stack",
-			input: Chunk{
+			input: SampleChunk{
 				Platform: platform.Python,
-				Profile: Data{
+				Profile: SampleData{
 					Frames: []frame.Frame{
 						{
 							File:     "<string>",
@@ -232,9 +232,9 @@ func TestTrimPythonStacks(t *testing.T) {
 					},
 				},
 			},
-			output: Chunk{
+			output: SampleChunk{
 				Platform: platform.Python,
-				Profile: Data{
+				Profile: SampleData{
 					Frames: []frame.Frame{
 						{
 							File:     "<string>",
