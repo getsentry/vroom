@@ -111,6 +111,18 @@ func quantile(values []uint64, q float64) (uint64, error) {
 	return values[index], nil
 }
 
+func ExtractFunctionsFromCallTreesForThread(
+	callTreesForThread []*nodetree.Node,
+) []nodetree.CallTreeFunction {
+	functions := make(map[uint32]nodetree.CallTreeFunction, 0)
+
+	for _, callTree := range callTreesForThread {
+		callTree.CollectFunctions(functions)
+	}
+
+	return mergeAndSortFunctions(functions)
+}
+
 func ExtractFunctionsFromCallTrees[T comparable](
 	callTrees map[T][]*nodetree.Node,
 ) []nodetree.CallTreeFunction {
@@ -122,6 +134,12 @@ func ExtractFunctionsFromCallTrees[T comparable](
 		}
 	}
 
+	return mergeAndSortFunctions(functions)
+}
+
+func mergeAndSortFunctions(
+	functions map[uint32]nodetree.CallTreeFunction,
+) []nodetree.CallTreeFunction {
 	functionsList := make([]nodetree.CallTreeFunction, 0, len(functions))
 	for _, function := range functions {
 		if function.SampleCount <= 1 {

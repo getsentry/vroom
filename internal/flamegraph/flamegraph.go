@@ -559,18 +559,7 @@ func GetFlamegraphFromCandidates(
 			chunkProfileSpan := span.StartChild("calltree")
 			chunkProfileSpan.Description = "continuous profile"
 
-			example := utils.NewExampleFromProfilerChunk(
-				result.Chunk.ProjectID,
-				result.Chunk.ProfilerID,
-				result.Chunk.ID,
-				result.TransactionID,
-				result.ThreadID,
-				result.Start,
-				result.End,
-			)
-			annotate := annotateWithProfileExample(example)
-
-			for _, callTree := range result.CallTrees {
+			for threadID, callTree := range result.CallTrees {
 				if result.Start > 0 && result.End > 0 {
 					interval := utils.Interval{
 						Start: result.Start,
@@ -578,13 +567,26 @@ func GetFlamegraphFromCandidates(
 					}
 					callTree = sliceCallTree(&callTree, &[]utils.Interval{interval})
 				}
+
+				example := utils.NewExampleFromProfilerChunk(
+					result.Chunk.ProjectID,
+					result.Chunk.ProfilerID,
+					result.Chunk.ID,
+					result.TransactionID,
+					&threadID,
+					result.Start,
+					result.End,
+				)
+				annotate := annotateWithProfileExample(example)
+
 				addCallTreeToFlamegraph(&flamegraphTree, callTree, annotate)
-			}
-			// if metrics aggregator is not null, while we're at it,
-			// compute the metrics as well
-			if ma != nil {
-				functions := metrics.CapAndFilterFunctions(metrics.ExtractFunctionsFromCallTrees(result.CallTrees), int(ma.MaxUniqueFunctions), true)
-				ma.AddFunctions(functions, example)
+
+				// if metrics aggregator is not null, while we're at it,
+				// compute the metrics as well
+				if ma != nil {
+					functions := metrics.CapAndFilterFunctions(metrics.ExtractFunctionsFromCallTreesForThread(callTree), int(ma.MaxUniqueFunctions), true)
+					ma.AddFunctions(functions, example)
+				}
 			}
 			chunkProfileSpan.Finish()
 		} else {
