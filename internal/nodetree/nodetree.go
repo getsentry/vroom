@@ -105,6 +105,7 @@ type CallTreeFunction struct {
 	SelfTimesNS   []uint64 `json:"self_times_ns"`
 	SumSelfTimeNS uint64   `json:"-"`
 	SampleCount   int      `json:"-"`
+	ThreadID      string   `json:"thread_id"`
 }
 
 // `CollectionFunctions` walks the node tree, collects any function with a non zero
@@ -127,13 +128,14 @@ type CallTreeFunction struct {
 // 100ms - 30ms = 70ms.
 func (n *Node) CollectFunctions(
 	results map[uint32]CallTreeFunction,
+	threadID string,
 ) (uint64, uint64) {
 	var childrenApplicationDurationNS uint64
 	var childrenSystemDurationNS uint64
 
 	// determine the amount of time spent in application vs system functions in the children
 	for _, child := range n.Children {
-		applicationDurationNS, systemDurationNS := child.CollectFunctions(results)
+		applicationDurationNS, systemDurationNS := child.CollectFunctions(results, threadID)
 		childrenApplicationDurationNS += applicationDurationNS
 		childrenSystemDurationNS += systemDurationNS
 	}
@@ -185,6 +187,7 @@ func (n *Node) CollectFunctions(
 					SelfTimesNS:   []uint64{selfTimeNS},
 					SumSelfTimeNS: selfTimeNS,
 					SampleCount:   n.SampleCount,
+					ThreadID:      threadID,
 				}
 			} else {
 				function.SelfTimesNS = append(function.SelfTimesNS, selfTimeNS)

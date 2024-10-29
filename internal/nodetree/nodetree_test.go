@@ -392,7 +392,7 @@ func TestNodeTreeCollectFunctions(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			results := make(map[uint32]CallTreeFunction)
-			tt.node.CollectFunctions(results)
+			tt.node.CollectFunctions(results, "")
 			if diff := testutil.Diff(results, tt.want); diff != "" {
 				t.Fatalf("Result mismatch: got - want +\n%s", diff)
 			}
