@@ -600,7 +600,7 @@ func GetFlamegraphFromCandidates(
 	serializeSpan := span.StartChild("serialize")
 	defer serializeSpan.Finish()
 
-	sp := toSpeedscope(flamegraphTree, 4, 0)
+	sp := toSpeedscope(flamegraphTree, 0, 0)
 	if ma != nil {
 		fm := ma.ToMetrics()
 		sp.Metrics = &fm
