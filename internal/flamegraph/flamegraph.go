@@ -438,7 +438,7 @@ func (f *flamegraph) addSample(
 	profileIDs map[string]struct{},
 	profiles map[utils.ExampleMetadata]struct{},
 ) {
-	f.totalSamples += 1
+	f.totalSamples++
 	cp := make([]int, len(*stack))
 	copy(cp, *stack)
 	heap.Push(f, flamegraphSample{
