@@ -136,7 +136,7 @@ func GetFlamegraphFromProfiles(
 		countProfAggregated++
 	}
 
-	sp := toSpeedscope(flamegraphTree, 1000, projectID)
+	sp := toSpeedscope(ctx, flamegraphTree, 1000, projectID)
 	hub.Scope().SetTag("processed_profiles", strconv.Itoa(countProfAggregated))
 	return sp, nil
 }
@@ -226,6 +226,10 @@ type (
 		profiles          []utils.ExampleMetadata
 		endValue          uint64
 		maxSamples        int
+		// The total number of samples that were added to the flamegraph
+		// including the ones that were dropped due to them exceeding
+		// the max samples limit.
+		totalSamples int
 	}
 
 	flamegraphSample struct {
@@ -307,7 +311,16 @@ func (f *flamegraph) Pop() any {
 	return sample
 }
 
-func toSpeedscope(trees []*nodetree.Node, maxSamples int, projectID uint64) speedscope.Output {
+func toSpeedscope(
+	ctx context.Context,
+	trees []*nodetree.Node,
+	maxSamples int,
+	projectID uint64,
+) speedscope.Output {
+	s := sentry.StartSpan(ctx, "processing")
+	s.Description = "generating speedscope"
+	defer s.Finish()
+
 	fd := &flamegraph{
 		frames:           make([]speedscope.Frame, 0),
 		framesIndex:      make(map[string]int),
@@ -321,6 +334,9 @@ func toSpeedscope(trees []*nodetree.Node, maxSamples int, projectID uint64) spee
 		stack := make([]int, 0, profile.MaxStackDepth)
 		fd.visitCalltree(tree, &stack)
 	}
+
+	s.SetData("total_samples", fd.totalSamples)
+	s.SetData("final_samples", fd.Len())
 
 	aggProfiles := make([]interface{}, 1)
 	aggProfiles[0] = speedscope.SampledProfile{
@@ -422,6 +438,7 @@ func (f *flamegraph) addSample(
 	profileIDs map[string]struct{},
 	profiles map[utils.ExampleMetadata]struct{},
 ) {
+	f.totalSamples += 1
 	cp := make([]int, len(*stack))
 	copy(cp, *stack)
 	heap.Push(f, flamegraphSample{
@@ -541,7 +558,7 @@ func GetFlamegraphFromChunks(
 		countChunksAggregated++
 	}
 
-	sp := toSpeedscope(flamegraphTree, 1000, projectID)
+	sp := toSpeedscope(ctx, flamegraphTree, 1000, projectID)
 	if hub != nil {
 		hub.Scope().SetTag("processed_chunks", strconv.Itoa(countChunksAggregated))
 	}
@@ -682,7 +699,7 @@ func GetFlamegraphFromCandidates(
 	serializeSpan := span.StartChild("serialize")
 	defer serializeSpan.Finish()
 
-	sp := toSpeedscope(flamegraphTree, 1000, 0)
+	sp := toSpeedscope(ctx, flamegraphTree, 1000, 0)
 	if ma != nil {
 		fm := ma.ToMetrics()
 		sp.Metrics = &fm
