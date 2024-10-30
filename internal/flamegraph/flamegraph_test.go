@@ -199,7 +199,7 @@ func TestFlamegraphAggregation(t *testing.T) {
 				addCallTreeToFlamegraph(&ft, callTrees[0], annotateWithProfileID(p.ID()))
 			}
 
-			if diff := testutil.Diff(toSpeedscope(ft, 1, 99), test.output, options); diff != "" {
+			if diff := testutil.Diff(toSpeedscope(ft, 10, 99), test.output, options); diff != "" {
 				t.Fatalf("Result mismatch: got - want +\n%s", diff)
 			}
 		})
@@ -335,7 +335,7 @@ func TestAnnotatingWithExamples(t *testing.T) {
 			for _, example := range test.examples {
 				addCallTreeToFlamegraph(&ft, test.callTrees, annotateWithProfileExample(example))
 			}
-			if diff := testutil.Diff(toSpeedscope(ft, 1, 99), test.output, options); diff != "" {
+			if diff := testutil.Diff(toSpeedscope(ft, 10, 99), test.output, options); diff != "" {
 				t.Fatalf("Result mismatch: got - want +\n%s", diff)
 			}
 		})
