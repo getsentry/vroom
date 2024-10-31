@@ -128,8 +128,8 @@ func ExtractFunctionsFromCallTrees[T comparable](
 	callTrees map[T][]*nodetree.Node,
 ) []nodetree.CallTreeFunction {
 	functions := make(map[uint32]nodetree.CallTreeFunction, 0)
-	threadID := ""
 	for tid, callTreesForThread := range callTrees {
+		threadID := ""
 		if t, ok := any(tid).(string); ok {
 			threadID = t
 		} else if t, ok := any(tid).(uint64); ok {
