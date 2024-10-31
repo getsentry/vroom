@@ -106,6 +106,7 @@ type CallTreeFunction struct {
 	SumSelfTimeNS uint64   `json:"-"`
 	SampleCount   int      `json:"-"`
 	ThreadID      string   `json:"thread_id"`
+	MaxDuration   uint64   `json:"-"`
 }
 
 // `CollectionFunctions` walks the node tree, collects any function with a non zero
@@ -188,11 +189,18 @@ func (n *Node) CollectFunctions(
 					SumSelfTimeNS: selfTimeNS,
 					SampleCount:   n.SampleCount,
 					ThreadID:      threadID,
+					MaxDuration:   selfTimeNS,
 				}
 			} else {
 				function.SelfTimesNS = append(function.SelfTimesNS, selfTimeNS)
 				function.SumSelfTimeNS += selfTimeNS
 				function.SampleCount += n.SampleCount
+				if selfTimeNS > function.MaxDuration {
+					function.MaxDuration = selfTimeNS
+					if threadID != function.ThreadID {
+						function.ThreadID = threadID
+					}
+				}
 				results[fingerprint] = function
 			}
 		}
