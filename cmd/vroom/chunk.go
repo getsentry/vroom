@@ -169,7 +169,9 @@ func (env *environment) postChunk(w http.ResponseWriter, r *http.Request) {
 		b, err := json.Marshal(buildChunkFunctionsKafkaMessage(sc, functions))
 		s.Finish()
 		if err != nil {
-			hub.CaptureException(err)
+			if hub != nil {
+				hub.CaptureException(err)
+			}
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -180,11 +182,15 @@ func (env *environment) postChunk(w http.ResponseWriter, r *http.Request) {
 			Value: b,
 		})
 		s.Finish()
-		hub.Scope().SetContext("Call functions payload", map[string]interface{}{
-			"Size": len(b),
-		})
+		if hub != nil {
+			hub.Scope().SetContext("Call functions payload", map[string]interface{}{
+				"Size": len(b),
+			})
+		}
 		if err != nil {
-			hub.CaptureException(err)
+			if hub != nil {
+				hub.CaptureException(err)
+			}
 		}
 
 		// this block is writing into the generic metrics dataset
