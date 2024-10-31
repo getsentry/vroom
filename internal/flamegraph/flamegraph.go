@@ -1,6 +1,7 @@
 package flamegraph
 
 import (
+	"container/heap"
 	"context"
 	"crypto/md5"
 	"encoding/hex"
@@ -135,7 +136,7 @@ func GetFlamegraphFromProfiles(
 		countProfAggregated++
 	}
 
-	sp := toSpeedscope(flamegraphTree, 4, projectID)
+	sp := toSpeedscope(ctx, flamegraphTree, 1000, projectID)
 	hub.Scope().SetTag("processed_profiles", strconv.Itoa(countProfAggregated))
 	return sp, nil
 }
@@ -210,27 +211,120 @@ func expandCallTreeWithProfileID(node *nodetree.Node, annotate func(n *nodetree.
 	}
 }
 
-type flamegraph struct {
-	samples           [][]int
-	samplesProfileIDs [][]int
-	samplesProfiles   [][]int
-	sampleCounts      []uint64
-	sampleDurationsNs []uint64
-	frames            []speedscope.Frame
-	framesIndex       map[string]int
-	profilesIDsIndex  map[string]int
-	profilesIDs       []string
-	profilesIndex     map[utils.ExampleMetadata]int
-	profiles          []utils.ExampleMetadata
-	endValue          uint64
-	minFreq           int
+type (
+	flamegraph struct {
+		samples           [][]int
+		samplesProfileIDs [][]int
+		samplesProfiles   [][]int
+		sampleCounts      []uint64
+		sampleDurationsNs []uint64
+		frames            []speedscope.Frame
+		framesIndex       map[string]int
+		profilesIDsIndex  map[string]int
+		profilesIDs       []string
+		profilesIndex     map[utils.ExampleMetadata]int
+		profiles          []utils.ExampleMetadata
+		endValue          uint64
+		maxSamples        int
+		// The total number of samples that were added to the flamegraph
+		// including the ones that were dropped due to them exceeding
+		// the max samples limit.
+		totalSamples int
+	}
+
+	flamegraphSample struct {
+		stack      []int
+		count      uint64
+		duration   uint64
+		profileIDs map[string]struct{}
+		profiles   map[utils.ExampleMetadata]struct{}
+	}
+)
+
+func (f *flamegraph) overCapacity() bool {
+	return f.Len() > f.maxSamples
 }
 
-func toSpeedscope(trees []*nodetree.Node, minFreq int, projectID uint64) speedscope.Output {
+func (f *flamegraph) Len() int {
+	// assumes all the sample* slices have the same length
+	return len(f.samples)
+}
+
+func (f *flamegraph) Less(i, j int) bool {
+	// first compare the counts per sample
+	if f.sampleCounts[i] != f.sampleCounts[j] {
+		return f.sampleCounts[i] < f.sampleCounts[j]
+	}
+	// if counts are equal, compare the duration per sample
+	if f.sampleDurationsNs[i] != f.sampleDurationsNs[j] {
+		return f.sampleDurationsNs[i] < f.sampleDurationsNs[j]
+	}
+	// if durations are equal, compare the depth per sample
+	return len(f.samples[i]) < len(f.samples[j])
+}
+
+func (f *flamegraph) Swap(i, j int) {
+	f.samples[i], f.samples[j] = f.samples[j], f.samples[i]
+	f.samplesProfileIDs[i], f.samplesProfileIDs[j] = f.samplesProfileIDs[j], f.samplesProfileIDs[i]
+	f.samplesProfiles[i], f.samplesProfiles[j] = f.samplesProfiles[j], f.samplesProfiles[i]
+	f.sampleCounts[i], f.sampleCounts[j] = f.sampleCounts[j], f.sampleCounts[i]
+	f.sampleDurationsNs[i], f.sampleDurationsNs[j] = f.sampleDurationsNs[j], f.sampleDurationsNs[i]
+}
+
+func (f *flamegraph) Push(item any) {
+	sample := item.(flamegraphSample)
+
+	f.samples = append(f.samples, sample.stack)
+	f.sampleCounts = append(f.sampleCounts, sample.count)
+	f.sampleDurationsNs = append(f.sampleDurationsNs, sample.duration)
+	f.samplesProfileIDs = append(f.samplesProfileIDs, f.getProfileIDsIndices(sample.profileIDs))
+	f.samplesProfiles = append(f.samplesProfiles, f.getProfilesIndices(sample.profiles))
+}
+
+func (f *flamegraph) Pop() any {
+	n := len(f.samples) - 1
+
+	profileIDs := make(map[string]struct{})
+	for _, i := range f.samplesProfileIDs[n] {
+		profileIDs[f.profilesIDs[i]] = struct{}{}
+	}
+
+	profiles := make(map[utils.ExampleMetadata]struct{})
+	for _, i := range f.samplesProfiles[n] {
+		profiles[f.profiles[i]] = struct{}{}
+	}
+
+	sample := flamegraphSample{
+		stack:      f.samples[n],
+		count:      f.sampleCounts[n],
+		duration:   f.sampleDurationsNs[n],
+		profileIDs: profileIDs,
+		profiles:   profiles,
+	}
+
+	f.samples = f.samples[0:n]
+	f.sampleCounts = f.sampleCounts[0:n]
+	f.sampleDurationsNs = f.sampleDurationsNs[0:n]
+	f.samplesProfileIDs = f.samplesProfileIDs[0:n]
+	f.samplesProfiles = f.samplesProfiles[0:n]
+
+	return sample
+}
+
+func toSpeedscope(
+	ctx context.Context,
+	trees []*nodetree.Node,
+	maxSamples int,
+	projectID uint64,
+) speedscope.Output {
+	s := sentry.StartSpan(ctx, "processing")
+	s.Description = "generating speedscope"
+	defer s.Finish()
+
 	fd := &flamegraph{
 		frames:           make([]speedscope.Frame, 0),
 		framesIndex:      make(map[string]int),
-		minFreq:          minFreq,
+		maxSamples:       maxSamples,
 		profilesIDsIndex: make(map[string]int),
 		profilesIndex:    make(map[utils.ExampleMetadata]int),
 		samples:          make([][]int, 0),
@@ -240,6 +334,9 @@ func toSpeedscope(trees []*nodetree.Node, minFreq int, projectID uint64) speedsc
 		stack := make([]int, 0, profile.MaxStackDepth)
 		fd.visitCalltree(tree, &stack)
 	}
+
+	s.SetData("total_samples", fd.totalSamples)
+	s.SetData("final_samples", fd.Len())
 
 	aggProfiles := make([]interface{}, 1)
 	aggProfiles[0] = speedscope.SampledProfile{
@@ -276,10 +373,6 @@ func getIDFromNode(node *nodetree.Node) string {
 }
 
 func (f *flamegraph) visitCalltree(node *nodetree.Node, currentStack *[]int) {
-	if node.SampleCount < f.minFreq {
-		return
-	}
-
 	frameID := getIDFromNode(node)
 	if i, exists := f.framesIndex[frameID]; exists {
 		*currentStack = append(*currentStack, i)
@@ -324,7 +417,7 @@ func (f *flamegraph) visitCalltree(node *nodetree.Node, currentStack *[]int) {
 		// ending at the current node.
 		diffCount := node.SampleCount - totChildrenSampleCount
 		diffDuration := node.DurationNS - totChildrenDuration
-		if diffCount >= f.minFreq {
+		if diffCount > 0 {
 			f.addSample(
 				currentStack,
 				uint64(diffCount),
@@ -345,13 +438,19 @@ func (f *flamegraph) addSample(
 	profileIDs map[string]struct{},
 	profiles map[utils.ExampleMetadata]struct{},
 ) {
+	f.totalSamples++
 	cp := make([]int, len(*stack))
 	copy(cp, *stack)
-	f.samples = append(f.samples, cp)
-	f.sampleCounts = append(f.sampleCounts, count)
-	f.sampleDurationsNs = append(f.sampleDurationsNs, duration)
-	f.samplesProfileIDs = append(f.samplesProfileIDs, f.getProfileIDsIndices(profileIDs))
-	f.samplesProfiles = append(f.samplesProfiles, f.getProfilesIndices(profiles))
+	heap.Push(f, flamegraphSample{
+		stack:      cp,
+		count:      count,
+		duration:   duration,
+		profileIDs: profileIDs,
+		profiles:   profiles,
+	})
+	for f.overCapacity() {
+		heap.Pop(f)
+	}
 	f.endValue += count
 }
 
@@ -459,7 +558,7 @@ func GetFlamegraphFromChunks(
 		countChunksAggregated++
 	}
 
-	sp := toSpeedscope(flamegraphTree, 4, projectID)
+	sp := toSpeedscope(ctx, flamegraphTree, 1000, projectID)
 	if hub != nil {
 		hub.Scope().SetTag("processed_chunks", strconv.Itoa(countChunksAggregated))
 	}
@@ -600,7 +699,7 @@ func GetFlamegraphFromCandidates(
 	serializeSpan := span.StartChild("serialize")
 	defer serializeSpan.Finish()
 
-	sp := toSpeedscope(flamegraphTree, 4, 0)
+	sp := toSpeedscope(ctx, flamegraphTree, 1000, 0)
 	if ma != nil {
 		fm := ma.ToMetrics()
 		sp.Metrics = &fm
