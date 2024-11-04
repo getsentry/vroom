@@ -5,6 +5,7 @@ import (
 	"errors"
 	"math"
 	"sort"
+	"strconv"
 
 	"github.com/getsentry/sentry-go"
 	"github.com/getsentry/vroom/internal/chunk"
@@ -117,7 +118,7 @@ func ExtractFunctionsFromCallTreesForThread(
 	functions := make(map[uint32]nodetree.CallTreeFunction, 0)
 
 	for _, callTree := range callTreesForThread {
-		callTree.CollectFunctions(functions)
+		callTree.CollectFunctions(functions, "")
 	}
 
 	return mergeAndSortFunctions(functions)
@@ -127,10 +128,15 @@ func ExtractFunctionsFromCallTrees[T comparable](
 	callTrees map[T][]*nodetree.Node,
 ) []nodetree.CallTreeFunction {
 	functions := make(map[uint32]nodetree.CallTreeFunction, 0)
-
-	for _, callTreesForThread := range callTrees {
+	for tid, callTreesForThread := range callTrees {
+		threadID := ""
+		if t, ok := any(tid).(string); ok {
+			threadID = t
+		} else if t, ok := any(tid).(uint64); ok {
+			threadID = strconv.FormatUint(t, 10)
+		}
 		for _, callTree := range callTreesForThread {
-			callTree.CollectFunctions(functions)
+			callTree.CollectFunctions(functions, threadID)
 		}
 	}
 

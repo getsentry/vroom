@@ -42,6 +42,7 @@ func TestNodeTreeCollectFunctions(t *testing.T) {
 					Package:       "foo",
 					SelfTimesNS:   []uint64{10},
 					SumSelfTimeNS: 10,
+					MaxDuration:   10,
 				},
 			},
 		},
@@ -64,6 +65,7 @@ func TestNodeTreeCollectFunctions(t *testing.T) {
 					Package:       "foo",
 					SelfTimesNS:   []uint64{10},
 					SumSelfTimeNS: 10,
+					MaxDuration:   10,
 				},
 			},
 		},
@@ -96,6 +98,7 @@ func TestNodeTreeCollectFunctions(t *testing.T) {
 					Package:       "foo",
 					SelfTimesNS:   []uint64{10},
 					SumSelfTimeNS: 10,
+					MaxDuration:   10,
 				},
 				fingerprintBar: {
 					Fingerprint:   fingerprintBar,
@@ -104,6 +107,7 @@ func TestNodeTreeCollectFunctions(t *testing.T) {
 					Package:       "bar",
 					SelfTimesNS:   []uint64{10},
 					SumSelfTimeNS: 10,
+					MaxDuration:   10,
 				},
 			},
 		},
@@ -156,6 +160,7 @@ func TestNodeTreeCollectFunctions(t *testing.T) {
 					Package:       "foo",
 					SelfTimesNS:   []uint64{10},
 					SumSelfTimeNS: 10,
+					MaxDuration:   10,
 				},
 				fingerprintBaz: {
 					Fingerprint:   fingerprintBaz,
@@ -164,11 +169,12 @@ func TestNodeTreeCollectFunctions(t *testing.T) {
 					Package:       "baz",
 					SelfTimesNS:   []uint64{10},
 					SumSelfTimeNS: 10,
+					MaxDuration:   10,
 				},
 			},
 		},
 		{
-			name:     "mutitple occurrences of same functions",
+			name:     "multitple occurrences of same functions",
 			platform: platform.Python,
 			node: Node{
 				DurationNS:    40,
@@ -260,6 +266,7 @@ func TestNodeTreeCollectFunctions(t *testing.T) {
 					Package:       "foo",
 					SelfTimesNS:   []uint64{10, 20},
 					SumSelfTimeNS: 30,
+					MaxDuration:   20,
 				},
 				fingerprintBaz: {
 					Fingerprint:   fingerprintBaz,
@@ -268,6 +275,7 @@ func TestNodeTreeCollectFunctions(t *testing.T) {
 					Package:       "baz",
 					SelfTimesNS:   []uint64{10, 20},
 					SumSelfTimeNS: 30,
+					MaxDuration:   20,
 				},
 				fingerprintQux: {
 					Fingerprint:   fingerprintQux,
@@ -276,6 +284,7 @@ func TestNodeTreeCollectFunctions(t *testing.T) {
 					Package:       "qux",
 					SelfTimesNS:   []uint64{10},
 					SumSelfTimeNS: 10,
+					MaxDuration:   10,
 				},
 				fingerprintMain: {
 					Fingerprint:   fingerprintMain,
@@ -284,6 +293,7 @@ func TestNodeTreeCollectFunctions(t *testing.T) {
 					Package:       "main",
 					SelfTimesNS:   []uint64{10},
 					SumSelfTimeNS: 10,
+					MaxDuration:   10,
 				},
 			},
 		},
@@ -336,6 +346,7 @@ func TestNodeTreeCollectFunctions(t *testing.T) {
 					InApp:         true,
 					SelfTimesNS:   []uint64{10},
 					SumSelfTimeNS: 10,
+					MaxDuration:   10,
 				},
 			},
 		},
@@ -370,6 +381,7 @@ func TestNodeTreeCollectFunctions(t *testing.T) {
 					InApp:         true,
 					SelfTimesNS:   []uint64{10},
 					SumSelfTimeNS: 10,
+					MaxDuration:   10,
 				},
 			},
 		},
@@ -392,7 +404,7 @@ func TestNodeTreeCollectFunctions(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			results := make(map[uint32]CallTreeFunction)
-			tt.node.CollectFunctions(results)
+			tt.node.CollectFunctions(results, "")
 			if diff := testutil.Diff(results, tt.want); diff != "" {
 				t.Fatalf("Result mismatch: got - want +\n%s", diff)
 			}

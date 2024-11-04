@@ -157,13 +157,44 @@ func (env *environment) postChunk(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-
 		s = sentry.StartSpan(ctx, "processing")
 		s.Description = "Extract functions"
 		functions := metrics.ExtractFunctionsFromCallTrees(callTrees)
 		functions = metrics.CapAndFilterFunctions(functions, maxUniqueFunctionsPerProfile, true)
 		s.Finish()
 
+		// This block writes into the functions dataset
+		s = sentry.StartSpan(ctx, "json.marshal")
+		s.Description = "Marshal functions Kafka message"
+		b, err := json.Marshal(buildChunkFunctionsKafkaMessage(sc, functions))
+		s.Finish()
+		if err != nil {
+			if hub != nil {
+				hub.CaptureException(err)
+			}
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		s = sentry.StartSpan(ctx, "processing")
+		s.Description = "Send functions to Kafka"
+		err = env.profilingWriter.WriteMessages(ctx, kafka.Message{
+			Topic: env.config.CallTreesKafkaTopic,
+			Value: b,
+		})
+		s.Finish()
+		if hub != nil {
+			hub.Scope().SetContext("Call functions payload", map[string]interface{}{
+				"Size": len(b),
+			})
+		}
+		if err != nil {
+			if hub != nil {
+				hub.CaptureException(err)
+			}
+		}
+
+		// this block is writing into the generic metrics dataset
+		// TODO: remove once we fully move to functions dataset
 		s = sentry.StartSpan(ctx, "processing")
 		s.Description = "Extract metrics from functions"
 		metrics := extractMetricsFromSampleChunkFunctions(sc, functions)

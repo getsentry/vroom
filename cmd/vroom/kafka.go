@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 
+	"github.com/getsentry/vroom/internal/chunk"
 	"github.com/getsentry/vroom/internal/nodetree"
 	"github.com/getsentry/vroom/internal/platform"
 	"github.com/getsentry/vroom/internal/profile"
@@ -22,6 +23,9 @@ type (
 		RetentionDays          int                         `json:"retention_days"`
 		Timestamp              int64                       `json:"timestamp"`
 		TransactionName        string                      `json:"transaction_name"`
+		StartTimestamp         float64                     `json:"start_timestamp,omitempty"`
+		EndTimestamp           float64                     `json:"end_timestamp,omitempty"`
+		ProfilingType          string                      `json:"profiling_type,omitempty"`
 		MaterializationVersion uint8                       `json:"materialization_version"`
 	}
 
@@ -86,6 +90,26 @@ func buildFunctionsKafkaMessage(p profile.Profile, functions []nodetree.CallTree
 		RetentionDays:          p.RetentionDays(),
 		Timestamp:              p.Timestamp().Unix(),
 		TransactionName:        p.Transaction().Name,
+		MaterializationVersion: 1,
+	}
+}
+
+// Metrics extraction is only supported for sample chunks right now.
+// TODO: support metrics extraction for Android chunks.
+func buildChunkFunctionsKafkaMessage(c *chunk.SampleChunk, functions []nodetree.CallTreeFunction) FunctionsKafkaMessage {
+	return FunctionsKafkaMessage{
+		Environment:            c.Environment,
+		Functions:              functions,
+		ID:                     c.ID,
+		Platform:               c.Platform,
+		ProjectID:              c.ProjectID,
+		Received:               int64(c.Received),
+		Release:                c.Release,
+		RetentionDays:          c.RetentionDays,
+		Timestamp:              int64(c.StartTimestamp()),
+		StartTimestamp:         c.StartTimestamp(),
+		EndTimestamp:           c.EndTimestamp(),
+		ProfilingType:          "continuous",
 		MaterializationVersion: 1,
 	}
 }
