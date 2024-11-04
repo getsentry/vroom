@@ -1,6 +1,7 @@
 package flamegraph
 
 import (
+	"context"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -145,9 +146,9 @@ func TestFlamegraphAggregation(t *testing.T) {
 						SamplesExamples:   [][]int{{}, {}, {}, {}},
 						Type:              "sampled",
 						Unit:              "count",
-						Weights:           []uint64{2, 1, 1, 1},
-						SampleCounts:      []uint64{2, 1, 1, 1},
-						SampleDurationsNs: []uint64{20, 10, 10, 10},
+						Weights:           []uint64{1, 1, 1, 2},
+						SampleCounts:      []uint64{1, 1, 1, 2},
+						SampleDurationsNs: []uint64{10, 10, 10, 20},
 					},
 				},
 				Shared: speedscope.SharedData{
@@ -199,7 +200,7 @@ func TestFlamegraphAggregation(t *testing.T) {
 				addCallTreeToFlamegraph(&ft, callTrees[0], annotateWithProfileID(p.ID()))
 			}
 
-			if diff := testutil.Diff(toSpeedscope(ft, 1, 99), test.output, options); diff != "" {
+			if diff := testutil.Diff(toSpeedscope(context.TODO(), ft, 10, 99), test.output, options); diff != "" {
 				t.Fatalf("Result mismatch: got - want +\n%s", diff)
 			}
 		})
@@ -335,7 +336,7 @@ func TestAnnotatingWithExamples(t *testing.T) {
 			for _, example := range test.examples {
 				addCallTreeToFlamegraph(&ft, test.callTrees, annotateWithProfileExample(example))
 			}
-			if diff := testutil.Diff(toSpeedscope(ft, 1, 99), test.output, options); diff != "" {
+			if diff := testutil.Diff(toSpeedscope(context.TODO(), ft, 10, 99), test.output, options); diff != "" {
 				t.Fatalf("Result mismatch: got - want +\n%s", diff)
 			}
 		})
