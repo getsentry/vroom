@@ -3,6 +3,7 @@ package chunk
 import (
 	"fmt"
 
+	"github.com/getsentry/vroom/internal/frame"
 	"github.com/getsentry/vroom/internal/platform"
 	"github.com/getsentry/vroom/internal/utils"
 )
@@ -19,6 +20,7 @@ type (
 		GetRelease() string
 		GetRetentionDays() int
 		GetOptions() utils.Options
+		GetFrameWithFingerprint(uint32) (frame.Frame, error)
 
 		DurationMS() uint64
 		EndTimestamp() float64

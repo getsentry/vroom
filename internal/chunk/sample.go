@@ -252,3 +252,12 @@ func (c SampleChunk) GetOrganizationID() uint64 {
 func (c SampleChunk) GetOptions() utils.Options {
 	return c.Options
 }
+
+func (c SampleChunk) GetFrameWithFingerprint(target uint32) (frame.Frame, error) {
+	for _, f := range c.Profile.Frames {
+		if f.Fingerprint() == target {
+			return f, nil
+		}
+	}
+	return frame.Frame{}, frame.ErrFrameNotFound
+}

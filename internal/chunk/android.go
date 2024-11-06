@@ -6,6 +6,7 @@ import (
 
 	"github.com/getsentry/vroom/internal/clientsdk"
 	"github.com/getsentry/vroom/internal/debugmeta"
+	"github.com/getsentry/vroom/internal/frame"
 	"github.com/getsentry/vroom/internal/nodetree"
 	"github.com/getsentry/vroom/internal/platform"
 	"github.com/getsentry/vroom/internal/profile"
@@ -110,6 +111,16 @@ func (c AndroidChunk) GetOrganizationID() uint64 {
 
 func (c AndroidChunk) GetOptions() utils.Options {
 	return c.Options
+}
+
+func (c AndroidChunk) GetFrameWithFingerprint(target uint32) (frame.Frame, error) {
+	for _, m := range c.Profile.Methods {
+		f := m.Frame()
+		if f.Fingerprint() == target {
+			return f, nil
+		}
+	}
+	return frame.Frame{}, frame.ErrFrameNotFound
 }
 
 func (c *AndroidChunk) Normalize() {
