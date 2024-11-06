@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/getsentry/vroom/internal/debugmeta"
+	"github.com/getsentry/vroom/internal/frame"
 	"github.com/getsentry/vroom/internal/measurements"
 	"github.com/getsentry/vroom/internal/metadata"
 	"github.com/getsentry/vroom/internal/nodetree"
@@ -42,6 +43,7 @@ type (
 		IsSampled() bool
 		SetProfileID(ID string)
 		GetOptions() utils.Options
+		GetFrameWithFingerprint(uint32) (frame.Frame, error)
 	}
 
 	Profile struct {
@@ -172,4 +174,8 @@ func (p *Profile) Measurements() map[string]measurements.Measurement {
 
 func (p *Profile) GetOptions() utils.Options {
 	return p.profile.GetOptions()
+}
+
+func (p *Profile) GetFrameWithFingerprint(target uint32) (frame.Frame, error) {
+	return p.profile.GetFrameWithFingerprint(target)
 }

@@ -3,132 +3,114 @@ package occurrence
 import (
 	"context"
 	"errors"
-	"sync"
 
 	"github.com/getsentry/sentry-go"
-	"github.com/getsentry/vroom/internal/nodetree"
+	"github.com/getsentry/vroom/internal/chunk"
+	"github.com/getsentry/vroom/internal/frame"
+	"github.com/getsentry/vroom/internal/platform"
 	"github.com/getsentry/vroom/internal/profile"
 	"github.com/getsentry/vroom/internal/storageutil"
+	"github.com/getsentry/vroom/internal/utils"
 	"gocloud.dev/blob"
 )
 
 type RegressedFunction struct {
-	OrganizationID           uint64  `json:"organization_id"`
-	ProjectID                uint64  `json:"project_id"`
-	ProfileID                string  `json:"profile_id"`
-	Fingerprint              uint32  `json:"fingerprint"`
-	AbsolutePercentageChange float64 `json:"absolute_percentage_change"`
-	AggregateRange1          float64 `json:"aggregate_range_1"`
-	AggregateRange2          float64 `json:"aggregate_range_2"`
-	Breakpoint               uint64  `json:"breakpoint"`
-	TrendDifference          float64 `json:"trend_difference"`
-	TrendPercentage          float64 `json:"trend_percentage"`
-	UnweightedPValue         float64 `json:"unweighted_p_value"`
-	UnweightedTValue         float64 `json:"unweighted_t_value"`
+	OrganizationID           uint64                `json:"organization_id"`
+	ProjectID                uint64                `json:"project_id"`
+	ProfileID                string                `json:"profile_id"`
+	Example                  utils.ExampleMetadata `json:"example"`
+	Fingerprint              uint32                `json:"fingerprint"`
+	AbsolutePercentageChange float64               `json:"absolute_percentage_change"`
+	AggregateRange1          float64               `json:"aggregate_range_1"`
+	AggregateRange2          float64               `json:"aggregate_range_2"`
+	Breakpoint               uint64                `json:"breakpoint"`
+	TrendDifference          float64               `json:"trend_difference"`
+	TrendPercentage          float64               `json:"trend_percentage"`
+	UnweightedPValue         float64               `json:"unweighted_p_value"`
+	UnweightedTValue         float64               `json:"unweighted_t_value"`
 }
 
 func ProcessRegressedFunction(
 	ctx context.Context,
 	profilesBucket *blob.Bucket,
 	regressedFunction RegressedFunction,
+	jobs chan storageutil.ReadJob,
 ) (*Occurrence, error) {
-	s := sentry.StartSpan(ctx, "profile.read")
-	s.Description = "Read profile from GCS"
-	var p profile.Profile
-	objectName := profile.StoragePath(
-		regressedFunction.OrganizationID,
-		regressedFunction.ProjectID,
-		regressedFunction.ProfileID,
-	)
-	err := storageutil.UnmarshalCompressed(ctx, profilesBucket, objectName, &p)
-	s.Finish()
-	if err != nil {
-		return nil, err
-	}
+	results := make(chan storageutil.ReadJobResult, 1)
+	defer close(results)
 
-	s = sentry.StartSpan(ctx, "processing")
-	s.Description = "Generate call trees"
-	calltreesByTID, err := p.CallTrees()
-	s.Finish()
-
-	if err != nil {
-		return nil, err
-	}
-
-	calltrees, exists := calltreesByTID[p.Transaction().ActiveThreadID]
-	if !exists {
-		return nil, errors.New("calltree not found")
-	}
-
-	s = sentry.StartSpan(ctx, "processing")
-	s.Description = "Searching for fingerprint"
-	var node *nodetree.Node
-	for _, calltree := range calltrees {
-		node = calltree.FindNodeByFingerprint(regressedFunction.Fingerprint)
-		if node != nil {
-			break
+	if regressedFunction.ProfileID != "" {
+		// For back compat, we should be use the example moving forwards
+		jobs <- profile.ReadJob{
+			Ctx:            ctx,
+			OrganizationID: regressedFunction.OrganizationID,
+			ProjectID:      regressedFunction.ProjectID,
+			ProfileID:      regressedFunction.ProfileID,
+			Storage:        profilesBucket,
+			Result:         results,
+		}
+	} else if regressedFunction.Example.ProfileID != "" {
+		jobs <- profile.ReadJob{
+			Ctx:            ctx,
+			OrganizationID: regressedFunction.OrganizationID,
+			ProjectID:      regressedFunction.ProjectID,
+			ProfileID:      regressedFunction.Example.ProfileID,
+			Storage:        profilesBucket,
+			Result:         results,
+		}
+	} else {
+		jobs <- chunk.ReadJob{
+			Ctx:            ctx,
+			OrganizationID: regressedFunction.OrganizationID,
+			ProjectID:      regressedFunction.ProjectID,
+			ProfilerID:     regressedFunction.Example.ProfilerID,
+			ChunkID:        regressedFunction.Example.ChunkID,
+			Storage:        profilesBucket,
+			Result:         results,
 		}
 	}
-	s.Finish()
 
-	if node == nil {
-		return nil, errors.New("fingerprint not found")
+	res := <-results
+	platform, frame, err := getPlatformAndFrame(ctx, res, regressedFunction.Fingerprint)
+	if err != nil {
+		return nil, err
 	}
-
-	return FromRegressedFunction(p.Platform(), regressedFunction, node.Frame), nil
+	return FromRegressedFunction(platform, regressedFunction, frame), nil
 }
 
-func ProcessRegressedFunctions(
+func getPlatformAndFrame(
 	ctx context.Context,
-	hub *sentry.Hub,
-	profilesBucket *blob.Bucket,
-	regressedFunctions []RegressedFunction,
-	numWorkers int,
-) []*Occurrence {
-	if len(regressedFunctions) < numWorkers {
-		numWorkers = len(regressedFunctions)
+	res storageutil.ReadJobResult,
+	target uint32,
+) (platform.Platform, frame.Frame, error) {
+	var platform platform.Platform
+	var frame frame.Frame
+
+	err := res.Error()
+	if err != nil {
+		return platform, frame, err
 	}
 
-	var wg sync.WaitGroup
-	wg.Add(numWorkers)
+	s := sentry.StartSpan(ctx, "processing")
+	s.Description = "Searching for fingerprint"
+	defer s.Finish()
 
-	regressedChan := make(chan RegressedFunction, numWorkers)
-	occurrenceChan := make(chan *Occurrence)
-
-	for i := 0; i < numWorkers; i++ {
-		go func() {
-			defer wg.Done()
-			for regressedFunction := range regressedChan {
-				occurrence, err := ProcessRegressedFunction(ctx, profilesBucket, regressedFunction)
-				if err != nil {
-					hub.CaptureException(err)
-					continue
-				} else if occurrence == nil {
-					continue
-				}
-
-				occurrenceChan <- occurrence
-			}
-		}()
-	}
-
-	go func() {
-		for _, regressedFunction := range regressedFunctions {
-			regressedChan <- regressedFunction
+	if result, ok := res.(profile.ReadJobResult); ok {
+		platform = result.Profile.Platform()
+		frame, err = result.Profile.GetFrameWithFingerprint(target)
+		if err != nil {
+			return platform, frame, err
 		}
-		close(regressedChan)
-
-		// wait until all the profiles have been processed
-		// then we can close the occurrence channel and collect
-		// any occurrences that have been created
-		wg.Wait()
-		close(occurrenceChan)
-	}()
-
-	occurrences := []*Occurrence{}
-	for occurrence := range occurrenceChan {
-		occurrences = append(occurrences, occurrence)
+	} else if result, ok := res.(chunk.ReadJobResult); ok {
+		platform = result.Chunk.GetPlatform()
+		frame, err = result.Chunk.GetFrameWithFingerprint(target)
+		if err != nil {
+			return platform, frame, err
+		}
+	} else {
+		// This should never happen
+		return platform, frame, errors.New("unexpected result from storage")
 	}
 
-	return occurrences
+	return platform, frame, nil
 }

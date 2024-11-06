@@ -3,6 +3,7 @@ package frame
 import (
 	"crypto/md5"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"hash"
 	"hash/fnv"
@@ -21,6 +22,8 @@ var (
 		"Sentry": {},
 		"hermes": {},
 	}
+
+	ErrFrameNotFound = errors.New("Unable to find matching frame")
 )
 
 type (

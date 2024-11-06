@@ -25,7 +25,7 @@ func (env *environment) postRegressed(w http.ResponseWriter, r *http.Request) {
 	for _, regressedFunction := range regressedFunctions {
 		s := sentry.StartSpan(ctx, "processing")
 		s.Description = "Generating occurrence for payload"
-		occurrence, err := occurrence.ProcessRegressedFunction(ctx, env.storage, regressedFunction)
+		occurrence, err := occurrence.ProcessRegressedFunction(ctx, env.storage, regressedFunction, readJobs)
 		s.Finish()
 		if err != nil {
 			hub.CaptureException(err)

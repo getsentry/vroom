@@ -363,6 +363,10 @@ func (p LegacyProfile) GetOptions() utils.Options {
 	return p.Options
 }
 
+func (p LegacyProfile) GetFrameWithFingerprint(target uint32) (frame.Frame, error) {
+	return p.Trace.GetFrameWithFingerprint(target)
+}
+
 // This is to be used for ReactNative JS profile only since it works based on the
 // assumption that we'll only have 1 thread in the JS profile, as is the case
 // for ReactNative.

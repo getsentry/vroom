@@ -446,6 +446,15 @@ func (p *Profile) GetOptions() utils.Options {
 	return p.Options
 }
 
+func (p *Profile) GetFrameWithFingerprint(target uint32) (frame.Frame, error) {
+	for _, f := range p.Trace.Frames {
+		if f.Fingerprint() == target {
+			return f, nil
+		}
+	}
+	return frame.Frame{}, frame.ErrFrameNotFound
+}
+
 func (t Trace) SamplesByThreadD() ([]uint64, map[uint64][]*Sample) {
 	samples := make(map[uint64][]*Sample)
 	var threadIDs []uint64

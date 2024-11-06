@@ -597,3 +597,14 @@ func (p Android) ActiveThreadID() uint64 {
 	}
 	return 0
 }
+
+func (p Android) GetFrameWithFingerprint(target uint32) (frame.Frame, error) {
+	for _, m := range p.Methods {
+		f := m.Frame()
+		if f.Fingerprint() == target {
+			return f, nil
+		}
+	}
+	// TODO: handle react native
+	return frame.Frame{}, frame.ErrFrameNotFound
+}
