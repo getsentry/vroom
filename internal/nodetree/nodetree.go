@@ -269,21 +269,6 @@ func (n *Node) Close(timestamp uint64) {
 	}
 }
 
-func (n *Node) FindNodeByFingerprint(target uint32) *Node {
-	if n.Frame.Fingerprint() == target {
-		return n
-	}
-
-	for _, child := range n.Children {
-		node := child.FindNodeByFingerprint(target)
-		if node != nil {
-			return node
-		}
-	}
-
-	return nil
-}
-
 func isSymbolicatedFrame(f frame.Frame) bool {
 	// React-native case
 	if f.Platform == platform.JavaScript && f.IsReactNative {
