@@ -27,6 +27,7 @@
 - Forward SDK info for legacy profiles to Kafka. ([#515](https://github.com/getsentry/vroom/pull/515))
 - Add more metadata fields to Chunk Kafka message. ([#518](https://github.com/getsentry/vroom/pull/518))
 - Ingest Android profile chunks. ([#521](https://github.com/getsentry/vroom/pull/521))
+- Handle profile chunks in regressed endpoint. ([#527](https://github.com/getsentry/vroom/pull/527))
 
 **Bug Fixes**:
 
