@@ -237,7 +237,6 @@ func FromRegressedFunction(
 		EvidenceData: map[string]interface{}{
 			"organization_id": regressed.OrganizationID,
 			"project_id":      regressed.ProjectID,
-			"profile_id":      regressed.ProfileID,
 
 			// frame info
 			"file":        f.File,
