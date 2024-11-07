@@ -100,7 +100,7 @@ func buildChunkFunctionsKafkaMessage(c *chunk.SampleChunk, functions []nodetree.
 	return FunctionsKafkaMessage{
 		Environment:            c.Environment,
 		Functions:              functions,
-		ID:                     c.ID,
+		ID:                     c.ProfilerID,
 		Platform:               c.Platform,
 		ProjectID:              c.ProjectID,
 		Received:               int64(c.Received),
