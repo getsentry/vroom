@@ -48,6 +48,7 @@
 - Increase readjob channel size  ([#512](https://github.com/getsentry/vroom/pull/512))
 - Return the duration measured by the profiler. ([#516](https://github.com/getsentry/vroom/pull/516), [#517](https://github.com/getsentry/vroom/pull/517))
 - Annotate functions to the right thread. ([#523](https://github.com/getsentry/vroom/pull/523))
+- Should write the profiler id. ([#528](https://github.com/getsentry/vroom/pull/528))
 
 **Internal**:
 
