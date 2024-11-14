@@ -41,7 +41,7 @@ type (
 		DeobfuscationStatus string `json:"deobfuscation_status,omitempty"`
 		// for react-native apps where we have js frames turned into android methods
 		JsSymbolicated *bool `json:"symbolicated,omitempty"`
-		OrigiInApp     *int8 `json:"orig_in_app,omitempty"`
+		OrigInApp      *int8 `json:"orig_in_app,omitempty"`
 	}
 )
 
@@ -375,7 +375,7 @@ func (p *Android) NormalizeMethods(pi profileInterface) {
 
 		for j := range method.InlineFrames {
 			inlineMethod := method.InlineFrames[j]
-			if inlineMethod.Data.OrigiInApp != nil {
+			if inlineMethod.Data.OrigInApp != nil {
 				continue
 			}
 
@@ -387,7 +387,7 @@ func (p *Android) NormalizeMethods(pi profileInterface) {
 		// If a stack trace rule was applied to a given
 		// frame this should have the precedence over the
 		// appIdentifier.
-		if method.Data.OrigiInApp != nil {
+		if method.Data.OrigInApp != nil {
 			continue
 		}
 
