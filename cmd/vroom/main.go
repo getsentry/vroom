@@ -72,6 +72,7 @@ func newEnvironment() (*environment, error) {
 		ReadTimeout:  3 * time.Second,
 		Topic:        e.config.OccurrencesKafkaTopic,
 		WriteTimeout: 3 * time.Second,
+		Transport:    createKafkaRoundTripper(e),
 	}
 	e.profilingWriter = &kafka.Writer{
 		Addr:         kafka.TCP(e.config.ProfilingKafkaBrokers...),
@@ -82,6 +83,7 @@ func newEnvironment() (*environment, error) {
 		Compression:  kafka.Lz4,
 		ReadTimeout:  3 * time.Second,
 		WriteTimeout: 3 * time.Second,
+		Transport:    createKafkaRoundTripper(e),
 	}
 	e.metricSummaryWriter = &kafka.Writer{
 		Addr:         kafka.TCP(e.config.SpansKafkaBrokers...),
@@ -91,6 +93,7 @@ func newEnvironment() (*environment, error) {
 		ReadTimeout:  3 * time.Second,
 		Topic:        e.config.MetricsSummaryKafkaTopic,
 		WriteTimeout: 3 * time.Second,
+		Transport:    createKafkaRoundTripper(e),
 	}
 	e.metricsClient = &http.Client{
 		Timeout: time.Second * 5,

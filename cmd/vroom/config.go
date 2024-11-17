@@ -8,6 +8,10 @@ type (
 
 		SentryDSN string `env:"SENTRY_DSN"`
 
+		KafkaSaslMechanism string `env:"SENTRY_KAFKA_SASL_MECHANISM"`
+		KafkaSaslUsername  string `env:"SENTRY_KAFKA_SASL_USERNAME"`
+		KafkaSaslPassword  string `env:"SENTRY_KAFKA_SASL_PASSWORD"`
+
 		OccurrencesKafkaBrokers []string `env:"SENTRY_KAFKA_BROKERS_OCCURRENCES" env-default:"localhost:9092"`
 		ProfilingKafkaBrokers   []string `env:"SENTRY_KAFKA_BROKERS_PROFILING" env-default:"localhost:9092"`
 		SpansKafkaBrokers       []string `env:"SENTRY_KAFKA_BROKERS_SPANS" env-default:"localhost:9092"`

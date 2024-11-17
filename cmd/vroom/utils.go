@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"log"
 	"math"
 	"net/http"
 	"strconv"
@@ -9,6 +10,9 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/segmentio/kafka-go"
+	"github.com/segmentio/kafka-go/sasl/plain"
+	"github.com/segmentio/kafka-go/sasl/scram"
 
 	"github.com/getsentry/sentry-go"
 	"github.com/getsentry/vroom/internal/chunk"
@@ -118,4 +122,38 @@ func extractMetricsFromSampleChunkFunctions(c *chunk.SampleChunk, functions []no
 		metrics = append(metrics, dm)
 	}
 	return metrics
+}
+
+func createKafkaRoundTripper(e environment) kafka.RoundTripper {
+	switch strings.ToUpper(e.config.KafkaSaslMechanism) {
+	case "PLAIN":
+		return &kafka.Transport{
+			SASL: plain.Mechanism{
+				Username: e.config.KafkaSaslUsername,
+				Password: e.config.KafkaSaslPassword,
+			},
+		}
+	case "SCRAM-SHA-256":
+		mechanism, err := scram.Mechanism(scram.SHA256, e.config.KafkaSaslUsername, e.config.KafkaSaslPassword)
+		if err != nil {
+			log.Fatal("error creating scram mechanism", err)
+			return nil
+		}
+
+		return &kafka.Transport{
+			SASL: mechanism,
+		}
+	case "SCRAM-SHA-512":
+		mechanism, err := scram.Mechanism(scram.SHA512, e.config.KafkaSaslUsername, e.config.KafkaSaslPassword)
+		if err != nil {
+			log.Fatal("error creating scram mechanism", err)
+			return nil
+		}
+
+		return &kafka.Transport{
+			SASL: mechanism,
+		}
+	default:
+		return nil
+	}
 }
