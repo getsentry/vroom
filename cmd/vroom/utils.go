@@ -129,8 +129,8 @@ func extractMetricsFromSampleChunkFunctions(c *chunk.SampleChunk, functions []no
 }
 
 func createKafkaRoundTripper(e ServiceConfig) kafka.RoundTripper {
-	var saslMechanism sasl.Mechanism = nil
-	var tlsConfig *tls.Config = nil
+	var saslMechanism sasl.Mechanism
+	var tlsConfig *tls.Config
 
 	switch strings.ToUpper(e.KafkaSaslMechanism) {
 	case "PLAIN":
