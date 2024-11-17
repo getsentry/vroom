@@ -124,17 +124,17 @@ func extractMetricsFromSampleChunkFunctions(c *chunk.SampleChunk, functions []no
 	return metrics
 }
 
-func createKafkaRoundTripper(e environment) kafka.RoundTripper {
-	switch strings.ToUpper(e.config.KafkaSaslMechanism) {
+func createKafkaRoundTripper(e ServiceConfig) kafka.RoundTripper {
+	switch strings.ToUpper(e.KafkaSaslMechanism) {
 	case "PLAIN":
 		return &kafka.Transport{
 			SASL: plain.Mechanism{
-				Username: e.config.KafkaSaslUsername,
-				Password: e.config.KafkaSaslPassword,
+				Username: e.KafkaSaslUsername,
+				Password: e.KafkaSaslPassword,
 			},
 		}
 	case "SCRAM-SHA-256":
-		mechanism, err := scram.Mechanism(scram.SHA256, e.config.KafkaSaslUsername, e.config.KafkaSaslPassword)
+		mechanism, err := scram.Mechanism(scram.SHA256, e.KafkaSaslUsername, e.KafkaSaslPassword)
 		if err != nil {
 			log.Fatal("error creating scram mechanism", err)
 			return nil
@@ -144,7 +144,7 @@ func createKafkaRoundTripper(e environment) kafka.RoundTripper {
 			SASL: mechanism,
 		}
 	case "SCRAM-SHA-512":
-		mechanism, err := scram.Mechanism(scram.SHA512, e.config.KafkaSaslUsername, e.config.KafkaSaslPassword)
+		mechanism, err := scram.Mechanism(scram.SHA512, e.KafkaSaslUsername, e.KafkaSaslPassword)
 		if err != nil {
 			log.Fatal("error creating scram mechanism", err)
 			return nil
