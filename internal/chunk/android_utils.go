@@ -1,0 +1,151 @@
+package chunk
+
+import (
+	"encoding/json"
+	"sort"
+
+	"github.com/getsentry/vroom/internal/measurements"
+	"github.com/getsentry/vroom/internal/profile"
+	"github.com/getsentry/vroom/internal/speedscope"
+)
+
+var member void
+
+type void struct{}
+
+func SpeedscopeFromAndroidChunks(chunks []AndroidChunk, startTS, endTS uint64) (speedscope.Output, error) {
+	if len(chunks) == 0 {
+		return speedscope.Output{}, nil
+	}
+	maxTsNS := uint64(0)
+	threadSet := make(map[uint64]void)
+	methodToID := make(map[uint32]uint64)
+	sort.Slice(chunks, func(i, j int) bool {
+		return chunks[i].EndTimestamp() <= chunks[j].StartTimestamp()
+	})
+
+	mergedMeasurement := make(map[string]measurements.MeasurementV2)
+
+	chunk := chunks[0]
+	firstChunkStartTimestampNS := uint64(chunk.StartTimestamp() * 1e9)
+	adjustedChunkStartTimestampNS := firstChunkStartTimestampNS
+	buildTimestamp := chunk.Profile.TimestampGetter()
+	// clean up the events in the first chunk
+	events := make([]profile.AndroidEvent, 0, len(chunk.Profile.Events))
+	methods := make([]profile.AndroidMethod, 0, len(chunk.Profile.Methods))
+	delta := int64(0)
+	if firstChunkStartTimestampNS < startTS {
+		delta = -int64(startTS - firstChunkStartTimestampNS)
+		adjustedChunkStartTimestampNS = startTS
+	}
+	addTimeDelta := chunk.Profile.AddTimeDelta(delta)
+	for _, event := range chunk.Profile.Events {
+		ts := buildTimestamp(event.Time) + firstChunkStartTimestampNS
+		if ts < startTS || ts > endTS {
+			continue
+		}
+		// if the event falls within allowed range, but the first chunk
+		// begins before the start range (delta != 0), adjust the relative ts
+		// of each event by subtracting the delta
+		if delta != 0 {
+			addTimeDelta(&event)
+			// update ts
+			ts = buildTimestamp(event.Time) + adjustedChunkStartTimestampNS
+		}
+		events = append(events, event)
+		maxTsNS = max(maxTsNS, ts)
+	}
+	for _, method := range chunk.Profile.Methods {
+		methodToID[method.Frame().Fingerprint()] = method.ID
+		methods = append(methods, method)
+	}
+	for _, thread := range chunk.Profile.Threads {
+		threadSet[thread.ID] = member
+	}
+	if len(chunk.Measurements) > 0 {
+		err := json.Unmarshal(chunk.Measurements, &mergedMeasurement)
+		if err != nil {
+			return speedscope.Output{}, err
+		}
+	}
+
+	if delta != 0 {
+		firstChunkStartTimestampNS = adjustedChunkStartTimestampNS
+	}
+
+	for i := 1; i < len(chunks); i++ {
+		c := chunks[i]
+		chunkStartTimestampNs := uint64(c.StartTimestamp() * 1e9)
+		buildTimestamp := c.Profile.TimestampGetter()
+		// delta between the current chunk timestamp and the very first one
+		delta := chunkStartTimestampNs - firstChunkStartTimestampNS
+		addTimeDelta := c.Profile.AddTimeDelta(int64(delta))
+		// updates methods ID
+		tmpMethodsID := make(map[uint64]uint64)
+		for _, method := range c.Profile.Methods {
+			if id, ok := methodToID[method.Frame().Fingerprint()]; !ok {
+				newID := uint64(len(methodToID) + 1)
+				methodToID[method.Frame().Fingerprint()] = newID
+				tmpMethodsID[method.ID] = newID
+				method.ID = newID
+				methods = append(methods, method)
+			} else {
+				tmpMethodsID[method.ID] = id
+			}
+		}
+
+		// filter events
+		for _, event := range c.Profile.Events {
+			ts := buildTimestamp(event.Time) + chunkStartTimestampNs
+			if ts < startTS || ts > endTS {
+				continue
+			}
+			event.MethodID = tmpMethodsID[event.MethodID]
+			// before adding the event, update its relative timestamp
+			// which, in this case, should not be relative to the current
+			// chunk timestamp, but rather relative to the very 1st one
+			addTimeDelta(&event)
+			ts = buildTimestamp(event.Time) + firstChunkStartTimestampNS
+			events = append(events, event)
+			maxTsNS = max(maxTsNS, ts)
+		}
+		// update threads
+		for _, thread := range c.Profile.Threads {
+			if _, ok := threadSet[thread.ID]; !ok {
+				chunk.Profile.Threads = append(c.Profile.Threads, thread)
+				threadSet[thread.ID] = member
+			}
+		}
+		// In case we have measurements, merge them too
+		if len(c.Measurements) > 0 {
+			var chunkMeasurements map[string]measurements.MeasurementV2
+			err := json.Unmarshal(c.Measurements, &chunkMeasurements)
+			if err != nil {
+				return speedscope.Output{}, err
+			}
+			for k, measurement := range chunkMeasurements {
+				if el, ok := mergedMeasurement[k]; ok {
+					el.Values = append(el.Values, measurement.Values...)
+					mergedMeasurement[k] = el
+				} else {
+					mergedMeasurement[k] = measurement
+				}
+			}
+		}
+	}
+	chunk.Profile.Events = events
+	chunk.Profile.Methods = methods
+	chunk.DurationNS = maxTsNS
+
+	s, err := chunk.Profile.Speedscope()
+	if err != nil {
+		return speedscope.Output{}, err
+	}
+	s.DurationNS = chunk.DurationNS
+
+	if len(mergedMeasurement) > 0 {
+		s.MeasurementsV2 = mergedMeasurement
+	}
+
+	return s, nil
+}

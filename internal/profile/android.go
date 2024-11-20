@@ -244,6 +244,50 @@ func (p *Android) FixSamplesTime() {
 	}
 }
 
+func (p *Android) AddTimeDelta(deltaNS int64) func(*AndroidEvent) {
+	var addDeltaTimestamp func(e *AndroidEvent)
+	timestampBuilder := p.TimestampGetter()
+	switch p.Clock {
+	case GlobalClock:
+		addDeltaTimestamp = func(e *AndroidEvent) {
+			ts := timestampBuilder(e.Time)
+			ts = getTsFromDelta(ts, deltaNS)
+			secs := (ts / 1e9)
+			nanos := (ts % 1e9)
+			e.Time.Global.Secs = secs
+			e.Time.Global.Nanos = nanos
+		}
+	case CPUClock:
+		addDeltaTimestamp = func(e *AndroidEvent) {
+			ts := timestampBuilder(e.Time)
+			ts = getTsFromDelta(ts, deltaNS)
+			secs := (ts / 1e9)
+			nanos := (ts % 1e9)
+			e.Time.Monotonic.CPU.Secs = secs
+			e.Time.Monotonic.CPU.Nanos = nanos
+		}
+	default:
+		addDeltaTimestamp = func(e *AndroidEvent) {
+			ts := timestampBuilder(e.Time)
+			ts = getTsFromDelta(ts, deltaNS)
+			secs := (ts / 1e9)
+			nanos := (ts % 1e9)
+			e.Time.Monotonic.Wall.Secs = secs
+			e.Time.Monotonic.Wall.Nanos = nanos
+		}
+	}
+	return addDeltaTimestamp
+}
+
+func getTsFromDelta(ts uint64, deltaNS int64) uint64 {
+	if deltaNS < 0 && uint64(-deltaNS) <= ts {
+		return ts - uint64(-deltaNS)
+	} else if deltaNS >= 0 {
+		return ts + uint64(deltaNS)
+	}
+	return ts
+}
+
 // CallTrees generates call trees for a given profile.
 func (p Android) CallTrees() map[uint64][]*nodetree.Node {
 	return p.CallTreesWithMaxDepth(MaxStackDepth)
