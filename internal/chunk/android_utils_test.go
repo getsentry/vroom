@@ -2,6 +2,7 @@ package chunk
 
 import (
 	"testing"
+	"time"
 
 	"github.com/getsentry/vroom/internal/profile"
 	"github.com/getsentry/vroom/internal/speedscope"
@@ -260,12 +261,17 @@ func TestSpeedscopeFromAndroidChunks(t *testing.T) {
 						{Image: "class4", IsApplication: true, Name: "class4.method4()"},
 					},
 				},
+				Metadata: speedscope.ProfileMetadata{
+					ProfileView: speedscope.ProfileView{
+						Timestamp: time.Unix(0, 0).UTC(),
+					},
+				},
 			},
 			start: 0,
 			end:   6000,
 		},
 		{
-			name: "First chunk begins before allowed range (overlap)",
+			name: "First chunk begins before allowed range (overlap )",
 			have: []AndroidChunk{androidChunk1, androidChunk2},
 			want: speedscope.Output{
 				AndroidClock: "Dual",
@@ -318,6 +324,11 @@ func TestSpeedscopeFromAndroidChunks(t *testing.T) {
 						{Image: "class2", IsApplication: true, Name: "class2.method2()"},
 						{Image: "class3", IsApplication: true, Name: "class3.method3()"},
 						{Image: "class4", IsApplication: true, Name: "class4.method4()"},
+					},
+				},
+				Metadata: speedscope.ProfileMetadata{
+					ProfileView: speedscope.ProfileView{
+						Timestamp: time.Unix(0, 1500).UTC(),
 					},
 				},
 			},

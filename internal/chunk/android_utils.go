@@ -3,6 +3,7 @@ package chunk
 import (
 	"encoding/json"
 	"sort"
+	"time"
 
 	"github.com/getsentry/vroom/internal/measurements"
 	"github.com/getsentry/vroom/internal/profile"
@@ -142,6 +143,7 @@ func SpeedscopeFromAndroidChunks(chunks []AndroidChunk, startTS, endTS uint64) (
 		return speedscope.Output{}, err
 	}
 	s.DurationNS = chunk.DurationNS
+	s.Metadata.Timestamp = time.Unix(0, int64(firstChunkStartTimestampNS)).UTC()
 
 	if len(mergedMeasurement) > 0 {
 		s.MeasurementsV2 = mergedMeasurement
