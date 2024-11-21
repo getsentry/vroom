@@ -20,6 +20,7 @@ func SpeedscopeFromAndroidChunks(chunks []AndroidChunk, startTS, endTS uint64) (
 	}
 	maxTsNS := uint64(0)
 	threadSet := make(map[uint64]void)
+	// fingerprint to method ID
 	methodToID := make(map[uint32]uint64)
 	sort.Slice(chunks, func(i, j int) bool {
 		return chunks[i].EndTimestamp() <= chunks[j].StartTimestamp()
@@ -29,6 +30,12 @@ func SpeedscopeFromAndroidChunks(chunks []AndroidChunk, startTS, endTS uint64) (
 
 	chunk := chunks[0]
 	firstChunkStartTimestampNS := uint64(chunk.StartTimestamp() * 1e9)
+	// Initially, adjustedChunkStartTimestampNS will just be the
+	// chunk timestamp. If the chunk starts before the allowed
+	// time range though, we only keep events that fall within
+	// the range, set the startTimestamp to the start value of
+	// the allowed range and adjust the relative ts of each
+	// events.
 	adjustedChunkStartTimestampNS := firstChunkStartTimestampNS
 	buildTimestamp := chunk.Profile.TimestampGetter()
 	// clean up the events in the first chunk
@@ -43,11 +50,12 @@ func SpeedscopeFromAndroidChunks(chunks []AndroidChunk, startTS, endTS uint64) (
 	for _, event := range chunk.Profile.Events {
 		ts := buildTimestamp(event.Time) + firstChunkStartTimestampNS
 		if ts < startTS || ts > endTS {
+			// we filter out events out of range
 			continue
 		}
-		// if the event falls within allowed range, but the first chunk
+		// If the event falls within allowed range, but the first chunk
 		// begins before the start range (delta != 0), adjust the relative ts
-		// of each event by subtracting the delta
+		// of each event by subtracting the delta.
 		if delta != 0 {
 			addTimeDelta(&event)
 			// update ts
@@ -70,6 +78,10 @@ func SpeedscopeFromAndroidChunks(chunks []AndroidChunk, startTS, endTS uint64) (
 		}
 	}
 
+	// If chunk started before the allowed time range
+	// update the chunk timestamp (firstChunkStartTimestampNS)
+	// since later on, other chunks will use this to compute
+	// the right offset (relative ts in nanoseconds).
 	if delta != 0 {
 		firstChunkStartTimestampNS = adjustedChunkStartTimestampNS
 	}
@@ -78,7 +90,10 @@ func SpeedscopeFromAndroidChunks(chunks []AndroidChunk, startTS, endTS uint64) (
 		c := chunks[i]
 		chunkStartTimestampNs := uint64(c.StartTimestamp() * 1e9)
 		buildTimestamp := c.Profile.TimestampGetter()
-		// delta between the current chunk timestamp and the very first one
+		// Delta between the current chunk timestamp and the very first one.
+		// This will be needed to correctly offset the events relative ts,
+		// which need to be relative not to the start of this chunk, but to
+		// the start of the very first one.
 		delta := chunkStartTimestampNs - firstChunkStartTimestampNS
 		addTimeDelta := c.Profile.AddTimeDelta(int64(delta))
 		// updates methods ID
@@ -102,22 +117,22 @@ func SpeedscopeFromAndroidChunks(chunks []AndroidChunk, startTS, endTS uint64) (
 				continue
 			}
 			event.MethodID = tmpMethodsID[event.MethodID]
-			// before adding the event, update its relative timestamp
+			// Before adding the event, update its relative timestamp
 			// which, in this case, should not be relative to the current
-			// chunk timestamp, but rather relative to the very 1st one
+			// chunk timestamp, but rather relative to the very 1st one.
 			addTimeDelta(&event)
 			ts = buildTimestamp(event.Time) + firstChunkStartTimestampNS
 			events = append(events, event)
 			maxTsNS = max(maxTsNS, ts)
 		}
-		// update threads
+		// Update threads.
 		for _, thread := range c.Profile.Threads {
 			if _, ok := threadSet[thread.ID]; !ok {
 				chunk.Profile.Threads = append(c.Profile.Threads, thread)
 				threadSet[thread.ID] = member
 			}
 		}
-		// In case we have measurements, merge them too
+		// In case we have measurements, merge them too.
 		if len(c.Measurements) > 0 {
 			var chunkMeasurements map[string]measurements.MeasurementV2
 			err := json.Unmarshal(c.Measurements, &chunkMeasurements)
