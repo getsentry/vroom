@@ -83,15 +83,6 @@ func newEnvironment() (*environment, error) {
 		ReadTimeout:  3 * time.Second,
 		WriteTimeout: 3 * time.Second,
 	}
-	e.metricSummaryWriter = &kafka.Writer{
-		Addr:         kafka.TCP(e.config.SpansKafkaBrokers...),
-		Async:        true,
-		Balancer:     kafka.CRC32Balancer{},
-		BatchSize:    100,
-		ReadTimeout:  3 * time.Second,
-		Topic:        e.config.MetricsSummaryKafkaTopic,
-		WriteTimeout: 3 * time.Second,
-	}
 	e.metricsClient = &http.Client{
 		Timeout: time.Second * 5,
 		Transport: &http.Transport{

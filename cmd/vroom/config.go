@@ -12,11 +12,10 @@ type (
 		ProfilingKafkaBrokers   []string `env:"SENTRY_KAFKA_BROKERS_PROFILING" env-default:"localhost:9092"`
 		SpansKafkaBrokers       []string `env:"SENTRY_KAFKA_BROKERS_SPANS" env-default:"localhost:9092"`
 
-		CallTreesKafkaTopic      string `env:"SENTRY_KAFKA_TOPIC_CALL_TREES" env-default:"profiles-call-tree"`
-		MetricsSummaryKafkaTopic string `env:"SENTRY_KAFKA_TOPIC_METRICS_SUMMARY" env-default:"snuba-metrics-summaries"`
-		OccurrencesKafkaTopic    string `env:"SENTRY_KAFKA_TOPIC_OCCURRENCES" env-default:"ingest-occurrences"`
-		ProfileChunksKafkaTopic  string `env:"SENTRY_KAFKA_TOPIC_PROFILE_CHUNKS" env-default:"snuba-profile-chunks"`
-		ProfilesKafkaTopic       string `env:"SENTRY_KAKFA_TOPIC_PROFILES" env-default:"processed-profiles"`
+		CallTreesKafkaTopic     string `env:"SENTRY_KAFKA_TOPIC_CALL_TREES" env-default:"profiles-call-tree"`
+		OccurrencesKafkaTopic   string `env:"SENTRY_KAFKA_TOPIC_OCCURRENCES" env-default:"ingest-occurrences"`
+		ProfileChunksKafkaTopic string `env:"SENTRY_KAFKA_TOPIC_PROFILE_CHUNKS" env-default:"snuba-profile-chunks"`
+		ProfilesKafkaTopic      string `env:"SENTRY_KAKFA_TOPIC_PROFILES" env-default:"processed-profiles"`
 
 		SnubaHost string `env:"SENTRY_SNUBA_HOST" env-default:"http://localhost:1218"`
 
