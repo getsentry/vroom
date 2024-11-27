@@ -102,9 +102,10 @@ func SpeedscopeFromAndroidChunks(chunks []AndroidChunk, startTS, endTS uint64) (
 		// updates methods ID
 		tmpMethodsID := make(map[uint64]uint64)
 		for _, method := range c.Profile.Methods {
-			if id, ok := methodToID[method.Frame().Fingerprint()]; !ok {
+			fingerprint := method.Frame().Fingerprint()
+			if id, ok := methodToID[fingerprint]; !ok {
 				newID := uint64(len(methodToID) + 1)
-				methodToID[method.Frame().Fingerprint()] = newID
+				methodToID[fingerprint] = newID
 				tmpMethodsID[method.ID] = newID
 				method.ID = newID
 				methods = append(methods, method)
