@@ -966,7 +966,10 @@ func TestAddTimeDelta(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			addTimeDelta := test.trace.AddTimeDelta(test.delta)
 			event := test.trace.Events[0]
-			addTimeDelta(&event)
+			err := addTimeDelta(&event)
+			if err != nil {
+				t.Fatal(err)
+			}
 			if diff := testutil.Diff(event, test.want); diff != "" {
 				t.Fatalf("Result mismatch: got - want +\n%s", diff)
 			}

@@ -57,7 +57,10 @@ func SpeedscopeFromAndroidChunks(chunks []AndroidChunk, startTS, endTS uint64) (
 		// begins before the start range (delta != 0), adjust the relative ts
 		// of each event by subtracting the delta.
 		if delta != 0 {
-			addTimeDelta(&event)
+			err := addTimeDelta(&event)
+			if err != nil {
+				return speedscope.Output{}, err
+			}
 			// update ts
 			ts = buildTimestamp(event.Time) + adjustedChunkStartTimestampNS
 		}
@@ -120,7 +123,10 @@ func SpeedscopeFromAndroidChunks(chunks []AndroidChunk, startTS, endTS uint64) (
 			// Before adding the event, update its relative timestamp
 			// which, in this case, should not be relative to the current
 			// chunk timestamp, but rather relative to the very 1st one.
-			addTimeDelta(&event)
+			err := addTimeDelta(&event)
+			if err != nil {
+				return speedscope.Output{}, err
+			}
 			ts = buildTimestamp(event.Time) + firstChunkStartTimestampNS
 			events = append(events, event)
 			maxTsNS = max(maxTsNS, ts)
