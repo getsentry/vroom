@@ -41,6 +41,15 @@ func SpeedscopeFromAndroidChunks(chunks []AndroidChunk, startTS, endTS uint64) (
 	// clean up the events in the first chunk
 	events := make([]profile.AndroidEvent, 0, len(chunk.Profile.Events))
 	methods := make([]profile.AndroidMethod, 0, len(chunk.Profile.Methods))
+	// updates methods ID
+	tmpMethodsID := make(map[uint64]uint64)
+	for i, method := range chunk.Profile.Methods {
+		id := uint64(i + 1)
+		tmpMethodsID[method.ID] = id
+		method.ID = id
+		methodToID[method.Frame().Fingerprint()] = id
+		methods = append(methods, method)
+	}
 	delta := int64(0)
 	if firstChunkStartTimestampNS < startTS {
 		delta = -int64(startTS - firstChunkStartTimestampNS)
@@ -64,12 +73,9 @@ func SpeedscopeFromAndroidChunks(chunks []AndroidChunk, startTS, endTS uint64) (
 			// update ts
 			ts = buildTimestamp(event.Time) + adjustedChunkStartTimestampNS
 		}
+		event.MethodID = tmpMethodsID[event.MethodID]
 		events = append(events, event)
 		maxTsNS = max(maxTsNS, ts)
-	}
-	for _, method := range chunk.Profile.Methods {
-		methodToID[method.Frame().Fingerprint()] = method.ID
-		methods = append(methods, method)
 	}
 	for _, thread := range chunk.Profile.Threads {
 		threadSet[thread.ID] = member
@@ -100,7 +106,7 @@ func SpeedscopeFromAndroidChunks(chunks []AndroidChunk, startTS, endTS uint64) (
 		delta := chunkStartTimestampNs - firstChunkStartTimestampNS
 		addTimeDelta := c.Profile.AddTimeDelta(int64(delta))
 		// updates methods ID
-		tmpMethodsID := make(map[uint64]uint64)
+		tmpMethodsID = make(map[uint64]uint64)
 		for _, method := range c.Profile.Methods {
 			fingerprint := method.Frame().Fingerprint()
 			if id, ok := methodToID[fingerprint]; !ok {
