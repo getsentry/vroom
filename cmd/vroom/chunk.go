@@ -192,20 +192,6 @@ func (env *environment) postChunk(w http.ResponseWriter, r *http.Request) {
 				hub.CaptureException(err)
 			}
 		}
-
-		// this block is writing into the generic metrics dataset
-		// TODO: remove once we fully move to functions dataset
-		s = sentry.StartSpan(ctx, "processing")
-		s.Description = "Extract metrics from functions"
-		metrics := extractMetricsFromSampleChunkFunctions(sc, functions)
-		s.Finish()
-
-		if len(metrics) > 0 {
-			s = sentry.StartSpan(ctx, "processing")
-			s.Description = "Send functions metrics to generic metrics platform"
-			sendMetrics(ctx, options.ProjectDSN, metrics, env.metricsClient)
-			s.Finish()
-		}
 	}
 
 	w.WriteHeader(http.StatusNoContent)
