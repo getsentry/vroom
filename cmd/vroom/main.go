@@ -85,16 +85,6 @@ func newEnvironment() (*environment, error) {
 		WriteTimeout: 3 * time.Second,
 		Transport:    createKafkaRoundTripper(e.config),
 	}
-	e.metricSummaryWriter = &kafka.Writer{
-		Addr:         kafka.TCP(e.config.SpansKafkaBrokers...),
-		Async:        true,
-		Balancer:     kafka.CRC32Balancer{},
-		BatchSize:    100,
-		ReadTimeout:  3 * time.Second,
-		Topic:        e.config.MetricsSummaryKafkaTopic,
-		WriteTimeout: 3 * time.Second,
-		Transport:    createKafkaRoundTripper(e.config),
-	}
 	e.metricsClient = &http.Client{
 		Timeout: time.Second * 5,
 		Transport: &http.Transport{
@@ -147,11 +137,6 @@ func (e *environment) newRouter() (*httprouter.Router, error) {
 			http.MethodGet,
 			"/organizations/:organization_id/projects/:project_id/raw_profiles/:profile_id",
 			e.getRawProfile,
-		},
-		{
-			http.MethodPost,
-			"/organizations/:organization_id/projects/:project_id/flamegraph",
-			e.postFlamegraphFromProfileIDs,
 		},
 		{
 			http.MethodPost,

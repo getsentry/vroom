@@ -5,7 +5,6 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"log"
-	"math"
 	"net/http"
 	"os"
 	"strconv"
@@ -23,14 +22,6 @@ import (
 	"github.com/getsentry/vroom/internal/nodetree"
 	"github.com/getsentry/vroom/internal/profile"
 )
-
-func getFlamegraphNumWorkers(numProfiles, minNumWorkers int) int {
-	if numProfiles < minNumWorkers {
-		return numProfiles
-	}
-	v := int(math.Ceil((float64(numProfiles) / 100) * float64(minNumWorkers)))
-	return max(v, minNumWorkers)
-}
 
 func extractMetricsFromFunctions(p *profile.Profile, functions []nodetree.CallTreeFunction) ([]sentry.Metric, []MetricSummary) {
 	metrics := make([]sentry.Metric, 0, len(functions))

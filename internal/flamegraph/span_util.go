@@ -32,15 +32,6 @@ func mergeIntervals(intervals *[]utils.Interval) []utils.Interval {
 	return newIntervals
 }
 
-func relativeIntervalsFromAbsoluteTimestamp(intervals *[]utils.Interval, t uint64) {
-	for i, v := range *intervals {
-		// safety check: in case the start/end should be
-		// earlier than the profile start
-		(*intervals)[i].Start = max(t, v.Start) - t
-		(*intervals)[i].End = max(t, v.End) - t
-	}
-}
-
 func sliceCallTree(callTree *[]*nodetree.Node, intervals *[]utils.Interval) []*nodetree.Node {
 	slicedTree := make([]*nodetree.Node, 0)
 	for _, node := range *callTree {

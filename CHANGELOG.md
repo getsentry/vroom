@@ -50,6 +50,7 @@
 - Return the duration measured by the profiler. ([#516](https://github.com/getsentry/vroom/pull/516), [#517](https://github.com/getsentry/vroom/pull/517))
 - Annotate functions to the right thread. ([#523](https://github.com/getsentry/vroom/pull/523))
 - Should write the profiler id. ([#528](https://github.com/getsentry/vroom/pull/528))
+- Prioritize stack trace rule over app.identifier ([#529](https://github.com/getsentry/vroom/pull/529))
 
 **Internal**:
 
@@ -115,6 +116,7 @@
 - Update materialized_version for profile functions metrics ([#522](https://github.com/getsentry/vroom/pull/522))
 - Support writing functions metrics we extract from chunks into the functions dataset ([#524](https://github.com/getsentry/vroom/pull/524))
 - Keep top N samples in flamegraph. ([#526](https://github.com/getsentry/vroom/pull/526))
+- Remove unused legacy flamegraph code path. ([#533](https://github.com/getsentry/vroom/pull/533))
 
 ## 23.12.0
 
