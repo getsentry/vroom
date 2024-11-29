@@ -10,7 +10,7 @@ import (
 	"github.com/getsentry/vroom/internal/utils"
 )
 
-func TestCallTrees(t *testing.T) {
+func TestCallTreesSample(t *testing.T) {
 	tests := []struct {
 		name  string
 		chunk SampleChunk
