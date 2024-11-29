@@ -56,26 +56,6 @@ type (
 		VersionCode          string            `json:"version_code"`
 		VersionName          string            `json:"version_name"`
 	}
-
-	// MetricsSummaryKafkaMessage is representing the struct we send to Kafka to insert Metrics Summary in ClickHouse.
-	MetricsSummaryKafkaMessage struct {
-		Count         uint64            `json:"count"`
-		DurationMs    uint32            `json:"duration_ms"`
-		EndTimestamp  float64           `json:"end_timestamp"`
-		Group         string            `json:"group"`
-		IsSegment     bool              `json:"is_segment"`
-		Max           float64           `json:"max"`
-		Min           float64           `json:"min"`
-		Sum           float64           `json:"sum"`
-		Mri           string            `json:"mri"`
-		ProjectID     uint64            `json:"project_id"`
-		Received      int64             `json:"received"`
-		RetentionDays int               `json:"retention_days"`
-		SegmentID     string            `json:"segment_id"`
-		SpanID        string            `json:"span_id"`
-		Tags          map[string]string `json:"tags"`
-		TraceID       string            `json:"trace_id"`
-	}
 )
 
 func buildFunctionsKafkaMessage(p profile.Profile, functions []nodetree.CallTreeFunction) FunctionsKafkaMessage {

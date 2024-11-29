@@ -116,6 +116,8 @@
 - Support writing functions metrics we extract from chunks into the functions dataset ([#524](https://github.com/getsentry/vroom/pull/524))
 - Keep top N samples in flamegraph. ([#526](https://github.com/getsentry/vroom/pull/526))
 - Add utility to merge a list of android chunks and generate a speedscope result ([#531](https://github.com/getsentry/vroom/pull/531))
+- Remove unused legacy flamegraph code path. ([#533](https://github.com/getsentry/vroom/pull/533))
+- Remove generic metrics ingestion ([#534](https://github.com/getsentry/vroom/pull/534))
 
 ## 23.12.0
 
