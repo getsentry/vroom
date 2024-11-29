@@ -181,21 +181,6 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			hub.CaptureException(err)
 		}
-		if p.GetOptions().ProjectDSN != "" {
-			s = sentry.StartSpan(ctx, "processing")
-			s.Description = "Extract metrics from functions"
-			// Cap and filter out system frames.
-			functionsMetricPlatform := metrics.CapAndFilterFunctions(functions, maxUniqueFunctionsPerProfile, true)
-			metrics, _ := extractMetricsFromFunctions(&p, functionsMetricPlatform)
-			s.Finish()
-
-			if len(metrics) > 0 {
-				s = sentry.StartSpan(ctx, "processing")
-				s.Description = "Send functions metrics to generic metrics platform"
-				sendMetrics(ctx, p.GetOptions().ProjectDSN, metrics, env.metricsClient)
-				s.Finish()
-			}
-		}
 	}
 
 	if p.IsSampled() {
