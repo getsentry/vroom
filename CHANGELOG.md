@@ -118,6 +118,7 @@
 - Add utility to merge a list of android chunks and generate a speedscope result ([#531](https://github.com/getsentry/vroom/pull/531))
 - Remove unused legacy flamegraph code path. ([#533](https://github.com/getsentry/vroom/pull/533))
 - Remove generic metrics ingestion ([#534](https://github.com/getsentry/vroom/pull/534))
+- Lower number of concurrent reads ([#537](https://github.com/getsentry/vroom/pull/537))
 
 ## 23.12.0
 
