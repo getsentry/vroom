@@ -32,9 +32,8 @@ import (
 type environment struct {
 	config ServiceConfig
 
-	occurrencesWriter   KafkaWriter
-	profilingWriter     KafkaWriter
-	metricSummaryWriter KafkaWriter
+	occurrencesWriter KafkaWriter
+	profilingWriter   KafkaWriter
 
 	storage *blob.Bucket
 }
@@ -94,10 +93,6 @@ func (e *environment) shutdown() {
 		sentry.CaptureException(err)
 	}
 	err = e.profilingWriter.Close()
-	if err != nil {
-		sentry.CaptureException(err)
-	}
-	err = e.metricSummaryWriter.Close()
 	if err != nil {
 		sentry.CaptureException(err)
 	}
