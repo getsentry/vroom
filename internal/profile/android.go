@@ -371,7 +371,7 @@ func (p Android) CallTreesWithMaxDepth(maxDepth int) map[uint64][]*nodetree.Node
 				stacks[e.ThreadID][i].Children = append(stacks[e.ThreadID][i].Children, n)
 			}
 			stacks[e.ThreadID] = append(stacks[e.ThreadID], n)
-			n.Fingerprint = GenerateFingerprint(stacks[e.ThreadID])
+			n.Fingerprint = generateFingerprint(stacks[e.ThreadID])
 		case ExitAction, UnwindAction:
 			stackDepth[e.ThreadID]--
 			if stackDepth[e.ThreadID] > maxDepth {
@@ -415,7 +415,7 @@ func (p Android) CallTreesWithMaxDepth(maxDepth int) map[uint64][]*nodetree.Node
 	return treesByThreadID
 }
 
-func GenerateFingerprint(stack []*nodetree.Node) uint64 {
+func generateFingerprint(stack []*nodetree.Node) uint64 {
 	h := fnv.New64()
 	for _, n := range stack {
 		n.WriteToHash(h)

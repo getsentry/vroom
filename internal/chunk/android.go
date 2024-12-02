@@ -2,8 +2,6 @@ package chunk
 
 import (
 	"encoding/json"
-	"math"
-	"strconv"
 	"time"
 
 	"github.com/getsentry/vroom/internal/clientsdk"
@@ -55,113 +53,8 @@ func (c AndroidChunk) DurationMS() uint64 {
 	return uint64(time.Duration(c.DurationNS).Milliseconds())
 }
 
-func (c AndroidChunk) CallTrees(activeThreadID *string) (map[string][]*nodetree.Node, error) {
-	return c.CallTreesWithMaxDepth(activeThreadID, profile.MaxStackDepth)
-}
-
-func (c AndroidChunk) CallTreesWithMaxDepth(activeThreadID *string, maxDepth int) (map[string][]*nodetree.Node, error) {
-	p := c.Profile
-	// in case wall-clock.secs is not monotonic, "fix" it
-	p.FixSamplesTime()
-
-	buildTimestamp := p.TimestampGetter()
-	treesByThreadID := make(map[string][]*nodetree.Node)
-	stacks := make(map[uint64][]*nodetree.Node)
-	stackDepth := make(map[uint64]int)
-
-	methods := make(map[uint64]profile.AndroidMethod)
-	for _, m := range p.Methods {
-		methods[m.ID] = m
-	}
-
-	closeFrame := func(threadID uint64, ts uint64, i int) {
-		n := stacks[threadID][i]
-		n.Update(ts)
-		n.SampleCount = int(math.Ceil(float64(n.DurationNS) / float64((10 * time.Millisecond))))
-	}
-
-	var maxTimestampNS uint64
-	enterPerMethod := make(map[uint64]int)
-	exitPerMethod := make(map[uint64]int)
-
-	for _, e := range p.Events {
-		tid := strconv.FormatUint(e.ThreadID, 10)
-		if activeThreadID != nil && tid != *activeThreadID {
-			continue
-		}
-
-		ts := buildTimestamp(e.Time)
-		if ts > maxTimestampNS {
-			maxTimestampNS = ts
-		}
-
-		switch e.Action {
-		case profile.EnterAction:
-			m, exists := methods[e.MethodID]
-			if !exists {
-				methods[e.MethodID] = profile.AndroidMethod{
-					ClassName: "unknown",
-					ID:        e.MethodID,
-					Name:      "unknown",
-				}
-			}
-			stackDepth[e.ThreadID]++
-			if stackDepth[e.ThreadID] > maxDepth {
-				continue
-			}
-			enterPerMethod[e.MethodID]++
-			n := nodetree.NodeFromFrame(m.Frame(), ts, 0, 0)
-			if len(stacks[e.ThreadID]) == 0 {
-				treesByThreadID[tid] = append(treesByThreadID[tid], n)
-			} else {
-				i := len(stacks[e.ThreadID]) - 1
-				stacks[e.ThreadID][i].Children = append(stacks[e.ThreadID][i].Children, n)
-			}
-			stacks[e.ThreadID] = append(stacks[e.ThreadID], n)
-			n.Fingerprint = profile.GenerateFingerprint(stacks[e.ThreadID])
-		case profile.ExitAction, profile.UnwindAction:
-			stackDepth[e.ThreadID]--
-			if stackDepth[e.ThreadID] > maxDepth {
-				continue
-			}
-			if len(stacks[e.ThreadID]) == 0 {
-				continue
-			}
-			i := len(stacks[e.ThreadID]) - 1
-			var eventSkipped bool
-			for ; i >= 0; i-- {
-				n := stacks[e.ThreadID][i]
-				if n.Frame.MethodID != e.MethodID &&
-					enterPerMethod[e.MethodID] <= exitPerMethod[e.MethodID] {
-					eventSkipped = true
-					break
-				}
-				closeFrame(e.ThreadID, ts, i)
-				exitPerMethod[e.MethodID]++
-				if n.Frame.MethodID == e.MethodID {
-					break
-				}
-			}
-			// If we didn't skip the event, we should cut the stack accordingly.
-			if !eventSkipped {
-				stacks[e.ThreadID] = stacks[e.ThreadID][:i]
-			}
-		}
-	}
-
-	// Close remaining open frames.
-	for threadID, stack := range stacks {
-		for i := len(stack) - 1; i >= 0; i-- {
-			closeFrame(threadID, maxTimestampNS, i)
-		}
-	}
-	for _, trees := range treesByThreadID {
-		for _, root := range trees {
-			root.Close(maxTimestampNS)
-		}
-	}
-
-	return treesByThreadID, nil
+func (c AndroidChunk) CallTrees() map[uint64][]*nodetree.Node {
+	return c.Profile.CallTrees()
 }
 
 func (c AndroidChunk) SDKName() string {
