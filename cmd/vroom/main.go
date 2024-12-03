@@ -122,11 +122,6 @@ func (e *environment) newRouter() (*httprouter.Router, error) {
 		},
 		{
 			http.MethodPost,
-			"/organizations/:organization_id/projects/:project_id/chunks-flamegraph",
-			e.postFlamegraphFromChunksMetadata,
-		},
-		{
-			http.MethodPost,
 			"/organizations/:organization_id/projects/:project_id/chunks",
 			e.postProfileFromChunkIDs,
 		},
