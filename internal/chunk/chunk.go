@@ -69,6 +69,10 @@ func (c Chunk) MarshalJSON() ([]byte, error) {
 	return json.Marshal(c.chunk)
 }
 
+func (c Chunk) Chunk() chunkInterface {
+	return c.chunk
+}
+
 func StoragePath(OrganizationID uint64, ProjectID uint64, ProfilerID string, ID string) string {
 	return fmt.Sprintf(
 		"%d/%d/%s/%s",

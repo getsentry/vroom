@@ -426,7 +426,7 @@ func GetFlamegraphFromChunks(
 			}
 			continue
 		}
-		cm := chunkIDToMetadata[result.Chunk.ID]
+		cm := chunkIDToMetadata[result.Chunk.GetID()]
 		for _, interval := range cm.SpanIntervals {
 			callTrees, err := result.Chunk.CallTrees(&interval.ActiveThreadID)
 			if err != nil {
@@ -439,9 +439,9 @@ func GetFlamegraphFromChunks(
 
 			annotate := annotateWithProfileExample(
 				utils.NewExampleFromProfilerChunk(
-					result.Chunk.ProjectID,
-					result.Chunk.ProfilerID,
-					result.Chunk.ID,
+					result.Chunk.GetProjectID(),
+					result.Chunk.GetProfilerID(),
+					result.Chunk.GetID(),
 					result.TransactionID,
 					result.ThreadID,
 					result.Start,

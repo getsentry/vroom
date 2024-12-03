@@ -261,7 +261,7 @@ func (env *environment) postProfileFromChunkIDs(w http.ResponseWriter, r *http.R
 		}
 	}
 
-	chunks := make([]chunk.SampleChunk, 0, len(requestBody.ChunkIDs))
+	chunks := make([]chunk.Chunk, 0, len(requestBody.ChunkIDs))
 	// read the output of each tasks
 	for i := 0; i < len(requestBody.ChunkIDs); i++ {
 		res := <-results
@@ -305,26 +305,80 @@ func (env *environment) postProfileFromChunkIDs(w http.ResponseWriter, r *http.R
 
 	s = sentry.StartSpan(ctx, "chunks.merge")
 	s.Description = "Merge profile chunks into a single one"
-	chunk, err := chunk.MergeSampleChunks(chunks, requestBody.Start, requestBody.End)
-	s.Finish()
-	if err != nil {
-		hub.CaptureException(err)
-		w.WriteHeader(http.StatusInternalServerError)
+	if len(chunks) == 0 {
+		w.WriteHeader(http.StatusOK)
 		return
 	}
+	var resp []byte
+	// Here we check what type of chunks we're dealing with,
+	// since Android chunks and Sample chunks return completely
+	// different types (Chunk vs Speedscope), hence we can't hide
+	// the implementation behind an interface.
+	//
+	// We check the first chunk type, and use that to assert the
+	// type of all the elements in the slice and then call the
+	// appropriate utility.
+	switch chunks[0].Chunk().(type) {
+	case *chunk.SampleChunk:
+		sampleChunks := make([]chunk.SampleChunk, 0, len(chunks))
+		for _, c := range chunks {
+			sc, ok := c.Chunk().(*chunk.SampleChunk)
+			if !ok {
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+			sampleChunks = append(sampleChunks, *sc)
+		}
+		mergedChunk, err := chunk.MergeSampleChunks(sampleChunks, requestBody.Start, requestBody.End)
+		s.Finish()
+		if err != nil {
+			hub.CaptureException(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		s = sentry.StartSpan(ctx, "json.marshal")
+		resp, err = json.Marshal(postProfileFromChunkIDsResponse{Chunk: mergedChunk})
+		s.Finish()
+		if err != nil {
+			hub.CaptureException(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 
-	s = sentry.StartSpan(ctx, "json.marshal")
-	defer s.Finish()
-	b, err := json.Marshal(postProfileFromChunkIDsResponse{Chunk: chunk})
-	if err != nil {
-		hub.CaptureException(err)
-		w.WriteHeader(http.StatusInternalServerError)
+	case *chunk.AndroidChunk:
+		androidChunks := make([]chunk.AndroidChunk, 0, len(chunks))
+		for _, c := range chunks {
+			ac, ok := c.Chunk().(*chunk.AndroidChunk)
+			if !ok {
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+			androidChunks = append(androidChunks, *ac)
+		}
+		sp, err := chunk.SpeedscopeFromAndroidChunks(androidChunks, requestBody.Start, requestBody.End)
+		s.Finish()
+		if err != nil {
+			hub.CaptureException(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		s = sentry.StartSpan(ctx, "json.marshal")
+		resp, err = json.Marshal(sp)
+		s.Finish()
+		if err != nil {
+			hub.CaptureException(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+	default:
+		// Should never happen.
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	_, _ = w.Write(b)
+	_, _ = w.Write(resp)
 }
 
 type (
