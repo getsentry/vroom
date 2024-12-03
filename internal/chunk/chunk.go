@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/getsentry/vroom/internal/frame"
+	"github.com/getsentry/vroom/internal/nodetree"
 	"github.com/getsentry/vroom/internal/platform"
 	"github.com/getsentry/vroom/internal/utils"
 )
@@ -21,6 +22,7 @@ type (
 		GetRetentionDays() int
 		GetOptions() utils.Options
 		GetFrameWithFingerprint(uint32) (frame.Frame, error)
+		CallTrees(activeThreadID *string) (map[string][]*nodetree.Node, error)
 
 		DurationMS() uint64
 		EndTimestamp() float64
