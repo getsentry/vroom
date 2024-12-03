@@ -57,14 +57,14 @@ func (env *environment) postChunk(w http.ResponseWriter, r *http.Request) {
 	var c chunk.Chunk
 	switch p.Platform {
 	case platform.Android:
-		c = new(chunk.AndroidChunk)
+		c = chunk.New(new(chunk.AndroidChunk))
 	default:
-		c = new(chunk.SampleChunk)
+		c = chunk.New(new(chunk.SampleChunk))
 	}
 
 	s = sentry.StartSpan(ctx, "json.unmarshal")
 	s.Description = "Unmarshal profile"
-	err = json.Unmarshal(body, c)
+	err = json.Unmarshal(body, &c)
 	s.Finish()
 	if err != nil {
 		if hub != nil {
