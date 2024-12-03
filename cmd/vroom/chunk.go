@@ -138,59 +138,52 @@ func (env *environment) postChunk(w http.ResponseWriter, r *http.Request) {
 	}
 	s.Finish()
 
-	options := c.GetOptions()
-	sc, ok := c.(*chunk.SampleChunk)
+	// nb.: here we don't have a specific thread ID, so we're going to ingest
+	// functions metrics from all the thread.
+	// That's ok as this data is not supposed to be transaction/span scoped,
+	// plus, we'll only retain application frames, so much of the system functions
+	// chaff will be dropped.
+	s = sentry.StartSpan(ctx, "processing")
+	callTrees, err := c.CallTrees(nil)
+	s.Finish()
+	if err != nil {
+		hub.CaptureException(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	s = sentry.StartSpan(ctx, "processing")
+	s.Description = "Extract functions"
+	functions := metrics.ExtractFunctionsFromCallTrees(callTrees)
+	functions = metrics.CapAndFilterFunctions(functions, maxUniqueFunctionsPerProfile, true)
+	s.Finish()
 
-	// Metrics extraction is only supported for sample chunks right now.
-	// TODO: support metrics extraction for Android chunks.
-	if options.ProjectDSN != "" && c.GetPlatform() != platform.Android && ok {
-		// nb.: here we don't have a specific thread ID, so we're going to ingest
-		// functions metrics from all the thread.
-		// That's ok as this data is not supposed to be transaction/span scoped,
-		// plus, we'll only retain application frames, so much of the system functions
-		// chaff will be dropped.
-		s = sentry.StartSpan(ctx, "processing")
-		callTrees, err := sc.CallTrees(nil)
-		s.Finish()
-		if err != nil {
-			hub.CaptureException(err)
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-		s = sentry.StartSpan(ctx, "processing")
-		s.Description = "Extract functions"
-		functions := metrics.ExtractFunctionsFromCallTrees(callTrees)
-		functions = metrics.CapAndFilterFunctions(functions, maxUniqueFunctionsPerProfile, true)
-		s.Finish()
-
-		// This block writes into the functions dataset
-		s = sentry.StartSpan(ctx, "json.marshal")
-		s.Description = "Marshal functions Kafka message"
-		b, err := json.Marshal(buildChunkFunctionsKafkaMessage(sc, functions))
-		s.Finish()
-		if err != nil {
-			if hub != nil {
-				hub.CaptureException(err)
-			}
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-		s = sentry.StartSpan(ctx, "processing")
-		s.Description = "Send functions to Kafka"
-		err = env.profilingWriter.WriteMessages(ctx, kafka.Message{
-			Topic: env.config.CallTreesKafkaTopic,
-			Value: b,
-		})
-		s.Finish()
+	// This block writes into the functions dataset
+	s = sentry.StartSpan(ctx, "json.marshal")
+	s.Description = "Marshal functions Kafka message"
+	b, err = json.Marshal(buildChunkFunctionsKafkaMessage(&c, functions))
+	s.Finish()
+	if err != nil {
 		if hub != nil {
-			hub.Scope().SetContext("Call functions payload", map[string]interface{}{
-				"Size": len(b),
-			})
+			hub.CaptureException(err)
 		}
-		if err != nil {
-			if hub != nil {
-				hub.CaptureException(err)
-			}
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	s = sentry.StartSpan(ctx, "processing")
+	s.Description = "Send functions to Kafka"
+	err = env.profilingWriter.WriteMessages(ctx, kafka.Message{
+		Topic: env.config.CallTreesKafkaTopic,
+		Value: b,
+	})
+	s.Finish()
+	if hub != nil {
+		hub.Scope().SetContext("Call functions payload", map[string]interface{}{
+			"Size": len(b),
+		})
+	}
+	if err != nil {
+		if hub != nil {
+			hub.CaptureException(err)
 		}
 	}
 
