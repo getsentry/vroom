@@ -83,70 +83,70 @@ func StoragePath(OrganizationID uint64, ProjectID uint64, ProfilerID string, ID 
 	)
 }
 
-func (c *Chunk) GetEnvironment() string {
+func (c Chunk) GetEnvironment() string {
 	return c.chunk.GetEnvironment()
 }
 
-func (c *Chunk) GetID() string {
+func (c Chunk) GetID() string {
 	return c.chunk.GetID()
 }
 
-func (c *Chunk) GetOrganizationID() uint64 {
+func (c Chunk) GetOrganizationID() uint64 {
 	return c.chunk.GetOrganizationID()
 }
 
-func (c *Chunk) GetPlatform() platform.Platform {
+func (c Chunk) GetPlatform() platform.Platform {
 	return c.chunk.GetPlatform()
 }
 
-func (c *Chunk) GetProfilerID() string {
+func (c Chunk) GetProfilerID() string {
 	return c.chunk.GetProfilerID()
 }
 
-func (c *Chunk) GetProjectID() uint64 {
+func (c Chunk) GetProjectID() uint64 {
 	return c.chunk.GetProjectID()
 }
 
-func (c *Chunk) GetReceived() float64 {
+func (c Chunk) GetReceived() float64 {
 	return c.chunk.GetReceived()
 }
 
-func (c *Chunk) GetRelease() string {
+func (c Chunk) GetRelease() string {
 	return c.chunk.GetRelease()
 }
 
-func (c *Chunk) GetRetentionDays() int {
+func (c Chunk) GetRetentionDays() int {
 	return c.chunk.GetRetentionDays()
 }
 
-func (c *Chunk) GetOptions() utils.Options {
+func (c Chunk) GetOptions() utils.Options {
 	return c.chunk.GetOptions()
 }
 
-func (c *Chunk) GetFrameWithFingerprint(f uint32) (frame.Frame, error) {
+func (c Chunk) GetFrameWithFingerprint(f uint32) (frame.Frame, error) {
 	return c.chunk.GetFrameWithFingerprint(f)
 }
 
-func (c *Chunk) CallTrees(activeThreadID *string) (map[string][]*nodetree.Node, error) {
+func (c Chunk) CallTrees(activeThreadID *string) (map[string][]*nodetree.Node, error) {
 	return c.chunk.CallTrees(activeThreadID)
 }
 
-func (c *Chunk) DurationMS() uint64 {
+func (c Chunk) DurationMS() uint64 {
 	return c.chunk.DurationMS()
 }
-func (c *Chunk) EndTimestamp() float64 {
+func (c Chunk) EndTimestamp() float64 {
 	return c.chunk.EndTimestamp()
 }
-func (c *Chunk) SDKName() string {
+func (c Chunk) SDKName() string {
 	return c.chunk.SDKName()
 }
-func (c *Chunk) SDKVersion() string {
+func (c Chunk) SDKVersion() string {
 	return c.chunk.SDKVersion()
 }
-func (c *Chunk) StartTimestamp() float64 {
+func (c Chunk) StartTimestamp() float64 {
 	return c.chunk.StartTimestamp()
 }
-func (c *Chunk) StoragePath() string {
+func (c Chunk) StoragePath() string {
 	return c.chunk.StoragePath()
 }
 

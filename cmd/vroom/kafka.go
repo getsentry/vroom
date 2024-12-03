@@ -78,17 +78,17 @@ func buildFunctionsKafkaMessage(p profile.Profile, functions []nodetree.CallTree
 // TODO: support metrics extraction for Android chunks.
 func buildChunkFunctionsKafkaMessage(c *chunk.Chunk, functions []nodetree.CallTreeFunction) FunctionsKafkaMessage {
 	return FunctionsKafkaMessage{
-		Environment:            (*c).GetEnvironment(),
+		Environment:            c.GetEnvironment(),
 		Functions:              functions,
-		ID:                     (*c).GetProfilerID(),
-		Platform:               (*c).GetPlatform(),
-		ProjectID:              (*c).GetProjectID(),
-		Received:               int64((*c).GetReceived()),
-		Release:                (*c).GetRelease(),
-		RetentionDays:          (*c).GetRetentionDays(),
-		Timestamp:              int64((*c).StartTimestamp()),
-		StartTimestamp:         (*c).StartTimestamp(),
-		EndTimestamp:           (*c).EndTimestamp(),
+		ID:                     c.GetProfilerID(),
+		Platform:               c.GetPlatform(),
+		ProjectID:              c.GetProjectID(),
+		Received:               int64(c.GetReceived()),
+		Release:                c.GetRelease(),
+		RetentionDays:          c.GetRetentionDays(),
+		Timestamp:              int64(c.StartTimestamp()),
+		StartTimestamp:         c.StartTimestamp(),
+		EndTimestamp:           c.EndTimestamp(),
 		ProfilingType:          "continuous",
 		MaterializationVersion: 1,
 	}
