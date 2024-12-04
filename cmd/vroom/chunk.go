@@ -325,6 +325,7 @@ func (env *environment) postProfileFromChunkIDs(w http.ResponseWriter, r *http.R
 			sc, ok := c.Chunk().(*chunk.SampleChunk)
 			if !ok {
 				w.WriteHeader(http.StatusBadRequest)
+				fmt.Fprint(w, "error: mix of sampled and android chunks")
 				return
 			}
 			sampleChunks = append(sampleChunks, *sc)
@@ -351,6 +352,7 @@ func (env *environment) postProfileFromChunkIDs(w http.ResponseWriter, r *http.R
 			ac, ok := c.Chunk().(*chunk.AndroidChunk)
 			if !ok {
 				w.WriteHeader(http.StatusBadRequest)
+				fmt.Fprint(w, "error: mix of android and sample chunks")
 				return
 			}
 			androidChunks = append(androidChunks, *ac)
