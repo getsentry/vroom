@@ -306,7 +306,7 @@ func (env *environment) postProfileFromChunkIDs(w http.ResponseWriter, r *http.R
 	s = sentry.StartSpan(ctx, "chunks.merge")
 	s.Description = "Merge profile chunks into a single one"
 	if len(chunks) == 0 {
-		w.WriteHeader(http.StatusOK)
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 	var resp []byte
