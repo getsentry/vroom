@@ -261,9 +261,9 @@ func (ma *Aggregator) GetMetricsFromCandidates(
 			}
 
 			resultMetadata = utils.NewExampleFromProfilerChunk(
-				result.Chunk.ProjectID,
-				result.Chunk.ProfilerID,
-				result.Chunk.ID,
+				result.Chunk.GetProjectID(),
+				result.Chunk.GetProfilerID(),
+				result.Chunk.GetID(),
 				result.TransactionID,
 				result.ThreadID,
 				result.Start,

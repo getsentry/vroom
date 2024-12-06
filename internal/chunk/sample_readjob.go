@@ -25,7 +25,7 @@ type (
 
 	ReadJobResult struct {
 		Err           error
-		Chunk         *SampleChunk
+		Chunk         *Chunk
 		TransactionID string
 		ThreadID      *string
 		Start         uint64
@@ -34,7 +34,7 @@ type (
 )
 
 func (job ReadJob) Read() {
-	var chunk SampleChunk
+	var chunk Chunk
 
 	err := storageutil.UnmarshalCompressed(
 		job.Ctx,
