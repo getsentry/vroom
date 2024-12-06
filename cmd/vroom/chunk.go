@@ -281,7 +281,7 @@ func (env *environment) postProfileFromChunkIDs(w http.ResponseWriter, r *http.R
 			// sense to have a final profile with missing chunks
 			continue
 		}
-		chunks = append(chunks, result.Chunk)
+		chunks = append(chunks, *result.Chunk)
 	}
 	s.Finish()
 	if err != nil {
