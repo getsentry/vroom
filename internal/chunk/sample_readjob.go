@@ -62,7 +62,7 @@ type (
 
 	CallTreesReadJobResult struct {
 		Err           error
-		CallTrees     *map[string][]*nodetree.Node
+		CallTrees     map[string][]*nodetree.Node
 		Chunk         *SampleChunk
 		TransactionID string
 		ThreadID      *string
@@ -89,7 +89,7 @@ func (job CallTreesReadJob) Read() {
 
 	job.Result <- CallTreesReadJobResult{
 		Err:           err,
-		CallTrees:     &callTrees,
+		CallTrees:     callTrees,
 		Chunk:         &chunk,
 		TransactionID: job.TransactionID,
 		ThreadID:      job.ThreadID,

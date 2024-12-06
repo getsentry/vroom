@@ -451,13 +451,13 @@ func GetFlamegraphFromCandidates(
 			example := utils.NewExampleFromProfileID(result.Profile.ProjectID(), result.Profile.ID())
 			annotate := annotateWithProfileExample(example)
 
-			for _, callTree := range *result.CallTrees {
+			for _, callTree := range result.CallTrees {
 				addCallTreeToFlamegraph(&flamegraphTree, callTree, annotate)
 			}
 			// if metrics aggregator is not null, while we're at it,
 			// compute the metrics as well
 			if ma != nil {
-				functions := metrics.CapAndFilterFunctions(metrics.ExtractFunctionsFromCallTrees(*result.CallTrees), int(ma.MaxUniqueFunctions), true)
+				functions := metrics.CapAndFilterFunctions(metrics.ExtractFunctionsFromCallTrees(result.CallTrees), int(ma.MaxUniqueFunctions), true)
 				ma.AddFunctions(functions, example)
 			}
 
@@ -466,7 +466,7 @@ func GetFlamegraphFromCandidates(
 			chunkProfileSpan := span.StartChild("calltree")
 			chunkProfileSpan.Description = "continuous profile"
 
-			for threadID, callTree := range *result.CallTrees {
+			for threadID, callTree := range result.CallTrees {
 				if result.Start > 0 && result.End > 0 {
 					interval := utils.Interval{
 						Start: result.Start,

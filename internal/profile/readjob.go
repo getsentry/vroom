@@ -46,7 +46,7 @@ type (
 
 	CallTreesReadJobResult struct {
 		Err       error
-		CallTrees *map[uint64][]*nodetree.Node
+		CallTrees map[uint64][]*nodetree.Node
 		Profile   *Profile
 	}
 )
@@ -69,7 +69,7 @@ func (job CallTreesReadJob) Read() {
 	callTrees, err := profile.CallTrees()
 
 	job.Result <- CallTreesReadJobResult{
-		CallTrees: &callTrees,
+		CallTrees: callTrees,
 		Profile:   &profile,
 		Err:       err,
 	}
