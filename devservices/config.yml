@@ -28,6 +28,8 @@ services:
       - devservices
     extra_hosts:
       host.docker.internal: host-gateway
+    labels:
+      - orchestrator=devservices
     restart: unless-stopped
 
 volumes:
