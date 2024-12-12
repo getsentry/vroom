@@ -880,3 +880,99 @@ func TestFixSamplesTime(t *testing.T) {
 		})
 	}
 }
+
+func TestAddTimeDelta(t *testing.T) {
+	tests := []struct {
+		name  string
+		delta int64
+		trace Android
+		want  AndroidEvent
+	}{
+		{
+			name:  "Delta increase seconds",
+			delta: 50,
+			trace: Android{
+				Clock: "Dual",
+				Events: []AndroidEvent{
+					{
+						Action:   "Enter",
+						ThreadID: 1,
+						MethodID: 1,
+						Time: EventTime{
+							Monotonic: EventMonotonic{
+								Wall: Duration{
+									Secs:  1,
+									Nanos: 1e9,
+								},
+							},
+						},
+					},
+				},
+				StartTime: 0,
+			},
+			want: AndroidEvent{
+				Action:   "Enter",
+				ThreadID: 1,
+				MethodID: 1,
+				Time: EventTime{
+					Monotonic: EventMonotonic{
+						Wall: Duration{
+							Secs:  2,
+							Nanos: 50,
+						},
+					},
+				},
+			},
+		},
+		{
+			name:  "Delta decrease nanos",
+			delta: -50,
+			trace: Android{
+				Clock: "Dual",
+				Events: []AndroidEvent{
+					{
+						Action:   "Enter",
+						ThreadID: 1,
+						MethodID: 1,
+						Time: EventTime{
+							Monotonic: EventMonotonic{
+								Wall: Duration{
+									Secs:  1,
+									Nanos: 100,
+								},
+							},
+						},
+					},
+				},
+				StartTime: 0,
+			},
+			want: AndroidEvent{
+				Action:   "Enter",
+				ThreadID: 1,
+				MethodID: 1,
+				Time: EventTime{
+					Monotonic: EventMonotonic{
+						Wall: Duration{
+							Secs:  1,
+							Nanos: 50,
+						},
+					},
+				},
+			},
+		},
+	} // end tests
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			addTimeDelta := test.trace.AddTimeDelta(test.delta)
+			event := test.trace.Events[0]
+			err := addTimeDelta(&event)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if diff := testutil.Diff(event, test.want); diff != "" {
+				t.Fatalf("Result mismatch: got - want +\n%s", diff)
+			}
+		})
+	}
+}

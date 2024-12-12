@@ -60,6 +60,7 @@ func TestPostAndReadSampleChunk(t *testing.T) {
 		Release:        "1.2",
 		OrganizationID: 1,
 		ProjectID:      1,
+		Version:        "2",
 		Profile: chunk.SampleData{
 			Frames: []frame.Frame{
 				{
@@ -125,7 +126,7 @@ func TestPostAndReadSampleChunk(t *testing.T) {
 
 			// read the chunk with UnmarshalCompressed and make sure that we can unmarshal
 			// the data into the Chunk struct and that it matches the original
-			var c chunk.SampleChunk
+			var c chunk.Chunk
 			err = storageutil.UnmarshalCompressed(
 				context.Background(),
 				test.blobBucket,
@@ -135,7 +136,7 @@ func TestPostAndReadSampleChunk(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			if diff := testutil.Diff(chunkData, c); diff != "" {
+			if diff := testutil.Diff(&chunkData, c.Chunk()); diff != "" {
 				t.Fatalf("Result mismatch: got - want +\n%s", diff)
 			}
 		})

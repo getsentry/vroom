@@ -1,0 +1,41 @@
+x-sentry-service-config:
+  version: 0.1
+  service_name: vroom
+  dependencies:
+    kafka:
+      description: Shared instance of kafka used by sentry services
+      remote:
+        repo_name: sentry-shared-kafka
+        branch: main
+        repo_link: git@github.com:getsentry/sentry-shared-kafka.git
+    vroom:
+      description: Sentry's profiling service, processing and deriving data about your profiles
+  modes:
+    default: [kafka, vroom]
+services:
+  vroom:
+    image: us-central1-docker.pkg.dev/sentryio/vroom/vroom:latest
+    ports:
+      - 127.0.0.1:8085:8085
+    environment:
+      SENTRY_KAFKA_BROKERS_PROFILING: kafka-kafka-1:9092
+      SENTRY_KAFKA_BROKERS_OCCURRENCES: kafka-kafka-1:9092
+      SENTRY_BUCKET_PROFILES: file://localhost//var/lib/sentry-profiles
+      SENTRY_SNUBA_HOST: http://127.0.0.1:1218
+    volumes:
+      - sentry-vroom:/var/lib/sentry-profiles
+    networks:
+      - devservices
+    extra_hosts:
+      host.docker.internal: host-gateway
+    labels:
+      - orchestrator=devservices
+    restart: unless-stopped
+
+volumes:
+  sentry-vroom:
+
+networks:
+  devservices:
+    name: devservices
+    external: true

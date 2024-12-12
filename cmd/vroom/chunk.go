@@ -57,14 +57,14 @@ func (env *environment) postChunk(w http.ResponseWriter, r *http.Request) {
 	var c chunk.Chunk
 	switch p.Platform {
 	case platform.Android:
-		c = new(chunk.AndroidChunk)
+		c = chunk.New(new(chunk.AndroidChunk))
 	default:
-		c = new(chunk.SampleChunk)
+		c = chunk.New(new(chunk.SampleChunk))
 	}
 
 	s = sentry.StartSpan(ctx, "json.unmarshal")
 	s.Description = "Unmarshal profile"
-	err = json.Unmarshal(body, c)
+	err = json.Unmarshal(body, &c)
 	s.Finish()
 	if err != nil {
 		if hub != nil {
@@ -138,73 +138,52 @@ func (env *environment) postChunk(w http.ResponseWriter, r *http.Request) {
 	}
 	s.Finish()
 
-	options := c.GetOptions()
-	sc, ok := c.(*chunk.SampleChunk)
+	// nb.: here we don't have a specific thread ID, so we're going to ingest
+	// functions metrics from all the thread.
+	// That's ok as this data is not supposed to be transaction/span scoped,
+	// plus, we'll only retain application frames, so much of the system functions
+	// chaff will be dropped.
+	s = sentry.StartSpan(ctx, "processing")
+	callTrees, err := c.CallTrees(nil)
+	s.Finish()
+	if err != nil {
+		hub.CaptureException(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	s = sentry.StartSpan(ctx, "processing")
+	s.Description = "Extract functions"
+	functions := metrics.ExtractFunctionsFromCallTrees(callTrees)
+	functions = metrics.CapAndFilterFunctions(functions, maxUniqueFunctionsPerProfile, true)
+	s.Finish()
 
-	// Metrics extraction is only supported for sample chunks right now.
-	// TODO: support metrics extraction for Android chunks.
-	if options.ProjectDSN != "" && c.GetPlatform() != platform.Android && ok {
-		// nb.: here we don't have a specific thread ID, so we're going to ingest
-		// functions metrics from all the thread.
-		// That's ok as this data is not supposed to be transaction/span scoped,
-		// plus, we'll only retain application frames, so much of the system functions
-		// chaff will be dropped.
-		s = sentry.StartSpan(ctx, "processing")
-		callTrees, err := sc.CallTrees(nil)
-		s.Finish()
-		if err != nil {
-			hub.CaptureException(err)
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-		s = sentry.StartSpan(ctx, "processing")
-		s.Description = "Extract functions"
-		functions := metrics.ExtractFunctionsFromCallTrees(callTrees)
-		functions = metrics.CapAndFilterFunctions(functions, maxUniqueFunctionsPerProfile, true)
-		s.Finish()
-
-		// This block writes into the functions dataset
-		s = sentry.StartSpan(ctx, "json.marshal")
-		s.Description = "Marshal functions Kafka message"
-		b, err := json.Marshal(buildChunkFunctionsKafkaMessage(sc, functions))
-		s.Finish()
-		if err != nil {
-			if hub != nil {
-				hub.CaptureException(err)
-			}
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-		s = sentry.StartSpan(ctx, "processing")
-		s.Description = "Send functions to Kafka"
-		err = env.profilingWriter.WriteMessages(ctx, kafka.Message{
-			Topic: env.config.CallTreesKafkaTopic,
-			Value: b,
-		})
-		s.Finish()
+	// This block writes into the functions dataset
+	s = sentry.StartSpan(ctx, "json.marshal")
+	s.Description = "Marshal functions Kafka message"
+	b, err = json.Marshal(buildChunkFunctionsKafkaMessage(&c, functions))
+	s.Finish()
+	if err != nil {
 		if hub != nil {
-			hub.Scope().SetContext("Call functions payload", map[string]interface{}{
-				"Size": len(b),
-			})
+			hub.CaptureException(err)
 		}
-		if err != nil {
-			if hub != nil {
-				hub.CaptureException(err)
-			}
-		}
-
-		// this block is writing into the generic metrics dataset
-		// TODO: remove once we fully move to functions dataset
-		s = sentry.StartSpan(ctx, "processing")
-		s.Description = "Extract metrics from functions"
-		metrics := extractMetricsFromSampleChunkFunctions(sc, functions)
-		s.Finish()
-
-		if len(metrics) > 0 {
-			s = sentry.StartSpan(ctx, "processing")
-			s.Description = "Send functions metrics to generic metrics platform"
-			sendMetrics(ctx, options.ProjectDSN, metrics, env.metricsClient)
-			s.Finish()
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	s = sentry.StartSpan(ctx, "processing")
+	s.Description = "Send functions to Kafka"
+	err = env.profilingWriter.WriteMessages(ctx, kafka.Message{
+		Topic: env.config.CallTreesKafkaTopic,
+		Value: b,
+	})
+	s.Finish()
+	if hub != nil {
+		hub.Scope().SetContext("Call functions payload", map[string]interface{}{
+			"Size": len(b),
+		})
+	}
+	if err != nil {
+		if hub != nil {
+			hub.CaptureException(err)
 		}
 	}
 
@@ -282,7 +261,7 @@ func (env *environment) postProfileFromChunkIDs(w http.ResponseWriter, r *http.R
 		}
 	}
 
-	chunks := make([]chunk.SampleChunk, 0, len(requestBody.ChunkIDs))
+	chunks := make([]chunk.Chunk, 0, len(requestBody.ChunkIDs))
 	// read the output of each tasks
 	for i := 0; i < len(requestBody.ChunkIDs); i++ {
 		res := <-results
@@ -302,7 +281,7 @@ func (env *environment) postProfileFromChunkIDs(w http.ResponseWriter, r *http.R
 			// sense to have a final profile with missing chunks
 			continue
 		}
-		chunks = append(chunks, result.Chunk)
+		chunks = append(chunks, *result.Chunk)
 	}
 	s.Finish()
 	if err != nil {
@@ -326,26 +305,82 @@ func (env *environment) postProfileFromChunkIDs(w http.ResponseWriter, r *http.R
 
 	s = sentry.StartSpan(ctx, "chunks.merge")
 	s.Description = "Merge profile chunks into a single one"
-	chunk, err := chunk.MergeSampleChunks(chunks, requestBody.Start, requestBody.End)
-	s.Finish()
-	if err != nil {
-		hub.CaptureException(err)
-		w.WriteHeader(http.StatusInternalServerError)
+	if len(chunks) == 0 {
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+	var resp []byte
+	// Here we check what type of chunks we're dealing with,
+	// since Android chunks and Sample chunks return completely
+	// different types (Chunk vs Speedscope), hence we can't hide
+	// the implementation behind an interface.
+	//
+	// We check the first chunk type, and use that to assert the
+	// type of all the elements in the slice and then call the
+	// appropriate utility.
+	switch chunks[0].Chunk().(type) {
+	case *chunk.SampleChunk:
+		sampleChunks := make([]chunk.SampleChunk, 0, len(chunks))
+		for _, c := range chunks {
+			sc, ok := c.Chunk().(*chunk.SampleChunk)
+			if !ok {
+				w.WriteHeader(http.StatusBadRequest)
+				fmt.Fprint(w, "error: mix of sampled and android chunks")
+				return
+			}
+			sampleChunks = append(sampleChunks, *sc)
+		}
+		mergedChunk, err := chunk.MergeSampleChunks(sampleChunks, requestBody.Start, requestBody.End)
+		s.Finish()
+		if err != nil {
+			hub.CaptureException(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		s = sentry.StartSpan(ctx, "json.marshal")
+		resp, err = json.Marshal(postProfileFromChunkIDsResponse{Chunk: mergedChunk})
+		s.Finish()
+		if err != nil {
+			hub.CaptureException(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 
-	s = sentry.StartSpan(ctx, "json.marshal")
-	defer s.Finish()
-	b, err := json.Marshal(postProfileFromChunkIDsResponse{Chunk: chunk})
-	if err != nil {
-		hub.CaptureException(err)
-		w.WriteHeader(http.StatusInternalServerError)
+	case *chunk.AndroidChunk:
+		androidChunks := make([]chunk.AndroidChunk, 0, len(chunks))
+		for _, c := range chunks {
+			ac, ok := c.Chunk().(*chunk.AndroidChunk)
+			if !ok {
+				w.WriteHeader(http.StatusBadRequest)
+				fmt.Fprint(w, "error: mix of android and sample chunks")
+				return
+			}
+			androidChunks = append(androidChunks, *ac)
+		}
+		sp, err := chunk.SpeedscopeFromAndroidChunks(androidChunks, requestBody.Start, requestBody.End)
+		s.Finish()
+		if err != nil {
+			hub.CaptureException(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		s = sentry.StartSpan(ctx, "json.marshal")
+		resp, err = json.Marshal(sp)
+		s.Finish()
+		if err != nil {
+			hub.CaptureException(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+	default:
+		// Should never happen.
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	_, _ = w.Write(b)
+	_, _ = w.Write(resp)
 }
 
 type (

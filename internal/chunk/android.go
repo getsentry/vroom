@@ -2,6 +2,7 @@ package chunk
 
 import (
 	"encoding/json"
+	"strconv"
 	"time"
 
 	"github.com/getsentry/vroom/internal/clientsdk"
@@ -53,8 +54,14 @@ func (c AndroidChunk) DurationMS() uint64 {
 	return uint64(time.Duration(c.DurationNS).Milliseconds())
 }
 
-func (c AndroidChunk) CallTrees() map[uint64][]*nodetree.Node {
-	return c.Profile.CallTrees()
+func (c AndroidChunk) CallTrees(_ *string) (map[string][]*nodetree.Node, error) {
+	callTrees := c.Profile.CallTrees()
+	stringThreadCallTrees := make(map[string][]*nodetree.Node)
+	for tid, callTree := range callTrees {
+		threadID := strconv.FormatUint(tid, 10)
+		stringThreadCallTrees[threadID] = callTree
+	}
+	return stringThreadCallTrees, nil
 }
 
 func (c AndroidChunk) SDKName() string {

@@ -32,13 +32,10 @@ import (
 type environment struct {
 	config ServiceConfig
 
-	occurrencesWriter   KafkaWriter
-	profilingWriter     KafkaWriter
-	metricSummaryWriter KafkaWriter
+	occurrencesWriter KafkaWriter
+	profilingWriter   KafkaWriter
 
 	storage *blob.Bucket
-
-	metricsClient *http.Client
 }
 
 var (
@@ -85,15 +82,6 @@ func newEnvironment() (*environment, error) {
 		WriteTimeout: 3 * time.Second,
 		Transport:    createKafkaRoundTripper(e.config),
 	}
-	e.metricsClient = &http.Client{
-		Timeout: time.Second * 5,
-		Transport: &http.Transport{
-			MaxIdleConns:        100,
-			MaxIdleConnsPerHost: 100,
-			MaxConnsPerHost:     100,
-			IdleConnTimeout:     time.Second * 60,
-		},
-	}
 	return &e, nil
 }
 
@@ -107,10 +95,6 @@ func (e *environment) shutdown() {
 		sentry.CaptureException(err)
 	}
 	err = e.profilingWriter.Close()
-	if err != nil {
-		sentry.CaptureException(err)
-	}
-	err = e.metricSummaryWriter.Close()
 	if err != nil {
 		sentry.CaptureException(err)
 	}
@@ -137,11 +121,6 @@ func (e *environment) newRouter() (*httprouter.Router, error) {
 			http.MethodGet,
 			"/organizations/:organization_id/projects/:project_id/raw_profiles/:profile_id",
 			e.getRawProfile,
-		},
-		{
-			http.MethodPost,
-			"/organizations/:organization_id/projects/:project_id/chunks-flamegraph",
-			e.postFlamegraphFromChunksMetadata,
 		},
 		{
 			http.MethodPost,

@@ -20,7 +20,7 @@ type (
 
 	ReadJobResult struct {
 		Err     error
-		Profile Profile
+		Profile *Profile
 	}
 )
 
@@ -34,7 +34,7 @@ func (job ReadJob) Read() {
 		&profile,
 	)
 
-	job.Result <- ReadJobResult{Profile: profile, Err: err}
+	job.Result <- ReadJobResult{Profile: &profile, Err: err}
 }
 
 func (result ReadJobResult) Error() error {
@@ -47,7 +47,7 @@ type (
 	CallTreesReadJobResult struct {
 		Err       error
 		CallTrees map[uint64][]*nodetree.Node
-		Profile   Profile
+		Profile   *Profile
 	}
 )
 
@@ -70,7 +70,7 @@ func (job CallTreesReadJob) Read() {
 
 	job.Result <- CallTreesReadJobResult{
 		CallTrees: callTrees,
-		Profile:   profile,
+		Profile:   &profile,
 		Err:       err,
 	}
 }
