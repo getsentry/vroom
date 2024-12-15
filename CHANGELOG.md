@@ -126,6 +126,7 @@
 - Remove unused metrics summary kafka writer ([#538](https://github.com/getsentry/vroom/pull/538))
 - Remove unused chunks flamegraph endpoint ([#541](https://github.com/getsentry/vroom/pull/541))
 - Pass readjob result as pointer ([#542](https://github.com/getsentry/vroom/pull/542))
+- Bump golang.org/x/crypto from 0.24.0 to 0.31.0 ([#544](https://github.com/getsentry/vroom/pull/544))
 
 ## 23.12.0
 
