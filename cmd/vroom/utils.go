@@ -4,8 +4,10 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"log"
+	"net"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/segmentio/kafka-go"
 	"github.com/segmentio/kafka-go/sasl"
@@ -81,5 +83,9 @@ func createKafkaRoundTripper(e ServiceConfig) kafka.RoundTripper {
 	return &kafka.Transport{
 		SASL: saslMechanism,
 		TLS:  tlsConfig,
+		Dial: (&net.Dialer{
+			Timeout:   3 * time.Second,
+			DualStack: true,
+		}).DialContext,
 	}
 }
