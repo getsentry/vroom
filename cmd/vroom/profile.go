@@ -90,11 +90,13 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 				// This is a transient error, we'll retry
 				w.WriteHeader(http.StatusTooManyRequests)
 			} else {
-				// These errors won't be retried
-				hub.CaptureException(err)
 				if code := gcerrors.Code(err); code == gcerrors.FailedPrecondition {
 					w.WriteHeader(http.StatusPreconditionFailed)
 				} else {
+					if hub != nil {
+						hub.CaptureException(err)
+					}
+					// These errors won't be retried
 					w.WriteHeader(http.StatusInternalServerError)
 				}
 			}
