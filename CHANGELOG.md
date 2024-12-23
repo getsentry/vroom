@@ -28,6 +28,7 @@
 - Add more metadata fields to Chunk Kafka message. ([#518](https://github.com/getsentry/vroom/pull/518))
 - Ingest Android profile chunks. ([#521](https://github.com/getsentry/vroom/pull/521))
 - Handle profile chunks in regressed endpoint. ([#527](https://github.com/getsentry/vroom/pull/527))
+- Authentication support for Kafka connection. ([#530](https://github.com/getsentry/vroom/pull/530))
 - Add support for android chunks. ([#540](https://github.com/getsentry/vroom/pull/540))
 
 **Bug Fixes**:
