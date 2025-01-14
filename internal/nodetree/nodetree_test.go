@@ -17,6 +17,7 @@ const (
 )
 
 func TestNodeTreeCollectFunctions(t *testing.T) {
+	var minDepth uint
 	tests := []struct {
 		name     string
 		platform platform.Platform
@@ -404,7 +405,7 @@ func TestNodeTreeCollectFunctions(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			results := make(map[uint32]CallTreeFunction)
-			tt.node.CollectFunctions(results, "")
+			tt.node.CollectFunctions(results, "", 0, minDepth)
 			if diff := testutil.Diff(results, tt.want); diff != "" {
 				t.Fatalf("Result mismatch: got - want +\n%s", diff)
 			}
