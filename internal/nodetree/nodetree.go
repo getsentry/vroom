@@ -130,13 +130,15 @@ type CallTreeFunction struct {
 func (n *Node) CollectFunctions(
 	results map[uint32]CallTreeFunction,
 	threadID string,
+	nodeDepth uint,
+	minDepth uint,
 ) (uint64, uint64) {
 	var childrenApplicationDurationNS uint64
 	var childrenSystemDurationNS uint64
 
 	// determine the amount of time spent in application vs system functions in the children
 	for _, child := range n.Children {
-		applicationDurationNS, systemDurationNS := child.CollectFunctions(results, threadID)
+		applicationDurationNS, systemDurationNS := child.CollectFunctions(results, threadID, nodeDepth+1, minDepth)
 		childrenApplicationDurationNS += applicationDurationNS
 		childrenSystemDurationNS += systemDurationNS
 	}
@@ -151,7 +153,7 @@ func (n *Node) CollectFunctions(
 
 	var selfTimeNS uint64
 
-	if shouldAggregateFrame(n.Frame) {
+	if nodeDepth >= minDepth && shouldAggregateFrame(n.Frame) {
 		if n.IsApplication {
 			// cannot use `n.DurationNS - childrenApplicationDurationNS > 0` in case it underflows
 			if n.DurationNS > childrenApplicationDurationNS {

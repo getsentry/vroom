@@ -156,7 +156,7 @@ func (env *environment) postProfile(w http.ResponseWriter, r *http.Request) {
 		// Prepare call trees Kafka message
 		s = sentry.StartSpan(ctx, "processing")
 		s.Description = "Extract functions"
-		functions := metrics.ExtractFunctionsFromCallTrees(callTrees)
+		functions := metrics.ExtractFunctionsFromCallTrees(callTrees, minDepth)
 		// Cap but don't filter out system frames.
 		// Necessary until front end changes are in place.
 		functionsDataset := metrics.CapAndFilterFunctions(functions, maxUniqueFunctionsPerProfile, false)

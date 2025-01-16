@@ -25,15 +25,19 @@ type (
 
 	Aggregator struct {
 		MaxUniqueFunctions uint
-		MaxNumOfExamples   uint
-		CallTreeFunctions  map[uint32]nodetree.CallTreeFunction
-		FunctionsMetadata  map[uint32]FunctionsMetadata
+		// For a frame to be aggregated it has to have a depth >= MinDepth.
+		// So, if MinDepth is set to 1, it means all the root frames will not be part of the aggregation.
+		MinDepth          uint
+		MaxNumOfExamples  uint
+		CallTreeFunctions map[uint32]nodetree.CallTreeFunction
+		FunctionsMetadata map[uint32]FunctionsMetadata
 	}
 )
 
-func NewAggregator(MaxUniqueFunctions uint, MaxNumOfExamples uint) Aggregator {
+func NewAggregator(MaxUniqueFunctions uint, MaxNumOfExamples uint, MinDepth uint) Aggregator {
 	return Aggregator{
 		MaxUniqueFunctions: MaxUniqueFunctions,
+		MinDepth:           MinDepth,
 		MaxNumOfExamples:   MaxNumOfExamples,
 		CallTreeFunctions:  make(map[uint32]nodetree.CallTreeFunction),
 		FunctionsMetadata:  make(map[uint32]FunctionsMetadata),
@@ -114,11 +118,12 @@ func quantile(values []uint64, q float64) (uint64, error) {
 
 func ExtractFunctionsFromCallTreesForThread(
 	callTreesForThread []*nodetree.Node,
+	minDepth uint,
 ) []nodetree.CallTreeFunction {
 	functions := make(map[uint32]nodetree.CallTreeFunction, 0)
 
 	for _, callTree := range callTreesForThread {
-		callTree.CollectFunctions(functions, "")
+		callTree.CollectFunctions(functions, "", 0, minDepth)
 	}
 
 	return mergeAndSortFunctions(functions)
@@ -126,6 +131,7 @@ func ExtractFunctionsFromCallTreesForThread(
 
 func ExtractFunctionsFromCallTrees[T comparable](
 	callTrees map[T][]*nodetree.Node,
+	minDepth uint,
 ) []nodetree.CallTreeFunction {
 	functions := make(map[uint32]nodetree.CallTreeFunction, 0)
 	for tid, callTreesForThread := range callTrees {
@@ -136,7 +142,7 @@ func ExtractFunctionsFromCallTrees[T comparable](
 			threadID = strconv.FormatUint(t, 10)
 		}
 		for _, callTree := range callTreesForThread {
-			callTree.CollectFunctions(functions, threadID)
+			callTree.CollectFunctions(functions, threadID, 0, minDepth)
 		}
 	}
 
@@ -251,7 +257,7 @@ func (ma *Aggregator) GetMetricsFromCandidates(
 				continue
 			}
 			resultMetadata = utils.NewExampleFromProfileID(result.Profile.ProjectID(), result.Profile.ID())
-			functions := CapAndFilterFunctions(ExtractFunctionsFromCallTrees(profileCallTrees), int(ma.MaxUniqueFunctions), true)
+			functions := CapAndFilterFunctions(ExtractFunctionsFromCallTrees(profileCallTrees, ma.MinDepth), int(ma.MaxUniqueFunctions), true)
 			ma.AddFunctions(functions, resultMetadata)
 		} else if result, ok := res.(chunk.ReadJobResult); ok {
 			chunkCallTrees, err := result.Chunk.CallTrees(result.ThreadID)
@@ -269,7 +275,7 @@ func (ma *Aggregator) GetMetricsFromCandidates(
 				result.Start,
 				result.End,
 			)
-			functions := CapAndFilterFunctions(ExtractFunctionsFromCallTrees(chunkCallTrees), int(ma.MaxUniqueFunctions), true)
+			functions := CapAndFilterFunctions(ExtractFunctionsFromCallTrees(chunkCallTrees, ma.MinDepth), int(ma.MaxUniqueFunctions), true)
 			ma.AddFunctions(functions, resultMetadata)
 		} else {
 			// this should never happen

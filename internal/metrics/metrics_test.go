@@ -64,7 +64,7 @@ func TestAggregatorAddFunctions(t *testing.T) {
 		}, // end first test
 	} // end tests list
 
-	ma := NewAggregator(100, 5)
+	ma := NewAggregator(100, 5, 0)
 	for _, test := range tests {
 		// add the same calltreeFunctions twice: once coming from a profile/chunk with
 		// ID 1 and the second one with ID 2

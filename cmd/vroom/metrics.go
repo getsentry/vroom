@@ -53,7 +53,7 @@ func (env *environment) postMetrics(w http.ResponseWriter, r *http.Request) {
 	}
 
 	s = sentry.StartSpan(ctx, "processing")
-	ma := metrics.NewAggregator(maxUniqueFunctionsPerProfile, 5)
+	ma := metrics.NewAggregator(maxUniqueFunctionsPerProfile, 5, minDepth)
 	functionsMetrics, err := ma.GetMetricsFromCandidates(
 		ctx,
 		env.storage,

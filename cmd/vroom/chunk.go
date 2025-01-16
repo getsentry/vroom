@@ -27,6 +27,12 @@ type (
 	}
 )
 
+const (
+	// when computing slowest functions, ignore frames/node whose depth in the callTree
+	// is less than 1 (i.e. root frames).
+	minDepth uint = 1
+)
+
 func (env *environment) postChunk(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	hub := sentry.GetHubFromContext(ctx)
@@ -153,7 +159,7 @@ func (env *environment) postChunk(w http.ResponseWriter, r *http.Request) {
 	}
 	s = sentry.StartSpan(ctx, "processing")
 	s.Description = "Extract functions"
-	functions := metrics.ExtractFunctionsFromCallTrees(callTrees)
+	functions := metrics.ExtractFunctionsFromCallTrees(callTrees, minDepth)
 	functions = metrics.CapAndFilterFunctions(functions, maxUniqueFunctionsPerProfile, true)
 	s.Finish()
 

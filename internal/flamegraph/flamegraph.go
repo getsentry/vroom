@@ -457,7 +457,7 @@ func GetFlamegraphFromCandidates(
 			// if metrics aggregator is not null, while we're at it,
 			// compute the metrics as well
 			if ma != nil {
-				functions := metrics.CapAndFilterFunctions(metrics.ExtractFunctionsFromCallTrees(result.CallTrees), int(ma.MaxUniqueFunctions), true)
+				functions := metrics.CapAndFilterFunctions(metrics.ExtractFunctionsFromCallTrees(result.CallTrees, ma.MinDepth), int(ma.MaxUniqueFunctions), true)
 				ma.AddFunctions(functions, example)
 			}
 
@@ -491,7 +491,7 @@ func GetFlamegraphFromCandidates(
 				// if metrics aggregator is not null, while we're at it,
 				// compute the metrics as well
 				if ma != nil {
-					functions := metrics.CapAndFilterFunctions(metrics.ExtractFunctionsFromCallTreesForThread(callTree), int(ma.MaxUniqueFunctions), true)
+					functions := metrics.CapAndFilterFunctions(metrics.ExtractFunctionsFromCallTreesForThread(callTree, ma.MinDepth), int(ma.MaxUniqueFunctions), true)
 					ma.AddFunctions(functions, example)
 				}
 			}
