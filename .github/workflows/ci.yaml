@@ -48,28 +48,3 @@ jobs:
         go-version: stable
         cache: false
     - run: make test
-
-  publish-to-dockerhub:
-    name: Publish Vroom to DockerHub
-    runs-on: ubuntu-20.04
-    if: ${{ (github.ref_name == 'main') }}
-    steps:
-      - uses: actions/checkout@v4
-      - timeout-minutes: 20
-        run: until docker pull "us-central1-docker.pkg.dev/sentryio/vroom/vroom:${{ github.sha }}" 2>/dev/null; do sleep 10; done
-      - name: Push built docker image
-        shell: bash
-        run: |
-          IMAGE_URL="us-central1-docker.pkg.dev/sentryio/vroom/vroom:${{ github.sha }}"
-          docker login --username=sentrybuilder --password ${{ secrets.DOCKER_HUB_RW_TOKEN }}
-          # We push 3 tags to Dockerhub:
-          # first, the full sha of the commit
-          docker tag "$IMAGE_URL" getsentry/vroom:${GITHUB_SHA}
-          docker push getsentry/vroom:${GITHUB_SHA}
-          # second, the short sha of the commit
-          SHORT_SHA=$(git rev-parse --short "$GITHUB_SHA")
-          docker tag "$IMAGE_URL" getsentry/vroom:${SHORT_SHA}
-          docker push getsentry/vroom:${SHORT_SHA}
-          # finally, nightly
-          docker tag "$IMAGE_URL" getsentry/vroom:nightly
-          docker push getsentry/vroom:nightly
