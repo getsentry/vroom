@@ -17,11 +17,10 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      FULL_CI: true
-      # FULL_CI: "${{
-      #   github.event_name != 'pull_request'
-      #   || contains(github.event.pull_request.labels.*.name, 'Trigger: Full-CI')
-      # }}"
+      FULL_CI: "${{
+        github.event_name != 'pull_request'
+        || contains(github.event.pull_request.labels.*.name, 'Trigger: Full-CI')
+      }}"
 
     steps:
       - id: set-outputs
