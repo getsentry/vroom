@@ -55,6 +55,7 @@ func (c AndroidChunk) DurationMS() uint64 {
 }
 
 func (c AndroidChunk) CallTrees(_ *string) (map[string][]*nodetree.Node, error) {
+	c.Profile.SdkStartTime = uint64(c.StartTimestamp() * 1e9)
 	callTrees := c.Profile.CallTrees()
 	stringThreadCallTrees := make(map[string][]*nodetree.Node)
 	for tid, callTree := range callTrees {
