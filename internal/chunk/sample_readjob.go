@@ -63,7 +63,7 @@ type (
 	CallTreesReadJobResult struct {
 		Err           error
 		CallTrees     map[string][]*nodetree.Node
-		Chunk         *SampleChunk
+		Chunk         *Chunk
 		TransactionID string
 		ThreadID      *string
 		Start         uint64
@@ -72,7 +72,7 @@ type (
 )
 
 func (job CallTreesReadJob) Read() {
-	var chunk SampleChunk
+	var chunk Chunk
 
 	err := storageutil.UnmarshalCompressed(
 		job.Ctx,

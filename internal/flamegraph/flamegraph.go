@@ -476,9 +476,9 @@ func GetFlamegraphFromCandidates(
 				}
 
 				example := utils.NewExampleFromProfilerChunk(
-					result.Chunk.ProjectID,
-					result.Chunk.ProfilerID,
-					result.Chunk.ID,
+					result.Chunk.GetProjectID(),
+					result.Chunk.GetProfilerID(),
+					result.Chunk.GetID(),
 					result.TransactionID,
 					&threadID,
 					result.Start,
