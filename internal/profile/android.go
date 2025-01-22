@@ -161,7 +161,9 @@ type (
 		Events    []AndroidEvent  `json:"events,omitempty"`
 		Methods   []AndroidMethod `json:"methods,omitempty"`
 		StartTime uint64          `json:"start_time,omitempty"`
-		// SdkStartTime, if set, it's an absolute ts in Ns set by the sentry SDK
+		// SdkStartTime, if set (manually), it's an absolute ts in Ns
+		// whose value comes from the chunk timestamp set by the sentry SDK.
+		// This is used to control the ts during callTree generation.
 		SdkStartTime uint64          `json:"-"`
 		Threads      []AndroidThread `json:"threads,omitempty"`
 	}
