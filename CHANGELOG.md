@@ -30,6 +30,7 @@
 - Handle profile chunks in regressed endpoint. ([#527](https://github.com/getsentry/vroom/pull/527))
 - Authentication support for Kafka connection. ([#530](https://github.com/getsentry/vroom/pull/530))
 - Add support for android chunks. ([#540](https://github.com/getsentry/vroom/pull/540))
+- Use generic Chunk interface in CallTreesReadJob ([#554](https://github.com/getsentry/vroom/pull/554))
 
 **Bug Fixes**:
 
@@ -52,6 +53,7 @@
 - Annotate functions to the right thread. ([#523](https://github.com/getsentry/vroom/pull/523))
 - Should write the profiler id. ([#528](https://github.com/getsentry/vroom/pull/528))
 - Prioritize stack trace rule over app.identifier ([#529](https://github.com/getsentry/vroom/pull/529))
+- Fix android callTree timestamps and make them consistent with the sample (v2) format ([#553](https://github.com/getsentry/vroom/pull/553))
 
 **Internal**:
 

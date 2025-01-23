@@ -161,7 +161,11 @@ type (
 		Events    []AndroidEvent  `json:"events,omitempty"`
 		Methods   []AndroidMethod `json:"methods,omitempty"`
 		StartTime uint64          `json:"start_time,omitempty"`
-		Threads   []AndroidThread `json:"threads,omitempty"`
+		// SdkStartTime, if set (manually), it's an absolute ts in Ns
+		// whose value comes from the chunk timestamp set by the sentry SDK.
+		// This is used to control the ts during callTree generation.
+		SdkStartTime uint64          `json:"-"`
+		Threads      []AndroidThread `json:"threads,omitempty"`
 	}
 
 	Clock string
@@ -343,7 +347,7 @@ func (p Android) CallTreesWithMaxDepth(maxDepth int) map[uint64][]*nodetree.Node
 			continue
 		}
 
-		ts := buildTimestamp(e.Time)
+		ts := buildTimestamp(e.Time) + p.SdkStartTime
 		if ts > maxTimestampNS {
 			maxTimestampNS = ts
 		}
