@@ -53,6 +53,7 @@
 - Annotate functions to the right thread. ([#523](https://github.com/getsentry/vroom/pull/523))
 - Should write the profiler id. ([#528](https://github.com/getsentry/vroom/pull/528))
 - Prioritize stack trace rule over app.identifier ([#529](https://github.com/getsentry/vroom/pull/529))
+- Fix android callTree timestamps and make them consistent with the sample (v2) format ([#553](https://github.com/getsentry/vroom/pull/553))
 
 **Internal**:
 
