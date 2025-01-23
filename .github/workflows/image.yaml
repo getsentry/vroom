@@ -15,7 +15,7 @@ jobs:
   build-image:
     strategy:
       matrix:
-        arch: ${{ fromJson(needs.build-setup.outputs.archs) }}
+        arch: [amd64, arm64]
     runs-on: |-
       ${{fromJson('{
         "amd64": "ubuntu-20.04",
