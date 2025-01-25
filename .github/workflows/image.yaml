@@ -1,0 +1,95 @@
+name: image
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled]
+  push:
+    branches:
+      - main
+      - release/**
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  build-image:
+    strategy:
+      matrix:
+        arch: [amd64, arm64]
+    runs-on: |-
+      ${{fromJson('{
+        "amd64": "ubuntu-20.04",
+        "arm64": "ubuntu-22.04-arm"
+      }')[matrix.arch] }}
+    env:
+      IMG_VERSIONED: ghcr.io/getsentry/vroom:${{ matrix.arch }}-${{ github.sha }}
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Docker Login
+        run: docker login --username '${{ github.actor }}' --password '${{ secrets.GITHUB_TOKEN }}' ghcr.io
+
+      - name: build versioned image
+        run: |
+          set -euxo pipefail
+          docker buildx build \
+              --build-arg TARGETARCH=${{ matrix.arch }} \
+              --platform linux/${{ matrix.arch }} \
+              --tag "$IMG_VERSIONED" \
+              .
+
+      - name: push image to ghcr
+        if: ${{ (github.ref_name == 'main') }}
+        run: |
+          docker push "$IMG_VERSIONED"
+
+  assemble:
+    needs: build-image
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Docker Login
+        run: docker login --username '${{ github.actor }}' --password '${{ secrets.GITHUB_TOKEN }}' ghcr.io
+
+      - name: Assemble Sha Image
+        run: |
+          docker buildx imagetools create -t "ghcr.io/getsentry/vroom:${{ github.sha }}" \
+            "ghcr.io/getsentry/vroom:arm64-${{ github.sha }}" \
+            "ghcr.io/getsentry/vroom:amd64-${{ github.sha }}"
+
+      - name: Assemble Latest Image
+        if: github.ref_name == 'main'
+        run: |
+          docker buildx imagetools create -t "ghcr.io/getsentry/vroom:latest" \
+            "ghcr.io/getsentry/vroom:arm64-${{ github.sha }}" \
+            "ghcr.io/getsentry/vroom:amd64-${{ github.sha }}"
+
+  publish-to-dockerhub:
+    name: Publish Vroom to DockerHub
+    runs-on: ubuntu-20.04
+    if: ${{ (github.ref_name == 'main') }}
+    needs:
+      - assemble
+    steps:
+      - uses: actions/checkout@v4
+      - timeout-minutes: 20
+        run: until docker pull "ghcr.io/getsentry/vroom:${{ github.sha }}" 2>/dev/null; do sleep 10; done
+      - name: Push built docker image
+        shell: bash
+        run: |
+          IMAGE_URL="ghcr.io/getsentry/vroom:${{ github.sha }}"
+          docker login --username=sentrybuilder --password ${{ secrets.DOCKER_HUB_RW_TOKEN }}
+          # We push 3 tags to Dockerhub:
+          # first, the full sha of the commit
+          docker tag "$IMAGE_URL" getsentry/vroom:${GITHUB_SHA}
+          docker push getsentry/vroom:${GITHUB_SHA}
+          # second, the short sha of the commit
+          SHORT_SHA=$(git rev-parse --short "$GITHUB_SHA")
+          docker tag "$IMAGE_URL" getsentry/vroom:${SHORT_SHA}
+          docker push getsentry/vroom:${SHORT_SHA}
+          # finally, nightly
+          docker tag "$IMAGE_URL" getsentry/vroom:nightly
+          docker push getsentry/vroom:nightly
