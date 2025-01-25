@@ -41,8 +41,8 @@ jobs:
               --tag "$IMG_VERSIONED" \
               .
 
-      - name: ${{ (github.ref_name == 'main') }}
-        if: "needs.build-setup.outputs.full_ci == 'true'"
+      - name: push image to ghcr
+        if: ${{ (github.ref_name == 'main') }}
         run: |
           docker push "$IMG_VERSIONED"
 
