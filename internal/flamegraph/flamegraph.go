@@ -436,7 +436,13 @@ func GetFlamegraphFromCandidates(
 				continue
 			}
 			if errors.Is(err, context.DeadlineExceeded) {
-				return speedscope.Output{}, err
+				// Since we set an artificially lower timeout
+				// (10s < 15s), if we exceeded the deadline
+				// we stopped downloading chunks, but we
+				// still have time to compute the flamegraph
+				// with the chunks we downloaded so far
+				// and return it.
+				continue
 			}
 			if hub != nil {
 				hub.CaptureException(err)
