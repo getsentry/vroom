@@ -131,7 +131,7 @@
 - Bump golang.org/x/crypto from 0.24.0 to 0.31.0 ([#544](https://github.com/getsentry/vroom/pull/544))
 - Add a minDepth check for function metrics ([#550](https://github.com/getsentry/vroom/pull/550))
 - Bump x/net package to fix security issue (high severity) ([#555](https://github.com/getsentry/vroom/pull/555))
-- Enforce shorter timeout for chunks download in flamegraph generation ([557](https://github.com/getsentry/vroom/pull/557))
+- Enforce shorter timeout for chunks download in flamegraph generation ([#557](https://github.com/getsentry/vroom/pull/557))
 - Bump actions/create-github-app-token from 1.11.2 to 1.11.3 ([#559](https://github.com/getsentry/vroom/pull/559))
 
 ## 23.12.0
