@@ -19,3 +19,5 @@
 
 # IDE
 .vscode/
+
+.DS_Store
