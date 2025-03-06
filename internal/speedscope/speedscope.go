@@ -96,6 +96,7 @@ type (
 		Metadata           ProfileMetadata          `json:"metadata"`
 		Platform           platform.Platform        `json:"platform"`
 		ProfileID          string                   `json:"profileID,omitempty"`
+		ChunkID            string                   `json:"chunkID,omitempty"`
 		Profiles           []interface{}            `json:"profiles"`
 		ProjectID          uint64                   `json:"projectID"`
 		Shared             SharedData               `json:"shared"`
