@@ -164,7 +164,7 @@ func SpeedscopeFromAndroidChunks(chunks []AndroidChunk, startTS, endTS uint64) (
 	}
 	chunk.Profile.Events = events
 	chunk.Profile.Methods = methods
-	chunk.DurationNS = maxTsNS
+	chunk.DurationNS = maxTsNS - startTS
 
 	s, err := chunk.Profile.Speedscope()
 	if err != nil {

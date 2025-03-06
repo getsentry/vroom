@@ -275,7 +275,7 @@ func TestSpeedscopeFromAndroidChunks(t *testing.T) {
 			have: []AndroidChunk{androidChunk1, androidChunk2},
 			want: speedscope.Output{
 				AndroidClock: "Dual",
-				DurationNS:   4500,
+				DurationNS:   3000,
 				Profiles: []any{
 					&speedscope.EventedProfile{
 						EndValue: 3000,
