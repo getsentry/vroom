@@ -172,9 +172,10 @@ func SpeedscopeFromAndroidChunks(chunks []AndroidChunk, startTS, endTS uint64) (
 	}
 	s.DurationNS = chunk.DurationNS
 	s.Metadata.Timestamp = time.Unix(0, int64(firstChunkStartTimestampNS)).UTC()
+	s.ChunkID = chunk.ID
 
 	if len(mergedMeasurement) > 0 {
-		s.MeasurementsV2 = mergedMeasurement
+		s.Measurements = mergedMeasurement
 	}
 
 	return s, nil

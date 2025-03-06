@@ -88,21 +88,21 @@ type (
 	ValueUnit   string
 
 	Output struct {
-		ActiveProfileIndex int                                   `json:"activeProfileIndex"`
-		AndroidClock       string                                `json:"androidClock,omitempty"`
-		DurationNS         uint64                                `json:"durationNS,omitempty"`
-		Images             []debugmeta.Image                     `json:"images,omitempty"`
-		Measurements       map[string]measurements.Measurement   `json:"measurements,omitempty"`
-		MeasurementsV2     map[string]measurements.MeasurementV2 `json:"measurements_v2,omitempty"`
-		Metadata           ProfileMetadata                       `json:"metadata"`
-		Platform           platform.Platform                     `json:"platform"`
-		ProfileID          string                                `json:"profileID,omitempty"`
-		Profiles           []interface{}                         `json:"profiles"`
-		ProjectID          uint64                                `json:"projectID"`
-		Shared             SharedData                            `json:"shared"`
-		TransactionName    string                                `json:"transactionName"`
-		Version            string                                `json:"version,omitempty"`
-		Metrics            *[]utils.FunctionMetrics              `json:"metrics"`
+		ActiveProfileIndex int                      `json:"activeProfileIndex"`
+		AndroidClock       string                   `json:"androidClock,omitempty"`
+		DurationNS         uint64                   `json:"durationNS,omitempty"`
+		Images             []debugmeta.Image        `json:"images,omitempty"`
+		Measurements       interface{}              `json:"measurements,omitempty"`
+		Metadata           ProfileMetadata          `json:"metadata"`
+		Platform           platform.Platform        `json:"platform"`
+		ProfileID          string                   `json:"profileID,omitempty"`
+		ChunkID            string                   `json:"chunkID,omitempty"`
+		Profiles           []interface{}            `json:"profiles"`
+		ProjectID          uint64                   `json:"projectID"`
+		Shared             SharedData               `json:"shared"`
+		TransactionName    string                   `json:"transactionName"`
+		Version            string                   `json:"version,omitempty"`
+		Metrics            *[]utils.FunctionMetrics `json:"metrics"`
 	}
 
 	ProfileMetadata struct {
