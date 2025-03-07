@@ -313,6 +313,7 @@ func (env *environment) postProfileFromChunkIDs(w http.ResponseWriter, r *http.R
 	s.Description = "Merge profile chunks into a single one"
 	if len(chunks) == 0 {
 		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprint(w, "error: no chunks found to merge")
 		return
 	}
 	var resp []byte
