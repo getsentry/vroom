@@ -252,7 +252,7 @@ func (env *environment) getRawProfile(w http.ResponseWriter, r *http.Request) {
 
 	hub.Scope().SetTag("profile_id", profileID)
 	s := sentry.StartSpan(ctx, "profile.read")
-	s.Description = "Read profile from GCS or Snuba"
+	s.Description = "Read profile from GCS"
 
 	var p profile.Profile
 	err = storageutil.UnmarshalCompressed(
@@ -331,7 +331,7 @@ func (env *environment) getProfile(w http.ResponseWriter, r *http.Request) {
 
 	hub.Scope().SetTag("profile_id", profileID)
 	s := sentry.StartSpan(ctx, "profile.read")
-	s.Description = "Read profile from GCS or Snuba"
+	s.Description = "Read profile from GCS"
 
 	var p profile.Profile
 	err = storageutil.UnmarshalCompressed(
