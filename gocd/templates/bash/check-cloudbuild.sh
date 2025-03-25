@@ -1,6 +1,8 @@
 #!/bin/bash
 
-/devinfra/scripts/checks/googlecloud/checkcloudbuild.py \
+/devinfra/scripts/checks/googlecloud/check_cloudbuild.py \
+	sentryio \
+	vroom \
+	build-vroom \
 	${GO_REVISION_VROOM_REPO} \
-	"sentryio" \
-	"us-central1-docker.pkg.dev/sentryio/vroom/vroom"
+	main
