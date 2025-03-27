@@ -454,7 +454,13 @@ func GetFlamegraphFromCandidates(
 			transactionProfileSpan := span.StartChild("calltree")
 			transactionProfileSpan.Description = "transaction profile"
 
-			example := utils.NewExampleFromProfileID(result.Profile.ProjectID(), result.Profile.ID())
+			start, end := result.Profile.StartAndEndEpoch()
+			example := utils.NewExampleFromProfileID(
+				result.Profile.ProjectID(),
+				result.Profile.ID(),
+				start,
+				end,
+			)
 			annotate := annotateWithProfileExample(example)
 
 			for _, callTree := range result.CallTrees {

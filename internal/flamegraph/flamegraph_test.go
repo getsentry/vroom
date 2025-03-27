@@ -247,7 +247,7 @@ func TestAnnotatingWithExamples(t *testing.T) {
 				},
 			},
 			examples: []utils.ExampleMetadata{
-				utils.NewExampleFromProfileID(1, "2"),
+				utils.NewExampleFromProfileID(1, "2", 10_000_000, 50_000_000),
 				utils.NewExampleFromProfilerChunk(3, "4", "5", "6", &threadID, 10_000_000, 50_000_000),
 			},
 			output: speedscope.Output{
@@ -282,6 +282,8 @@ func TestAnnotatingWithExamples(t *testing.T) {
 						{
 							ProjectID: 1,
 							ProfileID: "2",
+							Start:     0.01,
+							End:       0.05,
 						},
 						{
 							ProjectID:     3,
