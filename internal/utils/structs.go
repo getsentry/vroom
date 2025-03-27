@@ -56,10 +56,14 @@ type (
 func NewExampleFromProfileID(
 	projectID uint64,
 	profileID string,
+	start uint64,
+	end uint64,
 ) ExampleMetadata {
 	return ExampleMetadata{
 		ProjectID: projectID,
 		ProfileID: profileID,
+		Start:     float64(start) / 1e9,
+		End:       float64(end) / 1e9,
 	}
 }
 

@@ -136,6 +136,12 @@ func (p *Profile) Timestamp() time.Time {
 	return p.profile.GetTimestamp()
 }
 
+func (p *Profile) StartAndEndEpoch() (uint64, uint64) {
+	startEpoch := uint64(p.Timestamp().UnixNano())
+	duration := p.DurationNS()
+	return startEpoch, startEpoch + duration
+}
+
 func (p *Profile) Received() time.Time {
 	return p.profile.GetReceived()
 }

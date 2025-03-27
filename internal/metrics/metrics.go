@@ -256,7 +256,13 @@ func (ma *Aggregator) GetMetricsFromCandidates(
 				hub.CaptureException(err)
 				continue
 			}
-			resultMetadata = utils.NewExampleFromProfileID(result.Profile.ProjectID(), result.Profile.ID())
+			start, end := result.Profile.StartAndEndEpoch()
+			resultMetadata = utils.NewExampleFromProfileID(
+				result.Profile.ProjectID(),
+				result.Profile.ID(),
+				start,
+				end,
+			)
 			functions := CapAndFilterFunctions(ExtractFunctionsFromCallTrees(profileCallTrees, ma.MinDepth), int(ma.MaxUniqueFunctions), true)
 			ma.AddFunctions(functions, resultMetadata)
 		} else if result, ok := res.(chunk.ReadJobResult); ok {
