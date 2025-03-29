@@ -57,7 +57,7 @@ jobs:
     if: github.repository_owner == 'getsentry'
     steps:
       - uses: actions/checkout@v4
-
+      - uses: docker/setup-qemu-action@v3
       - run: docker login --username '${{ github.actor }}' --password-stdin ghcr.io <<< "$GHCR_TOKEN"
         env:
           GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
