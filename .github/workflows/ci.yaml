@@ -49,18 +49,52 @@ jobs:
         cache: false
     - run: make test
 
+  build-image:
+    runs-on: ubuntu-latest
+    needs:
+      - lint
+      - test-vroom
+    if: github.repository_owner == 'getsentry'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-qemu-action@v3
+      - run: docker login --username '${{ github.actor }}' --password-stdin ghcr.io <<< "$GHCR_TOKEN"
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - run: docker buildx create --driver docker-container --use
+
+      - name: build
+        run: |
+          set -euxo pipefail
+
+          args=()
+
+          if [ ${{ github.event_name }} = 'push' ]; then
+            args+=(
+              --tag ghcr.io/getsentry/vroom:nightly
+            )
+          fi
+
+          docker buildx build \
+            --push \
+            --platform linux/amd64,linux/arm64 \
+            --tag ghcr.io/getsentry/vroom:${{ github.sha }} \
+            "${args[@]}" \
+            .
+
   publish-to-dockerhub:
     name: Publish Vroom to DockerHub
     runs-on: ubuntu-20.04
     if: ${{ (github.ref_name == 'main') }}
+    needs:
+      - build-image
     steps:
       - uses: actions/checkout@v4
-      - timeout-minutes: 20
-        run: until docker pull "us-central1-docker.pkg.dev/sentryio/vroom/vroom:${{ github.sha }}" 2>/dev/null; do sleep 10; done
       - name: Push built docker image
         shell: bash
         run: |
-          IMAGE_URL="us-central1-docker.pkg.dev/sentryio/vroom/vroom:${{ github.sha }}"
+          IMAGE_URL="ghcr.io/getsentry/vroom:${{ github.sha }}"
           docker login --username=sentrybuilder --password ${{ secrets.DOCKER_HUB_RW_TOKEN }}
           # We push 3 tags to Dockerhub:
           # first, the full sha of the commit
