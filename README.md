@@ -10,7 +10,7 @@
 
 # Sentry vroom
 
-[![GitHub Release](https://img.shields.io/github/release/getsentry/vroom.svg)](https://github.com/getsentry/relay/vroom/latest)
+[![GitHub Release](https://img.shields.io/github/release/getsentry/vroom.svg)](https://github.com/getsentry/vroom/releases/latest)
 
 <p align="center">
     <img src="https://github.com/getsentry/vroom/blob/main/artwork/vroom-logo.png?raw=true" alt="vroom" width="640">
