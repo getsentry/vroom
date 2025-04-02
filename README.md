@@ -25,7 +25,6 @@ The name was inspired by this [video](https://www.youtube.com/watch?v=t_rzYnXEQl
 In order to develop for `vroom`, you will need:
 - `golang` >= 1.18
 - `make`
-- Snuba (via Sentry development services)
 - `pre-commit`
 
 ### pre-commit
