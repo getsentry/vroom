@@ -74,8 +74,6 @@ func buildFunctionsKafkaMessage(p profile.Profile, functions []nodetree.CallTree
 	}
 }
 
-// Metrics extraction is only supported for sample chunks right now.
-// TODO: support metrics extraction for Android chunks.
 func buildChunkFunctionsKafkaMessage(c *chunk.Chunk, functions []nodetree.CallTreeFunction) FunctionsKafkaMessage {
 	return FunctionsKafkaMessage{
 		Environment:            c.GetEnvironment(),
