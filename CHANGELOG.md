@@ -135,6 +135,7 @@
 - Enforce shorter timeout for chunks download in flamegraph generation ([#557](https://github.com/getsentry/vroom/pull/557))
 - Bump actions/create-github-app-token from 1.11.2 to 1.11.3 ([#559](https://github.com/getsentry/vroom/pull/559))
 - Publish vroom to GHCR and provide a tagged release on GHCR. ([#576](https://github.com/getsentry/vroom/pull/576))
+- Buffer flamegraph candidates to reduce memory usage. ([#583](https://github.com/getsentry/vroom/pull/583))
 
 ## 23.12.0
 

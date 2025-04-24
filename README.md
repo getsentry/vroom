@@ -10,7 +10,7 @@
 
 # Sentry vroom
 
-[![GitHub Release](https://img.shields.io/github/release/getsentry/vroom.svg)](https://github.com/getsentry/relay/vroom/latest)
+[![GitHub Release](https://img.shields.io/github/release/getsentry/vroom.svg)](https://github.com/getsentry/vroom/releases/latest)
 
 <p align="center">
     <img src="https://github.com/getsentry/vroom/blob/main/artwork/vroom-logo.png?raw=true" alt="vroom" width="640">
@@ -25,7 +25,6 @@ The name was inspired by this [video](https://www.youtube.com/watch?v=t_rzYnXEQl
 In order to develop for `vroom`, you will need:
 - `golang` >= 1.18
 - `make`
-- Snuba (via Sentry development services)
 - `pre-commit`
 
 ### pre-commit

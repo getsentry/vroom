@@ -385,47 +385,49 @@ func GetFlamegraphFromCandidates(
 ) (speedscope.Output, error) {
 	hub := sentry.GetHubFromContext(ctx)
 
-	numCandidates := len(transactionProfileCandidates) + len(continuousProfileCandidates)
-
-	results := make(chan storageutil.ReadJobResult, numCandidates)
+	results := make(chan storageutil.ReadJobResult)
 	defer close(results)
 
-	dispatchSpan := span.StartChild("dispatch candidates")
-	dispatchSpan.SetData("transaction_candidates", len(transactionProfileCandidates))
-	dispatchSpan.SetData("continuous_candidates", len(continuousProfileCandidates))
+	go func() {
+		dispatchSpan := span.StartChild("dispatch candidates")
+		dispatchSpan.SetData("transaction_candidates", len(transactionProfileCandidates))
+		dispatchSpan.SetData("continuous_candidates", len(continuousProfileCandidates))
 
-	for _, candidate := range transactionProfileCandidates {
-		jobs <- profile.CallTreesReadJob{
-			Ctx:            ctx,
-			OrganizationID: organizationID,
-			ProjectID:      candidate.ProjectID,
-			ProfileID:      candidate.ProfileID,
-			Storage:        storage,
-			Result:         results,
+		for _, candidate := range transactionProfileCandidates {
+			jobs <- profile.CallTreesReadJob{
+				Ctx:            ctx,
+				OrganizationID: organizationID,
+				ProjectID:      candidate.ProjectID,
+				ProfileID:      candidate.ProfileID,
+				Storage:        storage,
+				Result:         results,
+			}
 		}
-	}
 
-	for _, candidate := range continuousProfileCandidates {
-		jobs <- chunk.CallTreesReadJob{
-			Ctx:            ctx,
-			OrganizationID: organizationID,
-			ProjectID:      candidate.ProjectID,
-			ProfilerID:     candidate.ProfilerID,
-			ChunkID:        candidate.ChunkID,
-			TransactionID:  candidate.TransactionID,
-			ThreadID:       candidate.ThreadID,
-			Start:          candidate.Start,
-			End:            candidate.End,
-			Storage:        storage,
-			Result:         results,
+		for _, candidate := range continuousProfileCandidates {
+			jobs <- chunk.CallTreesReadJob{
+				Ctx:            ctx,
+				OrganizationID: organizationID,
+				ProjectID:      candidate.ProjectID,
+				ProfilerID:     candidate.ProfilerID,
+				ChunkID:        candidate.ChunkID,
+				TransactionID:  candidate.TransactionID,
+				ThreadID:       candidate.ThreadID,
+				Start:          candidate.Start,
+				End:            candidate.End,
+				Storage:        storage,
+				Result:         results,
+			}
 		}
-	}
 
-	dispatchSpan.Finish()
+		dispatchSpan.Finish()
+	}()
 
 	var flamegraphTree []*nodetree.Node
 
 	flamegraphSpan := span.StartChild("processing candidates")
+
+	numCandidates := len(transactionProfileCandidates) + len(continuousProfileCandidates)
 
 	for i := 0; i < numCandidates; i++ {
 		res := <-results
