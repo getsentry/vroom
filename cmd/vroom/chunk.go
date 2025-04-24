@@ -254,18 +254,21 @@ func (env *environment) postProfileFromChunkIDs(w http.ResponseWriter, r *http.R
 
 	results := make(chan storageutil.ReadJobResult, len(requestBody.ChunkIDs))
 	defer close(results)
+
 	// send a task to the workers pool for each chunk
-	for _, ID := range requestBody.ChunkIDs {
-		readJobs <- chunk.ReadJob{
-			Ctx:            ctx,
-			Storage:        env.storage,
-			OrganizationID: organizationID,
-			ProjectID:      projectID,
-			ProfilerID:     requestBody.ProfilerID,
-			ChunkID:        ID,
-			Result:         results,
+	go func() {
+		for _, ID := range requestBody.ChunkIDs {
+			readJobs <- chunk.ReadJob{
+				Ctx:            ctx,
+				Storage:        env.storage,
+				OrganizationID: organizationID,
+				ProjectID:      projectID,
+				ProfilerID:     requestBody.ProfilerID,
+				ChunkID:        ID,
+				Result:         results,
+			}
 		}
-	}
+	}()
 
 	chunks := make([]chunk.Chunk, 0, len(requestBody.ChunkIDs))
 	// read the output of each tasks
