@@ -200,37 +200,39 @@ func (ma *Aggregator) GetMetricsFromCandidates(
 ) ([]utils.FunctionMetrics, error) {
 	hub := sentry.GetHubFromContext(ctx)
 
-	numCandidates := len(transactionProfileCandidates) + len(continuousProfileCandidates)
-
-	results := make(chan storageutil.ReadJobResult, numCandidates)
+	results := make(chan storageutil.ReadJobResult)
 	defer close(results)
 
-	for _, candidate := range transactionProfileCandidates {
-		jobs <- profile.ReadJob{
-			Ctx:            ctx,
-			OrganizationID: organizationID,
-			ProjectID:      candidate.ProjectID,
-			ProfileID:      candidate.ProfileID,
-			Storage:        storage,
-			Result:         results,
+	go func() {
+		for _, candidate := range transactionProfileCandidates {
+			jobs <- profile.ReadJob{
+				Ctx:            ctx,
+				OrganizationID: organizationID,
+				ProjectID:      candidate.ProjectID,
+				ProfileID:      candidate.ProfileID,
+				Storage:        storage,
+				Result:         results,
+			}
 		}
-	}
 
-	for _, candidate := range continuousProfileCandidates {
-		jobs <- chunk.ReadJob{
-			Ctx:            ctx,
-			OrganizationID: organizationID,
-			ProjectID:      candidate.ProjectID,
-			ProfilerID:     candidate.ProfilerID,
-			ChunkID:        candidate.ChunkID,
-			TransactionID:  candidate.TransactionID,
-			ThreadID:       candidate.ThreadID,
-			Start:          candidate.Start,
-			End:            candidate.End,
-			Storage:        storage,
-			Result:         results,
+		for _, candidate := range continuousProfileCandidates {
+			jobs <- chunk.ReadJob{
+				Ctx:            ctx,
+				OrganizationID: organizationID,
+				ProjectID:      candidate.ProjectID,
+				ProfilerID:     candidate.ProfilerID,
+				ChunkID:        candidate.ChunkID,
+				TransactionID:  candidate.TransactionID,
+				ThreadID:       candidate.ThreadID,
+				Start:          candidate.Start,
+				End:            candidate.End,
+				Storage:        storage,
+				Result:         results,
+			}
 		}
-	}
+	}()
+
+	numCandidates := len(transactionProfileCandidates) + len(continuousProfileCandidates)
 
 	for i := 0; i < numCandidates; i++ {
 		res := <-results
