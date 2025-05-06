@@ -134,6 +134,7 @@
 - Bump x/net package to fix security issue (high severity) ([#555](https://github.com/getsentry/vroom/pull/555))
 - Enforce shorter timeout for chunks download in flamegraph generation ([#557](https://github.com/getsentry/vroom/pull/557))
 - Bump actions/create-github-app-token from 1.11.2 to 1.11.3 ([#559](https://github.com/getsentry/vroom/pull/559))
+- Publish vroom to GHCR and provide a tagged release on GHCR. ([#576](https://github.com/getsentry/vroom/pull/576))
 - Buffer flamegraph candidates to reduce memory usage. ([#583](https://github.com/getsentry/vroom/pull/583))
 - Reduce read jobs buffer to reduce memory usage. ([#584](https://github.com/getsentry/vroom/pull/584))
 
