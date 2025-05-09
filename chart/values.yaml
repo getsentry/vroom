@@ -1,0 +1,28 @@
+project: customer-1
+terminationGracePeriodSeconds: 30
+sentry_dsn: https://668bf50556c94d03aca94bed6c48796d@o279428.ingest.sentry.io/1513938
+# not sure how sensitive this value is, could come from env volume
+bucket_profiles: gs://sentryio-profiles-value
+
+service:
+  port: 8080
+
+cogs:
+    feature: profiles
+    function: mixed
+
+cpu: 1000m
+memory: 1024Mi
+
+environments:
+  - name: "production"
+    environment: "production"
+    env: "primary"
+    component: "default"
+    replicas: 0
+    autoscaling:
+      enabled: true
+      minReplicas: 2
+      maxReplicas: 60
+      targetCPUUtilizationPercentage: 60
+      # targetMemoryUtilizationPercentage: - 

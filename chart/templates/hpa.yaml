@@ -1,0 +1,51 @@
+{{- $service := include "ServiceName" . -}}
+{{- $namespace := include "Namespace" . -}}
+{{- $context := (dict "context" . ) -}}
+{{- $environments := .Values.environments -}}
+{{- range $environments }}
+{{-   $deployment_name := printf "%s-%s-%s" $service .component .name }}
+{{-   $customDeploymentLabels := (dict "environment" .environment "env" .env) }}
+{{-   $customSelectorLabels := (dict "component" .component) }}
+{{-   $customLabels := (dict "customDeploymentLabels" $customDeploymentLabels "customSelectorLabels" $customSelectorLabels) }}
+{{-   $labels_context := (merge $context $customLabels) }}
+{{-   $autoscaling := .autoscaling }}
+{{-   if $autoscaling.enabled }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ $deployment_name }}
+  namespace: {{ $namespace }}
+  labels:
+    {{- include "Labels.Deployment" $labels_context | nindent 4 }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ $deployment_name }}
+  minReplicas: {{ .autoscaling.minReplicas }}
+  maxReplicas: {{ .autoscaling.maxReplicas }}
+  metrics:
+    {{- if .autoscaling.targetCPUUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ .autoscaling.targetCPUUtilizationPercentage }}
+    {{- end }}
+    {{- if .autoscaling.targetMemoryUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: {{ .autoscaling.targetMemoryUtilizationPercentage }}
+    {{- end }}
+  behavior:
+    scaleDown:
+      policies:
+      - periodSeconds: 300
+        type: Percent
+        value: 5
+{{- end }} {{- /* end of if autoscaling.enabled */}}
+{{- end }}{{- /* end of range environments */}}

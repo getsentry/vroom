@@ -1,0 +1,18 @@
+{{/* 
+TODO: probably should also be a range over components.
+*/}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "ServiceName" . }}
+  namespace: {{ include "Namespace" . }}
+  annotations:
+    cloud.google.com/neg: '{"exposed_ports": {"{{ .Values.service.port }}": {"name": "{{ include "NetworkEndpointGroup" . }}"}}}'
+spec:
+  clusterIP: None
+  selector:
+    {{- include "Labels.Selector" (dict "context" . "customSelectorLabels" (dict "component" "default"))  | nindent 4 }}
+  ports:
+    - port: {{ .Values.service.port }}
+      name: {{ include "ServiceName" . }}
+      protocol: TCP
