@@ -1,0 +1,102 @@
+{{- $service := include "ServiceName" . -}}
+{{- $namespace := include "Namespace" . -}}
+{{- $global := (dict "context" . ) -}}
+{{- $environments := .Values.environments -}}
+{{- range $environments }}
+{{-   $deployment_name := printf "%s-%s-%s" $service .component .name }}
+{{-   $customDeploymentLabels := (dict "environment" .environment "env" .env) }}
+{{-   $customSelectorLabels := (dict "component" .component) }}
+{{-   $customLabels := (dict "customDeploymentLabels" $customDeploymentLabels "customSelectorLabels" $customSelectorLabels) }}
+{{-   $labels_context := (merge $global $customLabels) }}
+{{-   $local_context := (dict "context" $global.context "component" .) }}
+{{-   $autoscaling := .autoscaling }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $deployment_name }}
+  namespace: {{ $namespace }}
+  labels:
+    {{- include "Labels.Deployment" $labels_context | nindent 4 }}
+spec:
+    {{- if not $autoscaling.enabled }}
+    replicas: {{ .replicas }}
+    {{- end }}
+    selector:
+        matchLabels:
+            {{- include "Labels.Selector" $labels_context | nindent 12 }}
+    strategy:
+        type: RollingUpdate
+        rollingUpdate:
+            maxSurge: 10%
+            maxUnavailable: 0
+    minReadySeconds: 5
+    template:
+        metadata:
+            labels:
+                {{- include "Labels.Deployment" $labels_context | nindent 16 }}
+            annotations:
+                {{- include "Annotations" $local_context | nindent 16 }}
+        spec:
+            serviceAccountName: service-{{ $service }}
+            nodeSelector:
+                nodepool.sentry.io/name: default
+            terminationGracePeriodSeconds: {{ $.Values.terminationGracePeriodSeconds }}
+            initContainers: [
+                {{ include "DogStatsdPortForward" $global.context }},
+            ]
+            containers:
+                - name: {{ $service }}
+                  image: {{ include "Image" $global.context }}
+                  ports:
+                    - containerPort: {{ $.Values.service.port }}
+                      name: {{ $service }}
+                  resources:
+                    requests:
+                      cpu: {{ $.Values.cpu }}
+                      memory: {{ $.Values.memory }}
+                    limits:
+                      memory: {{ $.Values.memory }}
+                  env:
+                    - name: PORT
+                      value: "{{ $.Values.service.port }}"
+                    - name: SENTRY_DSN
+                      value: {{ $.Values.sentry_dsn }}
+                    - name: SENTRY_ENVIRONMENT
+                      value: production
+                    - name: SENTRY_BUCKET_PROFILES
+                      value: {{ $.Values.bucket_profiles }}
+                    - name: SENTRY_KAFKA_TOPIC_PROFILES
+                      value: processed-profiles
+                    - name: SENTRY_KAFKA_TOPIC_OCCURRENCES
+                      value: ingest-occurrences
+                    - name: SENTRY_KAFKA_TOPIC_CALL_TREES
+                      value: profiles-call-tree
+                    {{/* TODO: Real values should come from volume */}}
+                    - name: "SENTRY_KAFKA_BROKERS_OCCURRENCES"
+                      value: kafka_brokers_occurrences
+                    - name: "SENTRY_KAFKA_BROKERS_PROFILING"
+                      value: kafka_brokers_profiling
+                    - name: "SENTRY_KAFKA_BROKERS_SPANS"
+                      value: kafka_brokers_spans
+                  readinessProbe:
+                    httpGet:
+                      path: /health
+                      port: {{ $.Values.service.port }}
+                    initialDelaySeconds: 30
+                    successThreshold: 1
+                    failureThreshold: 2
+                    periodSeconds: 1
+                    timeoutSeconds: 1
+                  lifecycle:
+                    preStop:
+                      exec:
+                        command:
+                        - /bin/sh
+                        - -ec
+                        - touch /tmp/vroom.down && sleep {{ sub $.Values.terminationGracePeriodSeconds 5 }}
+            dnsConfig:
+              options:
+                - name: ndots
+                  value: "1"
+{{- end }}{{- /* end of range environments */}}
