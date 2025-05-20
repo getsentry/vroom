@@ -1,0 +1,6 @@
+dependencies:
+- name: common
+  repository: file:///Users/dfedorov/github/helm-charts/common/
+  version: 0.1.0
+digest: sha256:a0f39ec8fab5c2b4ad7f84106e972bccca5be346345e69a4e3e9aaa475e77263
+generated: "2025-05-14T15:33:55.91882-07:00"

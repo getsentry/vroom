@@ -5,3 +5,8 @@ type: application
 
 version: 0.1.0
 appVersion: "1.16.0"
+
+dependencies:
+- name: common
+  version: 0.1.0
+  repository: file:///Users/dfedorov/github/helm-charts/common/
