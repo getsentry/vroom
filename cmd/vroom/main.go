@@ -123,6 +123,11 @@ func (e *environment) newRouter() (*httprouter.Router, error) {
 			e.getRawProfile,
 		},
 		{
+			http.MethodGet,
+			"/organizations/:organization_id/projects/:project_id/raw_chunks/:profiler_id/:chunk_id",
+			e.getRawChunk,
+		},
+		{
 			http.MethodPost,
 			"/organizations/:organization_id/projects/:project_id/chunks",
 			e.postProfileFromChunkIDs,

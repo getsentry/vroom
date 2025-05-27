@@ -10,6 +10,7 @@ import (
 	"strconv"
 
 	"github.com/getsentry/sentry-go"
+	"github.com/google/uuid"
 	"github.com/julienschmidt/httprouter"
 	"github.com/segmentio/kafka-go"
 	"gocloud.dev/gcerrors"
@@ -391,6 +392,97 @@ func (env *environment) postProfileFromChunkIDs(w http.ResponseWriter, r *http.R
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	_, _ = w.Write(resp)
+}
+
+func (env *environment) getRawChunk(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	hub := sentry.GetHubFromContext(ctx)
+	ps := httprouter.ParamsFromContext(ctx)
+	rawOrganizationID := ps.ByName("organization_id")
+	organizationID, err := strconv.ParseUint(rawOrganizationID, 10, 64)
+	if err != nil {
+		hub.CaptureException(err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	hub.Scope().SetTag("organization_id", rawOrganizationID)
+
+	rawProjectID := ps.ByName("project_id")
+	projectID, err := strconv.ParseUint(rawProjectID, 10, 64)
+	if err != nil {
+		sentry.CaptureException(err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	hub.Scope().SetTag("project_id", rawProjectID)
+
+	profilerID := ps.ByName("profiler_id")
+	_, err = uuid.Parse(profilerID)
+	if err != nil {
+		hub.CaptureException(err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	hub.Scope().SetTag("profiler_id", profilerID)
+
+	hub.Scope().SetTag("project_id", rawProjectID)
+
+	chunkID := ps.ByName("chunk_id")
+	_, err = uuid.Parse(chunkID)
+	if err != nil {
+		hub.CaptureException(err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	hub.Scope().SetTag("chunk_id", chunkID)
+
+	s := sentry.StartSpan(ctx, "chunk.read")
+	s.Description = "Read chunk from GCS"
+
+	var c chunk.Chunk
+	err = storageutil.UnmarshalCompressed(
+		ctx,
+		env.storage,
+		chunk.StoragePath(organizationID, projectID, profilerID, chunkID),
+		&c,
+	)
+	s.Finish()
+	if err != nil {
+		if errors.Is(err, storageutil.ErrObjectNotFound) {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+		var e *googleapi.Error
+		if ok := errors.As(err, &e); ok {
+			hub.Scope().SetContext("Google Cloud Storage Error", map[string]interface{}{
+				"body":    e.Body,
+				"code":    e.Code,
+				"details": e.Details,
+				"message": e.Message,
+			})
+		}
+		hub.CaptureException(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	s = sentry.StartSpan(ctx, "json.marshal")
+	defer s.Finish()
+	b, err := json.Marshal(c)
+	if err != nil {
+		hub.CaptureException(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Cache-Control", "public, max-age=3600, immutable")
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write(b)
 }
 
 type (
