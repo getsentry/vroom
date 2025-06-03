@@ -352,7 +352,10 @@ func (env *environment) postProfileFromChunkIDs(w http.ResponseWriter, r *http.R
 			return
 		}
 		s = sentry.StartSpan(ctx, "json.marshal")
-		resp, err = json.Marshal(postProfileFromChunkIDsResponse{Chunk: mergedChunk})
+		resp, err = json.Marshal(postProfileFromChunkIDsResponse{
+			Chunk:         mergedChunk,
+			DebugChunkIDs: chunkIDs,
+		})
 		s.Finish()
 		if err != nil {
 			hub.CaptureException(err)
