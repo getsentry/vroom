@@ -209,7 +209,8 @@ type postProfileFromChunkIDsRequest struct {
 // This way, if we decide to later add a few more utility fields
 // (for pagination, etc.) we won't have to change the Chunk struct.
 type postProfileFromChunkIDsResponse struct {
-	Chunk interface{} `json:"chunk"`
+	Chunk         interface{} `json:"chunk"`
+	DebugChunkIDs []string    `json:"debug_chunk_ids,omitempty"`
 }
 
 // This is more of a GET method, but since we're receiving a list of chunk IDs as part of a
@@ -271,6 +272,7 @@ func (env *environment) postProfileFromChunkIDs(w http.ResponseWriter, r *http.R
 		}
 	}()
 
+	chunkIDs := make([]string, 0, len(requestBody.ChunkIDs))
 	chunks := make([]chunk.Chunk, 0, len(requestBody.ChunkIDs))
 	// read the output of each tasks
 	for i := 0; i < len(requestBody.ChunkIDs); i++ {
@@ -339,6 +341,7 @@ func (env *environment) postProfileFromChunkIDs(w http.ResponseWriter, r *http.R
 				fmt.Fprint(w, "error: mix of sampled and android chunks")
 				return
 			}
+			chunkIDs = append(chunkIDs, sc.ID)
 			sampleChunks = append(sampleChunks, *sc)
 		}
 		mergedChunk, err := chunk.MergeSampleChunks(sampleChunks, requestBody.Start, requestBody.End)
@@ -366,6 +369,7 @@ func (env *environment) postProfileFromChunkIDs(w http.ResponseWriter, r *http.R
 				fmt.Fprint(w, "error: mix of android and sample chunks")
 				return
 			}
+			chunkIDs = append(chunkIDs, ac.ID)
 			androidChunks = append(androidChunks, *ac)
 		}
 		sp, err := chunk.SpeedscopeFromAndroidChunks(androidChunks, requestBody.Start, requestBody.End)
@@ -376,7 +380,10 @@ func (env *environment) postProfileFromChunkIDs(w http.ResponseWriter, r *http.R
 			return
 		}
 		s = sentry.StartSpan(ctx, "json.marshal")
-		resp, err = json.Marshal(postProfileFromChunkIDsResponse{Chunk: sp})
+		resp, err = json.Marshal(postProfileFromChunkIDsResponse{
+			Chunk:         sp,
+			DebugChunkIDs: chunkIDs,
+		})
 		s.Finish()
 		if err != nil {
 			hub.CaptureException(err)
