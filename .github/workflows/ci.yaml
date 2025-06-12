@@ -158,14 +158,15 @@ jobs:
           IMAGE_URL="ghcr.io/getsentry/vroom:${{ github.sha }}"
           docker pull "$IMAGE_URL"
           docker login --username=sentrybuilder --password ${{ secrets.DOCKER_HUB_RW_TOKEN }}
+          
           # We push 3 tags to Dockerhub:
           # first, the full sha of the commit
-          docker tag "$IMAGE_URL" getsentry/vroom:${GITHUB_SHA}
-          docker push getsentry/vroom:${GITHUB_SHA}
+          GITHUB_SHA="${{ github.sha }}"
+          docker buildx imagetools create --tag getsentry/vroom:${GITHUB_SHA} ghcr.io/getsentry/vroom:${{ github.sha }}
+          
           # second, the short sha of the commit
           SHORT_SHA=$(git rev-parse --short "$GITHUB_SHA")
-          docker tag "$IMAGE_URL" getsentry/vroom:${SHORT_SHA}
-          docker push getsentry/vroom:${SHORT_SHA}
+          docker buildx imagetools create --tag getsentry/vroom:${SHORT_SHA} ghcr.io/getsentry/vroom:${{ github.sha }}
+
           # finally, nightly
-          docker tag "$IMAGE_URL" getsentry/vroom:nightly
-          docker push getsentry/vroom:nightly
+          docker buildx imagetools create --tag getsentry/vroom:nightly ghcr.io/getsentry/vroom:${{ github.sha }}
