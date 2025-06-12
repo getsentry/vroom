@@ -130,12 +130,19 @@ jobs:
           docker push ghcr.io/getsentry/vroom:${{ github.sha }}-amd64
           docker tag vroom:arm64 ghcr.io/getsentry/vroom:${{ github.sha }}-arm64
           docker push ghcr.io/getsentry/vroom:${{ github.sha }}-arm64
+
           docker manifest create \
             ghcr.io/getsentry/vroom:${{ github.sha }} \
+            --amend ghcr.io/getsentry/vroom:${{ github.sha }}-amd64 \
+            --amend ghcr.io/getsentry/vroom:${{ github.sha }}-arm64
+
+          docker manifest create \
             ghcr.io/getsentry/vroom:nightly \
             --amend ghcr.io/getsentry/vroom:${{ github.sha }}-amd64 \
             --amend ghcr.io/getsentry/vroom:${{ github.sha }}-arm64
+
           docker manifest push ghcr.io/getsentry/vroom:${{ github.sha }}
+          docker manifest push ghcr.io/getsentry/vroom:nightly
 
   publish-to-dockerhub:
     name: Publish Vroom to DockerHub
