@@ -10,6 +10,7 @@ import (
 	"strconv"
 
 	"github.com/getsentry/sentry-go"
+	"github.com/google/uuid"
 	"github.com/julienschmidt/httprouter"
 	"github.com/segmentio/kafka-go"
 	"gocloud.dev/gcerrors"
@@ -208,7 +209,8 @@ type postProfileFromChunkIDsRequest struct {
 // This way, if we decide to later add a few more utility fields
 // (for pagination, etc.) we won't have to change the Chunk struct.
 type postProfileFromChunkIDsResponse struct {
-	Chunk interface{} `json:"chunk"`
+	Chunk         interface{} `json:"chunk"`
+	DebugChunkIDs []string    `json:"debug_chunk_ids,omitempty"`
 }
 
 // This is more of a GET method, but since we're receiving a list of chunk IDs as part of a
@@ -254,19 +256,23 @@ func (env *environment) postProfileFromChunkIDs(w http.ResponseWriter, r *http.R
 
 	results := make(chan storageutil.ReadJobResult, len(requestBody.ChunkIDs))
 	defer close(results)
-	// send a task to the workers pool for each chunk
-	for _, ID := range requestBody.ChunkIDs {
-		readJobs <- chunk.ReadJob{
-			Ctx:            ctx,
-			Storage:        env.storage,
-			OrganizationID: organizationID,
-			ProjectID:      projectID,
-			ProfilerID:     requestBody.ProfilerID,
-			ChunkID:        ID,
-			Result:         results,
-		}
-	}
 
+	// send a task to the workers pool for each chunk
+	go func() {
+		for _, ID := range requestBody.ChunkIDs {
+			readJobs <- chunk.ReadJob{
+				Ctx:            ctx,
+				Storage:        env.storage,
+				OrganizationID: organizationID,
+				ProjectID:      projectID,
+				ProfilerID:     requestBody.ProfilerID,
+				ChunkID:        ID,
+				Result:         results,
+			}
+		}
+	}()
+
+	chunkIDs := make([]string, 0, len(requestBody.ChunkIDs))
 	chunks := make([]chunk.Chunk, 0, len(requestBody.ChunkIDs))
 	// read the output of each tasks
 	for i := 0; i < len(requestBody.ChunkIDs); i++ {
@@ -335,6 +341,7 @@ func (env *environment) postProfileFromChunkIDs(w http.ResponseWriter, r *http.R
 				fmt.Fprint(w, "error: mix of sampled and android chunks")
 				return
 			}
+			chunkIDs = append(chunkIDs, sc.ID)
 			sampleChunks = append(sampleChunks, *sc)
 		}
 		mergedChunk, err := chunk.MergeSampleChunks(sampleChunks, requestBody.Start, requestBody.End)
@@ -345,7 +352,10 @@ func (env *environment) postProfileFromChunkIDs(w http.ResponseWriter, r *http.R
 			return
 		}
 		s = sentry.StartSpan(ctx, "json.marshal")
-		resp, err = json.Marshal(postProfileFromChunkIDsResponse{Chunk: mergedChunk})
+		resp, err = json.Marshal(postProfileFromChunkIDsResponse{
+			Chunk:         mergedChunk,
+			DebugChunkIDs: chunkIDs,
+		})
 		s.Finish()
 		if err != nil {
 			hub.CaptureException(err)
@@ -362,6 +372,7 @@ func (env *environment) postProfileFromChunkIDs(w http.ResponseWriter, r *http.R
 				fmt.Fprint(w, "error: mix of android and sample chunks")
 				return
 			}
+			chunkIDs = append(chunkIDs, ac.ID)
 			androidChunks = append(androidChunks, *ac)
 		}
 		sp, err := chunk.SpeedscopeFromAndroidChunks(androidChunks, requestBody.Start, requestBody.End)
@@ -372,7 +383,10 @@ func (env *environment) postProfileFromChunkIDs(w http.ResponseWriter, r *http.R
 			return
 		}
 		s = sentry.StartSpan(ctx, "json.marshal")
-		resp, err = json.Marshal(postProfileFromChunkIDsResponse{Chunk: sp})
+		resp, err = json.Marshal(postProfileFromChunkIDsResponse{
+			Chunk:         sp,
+			DebugChunkIDs: chunkIDs,
+		})
 		s.Finish()
 		if err != nil {
 			hub.CaptureException(err)
@@ -388,6 +402,97 @@ func (env *environment) postProfileFromChunkIDs(w http.ResponseWriter, r *http.R
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	_, _ = w.Write(resp)
+}
+
+func (env *environment) getRawChunk(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	hub := sentry.GetHubFromContext(ctx)
+	ps := httprouter.ParamsFromContext(ctx)
+	rawOrganizationID := ps.ByName("organization_id")
+	organizationID, err := strconv.ParseUint(rawOrganizationID, 10, 64)
+	if err != nil {
+		hub.CaptureException(err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	hub.Scope().SetTag("organization_id", rawOrganizationID)
+
+	rawProjectID := ps.ByName("project_id")
+	projectID, err := strconv.ParseUint(rawProjectID, 10, 64)
+	if err != nil {
+		sentry.CaptureException(err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	hub.Scope().SetTag("project_id", rawProjectID)
+
+	profilerID := ps.ByName("profiler_id")
+	_, err = uuid.Parse(profilerID)
+	if err != nil {
+		hub.CaptureException(err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	hub.Scope().SetTag("profiler_id", profilerID)
+
+	hub.Scope().SetTag("project_id", rawProjectID)
+
+	chunkID := ps.ByName("chunk_id")
+	_, err = uuid.Parse(chunkID)
+	if err != nil {
+		hub.CaptureException(err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	hub.Scope().SetTag("chunk_id", chunkID)
+
+	s := sentry.StartSpan(ctx, "chunk.read")
+	s.Description = "Read chunk from GCS"
+
+	var c chunk.Chunk
+	err = storageutil.UnmarshalCompressed(
+		ctx,
+		env.storage,
+		chunk.StoragePath(organizationID, projectID, profilerID, chunkID),
+		&c,
+	)
+	s.Finish()
+	if err != nil {
+		if errors.Is(err, storageutil.ErrObjectNotFound) {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+		var e *googleapi.Error
+		if ok := errors.As(err, &e); ok {
+			hub.Scope().SetContext("Google Cloud Storage Error", map[string]interface{}{
+				"body":    e.Body,
+				"code":    e.Code,
+				"details": e.Details,
+				"message": e.Message,
+			})
+		}
+		hub.CaptureException(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	s = sentry.StartSpan(ctx, "json.marshal")
+	defer s.Finish()
+	b, err := json.Marshal(c)
+	if err != nil {
+		hub.CaptureException(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Cache-Control", "public, max-age=3600, immutable")
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write(b)
 }
 
 type (
