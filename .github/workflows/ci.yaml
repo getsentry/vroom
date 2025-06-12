@@ -79,6 +79,13 @@ jobs:
           outputs: type=docker,dest=/tmp/vroom-${{ matrix.platform }}.tar
           push: false
 
+      # NOTE(aldy505): Rather than pushing the individual architecture-specific image to GHCR,
+      # we're uploading the tarball into GHA's artifact store and assemble it later
+      # to create a multiplatform image. This way, we won't be polluting the GHCR image tags
+      # with a bunch of images that are only being used for CI purposes.
+      #
+      # For posterity: If at any chance you need the individual architecture-specific images,
+      # you can set `push: true` and `tags: ghcr.io/getsentry/vroom:${{ github.sha }}-${{ matrix.platform }}` in the above step.
       - name: Upload Image
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
