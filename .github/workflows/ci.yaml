@@ -161,6 +161,7 @@ jobs:
           
           # We push 3 tags to Dockerhub:
           # first, the full sha of the commit
+          GITHUB_SHA="${{ github.sha }}"
           docker buildx imagetools create --tag getsentry/vroom:${GITHUB_SHA} ghcr.io/getsentry/vroom:${{ github.sha }}
           
           # second, the short sha of the commit
