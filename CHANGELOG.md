@@ -32,6 +32,7 @@
 - Add support for android chunks. ([#540](https://github.com/getsentry/vroom/pull/540))
 - Use generic Chunk interface in CallTreesReadJob ([#554](https://github.com/getsentry/vroom/pull/554))
 - Add start/end to profile example. ([#575](https://github.com/getsentry/vroom/pull/575))
+- Add default non-root user in the Docker image. ([#593](https://github.com/getsentry/vroom/pull/593))
 
 **Bug Fixes**:
 
