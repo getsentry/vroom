@@ -170,3 +170,16 @@ jobs:
 
           # finally, nightly
           docker buildx imagetools create --tag getsentry/vroom:nightly ghcr.io/getsentry/vroom:${{ github.sha }}
+
+  self-hosted-end-to-end:
+    needs: [build-image, assemble-image]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Run Sentry self-hosted e2e CI
+        uses: getsentry/self-hosted@master
+        with:
+          project_name: vroom
+          image_url: ghcr.io/getsentry/vroom:${{ github.sha }}
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
