@@ -26,6 +26,4 @@ COPY --from=builder /src/vroom /bin/vroom
 
 WORKDIR /var/vroom
 
-USER vroom
-
 ENTRYPOINT ["/bin/vroom"]
