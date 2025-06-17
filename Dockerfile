@@ -18,8 +18,7 @@ RUN groupadd --gid 1000 vroom \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /src/vroom /bin/vroom
-COPY --from=builder /src/docker-entrypoint.sh /bin/docker-entrypoint.sh
 
 WORKDIR /var/vroom
 
-ENTRYPOINT ["/bin/docker-entrypoint.sh"]
+ENTRYPOINT ["/bin/vroom"]
