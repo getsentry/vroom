@@ -33,6 +33,7 @@
 - Use generic Chunk interface in CallTreesReadJob ([#554](https://github.com/getsentry/vroom/pull/554))
 - Add start/end to profile example. ([#575](https://github.com/getsentry/vroom/pull/575))
 - Add default non-root user in the Docker image. ([#593](https://github.com/getsentry/vroom/pull/593))
+- fix(docker): Add entry point script, fix permissions ([#601](https://github.com/getsentry/vroom/pull/601))
 
 **Bug Fixes**:
 
