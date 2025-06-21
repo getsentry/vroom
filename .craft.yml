@@ -6,16 +6,18 @@ statusProvider:
   name: github
   config:
     contexts:
-      - 'build-vroom (sentryio)'
+      - 'build-amd64'
+      - 'build-arm64'
+      - 'assemble-image'
 targets:
   - name: github
   - id: release
     name: docker
-    source: us-central1-docker.pkg.dev/sentryio/vroom/vroom
+    source: ghcr.io/getsentry/vroom
     target: getsentry/vroom
   - id: latest
     name: docker
-    source: us-central1-docker.pkg.dev/sentryio/vroom/vroom
+    source: ghcr.io/getsentry/vroom
     target: getsentry/vroom
     targetFormat: '{{{target}}}:latest'
 preReleaseCommand: ""
