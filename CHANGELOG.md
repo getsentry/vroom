@@ -33,6 +33,7 @@
 - Use generic Chunk interface in CallTreesReadJob ([#554](https://github.com/getsentry/vroom/pull/554))
 - Add start/end to profile example. ([#575](https://github.com/getsentry/vroom/pull/575))
 - Add default non-root user in the Docker image. ([#593](https://github.com/getsentry/vroom/pull/593))
+- Classify macOS frames from an application as application frames. ([#604](https://github.com/getsentry/vroom/pull/604))
 
 **Bug Fixes**:
 
