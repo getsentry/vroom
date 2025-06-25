@@ -25,7 +25,8 @@ func IsCocoaApplicationPackage(p string) bool {
 	return strings.HasPrefix(p, "/private/var/containers") ||
 		strings.HasPrefix(p, "/var/containers") ||
 		strings.Contains(p, "/Developer/Xcode/DerivedData") ||
-		strings.Contains(p, "/data/Containers/Bundle/Application")
+		strings.Contains(p, "/data/Containers/Bundle/Application") ||
+		strings.Contains(p, ".app")
 }
 
 var (
