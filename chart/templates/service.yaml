@@ -1,0 +1,3 @@
+{{- range .Values.service }}
+{{- include "common.service.kind" (dict "context" $ "component" .) }}
+{{- end -}}
