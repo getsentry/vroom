@@ -15,7 +15,7 @@ import (
 	"github.com/getsentry/vroom/internal/speedscope"
 	"github.com/getsentry/vroom/internal/testutil"
 	"github.com/getsentry/vroom/internal/timeutil"
-	"github.com/getsentry/vroom/internal/utils"
+	"github.com/getsentry/vroom/internal/examples"
 )
 
 func TestFlamegraphAggregation(t *testing.T) {
@@ -213,7 +213,7 @@ func TestAnnotatingWithExamples(t *testing.T) {
 	tests := []struct {
 		name      string
 		callTrees []*nodetree.Node
-		examples  []utils.ExampleMetadata
+		examples  []examples.ExampleMetadata
 		output    speedscope.Output
 	}{
 		{
@@ -229,7 +229,7 @@ func TestAnnotatingWithExamples(t *testing.T) {
 					SampleCount:   2,
 					Frame:         frame.Frame{Function: "function1"},
 					ProfileIDs:    make(map[string]struct{}),
-					Profiles:      make(map[utils.ExampleMetadata]struct{}),
+					Profiles:      make(map[examples.ExampleMetadata]struct{}),
 					Children: []*nodetree.Node{
 						{
 							DurationNS:    10_000_000,
@@ -241,14 +241,14 @@ func TestAnnotatingWithExamples(t *testing.T) {
 							StartNS:       40_000_000,
 							Frame:         frame.Frame{Function: "function2"},
 							ProfileIDs:    make(map[string]struct{}),
-							Profiles:      make(map[utils.ExampleMetadata]struct{}),
+							Profiles:      make(map[examples.ExampleMetadata]struct{}),
 						},
 					},
 				},
 			},
-			examples: []utils.ExampleMetadata{
-				utils.NewExampleFromProfileID(1, "2", 10_000_000, 50_000_000),
-				utils.NewExampleFromProfilerChunk(3, "4", "5", "6", &threadID, 10_000_000, 50_000_000),
+			examples: []examples.ExampleMetadata{
+				examples.NewExampleFromProfileID(1, "2", 10_000_000, 50_000_000),
+				examples.NewExampleFromProfilerChunk(3, "4", "5", "6", &threadID, 10_000_000, 50_000_000),
 			},
 			output: speedscope.Output{
 				Metadata: speedscope.ProfileMetadata{
@@ -278,7 +278,7 @@ func TestAnnotatingWithExamples(t *testing.T) {
 						{Name: "function1", IsApplication: true},
 						{Name: "function2", IsApplication: true},
 					},
-					Profiles: []utils.ExampleMetadata{
+					Profiles: []examples.ExampleMetadata{
 						{
 							ProjectID: 1,
 							ProfileID: "2",
@@ -309,7 +309,7 @@ func TestAnnotatingWithExamples(t *testing.T) {
 			return a < b
 		}),
 		// This option will order profile IDs since we only want to compare values and not order.
-		cmpopts.SortSlices(func(a, b utils.ExampleMetadata) bool {
+		cmpopts.SortSlices(func(a, b examples.ExampleMetadata) bool {
 			if a.ProjectID != b.ProjectID {
 				return a.ProjectID < b.ProjectID
 			}

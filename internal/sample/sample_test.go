@@ -8,7 +8,7 @@ import (
 	"github.com/getsentry/vroom/internal/platform"
 	"github.com/getsentry/vroom/internal/testutil"
 	"github.com/getsentry/vroom/internal/transaction"
-	"github.com/getsentry/vroom/internal/utils"
+	"github.com/getsentry/vroom/internal/examples"
 )
 
 func TestReplaceIdleStacks(t *testing.T) {
@@ -278,7 +278,7 @@ func TestInlinesProduceDifferentIDs(t *testing.T) {
 	instructionAddress := "0x55bd050e168d"
 	inline1 := frame.Frame{
 		File:            "futures.rs",
-		Function:        "symbolicator::utils::futures::measure::{{closure}}",
+		Function:        "symbolicator::examples.:futures::measure::{{closure}}",
 		Line:            167,
 		InstructionAddr: instructionAddress,
 	}
@@ -387,7 +387,7 @@ func TestCallTrees(t *testing.T) {
 						StartNS:       10,
 						Frame:         frame.Frame{Function: "function0"},
 						ProfileIDs:    make(map[string]struct{}),
-						Profiles:      make(map[utils.ExampleMetadata]struct{}),
+						Profiles:      make(map[examples.ExampleMetadata]struct{}),
 						Children: []*nodetree.Node{
 							{
 								DurationNS:    40,
@@ -399,7 +399,7 @@ func TestCallTrees(t *testing.T) {
 								SampleCount:   2,
 								Frame:         frame.Frame{Function: "function1"},
 								ProfileIDs:    make(map[string]struct{}),
-								Profiles:      make(map[utils.ExampleMetadata]struct{}),
+								Profiles:      make(map[examples.ExampleMetadata]struct{}),
 								Children: []*nodetree.Node{
 									{
 										DurationNS:    10,
@@ -411,7 +411,7 @@ func TestCallTrees(t *testing.T) {
 										StartNS:       40,
 										Frame:         frame.Frame{Function: "function2"},
 										ProfileIDs:    make(map[string]struct{}),
-										Profiles:      make(map[utils.ExampleMetadata]struct{}),
+										Profiles:      make(map[examples.ExampleMetadata]struct{}),
 									},
 								},
 							},
@@ -454,7 +454,7 @@ func TestCallTrees(t *testing.T) {
 						StartNS:       10,
 						Frame:         frame.Frame{Function: "function0"},
 						ProfileIDs:    make(map[string]struct{}),
-						Profiles:      make(map[utils.ExampleMetadata]struct{}),
+						Profiles:      make(map[examples.ExampleMetadata]struct{}),
 						Children: []*nodetree.Node{
 							{
 								DurationNS:    30,
@@ -466,7 +466,7 @@ func TestCallTrees(t *testing.T) {
 								StartNS:       10,
 								Frame:         frame.Frame{Function: "function1"},
 								ProfileIDs:    make(map[string]struct{}),
-								Profiles:      make(map[utils.ExampleMetadata]struct{}),
+								Profiles:      make(map[examples.ExampleMetadata]struct{}),
 							},
 						},
 					},
@@ -509,7 +509,7 @@ func TestCallTrees(t *testing.T) {
 						StartNS:       10,
 						Frame:         frame.Frame{Function: "function0"},
 						ProfileIDs:    make(map[string]struct{}),
-						Profiles:      make(map[utils.ExampleMetadata]struct{}),
+						Profiles:      make(map[examples.ExampleMetadata]struct{}),
 					},
 					{
 						DurationNS:    10,
@@ -521,7 +521,7 @@ func TestCallTrees(t *testing.T) {
 						StartNS:       20,
 						Frame:         frame.Frame{Function: "function1"},
 						ProfileIDs:    make(map[string]struct{}),
-						Profiles:      make(map[utils.ExampleMetadata]struct{}),
+						Profiles:      make(map[examples.ExampleMetadata]struct{}),
 					},
 				},
 			},
@@ -1263,7 +1263,7 @@ func TestCallTreesFingerprintPerPlatform(t *testing.T) {
 						Package:       "foo",
 						SampleCount:   1,
 						ProfileIDs:    map[string]struct{}{},
-						Profiles:      make(map[utils.ExampleMetadata]struct{}),
+						Profiles:      make(map[examples.ExampleMetadata]struct{}),
 						Frame: frame.Frame{
 							Data:     frame.Data{SymbolicatorStatus: "symbolicated"},
 							Function: "main",
@@ -1318,7 +1318,7 @@ func TestCallTreesFingerprintPerPlatform(t *testing.T) {
 						Package:       "foo",
 						SampleCount:   1,
 						ProfileIDs:    map[string]struct{}{},
-						Profiles:      make(map[utils.ExampleMetadata]struct{}),
+						Profiles:      make(map[examples.ExampleMetadata]struct{}),
 						Frame: frame.Frame{
 							Data:     frame.Data{SymbolicatorStatus: "symbolicated"},
 							Function: "main",
@@ -1376,7 +1376,7 @@ func TestCallTreesFingerprintPerPlatform(t *testing.T) {
 						Path:          "/usr/local/lib/python3.8/threading.py",
 						SampleCount:   1,
 						ProfileIDs:    map[string]struct{}{},
-						Profiles:      make(map[utils.ExampleMetadata]struct{}),
+						Profiles:      make(map[examples.ExampleMetadata]struct{}),
 						Frame: frame.Frame{
 							Function: "Threading.run",
 							File:     "threading.py",
