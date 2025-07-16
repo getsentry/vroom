@@ -16,11 +16,11 @@ import (
 	"github.com/getsentry/vroom/internal/measurements"
 	"github.com/getsentry/vroom/internal/metadata"
 	"github.com/getsentry/vroom/internal/nodetree"
+	"github.com/getsentry/vroom/internal/options"
 	"github.com/getsentry/vroom/internal/platform"
 	"github.com/getsentry/vroom/internal/speedscope"
 	"github.com/getsentry/vroom/internal/timeutil"
 	"github.com/getsentry/vroom/internal/transaction"
-	"github.com/getsentry/vroom/internal/options"
 )
 
 var (
@@ -87,7 +87,7 @@ type (
 		EventID             string                              `json:"event_id"`
 		Measurements        map[string]measurements.Measurement `json:"measurements,omitempty"`
 		OS                  OS                                  `json:"os"`
-		Options             options.Options                       `json:"options,omitempty"`
+		Options             options.Options                     `json:"options,omitempty"`
 		OrganizationID      uint64                              `json:"organization_id"`
 		Platform            platform.Platform                   `json:"platform"`
 		ProjectID           uint64                              `json:"project_id"`

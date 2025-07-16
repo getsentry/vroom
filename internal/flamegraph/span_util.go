@@ -5,8 +5,8 @@ import (
 	"sort"
 	"time"
 
-	"github.com/getsentry/vroom/internal/nodetree"
 	"github.com/getsentry/vroom/internal/examples"
+	"github.com/getsentry/vroom/internal/nodetree"
 )
 
 func mergeIntervals(intervals *[]examples.Interval) []examples.Interval {

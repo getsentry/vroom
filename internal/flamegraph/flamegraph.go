@@ -12,12 +12,12 @@ import (
 
 	"github.com/getsentry/sentry-go"
 	"github.com/getsentry/vroom/internal/chunk"
+	"github.com/getsentry/vroom/internal/examples"
 	"github.com/getsentry/vroom/internal/metrics"
 	"github.com/getsentry/vroom/internal/nodetree"
 	"github.com/getsentry/vroom/internal/profile"
 	"github.com/getsentry/vroom/internal/speedscope"
 	"github.com/getsentry/vroom/internal/storageutil"
-	"github.com/getsentry/vroom/internal/examples"
 )
 
 type (

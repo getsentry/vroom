@@ -8,8 +8,8 @@ import (
 	"github.com/getsentry/sentry-go"
 	"github.com/julienschmidt/httprouter"
 
-	"github.com/getsentry/vroom/internal/metrics"
 	"github.com/getsentry/vroom/internal/examples"
+	"github.com/getsentry/vroom/internal/metrics"
 )
 
 type (

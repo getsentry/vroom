@@ -8,27 +8,27 @@ import (
 
 	"github.com/getsentry/sentry-go"
 	"github.com/getsentry/vroom/internal/chunk"
+	"github.com/getsentry/vroom/internal/examples"
 	"github.com/getsentry/vroom/internal/frame"
 	"github.com/getsentry/vroom/internal/platform"
 	"github.com/getsentry/vroom/internal/profile"
 	"github.com/getsentry/vroom/internal/storageutil"
-	"github.com/getsentry/vroom/internal/examples"
 )
 
 type RegressedFunction struct {
-	OrganizationID           uint64                `json:"organization_id"`
-	ProjectID                uint64                `json:"project_id"`
-	ProfileID                string                `json:"profile_id"`
+	OrganizationID           uint64                   `json:"organization_id"`
+	ProjectID                uint64                   `json:"project_id"`
+	ProfileID                string                   `json:"profile_id"`
 	Example                  examples.ExampleMetadata `json:"example"`
-	Fingerprint              uint32                `json:"fingerprint"`
-	AbsolutePercentageChange float64               `json:"absolute_percentage_change"`
-	AggregateRange1          float64               `json:"aggregate_range_1"`
-	AggregateRange2          float64               `json:"aggregate_range_2"`
-	Breakpoint               uint64                `json:"breakpoint"`
-	TrendDifference          float64               `json:"trend_difference"`
-	TrendPercentage          float64               `json:"trend_percentage"`
-	UnweightedPValue         float64               `json:"unweighted_p_value"`
-	UnweightedTValue         float64               `json:"unweighted_t_value"`
+	Fingerprint              uint32                   `json:"fingerprint"`
+	AbsolutePercentageChange float64                  `json:"absolute_percentage_change"`
+	AggregateRange1          float64                  `json:"aggregate_range_1"`
+	AggregateRange2          float64                  `json:"aggregate_range_2"`
+	Breakpoint               uint64                   `json:"breakpoint"`
+	TrendDifference          float64                  `json:"trend_difference"`
+	TrendPercentage          float64                  `json:"trend_percentage"`
+	UnweightedPValue         float64                  `json:"unweighted_p_value"`
+	UnweightedTValue         float64                  `json:"unweighted_t_value"`
 }
 
 func ProcessRegressedFunction(

@@ -6,12 +6,12 @@ import (
 
 	"github.com/getsentry/vroom/internal/clientsdk"
 	"github.com/getsentry/vroom/internal/debugmeta"
+	"github.com/getsentry/vroom/internal/examples"
 	"github.com/getsentry/vroom/internal/measurements"
+	"github.com/getsentry/vroom/internal/options"
 	"github.com/getsentry/vroom/internal/platform"
 	"github.com/getsentry/vroom/internal/timeutil"
 	"github.com/getsentry/vroom/internal/transaction"
-	"github.com/getsentry/vroom/internal/examples"
-	"github.com/getsentry/vroom/internal/options"
 )
 
 const (
@@ -79,8 +79,8 @@ type (
 	}
 
 	SharedData struct {
-		Frames     []Frame                 `json:"frames"`
-		ProfileIDs []string                `json:"profile_ids,omitempty"`
+		Frames     []Frame                    `json:"frames"`
+		ProfileIDs []string                   `json:"profile_ids,omitempty"`
 		Profiles   []examples.ExampleMetadata `json:"profiles,omitempty"`
 	}
 
@@ -89,20 +89,20 @@ type (
 	ValueUnit   string
 
 	Output struct {
-		ActiveProfileIndex int                      `json:"activeProfileIndex"`
-		AndroidClock       string                   `json:"androidClock,omitempty"`
-		DurationNS         uint64                   `json:"durationNS,omitempty"`
-		Images             []debugmeta.Image        `json:"images,omitempty"`
-		Measurements       interface{}              `json:"measurements,omitempty"`
-		Metadata           ProfileMetadata          `json:"metadata"`
-		Platform           platform.Platform        `json:"platform"`
-		ProfileID          string                   `json:"profileID,omitempty"`
-		ChunkID            string                   `json:"chunkID,omitempty"`
-		Profiles           []interface{}            `json:"profiles"`
-		ProjectID          uint64                   `json:"projectID"`
-		Shared             SharedData               `json:"shared"`
-		TransactionName    string                   `json:"transactionName"`
-		Version            string                   `json:"version,omitempty"`
+		ActiveProfileIndex int                         `json:"activeProfileIndex"`
+		AndroidClock       string                      `json:"androidClock,omitempty"`
+		DurationNS         uint64                      `json:"durationNS,omitempty"`
+		Images             []debugmeta.Image           `json:"images,omitempty"`
+		Measurements       interface{}                 `json:"measurements,omitempty"`
+		Metadata           ProfileMetadata             `json:"metadata"`
+		Platform           platform.Platform           `json:"platform"`
+		ProfileID          string                      `json:"profileID,omitempty"`
+		ChunkID            string                      `json:"chunkID,omitempty"`
+		Profiles           []interface{}               `json:"profiles"`
+		ProjectID          uint64                      `json:"projectID"`
+		Shared             SharedData                  `json:"shared"`
+		TransactionName    string                      `json:"transactionName"`
+		Version            string                      `json:"version,omitempty"`
 		Metrics            *[]examples.FunctionMetrics `json:"metrics"`
 	}
 
@@ -129,7 +129,7 @@ type (
 		Environment          string                              `json:"environment,omitempty"`         //nolint:unused
 		JsProfile            json.RawMessage                     `json:"-"`                             //nolint:unused
 		Measurements         map[string]measurements.Measurement `json:"-"`                             //nolint:unused
-		Options              options.Options                       `json:"-"`                             //nolint:unused
+		Options              options.Options                     `json:"-"`                             //nolint:unused
 		OrganizationID       uint64                              `json:"organizationID"`
 		Platform             platform.Platform                   `json:"platform"`            //nolint:unused
 		Profile              json.RawMessage                     `json:"-"`                   //nolint:unused

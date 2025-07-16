@@ -4,9 +4,9 @@ import (
 	"hash"
 	"strings"
 
+	"github.com/getsentry/vroom/internal/examples"
 	"github.com/getsentry/vroom/internal/frame"
 	"github.com/getsentry/vroom/internal/platform"
-	"github.com/getsentry/vroom/internal/examples"
 )
 
 var (
@@ -39,11 +39,11 @@ type (
 		Package       string  `json:"package"`
 		Path          string  `json:"path,omitempty"`
 
-		EndNS       uint64                             `json:"-"`
-		Frame       frame.Frame                        `json:"-"`
-		SampleCount int                                `json:"-"`
-		StartNS     uint64                             `json:"-"`
-		ProfileIDs  map[string]struct{}                `json:"profile_ids,omitempty"`
+		EndNS       uint64                                `json:"-"`
+		Frame       frame.Frame                           `json:"-"`
+		SampleCount int                                   `json:"-"`
+		StartNS     uint64                                `json:"-"`
+		ProfileIDs  map[string]struct{}                   `json:"profile_ids,omitempty"`
 		Profiles    map[examples.ExampleMetadata]struct{} `json:"profiles,omitempty"`
 	}
 )
