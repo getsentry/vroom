@@ -6,8 +6,8 @@ import (
 
 	"github.com/getsentry/vroom/internal/frame"
 	"github.com/getsentry/vroom/internal/nodetree"
+	"github.com/getsentry/vroom/internal/options"
 	"github.com/getsentry/vroom/internal/platform"
-	"github.com/getsentry/vroom/internal/utils"
 )
 
 type (
@@ -21,7 +21,7 @@ type (
 		GetReceived() float64
 		GetRelease() string
 		GetRetentionDays() int
-		GetOptions() utils.Options
+		GetOptions() options.Options
 		GetFrameWithFingerprint(uint32) (frame.Frame, error)
 		CallTrees(activeThreadID *string) (map[string][]*nodetree.Node, error)
 
@@ -119,7 +119,7 @@ func (c Chunk) GetRetentionDays() int {
 	return c.chunk.GetRetentionDays()
 }
 
-func (c Chunk) GetOptions() utils.Options {
+func (c Chunk) GetOptions() options.Options {
 	return c.chunk.GetOptions()
 }
 

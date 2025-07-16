@@ -10,16 +10,16 @@ import (
 	"github.com/getsentry/sentry-go"
 	"github.com/julienschmidt/httprouter"
 
+	"github.com/getsentry/vroom/internal/examples"
 	"github.com/getsentry/vroom/internal/flamegraph"
 	"github.com/getsentry/vroom/internal/metrics"
-	"github.com/getsentry/vroom/internal/utils"
 )
 
 type (
 	postFlamegraphBody struct {
-		Transaction     []utils.TransactionProfileCandidate `json:"transaction"`
-		Continuous      []utils.ContinuousProfileCandidate  `json:"continuous"`
-		GenerateMetrics bool                                `json:"generate_metrics"`
+		Transaction     []examples.TransactionProfileCandidate `json:"transaction"`
+		Continuous      []examples.ContinuousProfileCandidate  `json:"continuous"`
+		GenerateMetrics bool                                   `json:"generate_metrics"`
 	}
 )
 
