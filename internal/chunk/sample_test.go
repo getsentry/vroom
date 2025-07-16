@@ -3,11 +3,11 @@ package chunk
 import (
 	"testing"
 
+	"github.com/getsentry/vroom/internal/examples"
 	"github.com/getsentry/vroom/internal/frame"
 	"github.com/getsentry/vroom/internal/nodetree"
 	"github.com/getsentry/vroom/internal/platform"
 	"github.com/getsentry/vroom/internal/testutil"
-	"github.com/getsentry/vroom/internal/utils"
 )
 
 func TestCallTrees(t *testing.T) {
@@ -48,7 +48,7 @@ func TestCallTrees(t *testing.T) {
 						StartNS:       10_000_000,
 						Frame:         frame.Frame{Function: "function0"},
 						ProfileIDs:    make(map[string]struct{}),
-						Profiles:      make(map[utils.ExampleMetadata]struct{}),
+						Profiles:      make(map[examples.ExampleMetadata]struct{}),
 						Children: []*nodetree.Node{
 							{
 								DurationNS:    40_000_000,
@@ -60,7 +60,7 @@ func TestCallTrees(t *testing.T) {
 								SampleCount:   2,
 								Frame:         frame.Frame{Function: "function1"},
 								ProfileIDs:    make(map[string]struct{}),
-								Profiles:      make(map[utils.ExampleMetadata]struct{}),
+								Profiles:      make(map[examples.ExampleMetadata]struct{}),
 								Children: []*nodetree.Node{
 									{
 										DurationNS:    10_000_000,
@@ -72,7 +72,7 @@ func TestCallTrees(t *testing.T) {
 										StartNS:       40_000_000,
 										Frame:         frame.Frame{Function: "function2"},
 										ProfileIDs:    make(map[string]struct{}),
-										Profiles:      make(map[utils.ExampleMetadata]struct{}),
+										Profiles:      make(map[examples.ExampleMetadata]struct{}),
 									},
 								},
 							},
@@ -112,7 +112,7 @@ func TestCallTrees(t *testing.T) {
 						StartNS:       10_000_000,
 						Frame:         frame.Frame{Function: "function0"},
 						ProfileIDs:    make(map[string]struct{}),
-						Profiles:      make(map[utils.ExampleMetadata]struct{}),
+						Profiles:      make(map[examples.ExampleMetadata]struct{}),
 						Children: []*nodetree.Node{
 							{
 								DurationNS:    30_000_000,
@@ -124,7 +124,7 @@ func TestCallTrees(t *testing.T) {
 								StartNS:       10_000_000,
 								Frame:         frame.Frame{Function: "function1"},
 								ProfileIDs:    make(map[string]struct{}),
-								Profiles:      make(map[utils.ExampleMetadata]struct{}),
+								Profiles:      make(map[examples.ExampleMetadata]struct{}),
 							},
 						},
 					},
@@ -164,7 +164,7 @@ func TestCallTrees(t *testing.T) {
 						StartNS:       10_000_000,
 						Frame:         frame.Frame{Function: "function0"},
 						ProfileIDs:    make(map[string]struct{}),
-						Profiles:      make(map[utils.ExampleMetadata]struct{}),
+						Profiles:      make(map[examples.ExampleMetadata]struct{}),
 					},
 					{
 						DurationNS:    10_000_000,
@@ -176,7 +176,7 @@ func TestCallTrees(t *testing.T) {
 						StartNS:       20_000_000,
 						Frame:         frame.Frame{Function: "function1"},
 						ProfileIDs:    make(map[string]struct{}),
-						Profiles:      make(map[utils.ExampleMetadata]struct{}),
+						Profiles:      make(map[examples.ExampleMetadata]struct{}),
 					},
 				},
 			},

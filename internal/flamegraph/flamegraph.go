@@ -8,15 +8,16 @@ import (
 	"errors"
 	"fmt"
 
+	"gocloud.dev/blob"
+
 	"github.com/getsentry/sentry-go"
 	"github.com/getsentry/vroom/internal/chunk"
+	"github.com/getsentry/vroom/internal/examples"
 	"github.com/getsentry/vroom/internal/metrics"
 	"github.com/getsentry/vroom/internal/nodetree"
 	"github.com/getsentry/vroom/internal/profile"
 	"github.com/getsentry/vroom/internal/speedscope"
 	"github.com/getsentry/vroom/internal/storageutil"
-	"github.com/getsentry/vroom/internal/utils"
-	"gocloud.dev/blob"
 )
 
 type (
@@ -55,7 +56,7 @@ func annotateWithProfileID(profileID string) func(n *nodetree.Node) {
 	}
 }
 
-func annotateWithProfileExample(example utils.ExampleMetadata) func(n *nodetree.Node) {
+func annotateWithProfileExample(example examples.ExampleMetadata) func(n *nodetree.Node) {
 	return func(n *nodetree.Node) {
 		n.Profiles[example] = void
 	}
@@ -113,8 +114,8 @@ type (
 		framesIndex       map[string]int
 		profilesIDsIndex  map[string]int
 		profilesIDs       []string
-		profilesIndex     map[utils.ExampleMetadata]int
-		profiles          []utils.ExampleMetadata
+		profilesIndex     map[examples.ExampleMetadata]int
+		profiles          []examples.ExampleMetadata
 		endValue          uint64
 		maxSamples        int
 		// The total number of samples that were added to the flamegraph
@@ -128,7 +129,7 @@ type (
 		count      uint64
 		duration   uint64
 		profileIDs map[string]struct{}
-		profiles   map[utils.ExampleMetadata]struct{}
+		profiles   map[examples.ExampleMetadata]struct{}
 	}
 )
 
@@ -180,7 +181,7 @@ func (f *flamegraph) Pop() any {
 		profileIDs[f.profilesIDs[i]] = struct{}{}
 	}
 
-	profiles := make(map[utils.ExampleMetadata]struct{})
+	profiles := make(map[examples.ExampleMetadata]struct{})
 	for _, i := range f.samplesProfiles[n] {
 		profiles[f.profiles[i]] = struct{}{}
 	}
@@ -217,7 +218,7 @@ func toSpeedscope(
 		framesIndex:      make(map[string]int),
 		maxSamples:       maxSamples,
 		profilesIDsIndex: make(map[string]int),
-		profilesIndex:    make(map[utils.ExampleMetadata]int),
+		profilesIndex:    make(map[examples.ExampleMetadata]int),
 		samples:          make([][]int, 0),
 		sampleCounts:     make([]uint64, 0),
 	}
@@ -327,7 +328,7 @@ func (f *flamegraph) addSample(
 	count uint64,
 	duration uint64,
 	profileIDs map[string]struct{},
-	profiles map[utils.ExampleMetadata]struct{},
+	profiles map[examples.ExampleMetadata]struct{},
 ) {
 	f.totalSamples++
 	cp := make([]int, len(*stack))
@@ -359,7 +360,7 @@ func (f *flamegraph) getProfileIDsIndices(profileIDs map[string]struct{}) []int 
 	return indices
 }
 
-func (f *flamegraph) getProfilesIndices(profiles map[utils.ExampleMetadata]struct{}) []int {
+func (f *flamegraph) getProfilesIndices(profiles map[examples.ExampleMetadata]struct{}) []int {
 	indices := make([]int, 0, len(profiles))
 	for i := range profiles {
 		if idx, ok := f.profilesIndex[i]; ok {
@@ -377,8 +378,8 @@ func GetFlamegraphFromCandidates(
 	ctx context.Context,
 	storage *blob.Bucket,
 	organizationID uint64,
-	transactionProfileCandidates []utils.TransactionProfileCandidate,
-	continuousProfileCandidates []utils.ContinuousProfileCandidate,
+	transactionProfileCandidates []examples.TransactionProfileCandidate,
+	continuousProfileCandidates []examples.ContinuousProfileCandidate,
 	jobs chan storageutil.ReadJob,
 	ma *metrics.Aggregator,
 	span *sentry.Span,
@@ -457,7 +458,7 @@ func GetFlamegraphFromCandidates(
 			transactionProfileSpan.Description = "transaction profile"
 
 			start, end := result.Profile.StartAndEndEpoch()
-			example := utils.NewExampleFromProfileID(
+			example := examples.NewExampleFromProfileID(
 				result.Profile.ProjectID(),
 				result.Profile.ID(),
 				start,
@@ -482,14 +483,14 @@ func GetFlamegraphFromCandidates(
 
 			for threadID, callTree := range result.CallTrees {
 				if result.Start > 0 && result.End > 0 {
-					interval := utils.Interval{
+					interval := examples.Interval{
 						Start: result.Start,
 						End:   result.End,
 					}
-					callTree = sliceCallTree(&callTree, &[]utils.Interval{interval})
+					callTree = sliceCallTree(&callTree, &[]examples.Interval{interval})
 				}
 
-				example := utils.NewExampleFromProfilerChunk(
+				example := examples.NewExampleFromProfilerChunk(
 					result.Chunk.GetProjectID(),
 					result.Chunk.GetProfilerID(),
 					result.Chunk.GetID(),

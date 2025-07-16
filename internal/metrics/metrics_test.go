@@ -4,9 +4,9 @@ import (
 	"sort"
 	"testing"
 
+	"github.com/getsentry/vroom/internal/examples"
 	"github.com/getsentry/vroom/internal/nodetree"
 	"github.com/getsentry/vroom/internal/testutil"
-	"github.com/getsentry/vroom/internal/utils"
 )
 
 func TestAggregatorAddFunctions(t *testing.T) {
@@ -51,13 +51,13 @@ func TestAggregatorAddFunctions(t *testing.T) {
 				FunctionsMetadata: map[uint32]FunctionsMetadata{
 					0: {
 						MaxVal:   40,
-						Worst:    utils.ExampleMetadata{ProfileID: "1"},
-						Examples: []utils.ExampleMetadata{{ProfileID: "1"}, {ProfileID: "2"}},
+						Worst:    examples.ExampleMetadata{ProfileID: "1"},
+						Examples: []examples.ExampleMetadata{{ProfileID: "1"}, {ProfileID: "2"}},
 					},
 					1: {
 						MaxVal:   105,
-						Worst:    utils.ExampleMetadata{ProfileID: "1"},
-						Examples: []utils.ExampleMetadata{{ProfileID: "1"}, {ProfileID: "2"}},
+						Worst:    examples.ExampleMetadata{ProfileID: "1"},
+						Examples: []examples.ExampleMetadata{{ProfileID: "1"}, {ProfileID: "2"}},
 					},
 				}, // end want
 			},
@@ -68,8 +68,8 @@ func TestAggregatorAddFunctions(t *testing.T) {
 	for _, test := range tests {
 		// add the same calltreeFunctions twice: once coming from a profile/chunk with
 		// ID 1 and the second one with ID 2
-		ma.AddFunctions(test.calltreeFunctions, utils.ExampleMetadata{ProfileID: "1"})
-		ma.AddFunctions(test.calltreeFunctions, utils.ExampleMetadata{ProfileID: "2"})
+		ma.AddFunctions(test.calltreeFunctions, examples.ExampleMetadata{ProfileID: "1"})
+		ma.AddFunctions(test.calltreeFunctions, examples.ExampleMetadata{ProfileID: "2"})
 		if diff := testutil.Diff(ma, test.want); diff != "" {
 			t.Fatalf("Result mismatch: got - want +\n%s", diff)
 		}
@@ -80,7 +80,7 @@ func TestAggregatorToMetrics(t *testing.T) {
 	tests := []struct {
 		name       string
 		Aggregator Aggregator
-		want       []utils.FunctionMetrics
+		want       []examples.FunctionMetrics
 	}{
 		{
 			name: "toMetrics",
@@ -105,17 +105,17 @@ func TestAggregatorToMetrics(t *testing.T) {
 				FunctionsMetadata: map[uint32]FunctionsMetadata{
 					0: {
 						MaxVal:   66,
-						Worst:    utils.ExampleMetadata{ProfileID: "1"},
-						Examples: []utils.ExampleMetadata{{ProfileID: "1"}, {ProfileID: "2"}},
+						Worst:    examples.ExampleMetadata{ProfileID: "1"},
+						Examples: []examples.ExampleMetadata{{ProfileID: "1"}, {ProfileID: "2"}},
 					},
 					1: {
 						MaxVal:   66,
-						Worst:    utils.ExampleMetadata{ProfileID: "3"},
-						Examples: []utils.ExampleMetadata{{ProfileID: "1"}, {ProfileID: "3"}},
+						Worst:    examples.ExampleMetadata{ProfileID: "3"},
+						Examples: []examples.ExampleMetadata{{ProfileID: "1"}, {ProfileID: "3"}},
 					},
 				}, //end functionsMetadata
 			}, //end Aggregator
-			want: []utils.FunctionMetrics{
+			want: []examples.FunctionMetrics{
 				{
 					Name:        "a",
 					Fingerprint: 0,
@@ -125,8 +125,8 @@ func TestAggregatorToMetrics(t *testing.T) {
 					Count:       2,
 					Sum:         66,
 					Avg:         float64(66) / float64(9),
-					Worst:       utils.ExampleMetadata{ProfileID: "1"},
-					Examples:    []utils.ExampleMetadata{{ProfileID: "1"}, {ProfileID: "2"}},
+					Worst:       examples.ExampleMetadata{ProfileID: "1"},
+					Examples:    []examples.ExampleMetadata{{ProfileID: "1"}, {ProfileID: "2"}},
 				},
 				{
 					Name:        "b",
@@ -137,8 +137,8 @@ func TestAggregatorToMetrics(t *testing.T) {
 					Count:       2,
 					Sum:         66,
 					Avg:         float64(66) / float64(9),
-					Worst:       utils.ExampleMetadata{ProfileID: "3"},
-					Examples:    []utils.ExampleMetadata{{ProfileID: "1"}, {ProfileID: "3"}},
+					Worst:       examples.ExampleMetadata{ProfileID: "3"},
+					Examples:    []examples.ExampleMetadata{{ProfileID: "1"}, {ProfileID: "3"}},
 				},
 			}, //want
 		},

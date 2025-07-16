@@ -9,9 +9,9 @@ import (
 	"github.com/getsentry/vroom/internal/debugmeta"
 	"github.com/getsentry/vroom/internal/frame"
 	"github.com/getsentry/vroom/internal/nodetree"
+	"github.com/getsentry/vroom/internal/options"
 	"github.com/getsentry/vroom/internal/platform"
 	"github.com/getsentry/vroom/internal/profile"
-	"github.com/getsentry/vroom/internal/utils"
 )
 
 type (
@@ -37,7 +37,7 @@ type (
 		Received       float64 `json:"received"`
 		RetentionDays  int     `json:"retention_days"`
 
-		Options utils.Options `json:"options,omitempty"`
+		Options options.Options `json:"options,omitempty"`
 	}
 )
 
@@ -117,7 +117,7 @@ func (c AndroidChunk) GetOrganizationID() uint64 {
 	return c.OrganizationID
 }
 
-func (c AndroidChunk) GetOptions() utils.Options {
+func (c AndroidChunk) GetOptions() options.Options {
 	return c.Options
 }
 
