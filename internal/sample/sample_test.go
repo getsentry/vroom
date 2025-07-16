@@ -3,12 +3,12 @@ package sample
 import (
 	"testing"
 
+	"github.com/getsentry/vroom/internal/examples"
 	"github.com/getsentry/vroom/internal/frame"
 	"github.com/getsentry/vroom/internal/nodetree"
 	"github.com/getsentry/vroom/internal/platform"
 	"github.com/getsentry/vroom/internal/testutil"
 	"github.com/getsentry/vroom/internal/transaction"
-	"github.com/getsentry/vroom/internal/examples"
 )
 
 func TestReplaceIdleStacks(t *testing.T) {

@@ -4,9 +4,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/getsentry/vroom/internal/examples"
 	"github.com/getsentry/vroom/internal/nodetree"
 	"github.com/getsentry/vroom/internal/testutil"
-	"github.com/getsentry/vroom/internal/examples"
 )
 
 func TestMergeIntervals(t *testing.T) {
