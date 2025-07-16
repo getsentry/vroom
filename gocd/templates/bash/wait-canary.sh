@@ -1,5 +1,5 @@
 #!/bin/bash
 
-/devinfra/scripts/canary/canarychecks.py \
+checks-canary-canarychecks \
   --skip-check=${SKIP_CANARY_CHECKS} \
   --wait-minutes=5

@@ -139,6 +139,7 @@
 - Publish vroom to GHCR and provide a tagged release on GHCR. ([#576](https://github.com/getsentry/vroom/pull/576))
 - Buffer flamegraph candidates to reduce memory usage. ([#583](https://github.com/getsentry/vroom/pull/583))
 - Reduce read jobs buffer to reduce memory usage. ([#584](https://github.com/getsentry/vroom/pull/584))
+- Update GoCD scripts to use console script entry points. ([#608](https://github.com/getsentry/vroom/pull/608))
 
 ## 23.12.0
 
