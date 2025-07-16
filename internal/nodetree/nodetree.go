@@ -6,7 +6,7 @@ import (
 
 	"github.com/getsentry/vroom/internal/frame"
 	"github.com/getsentry/vroom/internal/platform"
-	"github.com/getsentry/vroom/internal/utils"
+	"github.com/getsentry/vroom/internal/examples"
 )
 
 var (
@@ -44,7 +44,7 @@ type (
 		SampleCount int                                `json:"-"`
 		StartNS     uint64                             `json:"-"`
 		ProfileIDs  map[string]struct{}                `json:"profile_ids,omitempty"`
-		Profiles    map[utils.ExampleMetadata]struct{} `json:"profiles,omitempty"`
+		Profiles    map[examples.ExampleMetadata]struct{} `json:"profiles,omitempty"`
 	}
 )
 
@@ -65,7 +65,7 @@ func NodeFromFrame(f frame.Frame, start, end, fingerprint uint64) *Node {
 		SampleCount:   1,
 		StartNS:       start,
 		ProfileIDs:    map[string]struct{}{},
-		Profiles:      map[utils.ExampleMetadata]struct{}{},
+		Profiles:      map[examples.ExampleMetadata]struct{}{},
 	}
 	if end > 0 {
 		n.DurationNS = n.EndNS - n.StartNS

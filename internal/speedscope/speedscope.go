@@ -10,7 +10,8 @@ import (
 	"github.com/getsentry/vroom/internal/platform"
 	"github.com/getsentry/vroom/internal/timeutil"
 	"github.com/getsentry/vroom/internal/transaction"
-	"github.com/getsentry/vroom/internal/utils"
+	"github.com/getsentry/vroom/internal/examples"
+	"github.com/getsentry/vroom/internal/options"
 )
 
 const (
@@ -80,7 +81,7 @@ type (
 	SharedData struct {
 		Frames     []Frame                 `json:"frames"`
 		ProfileIDs []string                `json:"profile_ids,omitempty"`
-		Profiles   []utils.ExampleMetadata `json:"profiles,omitempty"`
+		Profiles   []examples.ExampleMetadata `json:"profiles,omitempty"`
 	}
 
 	EventType   string
@@ -102,7 +103,7 @@ type (
 		Shared             SharedData               `json:"shared"`
 		TransactionName    string                   `json:"transactionName"`
 		Version            string                   `json:"version,omitempty"`
-		Metrics            *[]utils.FunctionMetrics `json:"metrics"`
+		Metrics            *[]examples.FunctionMetrics `json:"metrics"`
 	}
 
 	ProfileMetadata struct {
@@ -128,7 +129,7 @@ type (
 		Environment          string                              `json:"environment,omitempty"`         //nolint:unused
 		JsProfile            json.RawMessage                     `json:"-"`                             //nolint:unused
 		Measurements         map[string]measurements.Measurement `json:"-"`                             //nolint:unused
-		Options              utils.Options                       `json:"-"`                             //nolint:unused
+		Options              options.Options                       `json:"-"`                             //nolint:unused
 		OrganizationID       uint64                              `json:"organizationID"`
 		Platform             platform.Platform                   `json:"platform"`            //nolint:unused
 		Profile              json.RawMessage                     `json:"-"`                   //nolint:unused

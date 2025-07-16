@@ -20,7 +20,7 @@ import (
 	"github.com/getsentry/vroom/internal/speedscope"
 	"github.com/getsentry/vroom/internal/timeutil"
 	"github.com/getsentry/vroom/internal/transaction"
-	"github.com/getsentry/vroom/internal/utils"
+	"github.com/getsentry/vroom/internal/options"
 )
 
 var (
@@ -87,7 +87,7 @@ type (
 		EventID             string                              `json:"event_id"`
 		Measurements        map[string]measurements.Measurement `json:"measurements,omitempty"`
 		OS                  OS                                  `json:"os"`
-		Options             utils.Options                       `json:"options,omitempty"`
+		Options             options.Options                       `json:"options,omitempty"`
 		OrganizationID      uint64                              `json:"organization_id"`
 		Platform            platform.Platform                   `json:"platform"`
 		ProjectID           uint64                              `json:"project_id"`
@@ -442,7 +442,7 @@ func (p *Profile) Normalize() {
 	p.Trace.ReplaceIdleStacks()
 }
 
-func (p *Profile) GetOptions() utils.Options {
+func (p *Profile) GetOptions() options.Options {
 	return p.Options
 }
 

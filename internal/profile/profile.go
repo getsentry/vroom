@@ -13,7 +13,7 @@ import (
 	"github.com/getsentry/vroom/internal/sample"
 	"github.com/getsentry/vroom/internal/speedscope"
 	"github.com/getsentry/vroom/internal/transaction"
-	"github.com/getsentry/vroom/internal/utils"
+	"github.com/getsentry/vroom/internal/options"
 )
 
 type (
@@ -42,7 +42,7 @@ type (
 		StoragePath() string
 		IsSampled() bool
 		SetProfileID(ID string)
-		GetOptions() utils.Options
+		GetOptions() options.Options
 		GetFrameWithFingerprint(uint32) (frame.Frame, error)
 	}
 
@@ -178,7 +178,7 @@ func (p *Profile) Measurements() map[string]measurements.Measurement {
 	return p.profile.GetMeasurements()
 }
 
-func (p *Profile) GetOptions() utils.Options {
+func (p *Profile) GetOptions() options.Options {
 	return p.profile.GetOptions()
 }
 

@@ -20,7 +20,7 @@ import (
 	"github.com/getsentry/vroom/internal/speedscope"
 	"github.com/getsentry/vroom/internal/timeutil"
 	"github.com/getsentry/vroom/internal/transaction"
-	"github.com/getsentry/vroom/internal/utils"
+	"github.com/getsentry/vroom/internal/options"
 )
 
 const (
@@ -60,7 +60,7 @@ type (
 		Environment          string                              `json:"environment,omitempty"`
 		JsProfile            json.RawMessage                     `json:"js_profile,omitempty"`
 		Measurements         map[string]measurements.Measurement `json:"measurements,omitempty"`
-		Options              utils.Options                       `json:"options,omitempty"`
+		Options              options.Options                       `json:"options,omitempty"`
 		OrganizationID       uint64                              `json:"organization_id"`
 		Platform             platform.Platform                   `json:"platform"`
 		Profile              json.RawMessage                     `json:"profile,omitempty"`
@@ -359,7 +359,7 @@ func (p *LegacyProfile) SetProfileID(ID string) {
 	p.ProfileID = ID
 }
 
-func (p LegacyProfile) GetOptions() utils.Options {
+func (p LegacyProfile) GetOptions() options.Options {
 	return p.Options
 }
 

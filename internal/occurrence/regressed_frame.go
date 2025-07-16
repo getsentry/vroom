@@ -4,21 +4,22 @@ import (
 	"context"
 	"errors"
 
+	"gocloud.dev/blob"
+
 	"github.com/getsentry/sentry-go"
 	"github.com/getsentry/vroom/internal/chunk"
 	"github.com/getsentry/vroom/internal/frame"
 	"github.com/getsentry/vroom/internal/platform"
 	"github.com/getsentry/vroom/internal/profile"
 	"github.com/getsentry/vroom/internal/storageutil"
-	"github.com/getsentry/vroom/internal/utils"
-	"gocloud.dev/blob"
+	"github.com/getsentry/vroom/internal/examples"
 )
 
 type RegressedFunction struct {
 	OrganizationID           uint64                `json:"organization_id"`
 	ProjectID                uint64                `json:"project_id"`
 	ProfileID                string                `json:"profile_id"`
-	Example                  utils.ExampleMetadata `json:"example"`
+	Example                  examples.ExampleMetadata `json:"example"`
 	Fingerprint              uint32                `json:"fingerprint"`
 	AbsolutePercentageChange float64               `json:"absolute_percentage_change"`
 	AggregateRange1          float64               `json:"aggregate_range_1"`

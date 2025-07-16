@@ -12,13 +12,13 @@ import (
 
 	"github.com/getsentry/vroom/internal/flamegraph"
 	"github.com/getsentry/vroom/internal/metrics"
-	"github.com/getsentry/vroom/internal/utils"
+	"github.com/getsentry/vroom/internal/examples"
 )
 
 type (
 	postFlamegraphBody struct {
-		Transaction     []utils.TransactionProfileCandidate `json:"transaction"`
-		Continuous      []utils.ContinuousProfileCandidate  `json:"continuous"`
+		Transaction     []examples.TransactionProfileCandidate `json:"transaction"`
+		Continuous      []examples.ContinuousProfileCandidate  `json:"continuous"`
 		GenerateMetrics bool                                `json:"generate_metrics"`
 	}
 )

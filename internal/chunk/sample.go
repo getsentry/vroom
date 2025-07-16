@@ -13,7 +13,7 @@ import (
 	"github.com/getsentry/vroom/internal/nodetree"
 	"github.com/getsentry/vroom/internal/platform"
 	"github.com/getsentry/vroom/internal/sample"
-	"github.com/getsentry/vroom/internal/utils"
+	"github.com/getsentry/vroom/internal/options"
 )
 
 var (
@@ -45,7 +45,7 @@ type (
 
 		Measurements json.RawMessage `json:"measurements"`
 
-		Options utils.Options `json:"options,omitempty"`
+		Options options.Options `json:"options,omitempty"`
 	}
 
 	SampleData struct {
@@ -249,7 +249,7 @@ func (c SampleChunk) GetOrganizationID() uint64 {
 	return c.OrganizationID
 }
 
-func (c SampleChunk) GetOptions() utils.Options {
+func (c SampleChunk) GetOptions() options.Options {
 	return c.Options
 }
 

@@ -12,15 +12,15 @@ import (
 	"github.com/getsentry/vroom/internal/nodetree"
 	"github.com/getsentry/vroom/internal/profile"
 	"github.com/getsentry/vroom/internal/storageutil"
-	"github.com/getsentry/vroom/internal/utils"
+	"github.com/getsentry/vroom/internal/examples"
 	"gocloud.dev/blob"
 )
 
 type (
 	FunctionsMetadata struct {
 		MaxVal   uint64
-		Worst    utils.ExampleMetadata
-		Examples []utils.ExampleMetadata
+		Worst    examples.ExampleMetadata
+		Examples []examples.ExampleMetadata
 	}
 
 	Aggregator struct {
@@ -44,7 +44,7 @@ func NewAggregator(MaxUniqueFunctions uint, MaxNumOfExamples uint, MinDepth uint
 	}
 }
 
-func (ma *Aggregator) AddFunctions(functions []nodetree.CallTreeFunction, resultMetadata utils.ExampleMetadata) {
+func (ma *Aggregator) AddFunctions(functions []nodetree.CallTreeFunction, resultMetadata examples.ExampleMetadata) {
 	for _, f := range functions {
 		if fn, ok := ma.CallTreeFunctions[f.Fingerprint]; ok {
 			fn.SampleCount += f.SampleCount
@@ -65,14 +65,14 @@ func (ma *Aggregator) AddFunctions(functions []nodetree.CallTreeFunction, result
 			ma.FunctionsMetadata[f.Fingerprint] = FunctionsMetadata{
 				MaxVal:   f.SumSelfTimeNS,
 				Worst:    resultMetadata,
-				Examples: []utils.ExampleMetadata{resultMetadata},
+				Examples: []examples.ExampleMetadata{resultMetadata},
 			}
 		}
 	}
 }
 
-func (ma *Aggregator) ToMetrics() []utils.FunctionMetrics {
-	metrics := make([]utils.FunctionMetrics, 0, len(ma.CallTreeFunctions))
+func (ma *Aggregator) ToMetrics() []examples.FunctionMetrics {
+	metrics := make([]examples.FunctionMetrics, 0, len(ma.CallTreeFunctions))
 
 	for _, f := range ma.CallTreeFunctions {
 		sort.Slice(f.SelfTimesNS, func(i, j int) bool {
@@ -81,7 +81,7 @@ func (ma *Aggregator) ToMetrics() []utils.FunctionMetrics {
 		p75, _ := quantile(f.SelfTimesNS, 0.75)
 		p95, _ := quantile(f.SelfTimesNS, 0.95)
 		p99, _ := quantile(f.SelfTimesNS, 0.99)
-		metrics = append(metrics, utils.FunctionMetrics{
+		metrics = append(metrics, examples.FunctionMetrics{
 			Name:        f.Function,
 			Package:     f.Package,
 			Fingerprint: uint64(f.Fingerprint),
@@ -194,10 +194,10 @@ func (ma *Aggregator) GetMetricsFromCandidates(
 	ctx context.Context,
 	storage *blob.Bucket,
 	organizationID uint64,
-	transactionProfileCandidates []utils.TransactionProfileCandidate,
-	continuousProfileCandidates []utils.ContinuousProfileCandidate,
+	transactionProfileCandidates []examples.TransactionProfileCandidate,
+	continuousProfileCandidates []examples.ContinuousProfileCandidate,
 	jobs chan storageutil.ReadJob,
-) ([]utils.FunctionMetrics, error) {
+) ([]examples.FunctionMetrics, error) {
 	hub := sentry.GetHubFromContext(ctx)
 
 	results := make(chan storageutil.ReadJobResult)
@@ -251,7 +251,7 @@ func (ma *Aggregator) GetMetricsFromCandidates(
 			continue
 		}
 
-		var resultMetadata utils.ExampleMetadata
+		var resultMetadata examples.ExampleMetadata
 		if result, ok := res.(profile.ReadJobResult); ok {
 			profileCallTrees, err := result.Profile.CallTrees()
 			if err != nil {
@@ -259,7 +259,7 @@ func (ma *Aggregator) GetMetricsFromCandidates(
 				continue
 			}
 			start, end := result.Profile.StartAndEndEpoch()
-			resultMetadata = utils.NewExampleFromProfileID(
+			resultMetadata = examples.NewExampleFromProfileID(
 				result.Profile.ProjectID(),
 				result.Profile.ID(),
 				start,
@@ -274,7 +274,7 @@ func (ma *Aggregator) GetMetricsFromCandidates(
 				continue
 			}
 
-			resultMetadata = utils.NewExampleFromProfilerChunk(
+			resultMetadata = examples.NewExampleFromProfilerChunk(
 				result.Chunk.GetProjectID(),
 				result.Chunk.GetProfilerID(),
 				result.Chunk.GetID(),

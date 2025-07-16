@@ -6,10 +6,10 @@ import (
 	"time"
 
 	"github.com/getsentry/vroom/internal/nodetree"
-	"github.com/getsentry/vroom/internal/utils"
+	"github.com/getsentry/vroom/internal/examples"
 )
 
-func mergeIntervals(intervals *[]utils.Interval) []utils.Interval {
+func mergeIntervals(intervals *[]examples.Interval) []examples.Interval {
 	if len(*intervals) == 0 {
 		return *intervals
 	}
@@ -20,7 +20,7 @@ func mergeIntervals(intervals *[]utils.Interval) []utils.Interval {
 		return (*intervals)[i].Start < (*intervals)[j].Start
 	})
 
-	newIntervals := []utils.Interval{(*intervals)[0]}
+	newIntervals := []examples.Interval{(*intervals)[0]}
 	for _, interval := range (*intervals)[1:] {
 		if interval.Start <= newIntervals[len(newIntervals)-1].End {
 			newIntervals[len(newIntervals)-1].End = max(newIntervals[len(newIntervals)-1].End, interval.End)
@@ -32,7 +32,7 @@ func mergeIntervals(intervals *[]utils.Interval) []utils.Interval {
 	return newIntervals
 }
 
-func sliceCallTree(callTree *[]*nodetree.Node, intervals *[]utils.Interval) []*nodetree.Node {
+func sliceCallTree(callTree *[]*nodetree.Node, intervals *[]examples.Interval) []*nodetree.Node {
 	slicedTree := make([]*nodetree.Node, 0)
 	for _, node := range *callTree {
 		if duration := getTotalOverlappingDuration(node, intervals); duration > 0 {
@@ -54,7 +54,7 @@ func sliceCallTree(callTree *[]*nodetree.Node, intervals *[]utils.Interval) []*n
 	return slicedTree
 }
 
-func getTotalOverlappingDuration(node *nodetree.Node, intervals *[]utils.Interval) uint64 {
+func getTotalOverlappingDuration(node *nodetree.Node, intervals *[]examples.Interval) uint64 {
 	var duration uint64
 	for _, interval := range *intervals {
 		if node.EndNS <= interval.Start {
@@ -68,7 +68,7 @@ func getTotalOverlappingDuration(node *nodetree.Node, intervals *[]utils.Interva
 	return duration
 }
 
-func overlappingDuration(node *nodetree.Node, interval *utils.Interval) uint64 {
+func overlappingDuration(node *nodetree.Node, interval *examples.Interval) uint64 {
 	end := min(node.EndNS, interval.End)
 	start := max(node.StartNS, interval.Start)
 
