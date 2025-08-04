@@ -19,7 +19,6 @@ var (
 	packageExtensionRegex             = regexp.MustCompile(`\.(dylib|so|a|dll|exe)$`)
 	javascriptSystemPackagePathRegexp = regexp.MustCompile(`node_modules|^(@moz-extension|chrome-extension)`)
 	cocoaSystemPackage                = map[string]struct{}{
-		"Sentry": {},
 		"hermes": {},
 	}
 
