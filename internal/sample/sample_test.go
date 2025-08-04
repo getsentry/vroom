@@ -1149,7 +1149,7 @@ func TestNormalizeFramesPerPlatform(t *testing.T) {
 								Data:     frame.Data{SymbolicatorStatus: "symbolicated"},
 								Function: "hermes::vm::Interpreter::createObjectFromBuffer(hermes::vm::Runtime\u0026, hermes::vm::CodeBlock*, unsigned int, unsigned int, unsigned int)",
 								Package:  "/private/var/containers/Bundle/Application/0DA082D7-05F5-413F-892B-642FD331230C/BIGW.app/Frameworks/hermes.framework/hermes",
-								InApp:    &testutil.False,
+								InApp:    &testutil.True,
 								Platform: "cocoa",
 								Status:   "symbolicated",
 							},
