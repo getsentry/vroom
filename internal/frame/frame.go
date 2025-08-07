@@ -18,6 +18,9 @@ var (
 	windowsPathRegex                  = regexp.MustCompile(`(?i)^([a-z]:\\|\\\\)`)
 	packageExtensionRegex             = regexp.MustCompile(`\.(dylib|so|a|dll|exe)$`)
 	javascriptSystemPackagePathRegexp = regexp.MustCompile(`node_modules|^(@moz-extension|chrome-extension)`)
+	cocoaSystemPackage                = map[string]struct{}{
+		"hermes": {},
+	}
 
 	ErrFrameNotFound = errors.New("Unable to find matching frame")
 )
@@ -180,6 +183,12 @@ func (f Frame) IsCocoaApplicationFrame() bool {
 	if isMain {
 		// the main frame is found in the user package but should be treated
 		// as a system frame as it does not contain any user code
+		return false
+	}
+
+	// Some packages are known to be system packages.
+	// If we detect them, mark them as a system frame immediately.
+	if _, exists := cocoaSystemPackage[f.ModuleOrPackage()]; exists {
 		return false
 	}
 
