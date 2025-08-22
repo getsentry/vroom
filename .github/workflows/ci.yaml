@@ -26,20 +26,6 @@ jobs:
     - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
       with:
         fetch-depth: 0
-    - uses: actions/setup-go@v5
-      with:
-        go-version: stable
-        cache: false
-    - run: go install golang.org/x/tools/cmd/goimports@latest
-    - name: golangci-lint
-      uses: golangci/golangci-lint-action@v8
-      with:
-        version: latest
-
-  pre-commit:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
     - name: Get changed files
       id: changes
@@ -49,6 +35,19 @@ jobs:
         filters: |
           all:
             - added|modified: '**/*'
+
+    - uses: actions/setup-go@v5
+
+    - run: go install golang.org/x/tools/cmd/goimports@v0.36.0
+
+    - name: golangci-lint
+      uses: golangci/golangci-lint-action@v8
+      with:
+        version: v2.1
+        install-mode: binary
+        # we're just using their official action to install;
+        # running should be consolidated into pre-commit
+        args: version
 
     - uses: astral-sh/setup-uv@884ad927a57e558e7a70b92f2bccf9198a4be546 # v6
       with:
