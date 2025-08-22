@@ -4,13 +4,6 @@ repos:
     - id: goimports
       name: goimports
       entry: goimports
-      args: ['-ld']
-      language: system
-      types: [go]
-    - id: go-mod-tidy
-      name: go-mod-tidy
-      entry: go
-      args: ['mod', 'tidy']
       language: system
       types: [go]
     - id: golangci-lint
