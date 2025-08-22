@@ -1,8 +1,28 @@
 repos:
-- repo: https://github.com/TekWizely/pre-commit-golang
-  rev: v1.0.0-rc.1
+- repo: local
   hooks:
-    - id: go-build-repo-mod
-    - id: go-imports
-    - id: go-mod-tidy-repo
-    - id: golangci-lint-repo-mod
+    - id: goimports
+      name: goimports
+      entry: goimports
+      language: system
+      types: [go]
+    - id: golangci-lint
+      name: golangci-lint
+      entry: golangci-lint
+      args: ['run']
+      language: system
+      types: [go]
+
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v5.0.0
+  hooks:
+    - id: check-case-conflict
+    - id: check-executables-have-shebangs
+    - id: check-merge-conflict
+    - id: check-symlinks
+    - id: end-of-file-fixer
+      exclude_types: [svg]
+    - id: trailing-whitespace
+      exclude_types: [svg]
+    - id: check-added-large-files
+      args: ['--maxkb=1024']

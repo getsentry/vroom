@@ -25,18 +25,11 @@ The name was inspired by this [video](https://www.youtube.com/watch?v=t_rzYnXEQl
 In order to develop for `vroom`, you will need:
 - `golang` >= 1.18
 - `make`
-- `pre-commit`
 
-### pre-commit
+All other development dependencies are installed with [devenv](https://github.com/getsentry/devenv/?tab=readme-ov-file#install):
 
-In order to install `pre-commit`, you will need `python` and run:
 ```sh
-pip install --user pre-commit
-```
-
-Once `pre-commit` is installed, you'll have to set up the actual git hook scripts with:
-```sh
-pre-commit install
+devenv sync
 ```
 
 ### Build development server
