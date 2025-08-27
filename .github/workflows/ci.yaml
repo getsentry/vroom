@@ -50,7 +50,7 @@ jobs:
         install-mode: binary
         # we're just using their official action to install;
         # running should be consolidated into pre-commit
-        args: version
+        args: '--help'
 
     - uses: astral-sh/setup-uv@884ad927a57e558e7a70b92f2bccf9198a4be546 # v6
       with:
