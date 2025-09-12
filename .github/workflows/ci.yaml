@@ -3,14 +3,14 @@ name: continuous-integration
 on:
   pull_request:
     branches:
-      - '*'
+      - "*"
   push:
     branches:
       - main
 
 concurrency:
-    group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
-    cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
 
 env:
   SHELL: /bin/bash
@@ -23,68 +23,68 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
-      with:
-        fetch-depth: 0
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          fetch-depth: 0
 
-    - name: Get changed files
-      id: changes
-      uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
-      with:
-        list-files: json
-        filters: |
-          all:
-            - added|modified: '**/*'
+      - name: Get changed files
+        id: changes
+        uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
+        with:
+          list-files: json
+          filters: |
+            all:
+              - added|modified: '**/*'
 
-    - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v5
 
-    # this is way too slow to add to pre-commit
-    - run: go mod tidy
+      # this is way too slow to add to pre-commit
+      - run: go mod tidy
 
-    - run: go install golang.org/x/tools/cmd/goimports@v0.36.0
+      - run: go install golang.org/x/tools/cmd/goimports@v0.36.0
 
-    - name: golangci-lint
-      uses: golangci/golangci-lint-action@v8
-      with:
-        version: v2.1
-        install-mode: binary
-        # we're just using their official action to install;
-        # running should be consolidated into pre-commit
-        args: '--help'
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v8
+        with:
+          version: v2.4
+          install-mode: binary
+          # we're just using their official action to install;
+          # running should be consolidated into pre-commit
+          args: "--help"
 
-    - uses: astral-sh/setup-uv@884ad927a57e558e7a70b92f2bccf9198a4be546 # v6
-      with:
-        version: '0.8.2'
-        # we just cache the venv-dir directly in action-setup-venv
-        enable-cache: false
+      - uses: astral-sh/setup-uv@884ad927a57e558e7a70b92f2bccf9198a4be546 # v6
+        with:
+          version: "0.8.2"
+          # we just cache the venv-dir directly in action-setup-venv
+          enable-cache: false
 
-    - uses: getsentry/action-setup-venv@b3fb2c6402d963e90c2c8e6a6536946c7fe4ebde # v2.2.0
-      with:
-        python-version: 3.13.5
-        cache-dependency-path: uv.lock
-        install-cmd: uv sync --frozen --only-dev --active
+      - uses: getsentry/action-setup-venv@b3fb2c6402d963e90c2c8e6a6536946c7fe4ebde # v2.2.0
+        with:
+          python-version: 3.13.5
+          cache-dependency-path: uv.lock
+          install-cmd: uv sync --frozen --only-dev --active
 
-    - uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
-      with:
-        path: ~/.cache/pre-commit
-        key: cache-epoch-1|${{ env.pythonLocation }}|${{ hashFiles('.pre-commit-config.yaml', 'uv.lock') }}
+      - uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
+        with:
+          path: ~/.cache/pre-commit
+          key: cache-epoch-1|${{ env.pythonLocation }}|${{ hashFiles('.pre-commit-config.yaml', 'uv.lock') }}
 
-    - name: Install pre-commit
-      run: pre-commit install-hooks
+      - name: Install pre-commit
+        run: pre-commit install-hooks
 
-    - name: Run pre-commit
-      run: |
-        jq '.[]' --raw-output <<< '${{steps.changes.outputs.all_files}}' |
-          xargs pre-commit run --files
+      - name: Run pre-commit
+        run: |
+          jq '.[]' --raw-output <<< '${{steps.changes.outputs.all_files}}' |
+            xargs pre-commit run --files
 
   test-vroom:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
-      with:
-        fetch-depth: 0
-    - uses: actions/setup-go@v5
-      with:
-        go-version: stable
-        cache: false
-    - run: make test
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+          cache: false
+      - run: make test
