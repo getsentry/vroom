@@ -572,6 +572,7 @@ func TestCallTrees(t *testing.T) {
 						StartNS:       1000,
 						Name:          "class1.method1()",
 						Package:       "class1",
+						Occurrence:    1,
 						SampleCount:   1,
 						Frame: frame.Frame{
 							Function: "class1.method1()",
@@ -587,6 +588,7 @@ func TestCallTrees(t *testing.T) {
 								Package:       "class2",
 								EndNS:         2000,
 								StartNS:       1000,
+								Occurrence:    1,
 								SampleCount:   1,
 								Frame: frame.Frame{
 									Function: "class2.method2()",
@@ -604,6 +606,8 @@ func TestCallTrees(t *testing.T) {
 						Package:       "class1",
 						EndNS:         3000,
 						StartNS:       3000,
+						Occurrence:    1,
+						SampleCount:   0,
 						Frame: frame.Frame{
 							Function: "class1.method1()",
 							MethodID: 1,
@@ -624,6 +628,7 @@ func TestCallTrees(t *testing.T) {
 						DurationNS:    2000,
 						IsApplication: true,
 						EndNS:         3000,
+						Occurrence:    1,
 						SampleCount:   1,
 						StartNS:       1000,
 						Package:       "class1",
@@ -639,6 +644,7 @@ func TestCallTrees(t *testing.T) {
 								DurationNS:    1000,
 								IsApplication: true,
 								EndNS:         2500,
+								Occurrence:    1,
 								SampleCount:   1,
 								StartNS:       1500,
 								Package:       "class3",
@@ -654,6 +660,7 @@ func TestCallTrees(t *testing.T) {
 										DurationNS:    500,
 										IsApplication: true,
 										EndNS:         2250,
+										Occurrence:    1,
 										SampleCount:   1,
 										StartNS:       1750,
 										Package:       "class4",
@@ -685,6 +692,7 @@ func TestCallTrees(t *testing.T) {
 						StartNS:       1000,
 						Name:          "class1.method1()",
 						Package:       "class1",
+						Occurrence:    1,
 						SampleCount:   1,
 						Frame: frame.Frame{
 							Function: "class1.method1()",

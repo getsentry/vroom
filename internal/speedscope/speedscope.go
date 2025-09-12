@@ -76,6 +76,7 @@ type (
 		Weights           []uint64         `json:"weights"`
 		SampleDurationsNs []uint64         `json:"sample_durations_ns"`
 		SampleCounts      []uint64         `json:"sample_counts,omitempty"`
+		Occurrences       []uint64         `json:"occurrences,omitempty"`
 	}
 
 	SharedData struct {

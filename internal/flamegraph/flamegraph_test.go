@@ -56,7 +56,10 @@ func TestFlamegraphAggregation(t *testing.T) {
 								{0},    // a
 							},
 							Samples: []sample.Sample{
-								{},
+								{
+									ElapsedSinceStartNS: 0,
+									StackID:             0,
+								},
 								{
 									ElapsedSinceStartNS: 10,
 									StackID:             1,
@@ -67,6 +70,10 @@ func TestFlamegraphAggregation(t *testing.T) {
 								},
 								{
 									ElapsedSinceStartNS: 30,
+									StackID:             0,
+								},
+								{
+									ElapsedSinceStartNS: 40,
 									StackID:             2,
 								},
 							}, // end Samples
@@ -107,7 +114,10 @@ func TestFlamegraphAggregation(t *testing.T) {
 								{3, 0}, // b,a
 							},
 							Samples: []sample.Sample{
-								{},
+								{
+									ElapsedSinceStartNS: 0,
+									StackID:             0,
+								},
 								{
 									ElapsedSinceStartNS: 10,
 									StackID:             1,
@@ -129,7 +139,7 @@ func TestFlamegraphAggregation(t *testing.T) {
 				},
 				Profiles: []interface{}{
 					speedscope.SampledProfile{
-						EndValue:     5,
+						EndValue:     6,
 						IsMainThread: true,
 						Samples: [][]int{
 							{0, 1},
@@ -146,9 +156,10 @@ func TestFlamegraphAggregation(t *testing.T) {
 						SamplesExamples:   [][]int{{}, {}, {}, {}},
 						Type:              "sampled",
 						Unit:              "count",
-						Weights:           []uint64{1, 1, 1, 2},
-						SampleCounts:      []uint64{1, 1, 1, 2},
-						SampleDurationsNs: []uint64{10, 10, 10, 20},
+						Weights:           []uint64{1, 1, 1, 3},
+						SampleCounts:      []uint64{1, 1, 1, 3},
+						SampleDurationsNs: []uint64{10, 10, 10, 30},
+						Occurrences:       []uint64{1, 1, 1, 2},
 					},
 				},
 				Shared: speedscope.SharedData{
@@ -227,6 +238,7 @@ func TestAnnotatingWithExamples(t *testing.T) {
 					IsApplication: true,
 					Name:          "function1",
 					SampleCount:   2,
+					Occurrence:    2,
 					Frame:         frame.Frame{Function: "function1"},
 					ProfileIDs:    make(map[string]struct{}),
 					Profiles:      make(map[examples.ExampleMetadata]struct{}),
@@ -238,6 +250,7 @@ func TestAnnotatingWithExamples(t *testing.T) {
 							IsApplication: true,
 							Name:          "function2",
 							SampleCount:   1,
+							Occurrence:    1,
 							StartNS:       40_000_000,
 							Frame:         frame.Frame{Function: "function2"},
 							ProfileIDs:    make(map[string]struct{}),
@@ -271,6 +284,7 @@ func TestAnnotatingWithExamples(t *testing.T) {
 						Weights:           []uint64{2, 2},
 						SampleCounts:      []uint64{2, 2},
 						SampleDurationsNs: []uint64{20_000_000, 60_000_000},
+						Occurrences:       []uint64{2, 2},
 					},
 				},
 				Shared: speedscope.SharedData{
