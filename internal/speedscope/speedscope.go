@@ -37,6 +37,11 @@ type (
 		Path          string `json:"path,omitempty"`
 	}
 
+	FrameInfo struct {
+		Count  uint32 `json:"count"`
+		Weight uint64 `json:"weight"`
+	}
+
 	Event struct {
 		Type  EventType `json:"type"`
 		Frame int       `json:"frame"`
@@ -76,11 +81,11 @@ type (
 		Weights           []uint64         `json:"weights"`
 		SampleDurationsNs []uint64         `json:"sample_durations_ns"`
 		SampleCounts      []uint64         `json:"sample_counts,omitempty"`
-		Occurrences       []uint64         `json:"occurrences,omitempty"`
 	}
 
 	SharedData struct {
 		Frames     []Frame                    `json:"frames"`
+		FrameInfos []FrameInfo                `json:"frame_infos"`
 		ProfileIDs []string                   `json:"profile_ids,omitempty"`
 		Profiles   []examples.ExampleMetadata `json:"profiles,omitempty"`
 	}

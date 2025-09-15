@@ -41,7 +41,7 @@ type (
 
 		EndNS       uint64                                `json:"-"`
 		Frame       frame.Frame                           `json:"-"`
-		Occurrence  int                                   `json:"-"`
+		Occurrence  uint32                                `json:"-"`
 		SampleCount int                                   `json:"-"`
 		StartNS     uint64                                `json:"-"`
 		ProfileIDs  map[string]struct{}                   `json:"profile_ids,omitempty"`
@@ -73,6 +73,27 @@ func NodeFromFrame(f frame.Frame, start, end, fingerprint uint64) *Node {
 		n.DurationNS = n.EndNS - n.StartNS
 	}
 	return &n
+}
+
+func (n *Node) ShallowCopyWithoutChildren() *Node {
+	clone := Node{
+		EndNS:         n.EndNS,
+		Fingerprint:   n.Fingerprint,
+		Frame:         n.Frame,
+		IsApplication: n.IsApplication,
+		Line:          n.Line,
+		Name:          n.Name,
+		Package:       n.Package,
+		Path:          n.Path,
+		Occurrence:    n.Occurrence,
+		SampleCount:   n.SampleCount,
+		StartNS:       n.StartNS,
+		ProfileIDs:    n.ProfileIDs,
+		Profiles:      n.Profiles,
+		DurationNS:    n.DurationNS,
+	}
+
+	return &clone
 }
 
 func (n *Node) Update(timestamp uint64) {
