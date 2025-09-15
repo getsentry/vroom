@@ -15,7 +15,6 @@ import (
 	"github.com/getsentry/vroom/internal/sample"
 	"github.com/getsentry/vroom/internal/speedscope"
 	"github.com/getsentry/vroom/internal/testutil"
-	"github.com/getsentry/vroom/internal/timeutil"
 )
 
 func TestFlamegraphAggregation(t *testing.T) {
@@ -142,24 +141,28 @@ func TestFlamegraphAggregation(t *testing.T) {
 						EndValue:     6,
 						IsMainThread: true,
 						Samples: [][]int{
-							{0, 1},
-							{2, 0},
 							{2},
 							{3},
+							{2, 0},
+							{0, 1},
 						},
 						SamplesProfiles: [][]int{
-							{0},
-							{1},
-							{0},
-							{1},
+							{},
+							{},
+							{},
+							{},
 						},
-						SamplesExamples:   [][]int{{}, {}, {}, {}},
+						SamplesExamples: [][]int{
+							{0},
+							{1},
+							{1},
+							{0},
+						},
 						Type:              "sampled",
 						Unit:              "count",
 						Weights:           []uint64{1, 1, 1, 3},
 						SampleCounts:      []uint64{1, 1, 1, 3},
 						SampleDurationsNs: []uint64{10, 10, 10, 30},
-						Occurrences:       []uint64{1, 1, 1, 2},
 					},
 				},
 				Shared: speedscope.SharedData{
@@ -169,34 +172,145 @@ func TestFlamegraphAggregation(t *testing.T) {
 						{Image: "test.package", IsApplication: true, Name: "c"},
 						{Image: "test.package", Name: "e"},
 					},
-					ProfileIDs: []string{"ab1", "cd2"},
+					FrameInfos: []speedscope.FrameInfo{
+						{Count: 3, Weight: 40},
+						{Count: 2, Weight: 30},
+						{Count: 2, Weight: 20},
+						{Count: 1, Weight: 10},
+					},
+					Profiles: []examples.ExampleMetadata{
+						{ProfileID: "ab1"},
+						{ProfileID: "cd2"},
+					},
 				},
 			},
 		},
-	}
-
-	options := cmp.Options{
-		cmp.AllowUnexported(timeutil.Time{}),
-		// This option will order profile IDs since we only want to compare values and not order.
-		cmpopts.SortSlices(func(a, b string) bool {
-			return a < b
-		}),
-		// This option will order stacks since we only want to compare values and not order.
-		cmpopts.SortSlices(func(a, b []int) bool {
-			al, bl := len(a), len(b)
-			if al != bl {
-				// Smallest slice first
-				return al < bl
-			}
-			for i := 0; i < al; i++ {
-				if a[i] != b[i] {
-					// Slice with the first different smaller index first
-					return a[i] < b[i]
-				}
-			}
-			// Both slices are 0, we don't change the order
-			return false
-		}),
+		{
+			name: "Complex profiles aggregation",
+			profiles: []sample.Profile{
+				{
+					RawProfile: sample.RawProfile{
+						EventID:  "ab1",
+						Platform: platform.Cocoa,
+						Version:  "1",
+						Trace: sample.Trace{
+							Frames: []frame.Frame{
+								{
+									Function: "a",
+									Package:  "test.package",
+									InApp:    &testutil.False,
+								},
+								{
+									Function: "b",
+									Package:  "test.package",
+									InApp:    &testutil.False,
+								},
+								{
+									Function: "c",
+									Package:  "test.package",
+									InApp:    &testutil.True,
+								},
+							}, // end frames
+							Stacks: []sample.Stack{
+								{2, 1, 0}, // c,b,a
+								{1, 0},    // b,a
+								{0},       // a
+							},
+							Samples: []sample.Sample{
+								{
+									ElapsedSinceStartNS: 0,
+									StackID:             0,
+								},
+								{
+									ElapsedSinceStartNS: 10,
+									StackID:             0,
+								},
+								{
+									ElapsedSinceStartNS: 20,
+									StackID:             1,
+								},
+								{
+									ElapsedSinceStartNS: 30,
+									StackID:             1,
+								},
+								{
+									ElapsedSinceStartNS: 40,
+									StackID:             2,
+								},
+								{
+									ElapsedSinceStartNS: 50,
+									StackID:             2,
+								},
+								{
+									ElapsedSinceStartNS: 60,
+									StackID:             1,
+								},
+								{
+									ElapsedSinceStartNS: 70,
+									StackID:             1,
+								},
+								{
+									ElapsedSinceStartNS: 80,
+									StackID:             0,
+								},
+								{
+									ElapsedSinceStartNS: 90,
+									StackID:             0,
+								},
+							}, // end Samples
+						}, // end Trace
+					},
+				}, // end prof definition
+			},
+			output: speedscope.Output{
+				Metadata: speedscope.ProfileMetadata{
+					ProfileView: speedscope.ProfileView{
+						ProjectID: 99,
+					},
+				},
+				Profiles: []interface{}{
+					speedscope.SampledProfile{
+						EndValue:     9,
+						IsMainThread: true,
+						Samples: [][]int{
+							{0},
+							{0, 1},
+							{0, 1, 2},
+						},
+						SamplesProfiles: [][]int{
+							{},
+							{},
+							{},
+						},
+						SamplesExamples: [][]int{
+							{0},
+							{0},
+							{0},
+						},
+						Type:              "sampled",
+						Unit:              "count",
+						Weights:           []uint64{2, 4, 3},
+						SampleCounts:      []uint64{2, 4, 3},
+						SampleDurationsNs: []uint64{20, 40, 30},
+					},
+				},
+				Shared: speedscope.SharedData{
+					Frames: []speedscope.Frame{
+						{Image: "test.package", Name: "a"},
+						{Image: "test.package", Name: "b"},
+						{Image: "test.package", IsApplication: true, Name: "c"},
+					},
+					FrameInfos: []speedscope.FrameInfo{
+						{Count: 1, Weight: 90},
+						{Count: 2, Weight: 70},
+						{Count: 2, Weight: 30},
+					},
+					Profiles: []examples.ExampleMetadata{
+						{ProfileID: "ab1"},
+					},
+				},
+			},
+		},
 	}
 
 	for _, test := range tests {
@@ -208,10 +322,13 @@ func TestFlamegraphAggregation(t *testing.T) {
 				if err != nil {
 					t.Fatalf("error when generating calltrees: %v", err)
 				}
-				addCallTreeToFlamegraph(&ft, callTrees[0], annotateWithProfileID(p.ID()))
+				example := examples.ExampleMetadata{
+					ProfileID: p.ID(),
+				}
+				addCallTreeToFlamegraph(&ft, callTrees[0], annotateWithProfileExample(example))
 			}
 
-			if diff := testutil.Diff(toSpeedscope(context.TODO(), ft, 10, 99), test.output, options); diff != "" {
+			if diff := testutil.Diff(toSpeedscope(context.TODO(), ft, 10, 99), test.output); diff != "" {
 				t.Fatalf("Result mismatch: got - want +\n%s", diff)
 			}
 		})
@@ -284,13 +401,16 @@ func TestAnnotatingWithExamples(t *testing.T) {
 						Weights:           []uint64{2, 2},
 						SampleCounts:      []uint64{2, 2},
 						SampleDurationsNs: []uint64{20_000_000, 60_000_000},
-						Occurrences:       []uint64{2, 2},
 					},
 				},
 				Shared: speedscope.SharedData{
 					Frames: []speedscope.Frame{
 						{Name: "function1", IsApplication: true},
 						{Name: "function2", IsApplication: true},
+					},
+					FrameInfos: []speedscope.FrameInfo{
+						{Count: 4, Weight: 80_000_000},
+						{Count: 2, Weight: 20_000_000},
 					},
 					Profiles: []examples.ExampleMetadata{
 						{

@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"sort"
 
 	"gocloud.dev/blob"
 
@@ -48,20 +49,6 @@ func sumNodesSampleCount(nodes []*nodetree.Node) int {
 	return c
 }
 
-func sumNodesOccurrences(nodes []*nodetree.Node) int {
-	o := 0
-	for _, node := range nodes {
-		o += node.Occurrence
-	}
-	return o
-}
-
-func annotateWithProfileID(profileID string) func(n *nodetree.Node) {
-	return func(n *nodetree.Node) {
-		n.ProfileIDs[profileID] = void
-	}
-}
-
 func annotateWithProfileExample(example examples.ExampleMetadata) func(n *nodetree.Node) {
 	return func(n *nodetree.Node) {
 		n.Profiles[example] = void
@@ -70,42 +57,19 @@ func annotateWithProfileExample(example examples.ExampleMetadata) func(n *nodetr
 
 func addCallTreeToFlamegraph(flamegraphTree *[]*nodetree.Node, callTree []*nodetree.Node, annotate func(n *nodetree.Node)) {
 	for _, node := range callTree {
+		var currentNode *nodetree.Node
 		if existingNode := getMatchingNode(flamegraphTree, node); existingNode != nil {
-			existingNode.Occurrence += node.Occurrence
-			existingNode.SampleCount += node.SampleCount
-			existingNode.DurationNS += node.DurationNS
-			addCallTreeToFlamegraph(&existingNode.Children, node.Children, annotate)
-			if node.SampleCount > sumNodesSampleCount(node.Children) {
-				annotate(existingNode)
-			}
+			currentNode = existingNode
+			currentNode.Occurrence += node.Occurrence
+			currentNode.SampleCount += node.SampleCount
+			currentNode.DurationNS += node.DurationNS
 		} else {
-			*flamegraphTree = append(*flamegraphTree, node)
-			// in this case since we append the whole branch
-			// we haven't had the chance to add the profile IDs
-			// to the right children along the branch yet,
-			// therefore we call a utility that walk the branch
-			// and does it
-			expandCallTreeWithProfileID(node, annotate)
+			currentNode = node.ShallowCopyWithoutChildren()
+			*flamegraphTree = append(*flamegraphTree, currentNode)
 		}
-	}
-}
-
-func expandCallTreeWithProfileID(node *nodetree.Node, annotate func(n *nodetree.Node)) {
-	// leaf frames: we  must add the profileID
-	if node.Children == nil {
-		annotate(node)
-	} else {
-		childrenSampleCount := 0
-		for _, child := range node.Children {
-			childrenSampleCount += child.SampleCount
-			expandCallTreeWithProfileID(child, annotate)
-		}
-		// If the children's sample count is less than the current
-		// nodes sample count, it means there are some samples
-		// ending at the current node. In this case, this node
-		// should also contain the profile ID
-		if node.SampleCount > childrenSampleCount {
-			annotate(node)
+		addCallTreeToFlamegraph(&currentNode.Children, node.Children, annotate)
+		if node.SampleCount > sumNodesSampleCount(node.Children) {
+			annotate(currentNode)
 		}
 	}
 }
@@ -117,9 +81,9 @@ type (
 		samplesProfiles   [][]int
 		sampleCounts      []uint64
 		sampleDurationsNs []uint64
-		occurrences       []uint64
 		frames            []speedscope.Frame
 		framesIndex       map[string]int
+		frameInfos        []speedscope.FrameInfo
 		profilesIDsIndex  map[string]int
 		profilesIDs       []string
 		profilesIndex     map[examples.ExampleMetadata]int
@@ -135,7 +99,6 @@ type (
 	flamegraphSample struct {
 		stack      []int
 		count      uint64 // count refers to the individual sample counts
-		occurrence uint64 // occurrence refers to the merged call counts, excluding any children
 		duration   uint64
 		profileIDs map[string]struct{}
 		profiles   map[examples.ExampleMetadata]struct{}
@@ -170,7 +133,6 @@ func (f *flamegraph) Swap(i, j int) {
 	f.samplesProfiles[i], f.samplesProfiles[j] = f.samplesProfiles[j], f.samplesProfiles[i]
 	f.sampleCounts[i], f.sampleCounts[j] = f.sampleCounts[j], f.sampleCounts[i]
 	f.sampleDurationsNs[i], f.sampleDurationsNs[j] = f.sampleDurationsNs[j], f.sampleDurationsNs[i]
-	f.occurrences[i], f.occurrences[j] = f.occurrences[j], f.occurrences[i]
 }
 
 func (f *flamegraph) Push(item any) {
@@ -179,7 +141,6 @@ func (f *flamegraph) Push(item any) {
 	f.samples = append(f.samples, sample.stack)
 	f.sampleCounts = append(f.sampleCounts, sample.count)
 	f.sampleDurationsNs = append(f.sampleDurationsNs, sample.duration)
-	f.occurrences = append(f.occurrences, sample.occurrence)
 	f.samplesProfileIDs = append(f.samplesProfileIDs, f.getProfileIDsIndices(sample.profileIDs))
 	f.samplesProfiles = append(f.samplesProfiles, f.getProfilesIndices(sample.profiles))
 }
@@ -200,7 +161,6 @@ func (f *flamegraph) Pop() any {
 	sample := flamegraphSample{
 		stack:      f.samples[n],
 		count:      f.sampleCounts[n],
-		occurrence: f.occurrences[n],
 		duration:   f.sampleDurationsNs[n],
 		profileIDs: profileIDs,
 		profiles:   profiles,
@@ -209,7 +169,6 @@ func (f *flamegraph) Pop() any {
 	f.samples = f.samples[0:n]
 	f.sampleCounts = f.sampleCounts[0:n]
 	f.sampleDurationsNs = f.sampleDurationsNs[0:n]
-	f.occurrences = f.occurrences[0:n]
 	f.samplesProfileIDs = f.samplesProfileIDs[0:n]
 	f.samplesProfiles = f.samplesProfiles[0:n]
 
@@ -228,13 +187,13 @@ func toSpeedscope(
 
 	fd := &flamegraph{
 		frames:           make([]speedscope.Frame, 0),
+		frameInfos:       make([]speedscope.FrameInfo, 0),
 		framesIndex:      make(map[string]int),
 		maxSamples:       maxSamples,
 		profilesIDsIndex: make(map[string]int),
 		profilesIndex:    make(map[examples.ExampleMetadata]int),
 		samples:          make([][]int, 0),
 		sampleCounts:     make([]uint64, 0),
-		occurrences:      make([]uint64, 0),
 	}
 	for _, tree := range trees {
 		stack := make([]int, 0, profile.MaxStackDepth)
@@ -252,7 +211,6 @@ func toSpeedscope(
 		Weights:           fd.sampleCounts,
 		SampleCounts:      fd.sampleCounts,
 		SampleDurationsNs: fd.sampleDurationsNs,
-		Occurrences:       fd.occurrences,
 		IsMainThread:      true,
 		Type:              speedscope.ProfileTypeSampled,
 		Unit:              speedscope.ValueUnitCount,
@@ -267,6 +225,7 @@ func toSpeedscope(
 		},
 		Shared: speedscope.SharedData{
 			Frames:     fd.frames,
+			FrameInfos: fd.frameInfos,
 			ProfileIDs: fd.profilesIDs,
 			Profiles:   fd.profiles,
 		},
@@ -283,6 +242,8 @@ func (f *flamegraph) visitCalltree(node *nodetree.Node, currentStack *[]int) {
 	frameID := getIDFromNode(node)
 	if i, exists := f.framesIndex[frameID]; exists {
 		*currentStack = append(*currentStack, i)
+		f.frameInfos[i].Count += node.Occurrence
+		f.frameInfos[i].Weight += node.DurationNS
 	} else {
 		frame := node.ToFrame()
 		sfr := speedscope.Frame{
@@ -298,6 +259,10 @@ func (f *flamegraph) visitCalltree(node *nodetree.Node, currentStack *[]int) {
 		f.framesIndex[frameID] = len(f.frames)
 		*currentStack = append(*currentStack, len(f.frames))
 		f.frames = append(f.frames, sfr)
+		f.frameInfos = append(f.frameInfos, speedscope.FrameInfo{
+			Count:  node.Occurrence,
+			Weight: node.DurationNS,
+		})
 	}
 
 	// base case (when we reach leaf frames)
@@ -305,7 +270,6 @@ func (f *flamegraph) visitCalltree(node *nodetree.Node, currentStack *[]int) {
 		f.addSample(
 			currentStack,
 			uint64(node.SampleCount),
-			uint64(node.Occurrence-sumNodesOccurrences(node.Children)),
 			node.DurationNS,
 			node.ProfileIDs,
 			node.Profiles,
@@ -329,7 +293,6 @@ func (f *flamegraph) visitCalltree(node *nodetree.Node, currentStack *[]int) {
 			f.addSample(
 				currentStack,
 				uint64(diffCount),
-				uint64(node.Occurrence-sumNodesOccurrences(node.Children)),
 				diffDuration,
 				node.ProfileIDs,
 				node.Profiles,
@@ -343,7 +306,6 @@ func (f *flamegraph) visitCalltree(node *nodetree.Node, currentStack *[]int) {
 func (f *flamegraph) addSample(
 	stack *[]int,
 	count uint64,
-	occurrence uint64,
 	duration uint64,
 	profileIDs map[string]struct{},
 	profiles map[examples.ExampleMetadata]struct{},
@@ -355,7 +317,6 @@ func (f *flamegraph) addSample(
 	heap.Push(f, flamegraphSample{
 		stack:      cp,
 		count:      count,
-		occurrence: occurrence,
 		duration:   duration,
 		profileIDs: profileIDs,
 		profiles:   profiles,
@@ -366,9 +327,15 @@ func (f *flamegraph) addSample(
 	f.endValue += count
 }
 
-func (f *flamegraph) getProfileIDsIndices(profileIDs map[string]struct{}) []int {
-	indices := make([]int, 0, len(profileIDs))
-	for id := range profileIDs {
+func (f *flamegraph) getProfileIDsIndices(profileIDsMap map[string]struct{}) []int {
+	profileIDs := make([]string, 0, len(profileIDsMap))
+	for id := range profileIDsMap {
+		profileIDs = append(profileIDs, id)
+	}
+	sort.Strings(profileIDs)
+
+	indices := make([]int, 0, len(profileIDsMap))
+	for _, id := range profileIDs {
 		if idx, ok := f.profilesIDsIndex[id]; ok {
 			indices = append(indices, idx)
 		} else {
@@ -380,9 +347,28 @@ func (f *flamegraph) getProfileIDsIndices(profileIDs map[string]struct{}) []int 
 	return indices
 }
 
-func (f *flamegraph) getProfilesIndices(profiles map[examples.ExampleMetadata]struct{}) []int {
+func (f *flamegraph) getProfilesIndices(profilesMap map[examples.ExampleMetadata]struct{}) []int {
+	profiles := make([]examples.ExampleMetadata, 0, len(profilesMap))
+	for profile := range profilesMap {
+		profiles = append(profiles, profile)
+	}
+	sort.Slice(profiles, func(i int, j int) bool {
+		profile1 := profiles[i]
+		profile2 := profiles[j]
+
+		if profile1.ProfileID != "" {
+			return profile1.ProfileID < profile2.ProfileID
+		}
+
+		if profile2.ProfileID != "" {
+			return true
+		}
+
+		return profile1.ProfilerID < profile2.ProfilerID
+	})
+
 	indices := make([]int, 0, len(profiles))
-	for i := range profiles {
+	for _, i := range profiles {
 		if idx, ok := f.profilesIndex[i]; ok {
 			indices = append(indices, idx)
 		} else {
