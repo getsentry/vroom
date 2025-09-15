@@ -34,7 +34,7 @@
 - Add start/end to profile example. ([#575](https://github.com/getsentry/vroom/pull/575))
 - Add default non-root user in the Docker image. ([#593](https://github.com/getsentry/vroom/pull/593))
 - Classify macOS frames from an application as application frames. ([#604](https://github.com/getsentry/vroom/pull/604))
-- Return number of occurrences in flamegraph. ([#622](https://github.com/getsentry/vroom/pull/622))
+- Return number of occurrences in flamegraph. ([#622](https://github.com/getsentry/vroom/pull/622), [#625](https://github.com/getsentry/vroom/pull/625))
 
 **Bug Fixes**:
 
