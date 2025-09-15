@@ -34,6 +34,7 @@
 - Add start/end to profile example. ([#575](https://github.com/getsentry/vroom/pull/575))
 - Add default non-root user in the Docker image. ([#593](https://github.com/getsentry/vroom/pull/593))
 - Classify macOS frames from an application as application frames. ([#604](https://github.com/getsentry/vroom/pull/604))
+- Return number of occurrences in flamegraph. ([#622](https://github.com/getsentry/vroom/pull/622))
 
 **Bug Fixes**:
 
@@ -51,7 +52,7 @@
 - Remove module frame in python ([#496](https://github.com/getsentry/vroom/pull/496))
 - Handle js profile normalization for react+android profiles ([#499](https://github.com/getsentry/vroom/pull/499))
 - Fix metrics example list ([#505](https://github.com/getsentry/vroom/pull/505))
-- Increase readjob channel size  ([#512](https://github.com/getsentry/vroom/pull/512))
+- Increase readjob channel size ([#512](https://github.com/getsentry/vroom/pull/512))
 - Return the duration measured by the profiler. ([#516](https://github.com/getsentry/vroom/pull/516), [#517](https://github.com/getsentry/vroom/pull/517))
 - Annotate functions to the right thread. ([#523](https://github.com/getsentry/vroom/pull/523))
 - Should write the profiler id. ([#528](https://github.com/getsentry/vroom/pull/528))
@@ -176,7 +177,6 @@
 - Bump actions/setup-go from 4 to 5 ([#374](https://github.com/getsentry/vroom/pull/374))
 - Bump github/codeql-action from 2 to 3 ([#377](https://github.com/getsentry/vroom/pull/377))
 - Bump trufflesecurity/trufflehog from 3.63.2 to 3.63.4 ([#379](https://github.com/getsentry/vroom/pull/379))
-
 
 ## 23.11.0
 
