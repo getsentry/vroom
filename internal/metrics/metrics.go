@@ -48,7 +48,7 @@ func (ma *Aggregator) AddFunctions(functions []nodetree.CallTreeFunction, result
 	for _, f := range functions {
 		if fn, ok := ma.CallTreeFunctions[f.Fingerprint]; ok {
 			fn.SampleCount += f.SampleCount
-			fn.DurationsNS = append(fn.DurationsNS, fn.DurationsNS...)
+			fn.DurationsNS = append(fn.DurationsNS, f.DurationsNS...)
 			fn.SelfTimesNS = append(fn.SelfTimesNS, f.SelfTimesNS...)
 			fn.SumSelfTimeNS += f.SumSelfTimeNS
 			funcMetadata := ma.FunctionsMetadata[f.Fingerprint]
