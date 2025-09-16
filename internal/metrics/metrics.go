@@ -48,6 +48,7 @@ func (ma *Aggregator) AddFunctions(functions []nodetree.CallTreeFunction, result
 	for _, f := range functions {
 		if fn, ok := ma.CallTreeFunctions[f.Fingerprint]; ok {
 			fn.SampleCount += f.SampleCount
+			fn.DurationsNS = append(fn.DurationsNS, fn.DurationsNS...)
 			fn.SelfTimesNS = append(fn.SelfTimesNS, f.SelfTimesNS...)
 			fn.SumSelfTimeNS += f.SumSelfTimeNS
 			funcMetadata := ma.FunctionsMetadata[f.Fingerprint]
@@ -75,29 +76,30 @@ func (ma *Aggregator) ToMetrics() []examples.FunctionMetrics {
 	metrics := make([]examples.FunctionMetrics, 0, len(ma.CallTreeFunctions))
 
 	for _, f := range ma.CallTreeFunctions {
-		sort.Slice(f.SelfTimesNS, func(i, j int) bool {
-			return f.SelfTimesNS[i] < f.SelfTimesNS[j]
+		sort.Slice(f.DurationsNS, func(i, j int) bool {
+			return f.DurationsNS[i] < f.DurationsNS[j]
 		})
-		p75, _ := quantile(f.SelfTimesNS, 0.75)
-		p95, _ := quantile(f.SelfTimesNS, 0.95)
-		p99, _ := quantile(f.SelfTimesNS, 0.99)
+		p75, _ := quantile(f.DurationsNS, 0.75)
+		p95, _ := quantile(f.DurationsNS, 0.95)
+		p99, _ := quantile(f.DurationsNS, 0.99)
 		metrics = append(metrics, examples.FunctionMetrics{
 			Name:        f.Function,
 			Package:     f.Package,
-			Fingerprint: uint64(f.Fingerprint),
+			Fingerprint: f.Fingerprint,
 			InApp:       f.InApp,
 			P75:         p75,
 			P95:         p95,
 			P99:         p99,
-			Avg:         float64(f.SumSelfTimeNS) / float64(len(f.SelfTimesNS)),
-			Sum:         f.SumSelfTimeNS,
+			Avg:         float64(f.SumDurationNS) / float64(len(f.DurationsNS)),
+			Sum:         f.SumDurationNS,
+			SumSelfTime: f.SumSelfTimeNS,
 			Count:       uint64(f.SampleCount),
 			Worst:       ma.FunctionsMetadata[f.Fingerprint].Worst,
 			Examples:    ma.FunctionsMetadata[f.Fingerprint].Examples,
 		})
 	}
 	sort.Slice(metrics, func(i, j int) bool {
-		return metrics[i].Sum > metrics[j].Sum
+		return metrics[i].SumSelfTime > metrics[j].SumSelfTime
 	})
 	if len(metrics) > int(ma.MaxUniqueFunctions) {
 		metrics = metrics[:ma.MaxUniqueFunctions]

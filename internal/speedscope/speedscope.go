@@ -35,6 +35,7 @@ type (
 		Line          uint32 `json:"line,omitempty"`
 		Name          string `json:"name"`
 		Path          string `json:"path,omitempty"`
+		Fingerprint   uint32 `json:"fingerprint"`
 	}
 
 	FrameInfo struct {
