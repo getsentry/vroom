@@ -40,13 +40,14 @@ type (
 	FunctionMetrics struct {
 		Name        string            `json:"name"`
 		Package     string            `json:"package"`
-		Fingerprint uint64            `json:"fingerprint"`
+		Fingerprint uint32            `json:"fingerprint"`
 		InApp       bool              `json:"in_app"`
 		P75         uint64            `json:"p75"`
 		P95         uint64            `json:"p95"`
 		P99         uint64            `json:"p99"`
 		Avg         float64           `json:"avg"`
 		Sum         uint64            `json:"sum"`
+		SumSelfTime uint64            `json:"-"`
 		Count       uint64            `json:"count"`
 		Worst       ExampleMetadata   `json:"worst"`
 		Examples    []ExampleMetadata `json:"examples"`

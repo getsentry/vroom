@@ -90,6 +90,8 @@ func TestAggregatorToMetrics(t *testing.T) {
 					0: {
 						Function:      "a",
 						Fingerprint:   0,
+						DurationsNS:   []uint64{1, 2, 3, 4, 10, 8, 7, 11, 20},
+						SumDurationNS: 66,
 						SelfTimesNS:   []uint64{1, 2, 3, 4, 10, 8, 7, 11, 20},
 						SumSelfTimeNS: 66,
 						SampleCount:   2,
@@ -97,11 +99,13 @@ func TestAggregatorToMetrics(t *testing.T) {
 					1: {
 						Function:      "b",
 						Fingerprint:   1,
+						DurationsNS:   []uint64{1, 2, 3, 4, 10, 8, 7, 11, 20},
+						SumDurationNS: 66,
 						SelfTimesNS:   []uint64{1, 2, 3, 4, 10, 8, 7, 11, 20},
 						SumSelfTimeNS: 66,
 						SampleCount:   2,
 					},
-				}, //end callTreeFunctions
+				}, // end callTreeFunctions
 				FunctionsMetadata: map[uint32]FunctionsMetadata{
 					0: {
 						MaxVal:   66,
@@ -113,8 +117,8 @@ func TestAggregatorToMetrics(t *testing.T) {
 						Worst:    examples.ExampleMetadata{ProfileID: "3"},
 						Examples: []examples.ExampleMetadata{{ProfileID: "1"}, {ProfileID: "3"}},
 					},
-				}, //end functionsMetadata
-			}, //end Aggregator
+				}, // end functionsMetadata
+			}, // end Aggregator
 			want: []examples.FunctionMetrics{
 				{
 					Name:        "a",
@@ -124,6 +128,7 @@ func TestAggregatorToMetrics(t *testing.T) {
 					P99:         20,
 					Count:       2,
 					Sum:         66,
+					SumSelfTime: 66,
 					Avg:         float64(66) / float64(9),
 					Worst:       examples.ExampleMetadata{ProfileID: "1"},
 					Examples:    []examples.ExampleMetadata{{ProfileID: "1"}, {ProfileID: "2"}},
@@ -136,11 +141,12 @@ func TestAggregatorToMetrics(t *testing.T) {
 					P99:         20,
 					Count:       2,
 					Sum:         66,
+					SumSelfTime: 66,
 					Avg:         float64(66) / float64(9),
 					Worst:       examples.ExampleMetadata{ProfileID: "3"},
 					Examples:    []examples.ExampleMetadata{{ProfileID: "1"}, {ProfileID: "3"}},
 				},
-			}, //want
+			}, // want
 		},
 	}
 

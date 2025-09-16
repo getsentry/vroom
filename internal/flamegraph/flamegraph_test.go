@@ -9,6 +9,7 @@ import (
 
 	"github.com/getsentry/vroom/internal/examples"
 	"github.com/getsentry/vroom/internal/frame"
+	"github.com/getsentry/vroom/internal/metrics"
 	"github.com/getsentry/vroom/internal/nodetree"
 	"github.com/getsentry/vroom/internal/platform"
 	"github.com/getsentry/vroom/internal/profile"
@@ -22,6 +23,7 @@ func TestFlamegraphAggregation(t *testing.T) {
 		name     string
 		profiles []sample.Profile
 		output   speedscope.Output
+		metrics  []examples.FunctionMetrics
 	}{
 		{
 			name: "Basic profiles aggregation",
@@ -167,10 +169,10 @@ func TestFlamegraphAggregation(t *testing.T) {
 				},
 				Shared: speedscope.SharedData{
 					Frames: []speedscope.Frame{
-						{Image: "test.package", Name: "a"},
-						{Image: "test.package", Name: "b"},
-						{Image: "test.package", IsApplication: true, Name: "c"},
-						{Image: "test.package", Name: "e"},
+						{Image: "test.package", Name: "a", Fingerprint: 2430275452},
+						{Image: "test.package", Name: "b", Fingerprint: 2430275455},
+						{Image: "test.package", Name: "c", Fingerprint: 2430275454, IsApplication: true},
+						{Image: "test.package", Name: "e", Fingerprint: 2430275448},
 					},
 					FrameInfos: []speedscope.FrameInfo{
 						{Count: 3, Weight: 40},
@@ -182,6 +184,20 @@ func TestFlamegraphAggregation(t *testing.T) {
 						{ProfileID: "ab1"},
 						{ProfileID: "cd2"},
 					},
+				},
+			},
+			metrics: []examples.FunctionMetrics{
+				{
+					Name:        "b",
+					Package:     "test.package",
+					Fingerprint: 2430275455,
+					P75:         20,
+					P95:         20,
+					P99:         20,
+					Avg:         15,
+					Sum:         30,
+					SumSelfTime: 30,
+					Count:       3,
 				},
 			},
 		},
@@ -296,9 +312,9 @@ func TestFlamegraphAggregation(t *testing.T) {
 				},
 				Shared: speedscope.SharedData{
 					Frames: []speedscope.Frame{
-						{Image: "test.package", Name: "a"},
-						{Image: "test.package", Name: "b"},
-						{Image: "test.package", IsApplication: true, Name: "c"},
+						{Image: "test.package", Name: "a", Fingerprint: 2430275452},
+						{Image: "test.package", Name: "b", Fingerprint: 2430275455},
+						{Image: "test.package", Name: "c", Fingerprint: 2430275454, IsApplication: true},
 					},
 					FrameInfos: []speedscope.FrameInfo{
 						{Count: 1, Weight: 90},
@@ -308,6 +324,33 @@ func TestFlamegraphAggregation(t *testing.T) {
 					Profiles: []examples.ExampleMetadata{
 						{ProfileID: "ab1"},
 					},
+				},
+			},
+			metrics: []examples.FunctionMetrics{
+				{
+					Name:        "b",
+					Package:     "test.package",
+					Fingerprint: 2430275455,
+					P75:         40,
+					P95:         40,
+					P99:         40,
+					Avg:         35,
+					Sum:         70,
+					SumSelfTime: 40,
+					Count:       7,
+				},
+				{
+					Name:        "c",
+					Package:     "test.package",
+					Fingerprint: 2430275454,
+					InApp:       true,
+					P75:         20,
+					P95:         20,
+					P99:         20,
+					Avg:         15,
+					Sum:         30,
+					SumSelfTime: 30,
+					Count:       3,
 				},
 			},
 		},
@@ -329,6 +372,47 @@ func TestFlamegraphAggregation(t *testing.T) {
 			}
 
 			if diff := testutil.Diff(toSpeedscope(context.TODO(), ft, 10, 99), test.output); diff != "" {
+				t.Fatalf("Result mismatch: got - want +\n%s", diff)
+			}
+
+			ma := metrics.NewAggregator(
+				100,
+				5,
+				1,
+			)
+
+			for _, sp := range test.profiles {
+				p := profile.New(&sp)
+				callTrees, err := p.CallTrees()
+				if err != nil {
+					t.Fatalf("error when generating calltrees: %v", err)
+				}
+
+				start, end := p.StartAndEndEpoch()
+				example := examples.NewExampleFromProfileID(
+					p.ProjectID(),
+					p.ID(),
+					start,
+					end,
+				)
+
+				functions := metrics.CapAndFilterFunctions(
+					metrics.ExtractFunctionsFromCallTrees(
+						callTrees,
+						ma.MinDepth,
+					),
+					int(ma.MaxUniqueFunctions),
+					false,
+				)
+				ma.AddFunctions(functions, example)
+			}
+			m := ma.ToMetrics()
+
+			options := cmp.Options{
+				cmpopts.IgnoreFields(examples.FunctionMetrics{}, "Worst"),
+				cmpopts.IgnoreFields(examples.FunctionMetrics{}, "Examples"),
+			}
+			if diff := testutil.Diff(m, test.metrics, options); diff != "" {
 				t.Fatalf("Result mismatch: got - want +\n%s", diff)
 			}
 		})
@@ -405,8 +489,8 @@ func TestAnnotatingWithExamples(t *testing.T) {
 				},
 				Shared: speedscope.SharedData{
 					Frames: []speedscope.Frame{
-						{Name: "function1", IsApplication: true},
-						{Name: "function2", IsApplication: true},
+						{Name: "function1", Fingerprint: 3932509230, IsApplication: true},
+						{Name: "function2", Fingerprint: 3932509229, IsApplication: true},
 					},
 					FrameInfos: []speedscope.FrameInfo{
 						{Count: 4, Weight: 80_000_000},

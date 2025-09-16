@@ -125,6 +125,8 @@ type CallTreeFunction struct {
 	Function      string   `json:"function"`
 	Package       string   `json:"package"`
 	InApp         bool     `json:"in_app"`
+	DurationsNS   []uint64 `json:"durations_ns"`
+	SumDurationNS uint64   `json:"-"`
 	SelfTimesNS   []uint64 `json:"self_times_ns"`
 	SumSelfTimeNS uint64   `json:"-"`
 	SampleCount   int      `json:"-"`
@@ -174,9 +176,9 @@ func (n *Node) CollectFunctions(
 		applicationDurationNS = n.DurationNS
 	}
 
-	var selfTimeNS uint64
-
 	if nodeDepth >= minDepth && shouldAggregateFrame(n.Frame) {
+		var selfTimeNS uint64
+
 		if n.IsApplication {
 			// cannot use `n.DurationNS - childrenApplicationDurationNS > 0` in case it underflows
 			if n.DurationNS > childrenApplicationDurationNS {
@@ -210,6 +212,8 @@ func (n *Node) CollectFunctions(
 					Function:      n.Frame.Function,
 					Package:       n.Frame.ModuleOrPackage(),
 					InApp:         n.IsApplication,
+					DurationsNS:   []uint64{n.DurationNS},
+					SumDurationNS: n.DurationNS,
 					SelfTimesNS:   []uint64{selfTimeNS},
 					SumSelfTimeNS: selfTimeNS,
 					SampleCount:   n.SampleCount,
@@ -217,6 +221,8 @@ func (n *Node) CollectFunctions(
 					MaxDuration:   selfTimeNS,
 				}
 			} else {
+				function.DurationsNS = append(function.DurationsNS, n.DurationNS)
+				function.SumDurationNS += n.DurationNS
 				function.SelfTimesNS = append(function.SelfTimesNS, selfTimeNS)
 				function.SumSelfTimeNS += selfTimeNS
 				function.SampleCount += n.SampleCount
