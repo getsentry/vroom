@@ -23,12 +23,16 @@ func TestAggregatorAddFunctions(t *testing.T) {
 					Fingerprint:   0,
 					SelfTimesNS:   []uint64{10, 5, 25},
 					SumSelfTimeNS: 40,
+					DurationsNS:   []uint64{10, 5, 25},
+					SumDurationNS: 40,
 				},
 				{
 					Function:      "b",
 					Fingerprint:   1,
 					SelfTimesNS:   []uint64{45, 60},
 					SumSelfTimeNS: 105,
+					DurationsNS:   []uint64{45, 60},
+					SumDurationNS: 105,
 				},
 			},
 			want: Aggregator{
@@ -40,12 +44,16 @@ func TestAggregatorAddFunctions(t *testing.T) {
 						Fingerprint:   0,
 						SelfTimesNS:   []uint64{10, 5, 25, 10, 5, 25},
 						SumSelfTimeNS: 80,
+						DurationsNS:   []uint64{10, 5, 25, 10, 5, 25},
+						SumDurationNS: 80,
 					},
 					1: {
 						Function:      "b",
 						Fingerprint:   1,
 						SelfTimesNS:   []uint64{45, 60, 45, 60},
 						SumSelfTimeNS: 210,
+						DurationsNS:   []uint64{45, 60, 45, 60},
+						SumDurationNS: 210,
 					},
 				},
 				FunctionsMetadata: map[uint32]FunctionsMetadata{
