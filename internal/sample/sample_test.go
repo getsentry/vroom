@@ -387,7 +387,6 @@ func TestCallTrees(t *testing.T) {
 						SampleCount:   2,
 						StartNS:       10,
 						Frame:         frame.Frame{Function: "function0"},
-						ProfileIDs:    make(map[string]struct{}),
 						Profiles:      make(map[examples.ExampleMetadata]struct{}),
 						Children: []*nodetree.Node{
 							{
@@ -400,7 +399,6 @@ func TestCallTrees(t *testing.T) {
 								Occurrence:    1,
 								SampleCount:   2,
 								Frame:         frame.Frame{Function: "function1"},
-								ProfileIDs:    make(map[string]struct{}),
 								Profiles:      make(map[examples.ExampleMetadata]struct{}),
 								Children: []*nodetree.Node{
 									{
@@ -413,7 +411,6 @@ func TestCallTrees(t *testing.T) {
 										SampleCount:   1,
 										StartNS:       40,
 										Frame:         frame.Frame{Function: "function2"},
-										ProfileIDs:    make(map[string]struct{}),
 										Profiles:      make(map[examples.ExampleMetadata]struct{}),
 									},
 								},
@@ -457,7 +454,6 @@ func TestCallTrees(t *testing.T) {
 						SampleCount:   1,
 						StartNS:       10,
 						Frame:         frame.Frame{Function: "function0"},
-						ProfileIDs:    make(map[string]struct{}),
 						Profiles:      make(map[examples.ExampleMetadata]struct{}),
 						Children: []*nodetree.Node{
 							{
@@ -470,7 +466,6 @@ func TestCallTrees(t *testing.T) {
 								SampleCount:   1,
 								StartNS:       10,
 								Frame:         frame.Frame{Function: "function1"},
-								ProfileIDs:    make(map[string]struct{}),
 								Profiles:      make(map[examples.ExampleMetadata]struct{}),
 							},
 						},
@@ -514,7 +509,6 @@ func TestCallTrees(t *testing.T) {
 						SampleCount:   1,
 						StartNS:       10,
 						Frame:         frame.Frame{Function: "function0"},
-						ProfileIDs:    make(map[string]struct{}),
 						Profiles:      make(map[examples.ExampleMetadata]struct{}),
 					},
 					{
@@ -527,7 +521,6 @@ func TestCallTrees(t *testing.T) {
 						SampleCount:   1,
 						StartNS:       20,
 						Frame:         frame.Frame{Function: "function1"},
-						ProfileIDs:    make(map[string]struct{}),
 						Profiles:      make(map[examples.ExampleMetadata]struct{}),
 					},
 				},
@@ -1270,7 +1263,6 @@ func TestCallTreesFingerprintPerPlatform(t *testing.T) {
 						Package:       "foo",
 						Occurrence:    1,
 						SampleCount:   1,
-						ProfileIDs:    map[string]struct{}{},
 						Profiles:      make(map[examples.ExampleMetadata]struct{}),
 						Frame: frame.Frame{
 							Data:     frame.Data{SymbolicatorStatus: "symbolicated"},
@@ -1326,7 +1318,6 @@ func TestCallTreesFingerprintPerPlatform(t *testing.T) {
 						Package:       "foo",
 						Occurrence:    1,
 						SampleCount:   1,
-						ProfileIDs:    map[string]struct{}{},
 						Profiles:      make(map[examples.ExampleMetadata]struct{}),
 						Frame: frame.Frame{
 							Data:     frame.Data{SymbolicatorStatus: "symbolicated"},
@@ -1385,7 +1376,6 @@ func TestCallTreesFingerprintPerPlatform(t *testing.T) {
 						Path:          "/usr/local/lib/python3.8/threading.py",
 						Occurrence:    1,
 						SampleCount:   1,
-						ProfileIDs:    map[string]struct{}{},
 						Profiles:      make(map[examples.ExampleMetadata]struct{}),
 						Frame: frame.Frame{
 							Function: "Threading.run",

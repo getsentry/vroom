@@ -72,7 +72,6 @@ type (
 		Priority          int              `json:"priority,omitempty"`
 		Queues            map[string]Queue `json:"queues,omitempty"`
 		Samples           [][]int          `json:"samples"`
-		SamplesProfiles   [][]int          `json:"samples_profiles,omitempty"`
 		SamplesExamples   [][]int          `json:"samples_examples,omitempty"`
 		StartValue        uint64           `json:"startValue"`
 		State             string           `json:"state,omitempty"`
@@ -87,7 +86,6 @@ type (
 	SharedData struct {
 		Frames     []Frame                    `json:"frames"`
 		FrameInfos []FrameInfo                `json:"frame_infos"`
-		ProfileIDs []string                   `json:"profile_ids,omitempty"`
 		Profiles   []examples.ExampleMetadata `json:"profiles,omitempty"`
 	}
 

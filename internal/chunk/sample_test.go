@@ -48,7 +48,6 @@ func TestCallTrees(t *testing.T) {
 						SampleCount:   2,
 						StartNS:       10_000_000,
 						Frame:         frame.Frame{Function: "function0"},
-						ProfileIDs:    make(map[string]struct{}),
 						Profiles:      make(map[examples.ExampleMetadata]struct{}),
 						Children: []*nodetree.Node{
 							{
@@ -61,7 +60,6 @@ func TestCallTrees(t *testing.T) {
 								Occurrence:    1,
 								SampleCount:   2,
 								Frame:         frame.Frame{Function: "function1"},
-								ProfileIDs:    make(map[string]struct{}),
 								Profiles:      make(map[examples.ExampleMetadata]struct{}),
 								Children: []*nodetree.Node{
 									{
@@ -74,7 +72,6 @@ func TestCallTrees(t *testing.T) {
 										SampleCount:   1,
 										StartNS:       40_000_000,
 										Frame:         frame.Frame{Function: "function2"},
-										ProfileIDs:    make(map[string]struct{}),
 										Profiles:      make(map[examples.ExampleMetadata]struct{}),
 									},
 								},
@@ -115,7 +112,6 @@ func TestCallTrees(t *testing.T) {
 						SampleCount:   1,
 						StartNS:       10_000_000,
 						Frame:         frame.Frame{Function: "function0"},
-						ProfileIDs:    make(map[string]struct{}),
 						Profiles:      make(map[examples.ExampleMetadata]struct{}),
 						Children: []*nodetree.Node{
 							{
@@ -128,7 +124,6 @@ func TestCallTrees(t *testing.T) {
 								SampleCount:   1,
 								StartNS:       10_000_000,
 								Frame:         frame.Frame{Function: "function1"},
-								ProfileIDs:    make(map[string]struct{}),
 								Profiles:      make(map[examples.ExampleMetadata]struct{}),
 							},
 						},
@@ -169,7 +164,6 @@ func TestCallTrees(t *testing.T) {
 						SampleCount:   1,
 						StartNS:       10_000_000,
 						Frame:         frame.Frame{Function: "function0"},
-						ProfileIDs:    make(map[string]struct{}),
 						Profiles:      make(map[examples.ExampleMetadata]struct{}),
 					},
 					{
@@ -182,7 +176,6 @@ func TestCallTrees(t *testing.T) {
 						SampleCount:   1,
 						StartNS:       20_000_000,
 						Frame:         frame.Frame{Function: "function1"},
-						ProfileIDs:    make(map[string]struct{}),
 						Profiles:      make(map[examples.ExampleMetadata]struct{}),
 					},
 				},
