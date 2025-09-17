@@ -148,12 +148,6 @@ func TestFlamegraphAggregation(t *testing.T) {
 							{2, 0},
 							{0, 1},
 						},
-						SamplesProfiles: [][]int{
-							{},
-							{},
-							{},
-							{},
-						},
 						SamplesExamples: [][]int{
 							{0},
 							{1},
@@ -292,11 +286,6 @@ func TestFlamegraphAggregation(t *testing.T) {
 							{0},
 							{0, 1, 2},
 							{0, 1},
-						},
-						SamplesProfiles: [][]int{
-							{},
-							{},
-							{},
 						},
 						SamplesExamples: [][]int{
 							{0},
@@ -442,10 +431,6 @@ func TestFlamegraphAggregation(t *testing.T) {
 							{1},
 							{0, 1, 2},
 						},
-						SamplesProfiles: [][]int{
-							{},
-							{},
-						},
 						SamplesExamples: [][]int{
 							{0},
 							{0},
@@ -589,7 +574,6 @@ func TestAnnotatingWithExamples(t *testing.T) {
 					SampleCount:   2,
 					Occurrence:    2,
 					Frame:         frame.Frame{Function: "function1"},
-					ProfileIDs:    make(map[string]struct{}),
 					Profiles:      make(map[examples.ExampleMetadata]struct{}),
 					Children: []*nodetree.Node{
 						{
@@ -602,7 +586,6 @@ func TestAnnotatingWithExamples(t *testing.T) {
 							Occurrence:    1,
 							StartNS:       40_000_000,
 							Frame:         frame.Frame{Function: "function2"},
-							ProfileIDs:    make(map[string]struct{}),
 							Profiles:      make(map[examples.ExampleMetadata]struct{}),
 						},
 					},
@@ -626,7 +609,6 @@ func TestAnnotatingWithExamples(t *testing.T) {
 							{0, 1},
 							{0},
 						},
-						SamplesProfiles:   [][]int{{}, {}},
 						SamplesExamples:   [][]int{{0, 1}, {0, 1}},
 						Type:              "sampled",
 						Unit:              "count",

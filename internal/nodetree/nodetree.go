@@ -44,7 +44,6 @@ type (
 		Occurrence  uint32                                `json:"-"`
 		SampleCount int                                   `json:"-"`
 		StartNS     uint64                                `json:"-"`
-		ProfileIDs  map[string]struct{}                   `json:"profile_ids,omitempty"`
 		Profiles    map[examples.ExampleMetadata]struct{} `json:"profiles,omitempty"`
 	}
 )
@@ -66,7 +65,6 @@ func NodeFromFrame(f frame.Frame, start, end, fingerprint uint64) *Node {
 		Occurrence:    1,
 		SampleCount:   1,
 		StartNS:       start,
-		ProfileIDs:    map[string]struct{}{},
 		Profiles:      map[examples.ExampleMetadata]struct{}{},
 	}
 	if end > 0 {
@@ -88,7 +86,6 @@ func (n *Node) ShallowCopyWithoutChildren() *Node {
 		Occurrence:    n.Occurrence,
 		SampleCount:   n.SampleCount,
 		StartNS:       n.StartNS,
-		ProfileIDs:    n.ProfileIDs,
 		Profiles:      n.Profiles,
 		DurationNS:    n.DurationNS,
 	}
