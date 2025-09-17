@@ -239,15 +239,6 @@ func (n *Node) CollectFunctions(
 		results[fingerprint] = function
 	}
 
-	// now that we've traversed the whole tree, remove all entries with 0 self time
-	if nodeDepth == 0 {
-		for fingerprint, function := range results {
-			if function.SumSelfTimeNS == 0 {
-				delete(results, fingerprint)
-			}
-		}
-	}
-
 	// this pair represents the time spent in application functions vs
 	// time spent in system functions by this function and all of its descendents
 	return applicationDurationNS, n.DurationNS - applicationDurationNS
