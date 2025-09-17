@@ -198,41 +198,52 @@ func (n *Node) CollectFunctions(
 			}
 		}
 
-		if selfTimeNS > 0 {
-			// casting to an uint32 here because snuba does not handle uint64 values
-			// well as it is converted to a float somewhere
-			// not changing to the 32 bit hash function here to preserve backwards
-			// compatibility with existing fingerprints that we can cast
-			fingerprint := n.Frame.Fingerprint()
+		// casting to an uint32 here because snuba does not handle uint64 values
+		// well as it is converted to a float somewhere
+		// not changing to the 32 bit hash function here to preserve backwards
+		// compatibility with existing fingerprints that we can cast
+		fingerprint := n.Frame.Fingerprint()
 
-			function, exists := results[fingerprint]
-			if !exists {
-				results[fingerprint] = CallTreeFunction{
-					Fingerprint:   fingerprint,
-					Function:      n.Frame.Function,
-					Package:       n.Frame.ModuleOrPackage(),
-					InApp:         n.IsApplication,
-					DurationsNS:   []uint64{n.DurationNS},
-					SumDurationNS: n.DurationNS,
-					SelfTimesNS:   []uint64{selfTimeNS},
-					SumSelfTimeNS: selfTimeNS,
-					SampleCount:   n.SampleCount,
-					ThreadID:      threadID,
-					MaxDuration:   selfTimeNS,
+		function, exists := results[fingerprint]
+		if !exists {
+			function = CallTreeFunction{
+				Fingerprint:   fingerprint,
+				Function:      n.Frame.Function,
+				Package:       n.Frame.ModuleOrPackage(),
+				InApp:         n.IsApplication,
+				DurationsNS:   []uint64{n.DurationNS},
+				SumDurationNS: n.DurationNS,
+				SelfTimesNS:   []uint64{},
+				SumSelfTimeNS: 0,
+				SampleCount:   n.SampleCount,
+				ThreadID:      threadID,
+				MaxDuration:   selfTimeNS,
+			}
+		} else {
+			function.DurationsNS = append(function.DurationsNS, n.DurationNS)
+			function.SumDurationNS += n.DurationNS
+			function.SampleCount += n.SampleCount
+			if selfTimeNS > function.MaxDuration {
+				function.MaxDuration = selfTimeNS
+				if threadID != function.ThreadID {
+					function.ThreadID = threadID
 				}
-			} else {
-				function.DurationsNS = append(function.DurationsNS, n.DurationNS)
-				function.SumDurationNS += n.DurationNS
-				function.SelfTimesNS = append(function.SelfTimesNS, selfTimeNS)
-				function.SumSelfTimeNS += selfTimeNS
-				function.SampleCount += n.SampleCount
-				if selfTimeNS > function.MaxDuration {
-					function.MaxDuration = selfTimeNS
-					if threadID != function.ThreadID {
-						function.ThreadID = threadID
-					}
-				}
-				results[fingerprint] = function
+			}
+		}
+
+		if selfTimeNS > 0 {
+			function.SelfTimesNS = append(function.SelfTimesNS, selfTimeNS)
+			function.SumSelfTimeNS += selfTimeNS
+		}
+
+		results[fingerprint] = function
+	}
+
+	// now that we've traversed the whole tree, remove all entries with 0 self time
+	if nodeDepth == 0 {
+		for fingerprint, function := range results {
+			if function.SumSelfTimeNS == 0 {
+				delete(results, fingerprint)
 			}
 		}
 	}
