@@ -157,6 +157,11 @@ func mergeAndSortFunctions(
 ) []nodetree.CallTreeFunction {
 	functionsList := make([]nodetree.CallTreeFunction, 0, len(functions))
 	for _, function := range functions {
+		// We collect all functions in order to collect all durations.
+		// If at the end, the self time is still 0, then it is omitted from the results.
+		if function.SumSelfTimeNS == 0 {
+			continue
+		}
 		if function.SampleCount <= 1 {
 			// if there's only ever a single sample for this function in
 			// the profile, we skip over it to reduce the amount of data

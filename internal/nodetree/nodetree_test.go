@@ -162,6 +162,15 @@ func TestNodeTreeCollectFunctions(t *testing.T) {
 				},
 			},
 			want: map[uint32]CallTreeFunction{
+				fingerprintBar: {
+					Fingerprint:   fingerprintBar,
+					Function:      "bar",
+					Package:       "bar",
+					DurationsNS:   []uint64{10},
+					SelfTimesNS:   []uint64{},
+					SumDurationNS: 10,
+					MaxDuration:   0,
+				},
 				fingerprintFoo: {
 					Fingerprint:   fingerprintFoo,
 					InApp:         true,
@@ -183,6 +192,17 @@ func TestNodeTreeCollectFunctions(t *testing.T) {
 					SelfTimesNS:   []uint64{10},
 					SumSelfTimeNS: 10,
 					MaxDuration:   10,
+				},
+				fingerprintMain: {
+					Fingerprint:   fingerprintMain,
+					InApp:         true,
+					Function:      "main",
+					Package:       "main",
+					DurationsNS:   []uint64{10},
+					SumDurationNS: 10,
+					SelfTimesNS:   []uint64{},
+					SumSelfTimeNS: 0,
+					MaxDuration:   0,
 				},
 			},
 		},
@@ -272,6 +292,15 @@ func TestNodeTreeCollectFunctions(t *testing.T) {
 				},
 			},
 			want: map[uint32]CallTreeFunction{
+				fingerprintBar: {
+					Fingerprint:   fingerprintBar,
+					Function:      "bar",
+					Package:       "bar",
+					DurationsNS:   []uint64{10, 20},
+					SelfTimesNS:   []uint64{},
+					SumDurationNS: 30,
+					MaxDuration:   0,
+				},
 				fingerprintFoo: {
 					Fingerprint:   fingerprintFoo,
 					InApp:         true,

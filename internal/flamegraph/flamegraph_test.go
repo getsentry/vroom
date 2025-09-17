@@ -353,6 +353,153 @@ func TestFlamegraphAggregation(t *testing.T) {
 					SumSelfTime: 20,
 					Count:       7,
 				},
+				{
+					Name:        "a",
+					Package:     "test.package",
+					Fingerprint: 2430275452,
+					InApp:       true,
+					P75:         90,
+					P95:         90,
+					P99:         90,
+					Avg:         90,
+					Sum:         90,
+					SumSelfTime: 20,
+					Count:       9,
+				},
+			},
+		},
+		{
+			name: "zero self time",
+			profiles: []sample.Profile{
+				{
+					RawProfile: sample.RawProfile{
+						EventID:  "ab1",
+						Platform: platform.Cocoa,
+						Version:  "1",
+						Trace: sample.Trace{
+							Frames: []frame.Frame{
+								{
+									Function: "a",
+									Package:  "test.package",
+									InApp:    &testutil.True,
+								},
+								{
+									Function: "b",
+									Package:  "test.package",
+									InApp:    &testutil.True,
+								},
+								{
+									Function: "c",
+									Package:  "test.package",
+									InApp:    &testutil.True,
+								},
+							}, // end frames
+							Stacks: []sample.Stack{
+								{2, 1, 0}, // c,b,a
+								{1},       // b
+							},
+							Samples: []sample.Sample{
+								{
+									ElapsedSinceStartNS: 0,
+									StackID:             0,
+								},
+								{
+									ElapsedSinceStartNS: 10,
+									StackID:             0,
+								},
+								{
+									ElapsedSinceStartNS: 20,
+									StackID:             0,
+								},
+								{
+									ElapsedSinceStartNS: 30,
+									StackID:             1,
+								},
+								{
+									ElapsedSinceStartNS: 40,
+									StackID:             1,
+								},
+								{
+									ElapsedSinceStartNS: 50,
+									StackID:             1,
+								},
+							}, // end Samples
+						}, // end Trace
+					},
+				}, // end prof definition
+			},
+			output: speedscope.Output{
+				Metadata: speedscope.ProfileMetadata{
+					ProfileView: speedscope.ProfileView{
+						ProjectID: 99,
+					},
+				},
+				Profiles: []interface{}{
+					speedscope.SampledProfile{
+						EndValue:     5,
+						IsMainThread: true,
+						Samples: [][]int{
+							{1},
+							{0, 1, 2},
+						},
+						SamplesProfiles: [][]int{
+							{},
+							{},
+						},
+						SamplesExamples: [][]int{
+							{0},
+							{0},
+						},
+						Type:              "sampled",
+						Unit:              "count",
+						Weights:           []uint64{2, 3},
+						SampleCounts:      []uint64{2, 3},
+						SampleDurationsNs: []uint64{20, 30},
+					},
+				},
+				Shared: speedscope.SharedData{
+					Frames: []speedscope.Frame{
+						{Image: "test.package", Name: "a", Fingerprint: 2430275452, IsApplication: true},
+						{Image: "test.package", Name: "b", Fingerprint: 2430275455, IsApplication: true},
+						{Image: "test.package", Name: "c", Fingerprint: 2430275454, IsApplication: true},
+					},
+					FrameInfos: []speedscope.FrameInfo{
+						{Count: 1, Weight: 30},
+						{Count: 2, Weight: 50},
+						{Count: 1, Weight: 30},
+					},
+					Profiles: []examples.ExampleMetadata{
+						{ProfileID: "ab1"},
+					},
+				},
+			},
+			metrics: []examples.FunctionMetrics{
+				{
+					Name:        "c",
+					Package:     "test.package",
+					Fingerprint: 2430275454,
+					InApp:       true,
+					P75:         30,
+					P95:         30,
+					P99:         30,
+					Avg:         30,
+					Sum:         30,
+					SumSelfTime: 30,
+					Count:       3,
+				},
+				{
+					Name:        "b",
+					Package:     "test.package",
+					Fingerprint: 2430275455,
+					InApp:       true,
+					P75:         30,
+					P95:         30,
+					P99:         30,
+					Avg:         25,
+					Sum:         50,
+					SumSelfTime: 20,
+					Count:       5,
+				},
 			},
 		},
 	}
@@ -379,7 +526,7 @@ func TestFlamegraphAggregation(t *testing.T) {
 			ma := metrics.NewAggregator(
 				100,
 				5,
-				1,
+				0,
 			)
 
 			for _, sp := range test.profiles {
