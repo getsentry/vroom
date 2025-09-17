@@ -100,7 +100,10 @@ func (ma *Aggregator) ToMetrics() []examples.FunctionMetrics {
 		})
 	}
 	sort.Slice(metrics, func(i, j int) bool {
-		return metrics[i].SumSelfTime > metrics[j].SumSelfTime
+		if metrics[i].SumSelfTime != metrics[j].SumSelfTime {
+			return metrics[i].SumSelfTime > metrics[j].SumSelfTime
+		}
+		return metrics[i].Sum > metrics[j].Sum
 	})
 	if len(metrics) > int(ma.MaxUniqueFunctions) {
 		metrics = metrics[:ma.MaxUniqueFunctions]
@@ -172,7 +175,10 @@ func mergeAndSortFunctions(
 
 	// sort the list in descending order, and take the top N results
 	sort.SliceStable(functionsList, func(i, j int) bool {
-		return functionsList[i].SumSelfTimeNS > functionsList[j].SumSelfTimeNS
+		if functionsList[i].SumSelfTimeNS != functionsList[j].SumSelfTimeNS {
+			return functionsList[i].SumSelfTimeNS > functionsList[j].SumSelfTimeNS
+		}
+		return functionsList[i].SumDurationNS > functionsList[j].SumDurationNS
 	})
 
 	return functionsList
