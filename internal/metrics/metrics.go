@@ -1,19 +1,13 @@
 package metrics
 
 import (
-	"context"
 	"errors"
 	"math"
 	"sort"
 	"strconv"
 
-	"github.com/getsentry/sentry-go"
-	"github.com/getsentry/vroom/internal/chunk"
 	"github.com/getsentry/vroom/internal/examples"
 	"github.com/getsentry/vroom/internal/nodetree"
-	"github.com/getsentry/vroom/internal/profile"
-	"github.com/getsentry/vroom/internal/storageutil"
-	"gocloud.dev/blob"
 )
 
 type (
@@ -202,108 +196,4 @@ func CapAndFilterFunctions(functions []nodetree.CallTreeFunction, maxUniqueFunct
 		}
 	}
 	return appFunctions
-}
-
-func (ma *Aggregator) GetMetricsFromCandidates(
-	ctx context.Context,
-	storage *blob.Bucket,
-	organizationID uint64,
-	transactionProfileCandidates []examples.TransactionProfileCandidate,
-	continuousProfileCandidates []examples.ContinuousProfileCandidate,
-	jobs chan storageutil.ReadJob,
-) ([]examples.FunctionMetrics, error) {
-	hub := sentry.GetHubFromContext(ctx)
-
-	results := make(chan storageutil.ReadJobResult)
-	defer close(results)
-
-	go func() {
-		for _, candidate := range transactionProfileCandidates {
-			jobs <- profile.ReadJob{
-				Ctx:            ctx,
-				OrganizationID: organizationID,
-				ProjectID:      candidate.ProjectID,
-				ProfileID:      candidate.ProfileID,
-				Storage:        storage,
-				Result:         results,
-			}
-		}
-
-		for _, candidate := range continuousProfileCandidates {
-			jobs <- chunk.ReadJob{
-				Ctx:            ctx,
-				OrganizationID: organizationID,
-				ProjectID:      candidate.ProjectID,
-				ProfilerID:     candidate.ProfilerID,
-				ChunkID:        candidate.ChunkID,
-				TransactionID:  candidate.TransactionID,
-				ThreadID:       candidate.ThreadID,
-				Start:          candidate.Start,
-				End:            candidate.End,
-				Storage:        storage,
-				Result:         results,
-			}
-		}
-	}()
-
-	numCandidates := len(transactionProfileCandidates) + len(continuousProfileCandidates)
-
-	for i := 0; i < numCandidates; i++ {
-		res := <-results
-
-		err := res.Error()
-		if err != nil {
-			if errors.Is(err, storageutil.ErrObjectNotFound) {
-				continue
-			}
-			if errors.Is(err, context.DeadlineExceeded) {
-				return nil, err
-			}
-			if hub != nil {
-				hub.CaptureException(err)
-			}
-			continue
-		}
-
-		var resultMetadata examples.ExampleMetadata
-		if result, ok := res.(profile.ReadJobResult); ok {
-			profileCallTrees, err := result.Profile.CallTrees()
-			if err != nil {
-				hub.CaptureException(err)
-				continue
-			}
-			start, end := result.Profile.StartAndEndEpoch()
-			resultMetadata = examples.NewExampleFromProfileID(
-				result.Profile.ProjectID(),
-				result.Profile.ID(),
-				start,
-				end,
-			)
-			functions := CapAndFilterFunctions(ExtractFunctionsFromCallTrees(profileCallTrees, ma.MinDepth), int(ma.MaxUniqueFunctions), true)
-			ma.AddFunctions(functions, resultMetadata)
-		} else if result, ok := res.(chunk.ReadJobResult); ok {
-			chunkCallTrees, err := result.Chunk.CallTrees(result.ThreadID)
-			if err != nil {
-				hub.CaptureException(err)
-				continue
-			}
-
-			resultMetadata = examples.NewExampleFromProfilerChunk(
-				result.Chunk.GetProjectID(),
-				result.Chunk.GetProfilerID(),
-				result.Chunk.GetID(),
-				result.TransactionID,
-				result.ThreadID,
-				result.Start,
-				result.End,
-			)
-			functions := CapAndFilterFunctions(ExtractFunctionsFromCallTrees(chunkCallTrees, ma.MinDepth), int(ma.MaxUniqueFunctions), true)
-			ma.AddFunctions(functions, resultMetadata)
-		} else {
-			// this should never happen
-			return nil, errors.New("unexpected result from storage")
-		}
-	}
-
-	return ma.ToMetrics(), nil
 }
