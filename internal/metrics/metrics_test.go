@@ -21,7 +21,6 @@ func TestAggregatorAddFunctions(t *testing.T) {
 				{
 					Function:      "a",
 					Fingerprint:   0,
-					SelfTimesNS:   []uint64{10, 5, 25},
 					SumSelfTimeNS: 40,
 					DurationsNS:   []uint64{10, 5, 25},
 					SumDurationNS: 40,
@@ -29,7 +28,6 @@ func TestAggregatorAddFunctions(t *testing.T) {
 				{
 					Function:      "b",
 					Fingerprint:   1,
-					SelfTimesNS:   []uint64{45, 60},
 					SumSelfTimeNS: 105,
 					DurationsNS:   []uint64{45, 60},
 					SumDurationNS: 105,
@@ -42,7 +40,6 @@ func TestAggregatorAddFunctions(t *testing.T) {
 					0: {
 						Function:      "a",
 						Fingerprint:   0,
-						SelfTimesNS:   []uint64{10, 5, 25, 10, 5, 25},
 						SumSelfTimeNS: 80,
 						DurationsNS:   []uint64{10, 5, 25, 10, 5, 25},
 						SumDurationNS: 80,
@@ -50,7 +47,6 @@ func TestAggregatorAddFunctions(t *testing.T) {
 					1: {
 						Function:      "b",
 						Fingerprint:   1,
-						SelfTimesNS:   []uint64{45, 60, 45, 60},
 						SumSelfTimeNS: 210,
 						DurationsNS:   []uint64{45, 60, 45, 60},
 						SumDurationNS: 210,
@@ -100,7 +96,6 @@ func TestAggregatorToMetrics(t *testing.T) {
 						Fingerprint:   0,
 						DurationsNS:   []uint64{1, 2, 3, 4, 10, 8, 7, 11, 20},
 						SumDurationNS: 66,
-						SelfTimesNS:   []uint64{1, 2, 3, 4, 10, 8, 7, 11, 20},
 						SumSelfTimeNS: 66,
 						SampleCount:   2,
 					},
@@ -109,7 +104,6 @@ func TestAggregatorToMetrics(t *testing.T) {
 						Fingerprint:   1,
 						DurationsNS:   []uint64{1, 2, 3, 4, 10, 8, 7, 11, 20},
 						SumDurationNS: 66,
-						SelfTimesNS:   []uint64{1, 2, 3, 4, 10, 8, 7, 11, 20},
 						SumSelfTimeNS: 66,
 						SampleCount:   2,
 					},

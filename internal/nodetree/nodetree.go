@@ -124,7 +124,6 @@ type CallTreeFunction struct {
 	InApp         bool     `json:"in_app"`
 	DurationsNS   []uint64 `json:"durations_ns"`
 	SumDurationNS uint64   `json:"-"`
-	SelfTimesNS   []uint64 `json:"self_times_ns"`
 	SumSelfTimeNS uint64   `json:"-"`
 	SampleCount   int      `json:"-"`
 	ThreadID      string   `json:"thread_id"`
@@ -210,7 +209,6 @@ func (n *Node) CollectFunctions(
 				InApp:         n.IsApplication,
 				DurationsNS:   []uint64{n.DurationNS},
 				SumDurationNS: n.DurationNS,
-				SelfTimesNS:   []uint64{},
 				SumSelfTimeNS: 0,
 				SampleCount:   n.SampleCount,
 				ThreadID:      threadID,
@@ -229,7 +227,6 @@ func (n *Node) CollectFunctions(
 		}
 
 		if selfTimeNS > 0 {
-			function.SelfTimesNS = append(function.SelfTimesNS, selfTimeNS)
 			function.SumSelfTimeNS += selfTimeNS
 		}
 
