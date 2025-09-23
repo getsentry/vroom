@@ -127,6 +127,10 @@ func TestFlamegraphAggregation(t *testing.T) {
 									ElapsedSinceStartNS: 20,
 									StackID:             2,
 								},
+								{
+									ElapsedSinceStartNS: 30,
+									StackID:             2,
+								},
 							}, // end Samples
 						}, // end Trace
 					},
@@ -140,7 +144,7 @@ func TestFlamegraphAggregation(t *testing.T) {
 				},
 				Profiles: []interface{}{
 					speedscope.SampledProfile{
-						EndValue:     6,
+						EndValue:     7,
 						IsMainThread: true,
 						Samples: [][]int{
 							{2},
@@ -152,13 +156,13 @@ func TestFlamegraphAggregation(t *testing.T) {
 							{0},
 							{1},
 							{1},
-							{0},
+							{0, 1},
 						},
 						Type:              "sampled",
 						Unit:              "count",
-						Weights:           []uint64{1, 1, 1, 3},
-						SampleCounts:      []uint64{1, 1, 1, 3},
-						SampleDurationsNs: []uint64{10, 10, 10, 30},
+						Weights:           []uint64{1, 1, 1, 4},
+						SampleCounts:      []uint64{1, 1, 1, 4},
+						SampleDurationsNs: []uint64{10, 10, 10, 40},
 					},
 				},
 				Shared: speedscope.SharedData{
@@ -169,8 +173,8 @@ func TestFlamegraphAggregation(t *testing.T) {
 						{Image: "test.package", Name: "e", Fingerprint: 2430275448},
 					},
 					FrameInfos: []speedscope.FrameInfo{
+						{Count: 4, Weight: 50},
 						{Count: 3, Weight: 40},
-						{Count: 2, Weight: 30},
 						{Count: 2, Weight: 20},
 						{Count: 1, Weight: 10},
 					},
@@ -182,16 +186,61 @@ func TestFlamegraphAggregation(t *testing.T) {
 			},
 			metrics: []examples.FunctionMetrics{
 				{
+					Name:        "a",
+					Package:     "test.package",
+					Fingerprint: 2430275452,
+					P75:         10,
+					P95:         20,
+					P99:         20,
+					Avg:         float64(50) / float64(4),
+					Sum:         50,
+					SumSelfTime: 10,
+					Count:       5,
+					Worst:       examples.ExampleMetadata{ProfileID: "cd2"},
+					Examples:    []examples.ExampleMetadata{{ProfileID: "cd2"}},
+				},
+				{
 					Name:        "b",
 					Package:     "test.package",
 					Fingerprint: 2430275455,
 					P75:         20,
 					P95:         20,
 					P99:         20,
-					Avg:         15,
-					Sum:         30,
-					SumSelfTime: 30,
-					Count:       3,
+					Avg:         float64(40) / float64(3),
+					Sum:         40,
+					SumSelfTime: 40,
+					Count:       4,
+					Worst:       examples.ExampleMetadata{ProfileID: "ab1"},
+					Examples:    []examples.ExampleMetadata{{ProfileID: "ab1"}, {ProfileID: "cd2"}},
+				},
+				{
+					Name:        "c",
+					Package:     "test.package",
+					Fingerprint: 2430275454,
+					InApp:       true,
+					P75:         10,
+					P95:         10,
+					P99:         10,
+					Avg:         10,
+					Sum:         20,
+					SumSelfTime: 20,
+					Count:       2,
+					Worst:       examples.ExampleMetadata{ProfileID: "ab1"},
+					Examples:    []examples.ExampleMetadata{{ProfileID: "ab1"}},
+				},
+				{
+					Name:        "e",
+					Package:     "test.package",
+					Fingerprint: 2430275448,
+					P75:         10,
+					P95:         10,
+					P99:         10,
+					Avg:         10,
+					Sum:         10,
+					SumSelfTime: 10,
+					Count:       1,
+					Worst:       examples.ExampleMetadata{ProfileID: "cd2"},
+					Examples:    []examples.ExampleMetadata{{ProfileID: "cd2"}},
 				},
 			},
 		},
@@ -317,19 +366,6 @@ func TestFlamegraphAggregation(t *testing.T) {
 			},
 			metrics: []examples.FunctionMetrics{
 				{
-					Name:        "c",
-					Package:     "test.package",
-					Fingerprint: 2430275454,
-					InApp:       true,
-					P75:         30,
-					P95:         30,
-					P99:         30,
-					Avg:         25,
-					Sum:         50,
-					SumSelfTime: 50,
-					Count:       5,
-				},
-				{
 					Name:        "a",
 					Package:     "test.package",
 					Fingerprint: 2430275452,
@@ -341,6 +377,8 @@ func TestFlamegraphAggregation(t *testing.T) {
 					Sum:         90,
 					SumSelfTime: 20,
 					Count:       9,
+					Worst:       examples.ExampleMetadata{ProfileID: "ab1"},
+					Examples:    []examples.ExampleMetadata{{ProfileID: "ab1"}},
 				},
 				{
 					Name:        "b",
@@ -354,6 +392,23 @@ func TestFlamegraphAggregation(t *testing.T) {
 					Sum:         70,
 					SumSelfTime: 20,
 					Count:       7,
+					Worst:       examples.ExampleMetadata{ProfileID: "ab1"},
+					Examples:    []examples.ExampleMetadata{{ProfileID: "ab1"}},
+				},
+				{
+					Name:        "c",
+					Package:     "test.package",
+					Fingerprint: 2430275454,
+					InApp:       true,
+					P75:         30,
+					P95:         30,
+					P99:         30,
+					Avg:         25,
+					Sum:         50,
+					SumSelfTime: 50,
+					Count:       5,
+					Worst:       examples.ExampleMetadata{ProfileID: "ab1"},
+					Examples:    []examples.ExampleMetadata{{ProfileID: "ab1"}},
 				},
 			},
 		},
@@ -460,19 +515,6 @@ func TestFlamegraphAggregation(t *testing.T) {
 			},
 			metrics: []examples.FunctionMetrics{
 				{
-					Name:        "c",
-					Package:     "test.package",
-					Fingerprint: 2430275454,
-					InApp:       true,
-					P75:         30,
-					P95:         30,
-					P99:         30,
-					Avg:         30,
-					Sum:         30,
-					SumSelfTime: 30,
-					Count:       3,
-				},
-				{
 					Name:        "b",
 					Package:     "test.package",
 					Fingerprint: 2430275455,
@@ -484,6 +526,23 @@ func TestFlamegraphAggregation(t *testing.T) {
 					Sum:         50,
 					SumSelfTime: 20,
 					Count:       5,
+					Worst:       examples.ExampleMetadata{ProfileID: "ab1"},
+					Examples:    []examples.ExampleMetadata{{ProfileID: "ab1"}},
+				},
+				{
+					Name:        "c",
+					Package:     "test.package",
+					Fingerprint: 2430275454,
+					InApp:       true,
+					P75:         30,
+					P95:         30,
+					P99:         30,
+					Avg:         30,
+					Sum:         30,
+					SumSelfTime: 30,
+					Count:       3,
+					Worst:       examples.ExampleMetadata{ProfileID: "ab1"},
+					Examples:    []examples.ExampleMetadata{{ProfileID: "ab1"}},
 				},
 			},
 		},
@@ -492,6 +551,7 @@ func TestFlamegraphAggregation(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			var ft []*nodetree.Node
+
 			for _, sp := range test.profiles {
 				p := profile.New(&sp)
 				callTrees, err := p.CallTrees()
@@ -508,44 +568,14 @@ func TestFlamegraphAggregation(t *testing.T) {
 				t.Fatalf("Result mismatch: got - want +\n%s", diff)
 			}
 
-			ma := metrics.NewAggregator(
-				100,
-				5,
-				0,
-			)
-
-			for _, sp := range test.profiles {
-				p := profile.New(&sp)
-				callTrees, err := p.CallTrees()
-				if err != nil {
-					t.Fatalf("error when generating calltrees: %v", err)
-				}
-
-				start, end := p.StartAndEndEpoch()
-				example := examples.NewExampleFromProfileID(
-					p.ProjectID(),
-					p.ID(),
-					start,
-					end,
-				)
-
-				functions := metrics.CapAndFilterFunctions(
-					metrics.ExtractFunctionsFromCallTrees(
-						callTrees,
-						ma.MinDepth,
-					),
-					int(ma.MaxUniqueFunctions),
-					false,
-				)
-				ma.AddFunctions(functions, example)
+			ma := metrics.NewAggregator(100, 5, 0, false)
+			for _, tree := range ft {
+				// tree.RecursiveComputeSelfTime()
+				tree.Visit(ma.AddFunction)
 			}
 			m := ma.ToMetrics()
 
-			options := cmp.Options{
-				cmpopts.IgnoreFields(examples.FunctionMetrics{}, "Worst"),
-				cmpopts.IgnoreFields(examples.FunctionMetrics{}, "Examples"),
-			}
-			if diff := testutil.Diff(m, test.metrics, options); diff != "" {
+			if diff := testutil.Diff(m, test.metrics); diff != "" {
 				t.Fatalf("Result mismatch: got - want +\n%s", diff)
 			}
 		})

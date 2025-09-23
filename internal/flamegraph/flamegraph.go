@@ -49,13 +49,17 @@ func sumNodesSampleCount(nodes []*nodetree.Node) int {
 	return c
 }
 
-func annotateWithProfileExample(example examples.ExampleMetadata) func(n *nodetree.Node) {
-	return func(n *nodetree.Node) {
+func annotateWithProfileExample(example examples.ExampleMetadata) func(n, m *nodetree.Node) {
+	return func(n, m *nodetree.Node) {
 		n.Profiles[example] = void
+		if n.WorstSelfTime < m.SelfTimeNS {
+			n.WorstSelfTime = m.SelfTimeNS
+			n.WorstProfile = example
+		}
 	}
 }
 
-func addCallTreeToFlamegraph(flamegraphTree *[]*nodetree.Node, callTree []*nodetree.Node, annotate func(n *nodetree.Node)) {
+func addCallTreeToFlamegraph(flamegraphTree *[]*nodetree.Node, callTree []*nodetree.Node, annotate func(n, m *nodetree.Node)) {
 	for _, node := range callTree {
 		var currentNode *nodetree.Node
 		if existingNode := getMatchingNode(flamegraphTree, node); existingNode != nil {
@@ -63,13 +67,16 @@ func addCallTreeToFlamegraph(flamegraphTree *[]*nodetree.Node, callTree []*nodet
 			currentNode.Occurrence += node.Occurrence
 			currentNode.SampleCount += node.SampleCount
 			currentNode.DurationNS += node.DurationNS
+			currentNode.SelfTimeNS += node.SelfTimeNS
+			currentNode.DurationsNS = append(currentNode.DurationsNS, node.DurationNS)
 		} else {
 			currentNode = node.ShallowCopyWithoutChildren()
+			currentNode.DurationsNS = []uint64{node.DurationNS}
 			*flamegraphTree = append(*flamegraphTree, currentNode)
 		}
 		addCallTreeToFlamegraph(&currentNode.Children, node.Children, annotate)
 		if node.SampleCount > sumNodesSampleCount(node.Children) {
-			annotate(currentNode)
+			annotate(currentNode, node)
 		}
 	}
 }
@@ -436,12 +443,6 @@ func GetFlamegraphFromCandidates(
 			for _, callTree := range result.CallTrees {
 				addCallTreeToFlamegraph(&flamegraphTree, callTree, annotate)
 			}
-			// if metrics aggregator is not null, while we're at it,
-			// compute the metrics as well
-			if ma != nil {
-				functions := metrics.CapAndFilterFunctions(metrics.ExtractFunctionsFromCallTrees(result.CallTrees, ma.MinDepth), int(ma.MaxUniqueFunctions), true)
-				ma.AddFunctions(functions, example)
-			}
 
 			transactionProfileSpan.Finish()
 		} else if result, ok := res.(chunk.CallTreesReadJobResult); ok {
@@ -469,13 +470,6 @@ func GetFlamegraphFromCandidates(
 				annotate := annotateWithProfileExample(example)
 
 				addCallTreeToFlamegraph(&flamegraphTree, callTree, annotate)
-
-				// if metrics aggregator is not null, while we're at it,
-				// compute the metrics as well
-				if ma != nil {
-					functions := metrics.CapAndFilterFunctions(metrics.ExtractFunctionsFromCallTreesForThread(callTree, ma.MinDepth), int(ma.MaxUniqueFunctions), true)
-					ma.AddFunctions(functions, example)
-				}
 			}
 			chunkProfileSpan.Finish()
 		} else {
@@ -489,10 +483,22 @@ func GetFlamegraphFromCandidates(
 	serializeSpan := span.StartChild("serialize")
 	defer serializeSpan.Finish()
 
+	speedscopeSpan := span.StartChild("processing speedscope")
 	sp := toSpeedscope(ctx, flamegraphTree, 1000, 0)
+	speedscopeSpan.Finish()
+
+	// if metrics aggregator is not null, while we're at it,
+	// compute the metrics as well
 	if ma != nil {
+		metricsSpan := span.StartChild("processing metrics")
+		for _, tree := range flamegraphTree {
+			// tree.RecursiveComputeSelfTime()
+			tree.Visit(ma.AddFunction)
+		}
 		fm := ma.ToMetrics()
 		sp.Metrics = &fm
+		metricsSpan.Finish()
 	}
+
 	return sp, nil
 }

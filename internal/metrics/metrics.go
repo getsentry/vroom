@@ -1,6 +1,7 @@
 package metrics
 
 import (
+	"container/heap"
 	"errors"
 	"math"
 	"sort"
@@ -18,68 +19,176 @@ type (
 	}
 
 	Aggregator struct {
-		MaxUniqueFunctions uint
-		// For a frame to be aggregated it has to have a depth >= MinDepth.
-		// So, if MinDepth is set to 1, it means all the root frames will not be part of the aggregation.
-		MinDepth          uint
-		MaxNumOfExamples  uint
-		CallTreeFunctions map[uint32]nodetree.CallTreeFunction
-		FunctionsMetadata map[uint32]FunctionsMetadata
+		callTreeFunctionsMap map[uint32]*FunctionMetric
+		callTreeFunctions    []*FunctionMetric
+		maxUniqueFunctions   int
+		maxNumberOfExamples  int
+		// For a frame to be aggregated it has to have a depth >= minDepth. So, if minDepth
+		// is set to 1, it means all the root frames will not be part of the aggregation.
+		minDepth           int
+		filterSystemFrames bool
+	}
+
+	FunctionMetric struct {
+		index         int
+		Fingerprint   uint32
+		Function      string
+		Package       string
+		InApp         bool
+		DurationsNS   []uint64
+		SumDurationNS uint64
+		SumSelfTimeNS uint64
+		SampleCount   uint64
+		Examples      []examples.ExampleMetadata
+		WorstSelfTime uint64
+		WorstExample  examples.ExampleMetadata
 	}
 )
 
-func NewAggregator(MaxUniqueFunctions uint, MaxNumOfExamples uint, MinDepth uint) Aggregator {
+func NewAggregator(
+	maxUniqueFunctions int,
+	maxNumberOfExamples int,
+	minDepth int,
+	filterSystemFrames bool,
+) Aggregator {
 	return Aggregator{
-		MaxUniqueFunctions: MaxUniqueFunctions,
-		MinDepth:           MinDepth,
-		MaxNumOfExamples:   MaxNumOfExamples,
-		CallTreeFunctions:  make(map[uint32]nodetree.CallTreeFunction),
-		FunctionsMetadata:  make(map[uint32]FunctionsMetadata),
+		callTreeFunctionsMap: make(map[uint32]*FunctionMetric),
+		callTreeFunctions:    make([]*FunctionMetric, 0, maxUniqueFunctions+1),
+		maxUniqueFunctions:   maxUniqueFunctions,
+		maxNumberOfExamples:  maxNumberOfExamples,
+		minDepth:             minDepth,
+		filterSystemFrames:   filterSystemFrames,
 	}
 }
 
-func (ma *Aggregator) AddFunctions(functions []nodetree.CallTreeFunction, resultMetadata examples.ExampleMetadata) {
-	for _, f := range functions {
-		if fn, ok := ma.CallTreeFunctions[f.Fingerprint]; ok {
-			fn.SampleCount += f.SampleCount
-			fn.DurationsNS = append(fn.DurationsNS, f.DurationsNS...)
-			fn.SumDurationNS += f.SumDurationNS
-			fn.SumSelfTimeNS += f.SumSelfTimeNS
-			funcMetadata := ma.FunctionsMetadata[f.Fingerprint]
-			if f.SumSelfTimeNS > funcMetadata.MaxVal {
-				funcMetadata.MaxVal = f.SumSelfTimeNS
-				funcMetadata.Worst = resultMetadata
-			}
-			if len(funcMetadata.Examples) < int(ma.MaxNumOfExamples) {
-				funcMetadata.Examples = append(funcMetadata.Examples, resultMetadata)
-			}
-			ma.FunctionsMetadata[f.Fingerprint] = funcMetadata
-			ma.CallTreeFunctions[f.Fingerprint] = fn
-		} else {
-			ma.CallTreeFunctions[f.Fingerprint] = f
-			ma.FunctionsMetadata[f.Fingerprint] = FunctionsMetadata{
-				MaxVal:   f.SumSelfTimeNS,
-				Worst:    resultMetadata,
-				Examples: []examples.ExampleMetadata{resultMetadata},
-			}
+func (a Aggregator) Len() int {
+	return len(a.callTreeFunctions)
+}
+
+func (a Aggregator) Less(i, j int) bool {
+	fi := a.callTreeFunctions[i]
+	fj := a.callTreeFunctions[j]
+
+	if fi.SumSelfTimeNS != fj.SumSelfTimeNS {
+		return fi.SumSelfTimeNS < fj.SumSelfTimeNS
+	}
+
+	if fi.SumDurationNS != fj.SumDurationNS {
+		return fi.SumDurationNS < fj.SumDurationNS
+	}
+
+	return i < j
+}
+
+func (a *Aggregator) Swap(i, j int) {
+	a.callTreeFunctions[i], a.callTreeFunctions[j] = a.callTreeFunctions[j], a.callTreeFunctions[i]
+
+	// make sure to update the index so it can be easily found later
+	a.callTreeFunctions[i].index = i
+	a.callTreeFunctions[j].index = j
+}
+
+func (a *Aggregator) Push(item any) {
+	n := a.Len()
+	metric := item.(*FunctionMetric)
+	metric.index = n
+	a.callTreeFunctions = append(a.callTreeFunctions, metric)
+	a.callTreeFunctionsMap[metric.Fingerprint] = metric
+}
+
+func (a *Aggregator) Pop() any {
+	n := a.Len()
+	item := a.callTreeFunctions[n-1]
+	item.index = -1 // for safety
+	a.callTreeFunctions = a.callTreeFunctions[0 : n-1]
+	delete(a.callTreeFunctionsMap, item.Fingerprint)
+	return item
+}
+
+func (a *Aggregator) AddFunction(n *nodetree.Node, depth int) {
+	if a.filterSystemFrames && !n.IsApplication {
+		return
+	}
+
+	if depth < a.minDepth {
+		return
+	}
+
+	if !nodetree.ShouldAggregateFrame(n.Frame) {
+		return
+	}
+
+	var function *FunctionMetric
+	var ok bool
+	fingerprint := n.Frame.Fingerprint()
+	if function, ok = a.callTreeFunctionsMap[fingerprint]; ok {
+		function.DurationsNS = append(function.DurationsNS, n.DurationsNS...)
+		function.SumDurationNS += n.DurationNS
+		function.SumSelfTimeNS += n.SelfTimeNS
+		function.SampleCount += uint64(n.SampleCount)
+		heap.Fix(a, function.index)
+	} else {
+		f := FunctionMetric{
+			Fingerprint:   fingerprint,
+			Function:      n.Name,
+			Package:       n.Package,
+			InApp:         n.IsApplication,
+			DurationsNS:   n.DurationsNS,
+			SumDurationNS: n.DurationNS,
+			SumSelfTimeNS: n.SelfTimeNS,
+			SampleCount:   uint64(n.SampleCount),
 		}
+		function = &f
+		heap.Push(a, function)
+	}
+
+	for example := range n.Profiles {
+		function.Examples = append(function.Examples, example)
+	}
+
+	if function.WorstSelfTime < n.WorstSelfTime {
+		function.WorstSelfTime = n.WorstSelfTime
+		function.WorstExample = n.WorstProfile
+	}
+
+	for a.Len() > a.maxUniqueFunctions {
+		heap.Pop(a)
 	}
 }
 
-func (ma *Aggregator) ToMetrics() []examples.FunctionMetrics {
-	metrics := make([]examples.FunctionMetrics, 0, len(ma.CallTreeFunctions))
+func (a Aggregator) ToMetrics() []examples.FunctionMetrics {
+	metrics := make([]examples.FunctionMetrics, 0, len(a.callTreeFunctions))
 
-	for _, f := range ma.CallTreeFunctions {
+	for _, f := range a.callTreeFunctions {
+		if f.SumSelfTimeNS <= 0 {
+			continue
+		}
+		sort.Slice(f.Examples, func(i, j int) bool {
+			example1 := f.Examples[i]
+			example2 := f.Examples[j]
+
+			if example1.ProfileID != "" {
+				return example1.ProfileID < example2.ProfileID
+			}
+
+			if example2.ProfileID != "" {
+				return true
+			}
+
+			return example1.ProfilerID < example2.ProfilerID
+		})
 		sort.Slice(f.DurationsNS, func(i, j int) bool {
 			return f.DurationsNS[i] < f.DurationsNS[j]
 		})
+
 		p75, _ := quantile(f.DurationsNS, 0.75)
 		p95, _ := quantile(f.DurationsNS, 0.95)
 		p99, _ := quantile(f.DurationsNS, 0.99)
-		metrics = append(metrics, examples.FunctionMetrics{
+
+		m := examples.FunctionMetrics{
+			Fingerprint: f.Fingerprint,
 			Name:        f.Function,
 			Package:     f.Package,
-			Fingerprint: f.Fingerprint,
 			InApp:       f.InApp,
 			P75:         p75,
 			P95:         p95,
@@ -87,20 +196,25 @@ func (ma *Aggregator) ToMetrics() []examples.FunctionMetrics {
 			Avg:         float64(f.SumDurationNS) / float64(len(f.DurationsNS)),
 			Sum:         f.SumDurationNS,
 			SumSelfTime: f.SumSelfTimeNS,
-			Count:       uint64(f.SampleCount),
-			Worst:       ma.FunctionsMetadata[f.Fingerprint].Worst,
-			Examples:    ma.FunctionsMetadata[f.Fingerprint].Examples,
-		})
+			Count:       f.SampleCount,
+			Worst:       f.WorstExample,
+			Examples:    f.Examples,
+		}
+		metrics = append(metrics, m)
 	}
+
 	sort.Slice(metrics, func(i, j int) bool {
+		if metrics[i].Sum != metrics[j].Sum {
+			return metrics[i].Sum > metrics[j].Sum
+		}
+
 		if metrics[i].SumSelfTime != metrics[j].SumSelfTime {
 			return metrics[i].SumSelfTime > metrics[j].SumSelfTime
 		}
-		return metrics[i].Sum > metrics[j].Sum
+
+		return i < j
 	})
-	if len(metrics) > int(ma.MaxUniqueFunctions) {
-		metrics = metrics[:ma.MaxUniqueFunctions]
-	}
+
 	return metrics
 }
 
