@@ -570,7 +570,6 @@ func TestFlamegraphAggregation(t *testing.T) {
 
 			ma := metrics.NewAggregator(100, 5, 0, false)
 			for _, tree := range ft {
-				// tree.RecursiveComputeSelfTime()
 				tree.Visit(ma.AddFunction)
 			}
 			m := ma.ToMetrics()

@@ -492,7 +492,6 @@ func GetFlamegraphFromCandidates(
 	if ma != nil {
 		metricsSpan := span.StartChild("processing metrics")
 		for _, tree := range flamegraphTree {
-			// tree.RecursiveComputeSelfTime()
 			tree.Visit(ma.AddFunction)
 		}
 		fm := ma.ToMetrics()
