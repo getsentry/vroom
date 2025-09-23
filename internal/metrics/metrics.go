@@ -143,7 +143,9 @@ func (a *Aggregator) AddFunction(n *nodetree.Node, depth int) {
 	}
 
 	for example := range n.Profiles {
-		function.Examples = append(function.Examples, example)
+		if len(function.Examples) < a.maxUniqueFunctions {
+			function.Examples = append(function.Examples, example)
+		}
 	}
 
 	if function.WorstSelfTime < n.WorstSelfTime {
