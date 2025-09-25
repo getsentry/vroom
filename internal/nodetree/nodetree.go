@@ -39,16 +39,12 @@ type (
 		Package       string  `json:"package"`
 		Path          string  `json:"path,omitempty"`
 
-		DurationsNS   []uint64                              `json:"-"`
-		EndNS         uint64                                `json:"-"`
-		Frame         frame.Frame                           `json:"-"`
-		Occurrence    uint32                                `json:"-"`
-		SampleCount   int                                   `json:"-"`
-		SelfTimeNS    uint64                                `json:"-"`
-		StartNS       uint64                                `json:"-"`
-		Profiles      map[examples.ExampleMetadata]struct{} `json:"profiles,omitempty"`
-		WorstSelfTime uint64                                `json:"-"`
-		WorstProfile  examples.ExampleMetadata              `json:"-"`
+		EndNS       uint64                                `json:"-"`
+		Frame       frame.Frame                           `json:"-"`
+		Occurrence  uint32                                `json:"-"`
+		SampleCount int                                   `json:"-"`
+		StartNS     uint64                                `json:"-"`
+		Profiles    map[examples.ExampleMetadata]struct{} `json:"profiles,omitempty"`
 	}
 )
 
@@ -77,49 +73,6 @@ func NodeFromFrame(f frame.Frame, start, end, fingerprint uint64) *Node {
 	return &n
 }
 
-func (n *Node) RecursiveComputeSelfTime() {
-	for _, c := range n.Children {
-		c.RecursiveComputeSelfTime()
-	}
-
-	var childrenApplicationDurationNS uint64
-	var childrenSystemDurationNS uint64
-
-	for _, c := range n.Children {
-		if c.IsApplication {
-			childrenApplicationDurationNS += c.DurationNS
-		} else {
-			childrenSystemDurationNS += c.DurationNS
-		}
-	}
-
-	if n.IsApplication {
-		if n.DurationNS > childrenApplicationDurationNS {
-			n.SelfTimeNS = n.DurationNS - childrenApplicationDurationNS
-		} else {
-			n.SelfTimeNS = 0
-		}
-	} else {
-		sum := childrenApplicationDurationNS + childrenSystemDurationNS
-		if n.DurationNS > sum {
-			n.SelfTimeNS = n.DurationNS - sum
-		} else {
-			n.SelfTimeNS = 0
-		}
-	}
-}
-
-func (n *Node) Visit(visitor func(*Node, int)) {
-	n.visit(visitor, 0)
-}
-
-func (n *Node) visit(visitor func(*Node, int), depth int) {
-	visitor(n, depth)
-	for _, c := range n.Children {
-		c.visit(visitor, depth+1)
-	}
-}
-
 func (n *Node) ShallowCopyWithoutChildren() *Node {
 	clone := Node{
 		EndNS:         n.EndNS,
@@ -135,7 +88,6 @@ func (n *Node) ShallowCopyWithoutChildren() *Node {
 		StartNS:       n.StartNS,
 		Profiles:      n.Profiles,
 		DurationNS:    n.DurationNS,
-		SelfTimeNS:    n.SelfTimeNS,
 	}
 
 	return &clone
@@ -220,7 +172,7 @@ func (n *Node) CollectFunctions(
 		applicationDurationNS = n.DurationNS
 	}
 
-	if nodeDepth >= minDepth && ShouldAggregateFrame(n.Frame) {
+	if nodeDepth >= minDepth && shouldAggregateFrame(n.Frame) {
 		var selfTimeNS uint64
 
 		if n.IsApplication {
@@ -286,7 +238,7 @@ func (n *Node) CollectFunctions(
 	return applicationDurationNS, n.DurationNS - applicationDurationNS
 }
 
-func ShouldAggregateFrame(frame frame.Frame) bool {
+func shouldAggregateFrame(frame frame.Frame) bool {
 	frameFunction := frame.Function
 
 	// frames with no name are not valuable for aggregation
