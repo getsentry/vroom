@@ -500,3 +500,184 @@ func TestIsSymbolicated(t *testing.T) {
 		})
 	}
 }
+
+func TestComputeSelfTime(t *testing.T) {
+	tests := []struct {
+		name     string
+		node     Node
+		selfTime uint64
+	}{
+		{
+			name: "single system frame",
+			node: Node{
+				Children:      []*Node{},
+				DurationNS:    1000,
+				IsApplication: false,
+			},
+			selfTime: 1000,
+		},
+		{
+			name: "single application frame",
+			node: Node{
+				Children:      []*Node{},
+				DurationNS:    1000,
+				IsApplication: true,
+			},
+			selfTime: 1000,
+		},
+		{
+			name: "system frame with single system frame child full duration",
+			node: Node{
+				Children: []*Node{
+					{
+						Children:      []*Node{},
+						DurationNS:    1000,
+						IsApplication: false,
+					},
+				},
+				DurationNS:    1000,
+				IsApplication: false,
+			},
+			selfTime: 0,
+		},
+		{
+			name: "system frame with single system frame child partial duration",
+			node: Node{
+				Children: []*Node{
+					{
+						Children:      []*Node{},
+						DurationNS:    500,
+						IsApplication: false,
+					},
+				},
+				DurationNS:    1000,
+				IsApplication: false,
+			},
+			selfTime: 500,
+		},
+		{
+			name: "system frame with single system frame child partial duration",
+			node: Node{
+				Children: []*Node{
+					{
+						Children:      []*Node{},
+						DurationNS:    500,
+						IsApplication: false,
+					},
+				},
+				DurationNS:    1000,
+				IsApplication: false,
+			},
+			selfTime: 500,
+		},
+		{
+			name: "system frame with single application frame child full duration",
+			node: Node{
+				Children: []*Node{
+					{
+						Children:      []*Node{},
+						DurationNS:    1000,
+						IsApplication: true,
+					},
+				},
+				DurationNS:    1000,
+				IsApplication: false,
+			},
+			selfTime: 0,
+		},
+		{
+			name: "system frame with single application frame child partial duration",
+			node: Node{
+				Children: []*Node{
+					{
+						Children:      []*Node{},
+						DurationNS:    500,
+						IsApplication: true,
+					},
+				},
+				DurationNS:    1000,
+				IsApplication: false,
+			},
+			selfTime: 500,
+		},
+		{
+			name: "system frame with multiple child frames",
+			node: Node{
+				Children: []*Node{
+					{
+						Children:      []*Node{},
+						DurationNS:    500,
+						IsApplication: true,
+					},
+					{
+						Children:      []*Node{},
+						DurationNS:    250,
+						IsApplication: false,
+					},
+				},
+				DurationNS:    1000,
+				IsApplication: false,
+			},
+			selfTime: 250,
+		},
+		{
+			name: "application frame with single application frame child full duration",
+			node: Node{
+				Children: []*Node{
+					{
+						Children:      []*Node{},
+						DurationNS:    1000,
+						IsApplication: true,
+					},
+				},
+				DurationNS:    1000,
+				IsApplication: true,
+			},
+			selfTime: 0,
+		},
+		{
+			name: "application frame with single application frame child partial duration",
+			node: Node{
+				Children: []*Node{
+					{
+						Children:      []*Node{},
+						DurationNS:    500,
+						IsApplication: true,
+					},
+				},
+				DurationNS:    1000,
+				IsApplication: true,
+			},
+			selfTime: 500,
+		},
+		{
+			name: "application frame with multiple child frames",
+			node: Node{
+				Children: []*Node{
+					{
+						Children:      []*Node{},
+						DurationNS:    500,
+						IsApplication: true,
+					},
+					{
+						Children:      []*Node{},
+						DurationNS:    250,
+						IsApplication: false,
+					},
+				},
+				DurationNS:    1000,
+				IsApplication: true,
+			},
+			selfTime: 500,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(*testing.T) {
+			tt.node.RecursiveComputeSelfTime()
+			if diff := testutil.Diff(tt.node.SelfTimeNS, tt.selfTime); diff != "" {
+				t.Fatalf("Result mismatch: got - want +\n%s", diff)
+			}
+		})
+	}
+}

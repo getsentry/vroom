@@ -39,8 +39,14 @@ type (
 	}
 
 	FrameInfo struct {
-		Count  uint32 `json:"count"`
-		Weight uint64 `json:"weight"`
+		Count       uint32   `json:"count"`
+		Weight      uint64   `json:"weight"`
+		SumDuration uint64   `json:"sumDuration"`
+		SumSelfTime uint64   `json:"sumSelfTime"`
+		DurationsNS []uint64 `json:"-"`
+		P75Duration uint64   `json:"p75Duration"`
+		P95Duration uint64   `json:"p95Duration"`
+		P99Duration uint64   `json:"p99Duration"`
 	}
 
 	Event struct {

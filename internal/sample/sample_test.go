@@ -379,6 +379,7 @@ func TestCallTrees(t *testing.T) {
 				1: {
 					{
 						DurationNS:    40,
+						DurationsNS:   []uint64{40},
 						EndNS:         50,
 						Fingerprint:   15444731332182868858,
 						IsApplication: true,
@@ -391,6 +392,7 @@ func TestCallTrees(t *testing.T) {
 						Children: []*nodetree.Node{
 							{
 								DurationNS:    40,
+								DurationsNS:   []uint64{40},
 								EndNS:         50,
 								StartNS:       10,
 								Fingerprint:   14164357600995800812,
@@ -403,6 +405,7 @@ func TestCallTrees(t *testing.T) {
 								Children: []*nodetree.Node{
 									{
 										DurationNS:    10,
+										DurationsNS:   []uint64{10},
 										EndNS:         50,
 										Fingerprint:   9531802423075301657,
 										IsApplication: true,
@@ -446,6 +449,7 @@ func TestCallTrees(t *testing.T) {
 				1: {
 					{
 						DurationNS:    30,
+						DurationsNS:   []uint64{30},
 						EndNS:         40,
 						Fingerprint:   15444731332182868858,
 						IsApplication: true,
@@ -458,6 +462,7 @@ func TestCallTrees(t *testing.T) {
 						Children: []*nodetree.Node{
 							{
 								DurationNS:    30,
+								DurationsNS:   []uint64{30},
 								EndNS:         40,
 								Fingerprint:   14164357600995800812,
 								IsApplication: true,
@@ -501,6 +506,7 @@ func TestCallTrees(t *testing.T) {
 				1: {
 					{
 						DurationNS:    10,
+						DurationsNS:   []uint64{10},
 						EndNS:         20,
 						Fingerprint:   15444731332182868858,
 						IsApplication: true,
@@ -513,6 +519,7 @@ func TestCallTrees(t *testing.T) {
 					},
 					{
 						DurationNS:    10,
+						DurationsNS:   []uint64{10},
 						EndNS:         30,
 						Fingerprint:   15444731332182868859,
 						IsApplication: true,
@@ -1256,6 +1263,7 @@ func TestCallTreesFingerprintPerPlatform(t *testing.T) {
 				0: {
 					{
 						DurationNS:    10,
+						DurationsNS:   []uint64{10},
 						EndNS:         10,
 						Fingerprint:   1628006971372193492,
 						IsApplication: false,
@@ -1311,6 +1319,7 @@ func TestCallTreesFingerprintPerPlatform(t *testing.T) {
 				0: {
 					{
 						DurationNS:    10,
+						DurationsNS:   []uint64{10},
 						EndNS:         10,
 						Fingerprint:   1628006971372193492,
 						IsApplication: true,
@@ -1368,6 +1377,7 @@ func TestCallTreesFingerprintPerPlatform(t *testing.T) {
 				0: {
 					{
 						DurationNS:    10,
+						DurationsNS:   []uint64{10},
 						EndNS:         10,
 						Fingerprint:   12857020554704472368,
 						IsApplication: false,

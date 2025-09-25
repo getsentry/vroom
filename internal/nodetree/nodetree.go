@@ -32,6 +32,7 @@ type (
 	Node struct {
 		Children      []*Node `json:"children,omitempty"`
 		DurationNS    uint64  `json:"duration_ns"`
+		SelfTimeNS    uint64  `json:"self_time_ns"`
 		Fingerprint   uint64  `json:"fingerprint"`
 		IsApplication bool    `json:"is_application"`
 		Line          uint32  `json:"line,omitempty"`
@@ -39,6 +40,7 @@ type (
 		Package       string  `json:"package"`
 		Path          string  `json:"path,omitempty"`
 
+		DurationsNS []uint64                              `json:"-"`
 		EndNS       uint64                                `json:"-"`
 		Frame       frame.Frame                           `json:"-"`
 		Occurrence  uint32                                `json:"-"`
@@ -67,10 +69,43 @@ func NodeFromFrame(f frame.Frame, start, end, fingerprint uint64) *Node {
 		StartNS:       start,
 		Profiles:      map[examples.ExampleMetadata]struct{}{},
 	}
-	if end > 0 {
+	if n.EndNS > n.StartNS {
 		n.DurationNS = n.EndNS - n.StartNS
+		n.DurationsNS = []uint64{n.DurationNS}
 	}
 	return &n
+}
+
+func (n *Node) RecursiveComputeSelfTime() {
+	for _, c := range n.Children {
+		c.RecursiveComputeSelfTime()
+	}
+
+	var childrenApplicationDurationNS uint64
+	var childrenSystemDurationNS uint64
+
+	for _, c := range n.Children {
+		if c.IsApplication {
+			childrenApplicationDurationNS += c.DurationNS
+		} else {
+			childrenSystemDurationNS += c.DurationNS
+		}
+	}
+
+	if n.IsApplication {
+		if n.DurationNS > childrenApplicationDurationNS {
+			n.SelfTimeNS = n.DurationNS - childrenApplicationDurationNS
+		} else {
+			n.SelfTimeNS = 0
+		}
+	} else {
+		sum := childrenApplicationDurationNS + childrenSystemDurationNS
+		if n.DurationNS > sum {
+			n.SelfTimeNS = n.DurationNS - sum
+		} else {
+			n.SelfTimeNS = 0
+		}
+	}
 }
 
 func (n *Node) ShallowCopyWithoutChildren() *Node {
@@ -88,6 +123,8 @@ func (n *Node) ShallowCopyWithoutChildren() *Node {
 		StartNS:       n.StartNS,
 		Profiles:      n.Profiles,
 		DurationNS:    n.DurationNS,
+		SelfTimeNS:    n.SelfTimeNS,
+		DurationsNS:   n.DurationsNS,
 	}
 
 	return &clone
@@ -106,6 +143,7 @@ func (n *Node) ToFrame() frame.Frame {
 func (n *Node) SetDuration(t uint64) {
 	n.EndNS = t
 	n.DurationNS = n.EndNS - n.StartNS
+	n.DurationsNS = []uint64{n.DurationNS}
 }
 
 func (n *Node) WriteToHash(h hash.Hash) {
