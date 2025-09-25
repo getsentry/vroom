@@ -81,15 +81,7 @@ func (p Profile) MarshalJSON() ([]byte, error) {
 }
 
 func (p *Profile) CallTrees() (map[uint64][]*nodetree.Node, error) {
-	callTrees, err := p.profile.CallTrees()
-
-	for _, callTreesForThread := range callTrees {
-		for _, callTree := range callTreesForThread {
-			callTree.RecursiveComputeSelfTime()
-		}
-	}
-
-	return callTrees, err
+	return p.profile.CallTrees()
 }
 
 func (p *Profile) DebugMeta() debugmeta.DebugMeta {

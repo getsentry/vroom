@@ -57,7 +57,7 @@ func (env *environment) postFlamegraph(w http.ResponseWriter, r *http.Request) {
 	s = sentry.StartSpan(ctx, "processing")
 	var ma *metrics.Aggregator
 	if body.GenerateMetrics {
-		agg := metrics.NewAggregator(maxUniqueFunctionsPerProfile, 5, int(minDepth), false)
+		agg := metrics.NewAggregator(maxUniqueFunctionsPerProfile, 5, minDepth)
 		ma = &agg
 	}
 	speedscope, err := flamegraph.GetFlamegraphFromCandidates(
