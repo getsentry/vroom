@@ -40,6 +40,7 @@ func TestCallTrees(t *testing.T) {
 				"1": {
 					{
 						DurationNS:    40_000_000,
+						DurationsNS:   []uint64{40_000_000},
 						EndNS:         50_000_000,
 						Fingerprint:   15444731332182868858,
 						IsApplication: true,
@@ -52,6 +53,7 @@ func TestCallTrees(t *testing.T) {
 						Children: []*nodetree.Node{
 							{
 								DurationNS:    40_000_000,
+								DurationsNS:   []uint64{40_000_000},
 								EndNS:         50_000_000,
 								StartNS:       10_000_000,
 								Fingerprint:   14164357600995800812,
@@ -64,6 +66,7 @@ func TestCallTrees(t *testing.T) {
 								Children: []*nodetree.Node{
 									{
 										DurationNS:    10_000_000,
+										DurationsNS:   []uint64{10_000_000},
 										EndNS:         50_000_000,
 										Fingerprint:   9531802423075301657,
 										IsApplication: true,
@@ -104,6 +107,7 @@ func TestCallTrees(t *testing.T) {
 				"1": {
 					{
 						DurationNS:    30_000_000,
+						DurationsNS:   []uint64{30_000_000},
 						EndNS:         40_000_000,
 						Fingerprint:   15444731332182868858,
 						IsApplication: true,
@@ -116,6 +120,7 @@ func TestCallTrees(t *testing.T) {
 						Children: []*nodetree.Node{
 							{
 								DurationNS:    30_000_000,
+								DurationsNS:   []uint64{30_000_000},
 								EndNS:         40_000_000,
 								Fingerprint:   14164357600995800812,
 								IsApplication: true,
@@ -156,6 +161,7 @@ func TestCallTrees(t *testing.T) {
 				"1": {
 					{
 						DurationNS:    10_000_000,
+						DurationsNS:   []uint64{10_000_000},
 						EndNS:         20_000_000,
 						Fingerprint:   15444731332182868858,
 						IsApplication: true,
@@ -168,6 +174,7 @@ func TestCallTrees(t *testing.T) {
 					},
 					{
 						DurationNS:    10_000_000,
+						DurationsNS:   []uint64{10_000_000},
 						EndNS:         30_000_000,
 						Fingerprint:   15444731332182868859,
 						IsApplication: true,

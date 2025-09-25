@@ -73,9 +73,9 @@ func (ma *Aggregator) ToMetrics() []examples.FunctionMetrics {
 		sort.Slice(f.DurationsNS, func(i, j int) bool {
 			return f.DurationsNS[i] < f.DurationsNS[j]
 		})
-		p75, _ := quantile(f.DurationsNS, 0.75)
-		p95, _ := quantile(f.DurationsNS, 0.95)
-		p99, _ := quantile(f.DurationsNS, 0.99)
+		p75, _ := Quantile(f.DurationsNS, 0.75)
+		p95, _ := Quantile(f.DurationsNS, 0.95)
+		p99, _ := Quantile(f.DurationsNS, 0.99)
 		metrics = append(metrics, examples.FunctionMetrics{
 			Name:        f.Function,
 			Package:     f.Package,
@@ -104,7 +104,7 @@ func (ma *Aggregator) ToMetrics() []examples.FunctionMetrics {
 	return metrics
 }
 
-func quantile(values []uint64, q float64) (uint64, error) {
+func Quantile(values []uint64, q float64) (uint64, error) {
 	if len(values) == 0 {
 		return 0, errors.New("cannot compute percentile from empty list")
 	}

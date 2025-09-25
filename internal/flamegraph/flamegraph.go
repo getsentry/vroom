@@ -63,6 +63,8 @@ func addCallTreeToFlamegraph(flamegraphTree *[]*nodetree.Node, callTree []*nodet
 			currentNode.Occurrence += node.Occurrence
 			currentNode.SampleCount += node.SampleCount
 			currentNode.DurationNS += node.DurationNS
+			currentNode.SelfTimeNS += node.SelfTimeNS
+			currentNode.DurationsNS = append(currentNode.DurationsNS, node.DurationsNS...)
 		} else {
 			currentNode = node.ShallowCopyWithoutChildren()
 			*flamegraphTree = append(*flamegraphTree, currentNode)
@@ -186,6 +188,16 @@ func toSpeedscope(
 		fd.visitCalltree(tree, &stack)
 	}
 
+	for i, frameInfo := range fd.frameInfos {
+		sort.Slice(frameInfo.DurationsNS, func(i, j int) bool {
+			return frameInfo.DurationsNS[i] < frameInfo.DurationsNS[j]
+		})
+		frameInfo.P75Duration, _ = metrics.Quantile(frameInfo.DurationsNS, 0.75)
+		frameInfo.P95Duration, _ = metrics.Quantile(frameInfo.DurationsNS, 0.95)
+		frameInfo.P99Duration, _ = metrics.Quantile(frameInfo.DurationsNS, 0.99)
+		fd.frameInfos[i] = frameInfo
+	}
+
 	s.SetData("total_samples", fd.totalSamples)
 	s.SetData("final_samples", fd.Len())
 
@@ -228,6 +240,9 @@ func (f *flamegraph) visitCalltree(node *nodetree.Node, currentStack *[]int) {
 		*currentStack = append(*currentStack, i)
 		f.frameInfos[i].Count += node.Occurrence
 		f.frameInfos[i].Weight += node.DurationNS
+		f.frameInfos[i].SumDuration += node.DurationNS
+		f.frameInfos[i].SumSelfTime += node.SelfTimeNS
+		f.frameInfos[i].DurationsNS = append(f.frameInfos[i].DurationsNS, node.DurationsNS...)
 	} else {
 		frame := node.ToFrame()
 		sfr := speedscope.Frame{
@@ -245,8 +260,11 @@ func (f *flamegraph) visitCalltree(node *nodetree.Node, currentStack *[]int) {
 		*currentStack = append(*currentStack, len(f.frames))
 		f.frames = append(f.frames, sfr)
 		f.frameInfos = append(f.frameInfos, speedscope.FrameInfo{
-			Count:  node.Occurrence,
-			Weight: node.DurationNS,
+			Count:       node.Occurrence,
+			Weight:      node.DurationNS,
+			SumDuration: node.DurationNS,
+			SumSelfTime: node.SelfTimeNS,
+			DurationsNS: node.DurationsNS,
 		})
 	}
 

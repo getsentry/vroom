@@ -567,6 +567,7 @@ func TestCallTrees(t *testing.T) {
 				1: {
 					{
 						DurationNS:    1000,
+						DurationsNS:   []uint64{1000},
 						IsApplication: true,
 						EndNS:         2000,
 						StartNS:       1000,
@@ -583,6 +584,7 @@ func TestCallTrees(t *testing.T) {
 						Children: []*nodetree.Node{
 							{
 								DurationNS:    1000,
+								DurationsNS:   []uint64{1000},
 								IsApplication: true,
 								Name:          "class2.method2()",
 								Package:       "class2",
@@ -601,6 +603,7 @@ func TestCallTrees(t *testing.T) {
 					},
 					{
 						DurationNS:    0,
+						DurationsNS:   []uint64{0},
 						IsApplication: true,
 						Name:          "class1.method1()",
 						Package:       "class1",
@@ -626,6 +629,7 @@ func TestCallTrees(t *testing.T) {
 				1: {
 					{
 						DurationNS:    2000,
+						DurationsNS:   []uint64{2000},
 						IsApplication: true,
 						EndNS:         3000,
 						Occurrence:    1,
@@ -642,6 +646,7 @@ func TestCallTrees(t *testing.T) {
 						Children: []*nodetree.Node{
 							{
 								DurationNS:    1000,
+								DurationsNS:   []uint64{1000},
 								IsApplication: true,
 								EndNS:         2500,
 								Occurrence:    1,
@@ -658,6 +663,7 @@ func TestCallTrees(t *testing.T) {
 								Children: []*nodetree.Node{
 									{
 										DurationNS:    500,
+										DurationsNS:   []uint64{500},
 										IsApplication: true,
 										EndNS:         2250,
 										Occurrence:    1,
@@ -687,6 +693,7 @@ func TestCallTrees(t *testing.T) {
 				1: {
 					{
 						DurationNS:    1000,
+						DurationsNS:   []uint64{1000},
 						IsApplication: true,
 						EndNS:         2000,
 						StartNS:       1000,
