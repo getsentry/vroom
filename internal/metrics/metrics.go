@@ -143,7 +143,7 @@ func (a *Aggregator) AddFunction(n *nodetree.Node, depth int) {
 	}
 
 	for example := range n.Profiles {
-		if len(function.Examples) < a.maxUniqueFunctions {
+		if len(function.Examples) < a.maxNumberOfExamples {
 			function.Examples = append(function.Examples, example)
 		}
 	}
@@ -165,6 +165,7 @@ func (a Aggregator) ToMetrics() []examples.FunctionMetrics {
 		if f.SumSelfTimeNS <= 0 {
 			continue
 		}
+
 		sort.Slice(f.Examples, func(i, j int) bool {
 			example1 := f.Examples[i]
 			example2 := f.Examples[j]

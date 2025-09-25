@@ -35,7 +35,7 @@
 - Add default non-root user in the Docker image. ([#593](https://github.com/getsentry/vroom/pull/593))
 - Classify macOS frames from an application as application frames. ([#604](https://github.com/getsentry/vroom/pull/604))
 - Return number of occurrences in flamegraph. ([#622](https://github.com/getsentry/vroom/pull/622), [#625](https://github.com/getsentry/vroom/pull/625))
-- Use function duration when computing metrics ([#627](https://github.com/getsentry/vroom/pull/627), [#628](https://github.com/getsentry/vroom/pull/628), [#629](https://github.com/getsentry/vroom/pull/629), [#630](https://github.com/getsentry/vroom/pull/630), [#635](https://github.com/getsentry/vroom/pull/635))
+- Use function duration when computing metrics ([#627](https://github.com/getsentry/vroom/pull/627), [#628](https://github.com/getsentry/vroom/pull/628), [#629](https://github.com/getsentry/vroom/pull/629), [#630](https://github.com/getsentry/vroom/pull/630), [#635](https://github.com/getsentry/vroom/pull/635), [#638](https://github.com/getsentry/vroom/pull/638))
 - Remove Unused metrics endpoint ([#633](https://github.com/getsentry/vroom/pull/633))
 
 **Bug Fixes**:
