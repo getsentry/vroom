@@ -20,3 +20,9 @@ jobs:
           docker buildx imagetools create --tag \
            ghcr.io/getsentry/vroom:${{ github.ref_name }} \
            ghcr.io/getsentry/vroom:${{ github.sha }}
+
+      - name: Tag latest version
+        run: |
+          docker buildx imagetools create --tag \
+           ghcr.io/getsentry/vroom:latest \
+           ghcr.io/getsentry/vroom:${{ github.sha }}
