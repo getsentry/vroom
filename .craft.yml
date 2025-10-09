@@ -20,4 +20,3 @@ targets:
     source: ghcr.io/getsentry/vroom
     target: getsentry/vroom
     targetFormat: '{{{target}}}:latest'
-preReleaseCommand: ""
