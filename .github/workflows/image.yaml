@@ -139,3 +139,30 @@ jobs:
           project_name: vroom
           image_url: ghcr.io/getsentry/vroom:${{ github.sha }}
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+
+  build-production:
+    runs-on: ubuntu-24.04
+    if: github.ref_name == github.event.repository.default_branch
+    name: Build and push production images
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Build and push image
+        uses: getsentry/action-build-and-push-images@b172ab61a5f7eabd58bd42ce231b517e79947c01
+        with:
+          image_name: 'vroom'
+          platforms: linux/amd64
+          dockerfile_path: './Dockerfile'
+          ghcr: false
+          google_ar: true
+          tag_nightly: false
+          tag_latest: true
+          # TODO: remove this once we cut over GoCD to using gha for prod images
+          tag_suffix: -gha
+          google_ar_image_name: us-central1-docker.pkg.dev/sentryio/vroom/vroom
+          google_workload_identity_provider: projects/868781662168/locations/global/workloadIdentityPools/prod-github/providers/github-oidc-pool
+          google_service_account: gha-gcr-push@sac-prod-sa.iam.gserviceaccount.com
