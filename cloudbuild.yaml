@@ -15,5 +15,5 @@ steps:
       [ "$BRANCH_NAME" != "main" ] && exit 0
       docker push us-central1-docker.pkg.dev/$PROJECT_ID/vroom/vroom:latest
 images: [
-  'us-central1-docker.pkg.dev/sentryio/vroom/vroom:$COMMIT_SHA',
+  'us-central1-docker.pkg.dev/sentryio/vroom/vroom:$COMMIT_SHA-cloudbuild',
 ]
