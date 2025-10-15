@@ -51,7 +51,6 @@ function(region) {
             elastic_profile_id: 'vroom',
             tasks: [
               gocdtasks.script(importstr '../bash/check-github.sh'),
-              gocdtasks.script(importstr '../bash/check-cloudbuild.sh'),
             ],
           },
         },
