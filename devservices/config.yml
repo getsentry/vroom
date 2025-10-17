@@ -14,7 +14,7 @@ x-sentry-service-config:
     default: [kafka, vroom]
 services:
   vroom:
-    image: us-central1-docker.pkg.dev/sentryio/vroom/vroom:latest
+    image: ghcr.io/getsentry/vroom:nightly
     ports:
       - 127.0.0.1:8085:8085
     environment:
