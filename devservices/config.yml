@@ -32,9 +32,6 @@ services:
       - orchestrator=devservices
     restart: unless-stopped
 
-volumes:
-  sentry-vroom:
-
 networks:
   devservices:
     name: devservices
