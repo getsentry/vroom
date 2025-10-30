@@ -144,6 +144,7 @@
 - Reduce read jobs buffer to reduce memory usage. ([#584](https://github.com/getsentry/vroom/pull/584))
 - Update GoCD scripts to use console script entry points. ([#608](https://github.com/getsentry/vroom/pull/608))
 - Fix Craft's changelog bump entry. ([#640](https://github.com/getsentry/vroom/pull/640))
+- Change devservices source volume mount location ([#653](https://github.com/getsentry/vroom/pull/653))
 
 ## 23.12.0
 
