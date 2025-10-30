@@ -23,7 +23,7 @@ services:
       SENTRY_BUCKET_PROFILES: file://localhost//var/lib/sentry-profiles
       SENTRY_SNUBA_HOST: http://127.0.0.1:1218
     volumes:
-      - sentry-vroom:/var/lib/sentry-profiles
+      - /tmp/sentry-profiles:/var/lib/sentry-profiles
     networks:
       - devservices
     extra_hosts:
