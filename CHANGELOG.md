@@ -1,5 +1,13 @@
 # Changelog
 
+## 25.11.0
+
+### Various fixes & improvements
+
+- update changelog (#653) by @bmckerry
+- remove volume (#653) by @bmckerry
+- fix: env var (#653) by @bmckerry
+
 ## 25.10.0
 
 **Features**:
