@@ -1,31 +1,20 @@
 package main
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"net/http"
 	"strconv"
 
 	"github.com/getsentry/sentry-go"
 	"github.com/google/uuid"
 	"github.com/julienschmidt/httprouter"
-	"github.com/segmentio/kafka-go"
-	"gocloud.dev/gcerrors"
 	"google.golang.org/api/googleapi"
 
 	"github.com/getsentry/vroom/internal/chunk"
-	"github.com/getsentry/vroom/internal/metrics"
 	"github.com/getsentry/vroom/internal/platform"
 	"github.com/getsentry/vroom/internal/storageutil"
-)
-
-type (
-	chunkPlatform struct {
-		Platform platform.Platform `json:"platform"`
-	}
 )
 
 const (
@@ -33,169 +22,6 @@ const (
 	// is less than 1 (i.e. root frames).
 	minDepth uint = 1
 )
-
-func (env *environment) postChunk(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	hub := sentry.GetHubFromContext(ctx)
-
-	s := sentry.StartSpan(ctx, "processing")
-	s.Description = "Read HTTP body"
-	body, err := io.ReadAll(r.Body)
-	s.Finish()
-	if err != nil {
-		if hub != nil {
-			hub.CaptureException(err)
-		}
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	r.Body.Close()
-
-	var p chunkPlatform
-	err = json.Unmarshal(body, &p)
-	if err != nil {
-		if hub != nil {
-			hub.CaptureException(err)
-		}
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-
-	var c chunk.Chunk
-	switch p.Platform {
-	case platform.Android:
-		c = chunk.New(new(chunk.AndroidChunk))
-	default:
-		c = chunk.New(new(chunk.SampleChunk))
-	}
-
-	s = sentry.StartSpan(ctx, "json.unmarshal")
-	s.Description = "Unmarshal profile"
-	err = json.Unmarshal(body, &c)
-	s.Finish()
-	if err != nil {
-		if hub != nil {
-			hub.CaptureException(err)
-		}
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-
-	c.Normalize()
-
-	if hub != nil {
-		hub.Scope().SetContext("Profile metadata", map[string]interface{}{
-			"chunk_id":        c.GetID(),
-			"organization_id": strconv.FormatUint(c.GetOrganizationID(), 10),
-			"profiler_id":     c.GetProfilerID(),
-			"project_id":      strconv.FormatUint(c.GetProjectID(), 10),
-			"size":            len(body),
-		})
-
-		hub.Scope().SetTags(map[string]string{
-			"platform": string(c.GetPlatform()),
-		})
-	}
-
-	s = sentry.StartSpan(ctx, "gcs.write")
-	s.Description = "Write profile to GCS"
-	err = storageutil.CompressedWrite(ctx, env.storage, c.StoragePath(), c)
-	s.Finish()
-	if err != nil {
-		if errors.Is(err, context.DeadlineExceeded) {
-			// This is a transient error, we'll retry
-			w.WriteHeader(http.StatusTooManyRequests)
-		} else {
-			if code := gcerrors.Code(err); code == gcerrors.FailedPrecondition {
-				w.WriteHeader(http.StatusPreconditionFailed)
-			} else {
-				if hub != nil {
-					hub.CaptureException(err)
-				}
-				// These errors won't be retried
-				w.WriteHeader(http.StatusInternalServerError)
-			}
-		}
-		return
-	}
-
-	s = sentry.StartSpan(ctx, "json.marshal")
-	s.Description = "Marshal chunk Kafka message"
-	b, err := json.Marshal(buildChunkKafkaMessage(c))
-	s.Finish()
-	if err != nil {
-		if hub != nil {
-			hub.CaptureException(err)
-		}
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-	s = sentry.StartSpan(ctx, "processing")
-	s.Description = "Send chunk to Kafka"
-	err = env.profilingWriter.WriteMessages(ctx, kafka.Message{
-		Topic: env.config.ProfileChunksKafkaTopic,
-		Value: b,
-	})
-	if err != nil {
-		if hub != nil {
-			hub.CaptureException(err)
-		}
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-	s.Finish()
-
-	// nb.: here we don't have a specific thread ID, so we're going to ingest
-	// functions metrics from all the thread.
-	// That's ok as this data is not supposed to be transaction/span scoped,
-	// plus, we'll only retain application frames, so much of the system functions
-	// chaff will be dropped.
-	s = sentry.StartSpan(ctx, "processing")
-	callTrees, err := c.CallTrees(nil)
-	s.Finish()
-	if err != nil {
-		hub.CaptureException(err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-	s = sentry.StartSpan(ctx, "processing")
-	s.Description = "Extract functions"
-	functions := metrics.ExtractFunctionsFromCallTrees(callTrees, minDepth)
-	functions = metrics.CapAndFilterFunctions(functions, maxUniqueFunctionsPerProfile, true)
-	s.Finish()
-
-	// This block writes into the functions dataset
-	s = sentry.StartSpan(ctx, "json.marshal")
-	s.Description = "Marshal functions Kafka message"
-	b, err = json.Marshal(buildChunkFunctionsKafkaMessage(&c, functions))
-	s.Finish()
-	if err != nil {
-		if hub != nil {
-			hub.CaptureException(err)
-		}
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-	s = sentry.StartSpan(ctx, "processing")
-	s.Description = "Send functions to Kafka"
-	err = env.profilingWriter.WriteMessages(ctx, kafka.Message{
-		Topic: env.config.CallTreesKafkaTopic,
-		Value: b,
-	})
-	s.Finish()
-	if hub != nil {
-		hub.Scope().SetContext("Call functions payload", map[string]interface{}{
-			"Size": len(b),
-		})
-	}
-	if err != nil {
-		if hub != nil {
-			hub.CaptureException(err)
-		}
-	}
-
-	w.WriteHeader(http.StatusNoContent)
-}
 
 type postProfileFromChunkIDsRequest struct {
 	ProfilerID string   `json:"profiler_id"`
@@ -515,21 +341,3 @@ type (
 		SDKVersion  string            `json:"sdk_version"`
 	}
 )
-
-func buildChunkKafkaMessage(c chunk.Chunk) *ChunkKafkaMessage {
-	return &ChunkKafkaMessage{
-		ChunkID:        c.GetID(),
-		DurationMS:     c.DurationMS(),
-		EndTimestamp:   c.EndTimestamp(),
-		Environment:    c.GetEnvironment(),
-		Platform:       c.GetPlatform(),
-		ProfilerID:     c.GetProfilerID(),
-		ProjectID:      c.GetProjectID(),
-		Received:       c.GetReceived(),
-		Release:        c.GetRelease(),
-		RetentionDays:  c.GetRetentionDays(),
-		SDKName:        c.SDKName(),
-		SDKVersion:     c.SDKVersion(),
-		StartTimestamp: c.StartTimestamp(),
-	}
-}

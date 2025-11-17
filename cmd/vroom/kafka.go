@@ -3,10 +3,8 @@ package main
 import (
 	"context"
 
-	"github.com/getsentry/vroom/internal/chunk"
 	"github.com/getsentry/vroom/internal/nodetree"
 	"github.com/getsentry/vroom/internal/platform"
-	"github.com/getsentry/vroom/internal/profile"
 	"github.com/segmentio/kafka-go"
 )
 
@@ -57,72 +55,6 @@ type (
 		VersionName          string            `json:"version_name"`
 	}
 )
-
-func buildFunctionsKafkaMessage(p profile.Profile, functions []nodetree.CallTreeFunction) FunctionsKafkaMessage {
-	return FunctionsKafkaMessage{
-		Environment:            p.Environment(),
-		Functions:              functions,
-		ID:                     p.ID(),
-		Platform:               p.Platform(),
-		ProjectID:              p.ProjectID(),
-		Received:               p.Received().Unix(),
-		Release:                p.Release(),
-		RetentionDays:          p.RetentionDays(),
-		Timestamp:              p.Timestamp().Unix(),
-		TransactionName:        p.Transaction().Name,
-		MaterializationVersion: 1,
-	}
-}
-
-func buildChunkFunctionsKafkaMessage(c *chunk.Chunk, functions []nodetree.CallTreeFunction) FunctionsKafkaMessage {
-	return FunctionsKafkaMessage{
-		Environment:            c.GetEnvironment(),
-		Functions:              functions,
-		ID:                     c.GetProfilerID(),
-		Platform:               c.GetPlatform(),
-		ProjectID:              c.GetProjectID(),
-		Received:               int64(c.GetReceived()),
-		Release:                c.GetRelease(),
-		RetentionDays:          c.GetRetentionDays(),
-		Timestamp:              int64(c.StartTimestamp()),
-		StartTimestamp:         c.StartTimestamp(),
-		EndTimestamp:           c.EndTimestamp(),
-		ProfilingType:          "continuous",
-		MaterializationVersion: 1,
-	}
-}
-
-func buildProfileKafkaMessage(p profile.Profile) ProfileKafkaMessage {
-	t := p.Transaction()
-	m := p.Metadata()
-	return ProfileKafkaMessage{
-		AndroidAPILevel:      m.AndroidAPILevel,
-		Architecture:         m.Architecture,
-		DeviceClassification: m.DeviceClassification,
-		DeviceLocale:         m.DeviceLocale,
-		DeviceManufacturer:   m.DeviceManufacturer,
-		DeviceModel:          m.DeviceModel,
-		DeviceOSBuildNumber:  m.DeviceOSBuildNumber,
-		DeviceOSName:         m.DeviceOSName,
-		DeviceOSVersion:      m.DeviceOSVersion,
-		DurationNS:           p.DurationNS(),
-		Environment:          p.Environment(),
-		ID:                   p.ID(),
-		OrganizationID:       p.OrganizationID(),
-		Platform:             p.Platform(),
-		ProjectID:            p.ProjectID(),
-		Received:             p.Received().Unix(),
-		RetentionDays:        p.RetentionDays(),
-		SDKName:              m.SDKName,
-		SDKVersion:           m.SDKVersion,
-		TraceID:              t.TraceID,
-		TransactionID:        t.ID,
-		TransactionName:      t.Name,
-		VersionCode:          m.VersionCode,
-		VersionName:          m.VersionName,
-	}
-}
-
 type KafkaWriter interface {
 	WriteMessages(ctx context.Context, msgs ...kafka.Message) error
 	Close() error
