@@ -138,8 +138,6 @@ func (e *environment) newRouter() (*httprouter.Router, error) {
 			e.postFlamegraph,
 		},
 		{http.MethodGet, "/health", e.getHealth},
-		{http.MethodPost, "/chunk", e.postChunk},
-		{http.MethodPost, "/profile", e.postProfile},
 		{http.MethodPost, "/regressed", e.postRegressed},
 	}
 

@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+**Features**:
+
+**Bug Fixes**:
+
+**Internal**:
+
+- Remove ingestion endpoints ([#654](https://github.com/getsentry/vroom/pull/654))
+
+
 ## 25.11.0
 
 ### Various fixes & improvements
