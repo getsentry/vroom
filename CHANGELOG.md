@@ -1,5 +1,9 @@
 # Changelog
 
+## 25.12.0
+
+- No documented changes.
+
 ## 25.11.1
 
 **Features**:
