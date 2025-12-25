@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+**Internal**:
+
+- Release Docker image to GHCR via Craft ([#658](https://github.com/getsentry/vroom/pull/658))
+
 ## 25.12.1
 
 - No documented changes.
