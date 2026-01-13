@@ -1,5 +1,6 @@
-minVersion: 1.0.0
-changelogPolicy: auto
+minVersion: "2.15.0"
+changelog:
+  policy: auto
 artifactProvider:
   name: none
 statusProvider:
@@ -14,9 +15,9 @@ targets:
   - id: release
     name: docker
     source: ghcr.io/getsentry/vroom
-    target: getsentry/vroom
+    target: ghcr.io/getsentry/vroom
   - id: latest
     name: docker
     source: ghcr.io/getsentry/vroom
-    target: getsentry/vroom
+    target: ghcr.io/getsentry/vroom
     targetFormat: '{{{target}}}:latest'
