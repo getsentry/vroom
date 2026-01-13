@@ -6,6 +6,10 @@ on:
       - main
       - release/**
 
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
   build-image:
     runs-on: ${{ matrix.os }}
