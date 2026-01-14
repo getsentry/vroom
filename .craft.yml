@@ -1,22 +1,25 @@
-minVersion: 1.0.0
-changelogPolicy: auto
+minVersion: 2.18.0
 artifactProvider:
   name: none
 statusProvider:
   name: github
   config:
     contexts:
-      - 'build-amd64'
-      - 'build-arm64'
-      - 'assemble-image'
+    - build-amd64
+    - build-arm64
+    - assemble-image
 targets:
-  - name: github
-  - id: release
-    name: docker
-    source: ghcr.io/getsentry/vroom
-    target: getsentry/vroom
-  - id: latest
-    name: docker
-    source: ghcr.io/getsentry/vroom
-    target: getsentry/vroom
-    targetFormat: '{{{target}}}:latest'
+- name: github
+- id: release
+  name: docker
+  source: ghcr.io/getsentry/vroom
+  target: getsentry/vroom
+- id: latest
+  name: docker
+  source: ghcr.io/getsentry/vroom
+  target: getsentry/vroom
+  targetFormat: '{{{target}}}:latest'
+versioning:
+  policy: calver
+changelog:
+  policy: auto
