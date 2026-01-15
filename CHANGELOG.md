@@ -1,5 +1,9 @@
 # Changelog
 
+## 26.1.0
+
+- No documented changes.
+
 ## 25.12.1
 
 - No documented changes.
