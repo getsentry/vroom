@@ -6,6 +6,10 @@
 
 - Release Docker image to GHCR via Craft ([#658](https://github.com/getsentry/vroom/pull/658))
 
+## 26.1.0
+
+- No documented changes.
+
 ## 25.12.1
 
 - No documented changes.
