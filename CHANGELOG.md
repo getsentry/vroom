@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+**Internal**:
+
+- Disable `fetch_materials` on GoCD `pipeline-complete` stages. ([#662](https://github.com/getsentry/vroom/pull/662))
+
 ## 26.2.1
 
 - No documented changes.
