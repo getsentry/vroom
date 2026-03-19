@@ -2,6 +2,7 @@ package chunk
 
 import (
 	"encoding/json"
+	"log/slog"
 	"strconv"
 	"time"
 
@@ -122,12 +123,35 @@ func (c AndroidChunk) GetOptions() options.Options {
 }
 
 func (c AndroidChunk) GetFrameWithFingerprint(target uint32) (frame.Frame, error) {
+	// Try exact match first
 	for _, m := range c.Profile.Methods {
 		f := m.Frame()
 		if f.Fingerprint() == target {
 			return f, nil
 		}
 	}
+	
+	// Build frames array for fallback matching
+	frames := make([]frame.Frame, 0, len(c.Profile.Methods))
+	for _, m := range c.Profile.Methods {
+		frames = append(frames, m.Frame())
+	}
+	
+	// Try fallback with fingerprint variations
+	matchedFrame, usedFallback, err := frame.FindFrameByFingerprintWithFallback(frames, target)
+	if err == nil && usedFallback {
+		slog.Warn(
+			"Frame matched using fallback fingerprint computation",
+			"target_fingerprint", target,
+			"matched_frame_fingerprint", matchedFrame.Fingerprint(),
+			"matched_function", matchedFrame.Function,
+			"matched_module", matchedFrame.ModuleOrPackage(),
+			"chunk_id", c.ID,
+			"profiler_id", c.ProfilerID,
+		)
+		return matchedFrame, nil
+	}
+	
 	return frame.Frame{}, frame.ErrFrameNotFound
 }
 
