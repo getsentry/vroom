@@ -130,13 +130,13 @@ func (c AndroidChunk) GetFrameWithFingerprint(target uint32) (frame.Frame, error
 			return f, nil
 		}
 	}
-	
+
 	// Build frames array for fallback matching
 	frames := make([]frame.Frame, 0, len(c.Profile.Methods))
 	for _, m := range c.Profile.Methods {
 		frames = append(frames, m.Frame())
 	}
-	
+
 	// Try fallback with fingerprint variations
 	matchedFrame, usedFallback, err := frame.FindFrameByFingerprintWithFallback(frames, target)
 	if err == nil && usedFallback {
@@ -151,7 +151,7 @@ func (c AndroidChunk) GetFrameWithFingerprint(target uint32) (frame.Frame, error
 		)
 		return matchedFrame, nil
 	}
-	
+
 	return frame.Frame{}, frame.ErrFrameNotFound
 }
 

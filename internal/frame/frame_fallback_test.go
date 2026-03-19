@@ -7,12 +7,12 @@ import (
 
 func TestFindFrameByFingerprintWithFallback(t *testing.T) {
 	tests := []struct {
-		name               string
-		frames             []Frame
-		targetFingerprint  uint32
-		expectMatch        bool
-		expectFallback     bool
-		expectedFunction   string
+		name              string
+		frames            []Frame
+		targetFingerprint uint32
+		expectMatch       bool
+		expectFallback    bool
+		expectedFunction  string
 	}{
 		{
 			name: "exact match",
@@ -58,7 +58,7 @@ func TestFindFrameByFingerprintWithFallback(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			matchedFrame, usedFallback, err := FindFrameByFingerprintWithFallback(tt.frames, tt.targetFingerprint)
-			
+
 			if tt.expectMatch {
 				if err != nil {
 					t.Errorf("Expected match but got error: %v", err)
@@ -80,9 +80,9 @@ func TestFindFrameByFingerprintWithFallback(t *testing.T) {
 
 func TestComputeFingerprintVariations(t *testing.T) {
 	tests := []struct {
-		name           string
-		frame          Frame
-		minVariations  int
+		name          string
+		frame         Frame
+		minVariations int
 	}{
 		{
 			name:          "frame with module and function",
@@ -107,7 +107,7 @@ func TestComputeFingerprintVariations(t *testing.T) {
 			if len(variations) < tt.minVariations {
 				t.Errorf("Expected at least %d variations, got %d", tt.minVariations, len(variations))
 			}
-			
+
 			// Verify first variation matches the standard fingerprint
 			if variations[0] != tt.frame.Fingerprint() {
 				t.Errorf("First variation should match standard fingerprint")
@@ -116,7 +116,7 @@ func TestComputeFingerprintVariations(t *testing.T) {
 	}
 }
 
-// Helper function to compute fingerprint from file and function
+// Helper function to compute fingerprint from file and function.
 func computeFingerprintFromFileAndFunction(file, function string) uint32 {
 	h := fnv.New64()
 	h.Write([]byte(file))

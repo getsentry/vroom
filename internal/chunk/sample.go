@@ -261,7 +261,7 @@ func (c SampleChunk) GetFrameWithFingerprint(target uint32) (frame.Frame, error)
 			return f, nil
 		}
 	}
-	
+
 	// Try fallback with fingerprint variations
 	matchedFrame, usedFallback, err := frame.FindFrameByFingerprintWithFallback(c.Profile.Frames, target)
 	if err == nil && usedFallback {
@@ -276,6 +276,6 @@ func (c SampleChunk) GetFrameWithFingerprint(target uint32) (frame.Frame, error)
 		)
 		return matchedFrame, nil
 	}
-	
+
 	return frame.Frame{}, frame.ErrFrameNotFound
 }

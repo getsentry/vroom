@@ -23,8 +23,8 @@ var (
 		"hermes": {},
 	}
 
-	ErrFrameNotFound                  = errors.New("Unable to find matching frame")
-	ErrFrameNotFoundWithFallback      = errors.New("Unable to find matching frame even with fallback")
+	ErrFrameNotFound             = errors.New("Unable to find matching frame")
+	ErrFrameNotFoundWithFallback = errors.New("Unable to find matching frame even with fallback")
 )
 
 type (
@@ -248,10 +248,10 @@ func (f Frame) Fingerprint() uint32 {
 func computeFingerprintVariations(f Frame) []uint32 {
 	variations := make([]uint32, 0, 8)
 	h := fnv.New64()
-	
+
 	// Original fingerprint (already tried, but include for completeness)
 	variations = append(variations, f.Fingerprint())
-	
+
 	// Try with raw Package instead of trimPackage(Package)
 	if f.Package != "" && f.Module == "" {
 		h.Reset()
@@ -260,7 +260,7 @@ func computeFingerprintVariations(f Frame) []uint32 {
 		h.Write([]byte(f.Function))
 		variations = append(variations, uint32(h.Sum64()))
 	}
-	
+
 	// Try with File instead of Module/Package
 	if f.File != "" && (f.Module != "" || f.Package != "") {
 		h.Reset()
@@ -269,7 +269,7 @@ func computeFingerprintVariations(f Frame) []uint32 {
 		h.Write([]byte(f.Function))
 		variations = append(variations, uint32(h.Sum64()))
 	}
-	
+
 	// Try with Module alone (even if Package is set)
 	if f.Module != "" {
 		h.Reset()
@@ -278,19 +278,19 @@ func computeFingerprintVariations(f Frame) []uint32 {
 		h.Write([]byte(f.Function))
 		variations = append(variations, uint32(h.Sum64()))
 	}
-	
+
 	// Try with empty module/package (just function name)
 	if f.Function != "" {
 		h.Reset()
 		h.Write([]byte{':'})
 		h.Write([]byte(f.Function))
 		variations = append(variations, uint32(h.Sum64()))
-		
+
 		h.Reset()
 		h.Write([]byte(f.Function))
 		variations = append(variations, uint32(h.Sum64()))
 	}
-	
+
 	return variations
 }
 
@@ -305,7 +305,7 @@ func FindFrameByFingerprintWithFallback(frames []Frame, targetFingerprint uint32
 			return f, false, nil
 		}
 	}
-	
+
 	// Second pass: try fingerprint variations (fallback)
 	for _, f := range frames {
 		variations := computeFingerprintVariations(f)
@@ -315,7 +315,7 @@ func FindFrameByFingerprintWithFallback(frames []Frame, targetFingerprint uint32
 			}
 		}
 	}
-	
+
 	return Frame{}, false, ErrFrameNotFoundWithFallback
 }
 
