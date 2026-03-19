@@ -678,13 +678,13 @@ func (p Android) GetFrameWithFingerprint(target uint32) (frame.Frame, error) {
 			return f, nil
 		}
 	}
-	
+
 	// Build frames array for fallback matching
 	frames := make([]frame.Frame, 0, len(p.Methods))
 	for _, m := range p.Methods {
 		frames = append(frames, m.Frame())
 	}
-	
+
 	// Try fallback with fingerprint variations
 	matchedFrame, usedFallback, err := frame.FindFrameByFingerprintWithFallback(frames, target)
 	if err == nil && usedFallback {
@@ -697,7 +697,7 @@ func (p Android) GetFrameWithFingerprint(target uint32) (frame.Frame, error) {
 		)
 		return matchedFrame, nil
 	}
-	
+
 	// TODO: handle react native
 	return frame.Frame{}, frame.ErrFrameNotFound
 }
