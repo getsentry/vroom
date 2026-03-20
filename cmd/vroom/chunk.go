@@ -1,11 +1,13 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/getsentry/sentry-go"
 	"github.com/google/uuid"
@@ -43,6 +45,8 @@ type postProfileFromChunkIDsResponse struct {
 // body request, we use a POST method instead (similarly to the flamegraph endpoint).
 func (env *environment) postProfileFromChunkIDs(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+	downloadContext, cancel := context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
 	hub := sentry.GetHubFromContext(ctx)
 	ps := httprouter.ParamsFromContext(ctx)
 	rawOrganizationID := ps.ByName("organization_id")
@@ -87,7 +91,7 @@ func (env *environment) postProfileFromChunkIDs(w http.ResponseWriter, r *http.R
 	go func() {
 		for _, ID := range requestBody.ChunkIDs {
 			readJobs <- chunk.ReadJob{
-				Ctx:            ctx,
+				Ctx:            downloadContext,
 				Storage:        env.storage,
 				OrganizationID: organizationID,
 				ProjectID:      projectID,
@@ -125,6 +129,10 @@ func (env *environment) postProfileFromChunkIDs(w http.ResponseWriter, r *http.R
 	if err != nil {
 		if errors.Is(err, storageutil.ErrObjectNotFound) {
 			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+		if errors.Is(err, context.Canceled) {
+			w.WriteHeader(http.StatusServiceUnavailable)
 			return
 		}
 		var e *googleapi.Error
@@ -290,6 +298,10 @@ func (env *environment) getRawChunk(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		if errors.Is(err, storageutil.ErrObjectNotFound) {
 			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+		if errors.Is(err, context.Canceled) {
+			w.WriteHeader(http.StatusServiceUnavailable)
 			return
 		}
 		var e *googleapi.Error
