@@ -33,7 +33,6 @@ type environment struct {
 	config ServiceConfig
 
 	occurrencesWriter KafkaWriter
-	profilingWriter   KafkaWriter
 
 	storage *blob.Bucket
 }
@@ -41,11 +40,6 @@ type environment struct {
 var (
 	release  string
 	readJobs chan storageutil.ReadJob
-)
-
-const (
-	KiB int64 = 1024
-	MiB       = 1024 * KiB
 )
 
 func newEnvironment() (*environment, error) {
@@ -71,17 +65,6 @@ func newEnvironment() (*environment, error) {
 		WriteTimeout: 3 * time.Second,
 		Transport:    createKafkaRoundTripper(e.config),
 	}
-	e.profilingWriter = &kafka.Writer{
-		Addr:         kafka.TCP(e.config.ProfilingKafkaBrokers...),
-		Async:        true,
-		Balancer:     kafka.CRC32Balancer{},
-		BatchBytes:   20 * MiB,
-		BatchSize:    10,
-		Compression:  kafka.Lz4,
-		ReadTimeout:  3 * time.Second,
-		WriteTimeout: 3 * time.Second,
-		Transport:    createKafkaRoundTripper(e.config),
-	}
 	return &e, nil
 }
 
@@ -91,10 +74,6 @@ func (e *environment) shutdown() {
 		sentry.CaptureException(err)
 	}
 	err = e.occurrencesWriter.Close()
-	if err != nil {
-		sentry.CaptureException(err)
-	}
-	err = e.profilingWriter.Close()
 	if err != nil {
 		sentry.CaptureException(err)
 	}
