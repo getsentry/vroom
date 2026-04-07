@@ -18,7 +18,6 @@ services:
     ports:
       - 127.0.0.1:8085:8085
     environment:
-      SENTRY_KAFKA_BROKERS_PROFILING: kafka-kafka-1:9092
       SENTRY_KAFKA_BROKERS_OCCURRENCES: kafka-kafka-1:9092
       SENTRY_BUCKET_PROFILES: file://localhost//var/lib/sentry-profiles
       SENTRY_SNUBA_HOST: http://127.0.0.1:1218

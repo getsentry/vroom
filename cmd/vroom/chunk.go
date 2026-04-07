@@ -13,7 +13,6 @@ import (
 	"google.golang.org/api/googleapi"
 
 	"github.com/getsentry/vroom/internal/chunk"
-	"github.com/getsentry/vroom/internal/platform"
 	"github.com/getsentry/vroom/internal/storageutil"
 )
 
@@ -320,24 +319,3 @@ func (env *environment) getRawChunk(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	_, _ = w.Write(b)
 }
-
-type (
-	ChunkKafkaMessage struct {
-		ProjectID  uint64 `json:"project_id"`
-		ProfilerID string `json:"profiler_id"`
-		ChunkID    string `json:"chunk_id"`
-
-		StartTimestamp float64 `json:"start_timestamp"`
-		EndTimestamp   float64 `json:"end_timestamp"`
-		DurationMS     uint64  `json:"duration_ms"`
-
-		Received      float64 `json:"received"`
-		RetentionDays int     `json:"retention_days"`
-
-		Environment string            `json:"environment"`
-		Platform    platform.Platform `json:"platform"`
-		Release     string            `json:"release"`
-		SDKName     string            `json:"sdk_name"`
-		SDKVersion  string            `json:"sdk_version"`
-	}
-)
