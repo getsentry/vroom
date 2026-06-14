@@ -101,6 +101,19 @@ func MergeSampleChunks(chunks []SampleChunk, startTS, endTS uint64) (SampleChunk
 		chunk.Measurements = jsonRawMesaurement
 	}
 
+	// Collect the attachments of all the merged chunks.
+	// The merged chunk is based on the first one, so reset its list
+	// before appending to avoid duplicating the first chunk's attachments.
+	chunk.Attachments = nil
+	for _, c := range chunks {
+		for _, attachment := range c.Attachments {
+			if attachment.StoredID == "" {
+				continue
+			}
+			chunk.Attachments = append(chunk.Attachments, attachment)
+		}
+	}
+
 	return chunk, nil
 }
 

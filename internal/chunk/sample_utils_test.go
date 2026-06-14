@@ -101,3 +101,75 @@ func TestMergeSampleChunks(t *testing.T) {
 		})
 	}
 }
+
+func TestMergeSampleChunksAttachments(t *testing.T) {
+	chunks := []SampleChunk{
+		{
+			Attachments: []Attachment{
+				{Name: "raw_profile", ContentType: "application/x-perfetto", StoredID: "raw_profile_b"},
+				// Attachments without a stored ID are skipped.
+				{Name: "raw_profile", ContentType: "application/x-perfetto", StoredID: ""},
+			},
+			Profile: SampleData{
+				Frames: []frame.Frame{
+					{Function: "b"},
+				},
+				Samples: []Sample{
+					{StackID: 0, Timestamp: 3.0},
+					{StackID: 0, Timestamp: 4.0},
+				},
+				Stacks: [][]int{
+					{0},
+				},
+			},
+		},
+		// chunk without attachments
+		{
+			Profile: SampleData{
+				Frames: []frame.Frame{
+					{Function: "c"},
+				},
+				Samples: []Sample{
+					{StackID: 0, Timestamp: 5.0},
+					{StackID: 0, Timestamp: 6.0},
+				},
+				Stacks: [][]int{
+					{0},
+				},
+			},
+		},
+		{
+			Attachments: []Attachment{
+				{Name: "raw_profile", ContentType: "application/x-perfetto", StoredID: "raw_profile_a"},
+			},
+			Profile: SampleData{
+				Frames: []frame.Frame{
+					{Function: "a"},
+				},
+				Samples: []Sample{
+					{StackID: 0, Timestamp: 1.0},
+					{StackID: 0, Timestamp: 2.0},
+				},
+				Stacks: [][]int{
+					{0},
+				},
+			},
+		},
+	}
+
+	merged, err := MergeSampleChunks(chunks, 0, uint64(10e9))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Attachments follow the merged chunk order. Note: the chunk sort in
+	// MergeSampleChunks is only well-defined for non-overlapping chunks,
+	// so no strict chronological order is guaranteed.
+	want := []Attachment{
+		{Name: "raw_profile", ContentType: "application/x-perfetto", StoredID: "raw_profile_a"},
+		{Name: "raw_profile", ContentType: "application/x-perfetto", StoredID: "raw_profile_b"},
+	}
+	if diff := testutil.Diff(merged.Attachments, want); diff != "" {
+		t.Fatalf("Result mismatch: got - want +\n%s", diff)
+	}
+}

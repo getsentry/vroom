@@ -18,6 +18,7 @@ type (
 		GetPlatform() platform.Platform
 		GetProfilerID() string
 		GetProjectID() uint64
+		GetAttachments() []Attachment
 		GetReceived() float64
 		GetRelease() string
 		GetRetentionDays() int
@@ -105,6 +106,10 @@ func (c Chunk) GetProfilerID() string {
 
 func (c Chunk) GetProjectID() uint64 {
 	return c.chunk.GetProjectID()
+}
+
+func (c Chunk) GetAttachments() []Attachment {
+	return c.chunk.GetAttachments()
 }
 
 func (c Chunk) GetReceived() float64 {

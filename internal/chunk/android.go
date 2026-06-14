@@ -97,6 +97,11 @@ func (c AndroidChunk) GetProjectID() uint64 {
 	return c.ProjectID
 }
 
+// Attachments are only supported for sample chunks.
+func (c AndroidChunk) GetAttachments() []Attachment {
+	return nil
+}
+
 func (c AndroidChunk) GetReceived() float64 {
 	return c.Received
 }

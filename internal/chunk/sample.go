@@ -46,6 +46,18 @@ type (
 		Measurements json.RawMessage `json:"measurements"`
 
 		Options options.Options `json:"options,omitempty"`
+
+		// Attachments lists the files related to this chunk (e.g. a raw
+		// profile) stored in the object store. On merged chunks it contains
+		// the attachments of all the chunks that were merged
+		// (see MergeSampleChunks).
+		Attachments []Attachment `json:"attachments,omitempty"`
+	}
+
+	Attachment struct {
+		Name        string `json:"name"`
+		ContentType string `json:"content_type,omitempty"`
+		StoredID    string `json:"stored_id"`
 	}
 
 	SampleData struct {
@@ -224,6 +236,10 @@ func (c SampleChunk) GetProfilerID() string {
 
 func (c SampleChunk) GetProjectID() uint64 {
 	return c.ProjectID
+}
+
+func (c SampleChunk) GetAttachments() []Attachment {
+	return c.Attachments
 }
 
 func (c SampleChunk) GetReceived() float64 {
