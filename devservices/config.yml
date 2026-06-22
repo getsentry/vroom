@@ -7,7 +7,7 @@ x-sentry-service-config:
       remote:
         repo_name: sentry-shared-kafka
         branch: main
-        repo_link: git@github.com:getsentry/sentry-shared-kafka.git
+        repo_link: https://github.com/getsentry/sentry-shared-kafka.git
     vroom:
       description: Sentry's profiling service, processing and deriving data about your profiles
   modes:
