@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"hash/fnv"
+	"log/slog"
 	"math"
 	"sort"
 
@@ -254,10 +255,27 @@ func (c SampleChunk) GetOptions() options.Options {
 }
 
 func (c SampleChunk) GetFrameWithFingerprint(target uint32) (frame.Frame, error) {
+	// Try exact match first
 	for _, f := range c.Profile.Frames {
 		if f.Fingerprint() == target {
 			return f, nil
 		}
 	}
+
+	// Try fallback with fingerprint variations
+	matchedFrame, usedFallback, err := frame.FindFrameByFingerprintWithFallback(c.Profile.Frames, target)
+	if err == nil && usedFallback {
+		slog.Warn(
+			"Frame matched using fallback fingerprint computation",
+			"target_fingerprint", target,
+			"matched_frame_fingerprint", matchedFrame.Fingerprint(),
+			"matched_function", matchedFrame.Function,
+			"matched_module", matchedFrame.ModuleOrPackage(),
+			"chunk_id", c.ID,
+			"profiler_id", c.ProfilerID,
+		)
+		return matchedFrame, nil
+	}
+
 	return frame.Frame{}, frame.ErrFrameNotFound
 }
