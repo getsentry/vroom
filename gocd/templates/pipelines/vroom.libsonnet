@@ -28,7 +28,8 @@ local deploy_canary_stage(region) =
 
 function(region) {
   environment_variables: {
-    GITHUB_TOKEN: '{{SECRET:[devinfra-github][token]}}',
+    GITHUB_APP_ID: '{{SECRET:[devinfra-github][app_id]}}',
+    GITHUB_APP_PRIVATE_KEY: '{{SECRET:[devinfra-github][private_key]}}',
     SENTRY_REGION: region,
     SKIP_CANARY_CHECKS: false,
   },
