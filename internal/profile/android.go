@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"hash/fnv"
+	"log/slog"
 	"math"
 	"path"
 	"strings"
@@ -670,12 +671,33 @@ func (p Android) ActiveThreadID() uint64 {
 }
 
 func (p Android) GetFrameWithFingerprint(target uint32) (frame.Frame, error) {
+	// Try exact match first
 	for _, m := range p.Methods {
 		f := m.Frame()
 		if f.Fingerprint() == target {
 			return f, nil
 		}
 	}
+
+	// Build frames array for fallback matching
+	frames := make([]frame.Frame, 0, len(p.Methods))
+	for _, m := range p.Methods {
+		frames = append(frames, m.Frame())
+	}
+
+	// Try fallback with fingerprint variations
+	matchedFrame, usedFallback, err := frame.FindFrameByFingerprintWithFallback(frames, target)
+	if err == nil && usedFallback {
+		slog.Warn(
+			"Frame matched using fallback fingerprint computation",
+			"target_fingerprint", target,
+			"matched_frame_fingerprint", matchedFrame.Fingerprint(),
+			"matched_function", matchedFrame.Function,
+			"matched_module", matchedFrame.ModuleOrPackage(),
+		)
+		return matchedFrame, nil
+	}
+
 	// TODO: handle react native
 	return frame.Frame{}, frame.ErrFrameNotFound
 }
