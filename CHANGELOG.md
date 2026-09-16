@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+**Features**:
+
+**Bug Fixes**:
+
+**Internal**:
+
+- Fix flamegraph endpoint span nesting. ([#677](https://github.com/getsentry/vroom/pull/677))
+
 ## 26.9.0
 
 - No documented changes.
