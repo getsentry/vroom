@@ -367,7 +367,6 @@ func GetFlamegraphFromCandidates(
 	continuousProfileCandidates []examples.ContinuousProfileCandidate,
 	jobs chan storageutil.ReadJob,
 	ma *metrics.Aggregator,
-	span *sentry.Span,
 ) (speedscope.Output, error) {
 	hub := sentry.GetHubFromContext(ctx)
 
@@ -375,13 +374,14 @@ func GetFlamegraphFromCandidates(
 	defer close(results)
 
 	go func() {
-		dispatchSpan := span.StartChild("dispatch candidates")
+		dispatchSpan := sentry.StartSpan(ctx, "dispatch candidates")
 		dispatchSpan.SetData("transaction_candidates", len(transactionProfileCandidates))
 		dispatchSpan.SetData("continuous_candidates", len(continuousProfileCandidates))
+		defer dispatchSpan.Finish()
 
 		for _, candidate := range transactionProfileCandidates {
 			jobs <- profile.CallTreesReadJob{
-				Ctx:            ctx,
+				Ctx:            dispatchSpan.Context(),
 				OrganizationID: organizationID,
 				ProjectID:      candidate.ProjectID,
 				ProfileID:      candidate.ProfileID,
@@ -392,7 +392,7 @@ func GetFlamegraphFromCandidates(
 
 		for _, candidate := range continuousProfileCandidates {
 			jobs <- chunk.CallTreesReadJob{
-				Ctx:            ctx,
+				Ctx:            dispatchSpan.Context(),
 				OrganizationID: organizationID,
 				ProjectID:      candidate.ProjectID,
 				ProfilerID:     candidate.ProfilerID,
@@ -405,13 +405,11 @@ func GetFlamegraphFromCandidates(
 				Result:         results,
 			}
 		}
-
-		dispatchSpan.Finish()
 	}()
 
 	var flamegraphTree []*nodetree.Node
 
-	flamegraphSpan := span.StartChild("processing candidates")
+	flamegraphSpan := sentry.StartSpan(ctx, "processing candidates")
 
 	numCandidates := len(transactionProfileCandidates) + len(continuousProfileCandidates)
 
@@ -439,7 +437,7 @@ func GetFlamegraphFromCandidates(
 		}
 
 		if result, ok := res.(profile.CallTreesReadJobResult); ok {
-			transactionProfileSpan := span.StartChild("calltree")
+			transactionProfileSpan := flamegraphSpan.StartChild("calltree")
 			transactionProfileSpan.Description = "transaction profile"
 
 			start, end := result.Profile.StartAndEndEpoch()
@@ -463,7 +461,7 @@ func GetFlamegraphFromCandidates(
 
 			transactionProfileSpan.Finish()
 		} else if result, ok := res.(chunk.CallTreesReadJobResult); ok {
-			chunkProfileSpan := span.StartChild("calltree")
+			chunkProfileSpan := flamegraphSpan.StartChild("calltree")
 			chunkProfileSpan.Description = "continuous profile"
 
 			for threadID, callTree := range result.CallTrees {
@@ -498,16 +496,17 @@ func GetFlamegraphFromCandidates(
 			chunkProfileSpan.Finish()
 		} else {
 			// This should never happen
+			flamegraphSpan.Finish()
 			return speedscope.Output{}, errors.New("unexpected result from storage")
 		}
 	}
 
 	flamegraphSpan.Finish()
 
-	serializeSpan := span.StartChild("serialize")
+	serializeSpan := sentry.StartSpan(ctx, "serialize")
 	defer serializeSpan.Finish()
 
-	sp := toSpeedscope(ctx, flamegraphTree, 1000, 0)
+	sp := toSpeedscope(serializeSpan.Context(), flamegraphTree, 1000, 0)
 	if ma != nil {
 		fm := ma.ToMetrics()
 		sp.Metrics = &fm
