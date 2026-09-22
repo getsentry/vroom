@@ -371,13 +371,16 @@ func GetFlamegraphFromCandidates(
 	hub := sentry.GetHubFromContext(ctx)
 
 	results := make(chan storageutil.ReadJobResult)
-	defer close(results)
+	dispatchDone := make(chan struct{})
 
 	go func() {
 		dispatchSpan := sentry.StartSpan(ctx, "dispatch candidates")
 		dispatchSpan.SetData("transaction_candidates", len(transactionProfileCandidates))
 		dispatchSpan.SetData("continuous_candidates", len(continuousProfileCandidates))
-		defer dispatchSpan.Finish()
+		defer func() {
+			dispatchSpan.Finish()
+			close(dispatchDone)
+		}()
 
 		for _, candidate := range transactionProfileCandidates {
 			jobs <- profile.CallTreesReadJob{
@@ -412,9 +415,14 @@ func GetFlamegraphFromCandidates(
 	flamegraphSpan := sentry.StartSpan(ctx, "processing candidates")
 
 	numCandidates := len(transactionProfileCandidates) + len(continuousProfileCandidates)
+	var processingErr error
 
 	for i := 0; i < numCandidates; i++ {
 		res := <-results
+
+		if processingErr != nil {
+			continue
+		}
 
 		err := res.Error()
 		if err != nil {
@@ -495,13 +503,16 @@ func GetFlamegraphFromCandidates(
 			}
 			chunkProfileSpan.Finish()
 		} else {
-			// This should never happen
-			flamegraphSpan.Finish()
-			return speedscope.Output{}, errors.New("unexpected result from storage")
+			processingErr = errors.New("unexpected result from storage")
 		}
 	}
 
+	<-dispatchDone
 	flamegraphSpan.Finish()
+
+	if processingErr != nil {
+		return speedscope.Output{}, processingErr
+	}
 
 	serializeSpan := sentry.StartSpan(ctx, "serialize")
 	defer serializeSpan.Finish()

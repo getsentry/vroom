@@ -9,6 +9,7 @@
 **Internal**:
 
 - Fix flamegraph endpoint span nesting. ([#677](https://github.com/getsentry/vroom/pull/677))
+- More robust concurrency structure for flamegraph generation. ([#678](https://github.com/getsentry/vroom/pull/678))
 
 ## 26.9.0
 
