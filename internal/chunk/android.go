@@ -27,6 +27,7 @@ type (
 		Environment string              `json:"environment"`
 		Platform    platform.Platform   `json:"platform"`
 		Release     string              `json:"release"`
+		Version     string              `json:"version,omitempty"`
 		Timestamp   float64             `json:"timestamp"`
 
 		Profile      profile.Android `json:"profile"`
