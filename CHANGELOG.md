@@ -4,6 +4,8 @@
 
 **Features**:
 
+- Add `vroom healthcheck` subcommand for shell-free container healthchecks. ([#679](https://github.com/getsentry/vroom/pull/679))
+
 **Bug Fixes**:
 
 **Internal**:
