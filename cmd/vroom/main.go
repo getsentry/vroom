@@ -134,6 +134,10 @@ func (e *environment) newRouter() (*httprouter.Router, error) {
 }
 
 func main() {
+	if len(os.Args) > 1 && os.Args[1] == "healthcheck" {
+		os.Exit(runHealthcheck())
+	}
+
 	logutil.ConfigureLogger()
 
 	env, err := newEnvironment()
