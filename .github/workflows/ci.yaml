@@ -37,6 +37,8 @@ jobs:
               - added|modified: '**/*'
 
       - uses: actions/setup-go@v6
+        with:
+          go-version: stable
 
       # this is way too slow to add to pre-commit
       - run: go mod tidy
