@@ -146,12 +146,13 @@ func main() {
 	}
 
 	err = sentry.Init(sentry.ClientOptions{
-		Dsn:                   env.config.SentryDSN,
-		EnableTracing:         true,
-		TracesSampleRate:      1.0,
-		Environment:           env.config.Environment,
-		Release:               release,
-		BeforeSendTransaction: httputil.SetHTTPStatusCodeTag,
+		Dsn:                    env.config.SentryDSN,
+		EnableTracing:          true,
+		TracesSampleRate:       1.0,
+		TraceIgnoreStatusCodes: [][]int{},
+		Environment:            env.config.Environment,
+		Release:                release,
+		BeforeSendTransaction:  httputil.SetHTTPStatusCodeTag,
 		BeforeSend: func(event *sentry.Event, hint *sentry.EventHint) *sentry.Event {
 			code := gcerrors.Code(hint.OriginalException)
 			switch code {
