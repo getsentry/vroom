@@ -50,6 +50,10 @@ type version struct {
 	Version string `json:"version"`
 }
 
+// The version emitted by Relay for Android's trace-based profiles.
+// Keep in sync with vroomrs' ANDROID_TRACE_FORMAT_VERSION.
+const androidTraceFormatVersion = "2.android-trace"
+
 func (c *Chunk) UnmarshalJSON(b []byte) error {
 	var v version
 	err := json.Unmarshal(b, &v)
@@ -57,7 +61,7 @@ func (c *Chunk) UnmarshalJSON(b []byte) error {
 		return err
 	}
 	switch v.Version {
-	case "":
+	case "", androidTraceFormatVersion:
 		c.chunk = new(AndroidChunk)
 	default:
 		c.chunk = new(SampleChunk)
