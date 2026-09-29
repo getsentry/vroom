@@ -66,7 +66,7 @@ func UnmarshalCompressed(
 
 	or, err := b.NewReader(ctx, objectName, nil)
 	if err != nil {
-		if gcerrors.Code(err) == gcerrors.NotFound {
+		if gcerrors.Code(err) == gcerrors.NotFound || errors.Is(err, storage.ErrObjectNotExist) {
 			return fmt.Errorf("%w: %s", ErrObjectNotFound, objectName)
 		}
 
