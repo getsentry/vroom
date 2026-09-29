@@ -5,7 +5,7 @@
 **Features**:
 
 - Add `vroom healthcheck` subcommand for shell-free container healthchecks. ([#679](https://github.com/getsentry/vroom/pull/679))
-- Add `vroom drain <duration>` subcommand for shell-free preStop hooks, and clear a stale `/tmp/vroom.down` on startup.
+- Add `vroom drain <duration>` subcommand for shell-free preStop hooks, and clear a stale `/tmp/vroom.down` on startup. ([#683](https://github.com/getsentry/vroom/pull/683))
 
 **Bug Fixes**:
 
