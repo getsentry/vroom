@@ -13,6 +13,7 @@
 - Fix flamegraph endpoint span nesting. ([#677](https://github.com/getsentry/vroom/pull/677))
 - More robust concurrency structure for flamegraph generation. ([#678](https://github.com/getsentry/vroom/pull/678))
 - Prevent script injection in release workflow. ([#669](https://github.com/getsentry/vroom/pull/669))
+- Bump google.golang.org/grpc from 1.56.3 to 1.83.2. ([#681](https://github.com/getsentry/vroom/pull/681))
 
 ## 26.9.0
 
