@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"hash/fnv"
+	"log/slog"
 	"sort"
 	"strconv"
 	"strings"
@@ -447,11 +448,27 @@ func (p *Profile) GetOptions() options.Options {
 }
 
 func (p *Profile) GetFrameWithFingerprint(target uint32) (frame.Frame, error) {
+	// Try exact match first
 	for _, f := range p.Trace.Frames {
 		if f.Fingerprint() == target {
 			return f, nil
 		}
 	}
+
+	// Try fallback with fingerprint variations
+	matchedFrame, usedFallback, err := frame.FindFrameByFingerprintWithFallback(p.Trace.Frames, target)
+	if err == nil && usedFallback {
+		slog.Warn(
+			"Frame matched using fallback fingerprint computation",
+			"target_fingerprint", target,
+			"matched_frame_fingerprint", matchedFrame.Fingerprint(),
+			"matched_function", matchedFrame.Function,
+			"matched_module", matchedFrame.ModuleOrPackage(),
+			"profile_id", p.EventID,
+		)
+		return matchedFrame, nil
+	}
+
 	return frame.Frame{}, frame.ErrFrameNotFound
 }
 

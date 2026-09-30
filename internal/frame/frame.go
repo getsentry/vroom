@@ -23,7 +23,8 @@ var (
 		"hermes": {},
 	}
 
-	ErrFrameNotFound = errors.New("Unable to find matching frame")
+	ErrFrameNotFound             = errors.New("Unable to find matching frame")
+	ErrFrameNotFoundWithFallback = errors.New("Unable to find matching frame even with fallback")
 )
 
 type (
@@ -238,6 +239,84 @@ func (f Frame) Fingerprint() uint32 {
 	// function here to preserve backwards compatibility with existing fingerprints
 	// that we can cast
 	return uint32(h.Sum64())
+}
+
+// computeFingerprintVariations computes alternative fingerprint values for a frame
+// by trying different normalizations of module/package and function names.
+// This helps match frames when the fingerprint computation differs slightly
+// between client SDK and vroom (e.g., due to encoding, normalization, or edge cases).
+func computeFingerprintVariations(f Frame) []uint32 {
+	variations := make([]uint32, 0, 8)
+	h := fnv.New64()
+
+	// Original fingerprint (already tried, but include for completeness)
+	variations = append(variations, f.Fingerprint())
+
+	// Try with raw Package instead of trimPackage(Package)
+	if f.Package != "" && f.Module == "" {
+		h.Reset()
+		h.Write([]byte(f.Package))
+		h.Write([]byte{':'})
+		h.Write([]byte(f.Function))
+		variations = append(variations, uint32(h.Sum64()))
+	}
+
+	// Try with File instead of Module/Package
+	if f.File != "" && (f.Module != "" || f.Package != "") {
+		h.Reset()
+		h.Write([]byte(f.File))
+		h.Write([]byte{':'})
+		h.Write([]byte(f.Function))
+		variations = append(variations, uint32(h.Sum64()))
+	}
+
+	// Try with Module alone (even if Package is set)
+	if f.Module != "" {
+		h.Reset()
+		h.Write([]byte(f.Module))
+		h.Write([]byte{':'})
+		h.Write([]byte(f.Function))
+		variations = append(variations, uint32(h.Sum64()))
+	}
+
+	// Try with empty module/package (just function name)
+	if f.Function != "" {
+		h.Reset()
+		h.Write([]byte{':'})
+		h.Write([]byte(f.Function))
+		variations = append(variations, uint32(h.Sum64()))
+
+		h.Reset()
+		h.Write([]byte(f.Function))
+		variations = append(variations, uint32(h.Sum64()))
+	}
+
+	return variations
+}
+
+// FindFrameByFingerprintWithFallback searches for a frame matching the target fingerprint.
+// It first tries exact matches, then tries alternative fingerprint calculations
+// to handle cases where the client SDK and vroom compute fingerprints differently.
+// Returns the matching frame, whether fallback was used, and an error if no match found.
+func FindFrameByFingerprintWithFallback(frames []Frame, targetFingerprint uint32) (Frame, bool, error) {
+	// First pass: try exact fingerprint match
+	for _, f := range frames {
+		if f.Fingerprint() == targetFingerprint {
+			return f, false, nil
+		}
+	}
+
+	// Second pass: try fingerprint variations (fallback)
+	for _, f := range frames {
+		variations := computeFingerprintVariations(f)
+		for _, variant := range variations {
+			if variant == targetFingerprint {
+				return f, true, nil
+			}
+		}
+	}
+
+	return Frame{}, false, ErrFrameNotFoundWithFallback
 }
 
 func defaultFormatter(f Frame) string {
