@@ -15,13 +15,6 @@ import (
 	"github.com/segmentio/kafka-go/sasl/scram"
 )
 
-type MetricSummary struct {
-	Min   float64
-	Max   float64
-	Sum   float64
-	Count uint64
-}
-
 func createKafkaRoundTripper(e ServiceConfig) kafka.RoundTripper {
 	var saslMechanism sasl.Mechanism
 	var tlsConfig *tls.Config
