@@ -2,9 +2,84 @@
 
 ## Unreleased
 
+**Features**:
+
+- Add `vroom healthcheck` subcommand for shell-free container healthchecks. ([#679](https://github.com/getsentry/vroom/pull/679))
+
+**Bug Fixes**:
+
 **Internal**:
 
+- Fix flamegraph endpoint span nesting. ([#677](https://github.com/getsentry/vroom/pull/677))
+- More robust concurrency structure for flamegraph generation. ([#678](https://github.com/getsentry/vroom/pull/678))
+- Prevent script injection in release workflow. ([#669](https://github.com/getsentry/vroom/pull/669))
+- Bump google.golang.org/grpc from 1.56.3 to 1.83.2. ([#681](https://github.com/getsentry/vroom/pull/681))
+- Bump github.com/sirupsen/logrus from 1.9.0 to 1.9.1 ([#656](https://github.com/getsentry/vroom/pull/656))
 - Release Docker image to GHCR via Craft ([#658](https://github.com/getsentry/vroom/pull/658))
+
+## 26.9.0
+
+- No documented changes.
+
+## 26.8.0
+
+- No documented changes.
+
+## 26.7.2
+
+- No documented changes.
+
+## 26.7.1
+
+- No documented changes.
+
+## 26.7.0
+
+- No documented changes.
+
+## 26.6.0
+
+- No documented changes.
+
+## 26.5.2
+
+- No documented changes.
+
+## 26.5.1
+
+- No documented changes.
+
+## 26.5.0
+
+- No documented changes.
+
+## 26.4.2
+
+- No documented changes.
+
+## 26.4.1
+
+- No documented changes.
+
+## 26.4.0
+
+- No documented changes.
+
+## 26.3.1
+
+- No documented changes.
+
+## 26.3.0
+
+- No documented changes.
+
+## 26.2.1
+
+- No documented changes.
+
+## 26.2.0
+
+- No documented changes.
 
 ## 26.1.0
 
