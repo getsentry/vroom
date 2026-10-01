@@ -15,6 +15,7 @@
 - Prevent script injection in release workflow. ([#669](https://github.com/getsentry/vroom/pull/669))
 - Bump google.golang.org/grpc from 1.56.3 to 1.83.2. ([#681](https://github.com/getsentry/vroom/pull/681))
 - Bump github.com/sirupsen/logrus from 1.9.0 to 1.9.1 ([#656](https://github.com/getsentry/vroom/pull/656))
+- Release Docker image to GHCR via Craft ([#658](https://github.com/getsentry/vroom/pull/658))
 
 ## 26.9.0
 
