@@ -73,8 +73,14 @@ func (c Chunk) MarshalJSON() ([]byte, error) {
 	return json.Marshal(c.chunk)
 }
 
-func (c Chunk) Chunk() chunkInterface { //nolint:revive // TODO: https://linear.app/getsentry/issue/PRO-49/refactor-chunkchunkin-vroom-to-resolve-lint
-	return c.chunk
+func (c Chunk) Sample() (*SampleChunk, bool) {
+	sample, ok := c.chunk.(*SampleChunk)
+	return sample, ok
+}
+
+func (c Chunk) Android() (*AndroidChunk, bool) {
+	android, ok := c.chunk.(*AndroidChunk)
+	return android, ok
 }
 
 func StoragePath(OrganizationID uint64, ProjectID uint64, ProfilerID string, ID string) string {
