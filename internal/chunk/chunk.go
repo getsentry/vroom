@@ -73,7 +73,7 @@ func (c Chunk) MarshalJSON() ([]byte, error) {
 	return json.Marshal(c.chunk)
 }
 
-func (c Chunk) Chunk() chunkInterface {
+func (c Chunk) Chunk() chunkInterface { //nolint:revive // TODO: https://linear.app/getsentry/issue/PRO-49/refactor-chunkchunkin-vroom-to-resolve-lint
 	return c.chunk
 }
 
