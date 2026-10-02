@@ -134,11 +134,17 @@ func (e *environment) newRouter() (*httprouter.Router, error) {
 }
 
 func main() {
-	if len(os.Args) > 1 && os.Args[1] == "healthcheck" {
-		os.Exit(runHealthcheck())
+	if len(os.Args) > 1 {
+		switch os.Args[1] {
+		case "healthcheck":
+			os.Exit(runHealthcheck())
+		case "drain":
+			os.Exit(runDrain(os.Args[2:]))
+		}
 	}
 
 	logutil.ConfigureLogger()
+	clearDownFile()
 
 	env, err := newEnvironment()
 	if err != nil {
@@ -222,7 +228,7 @@ func main() {
 }
 
 func (e *environment) getHealth(w http.ResponseWriter, _ *http.Request) {
-	if _, err := os.Stat("/tmp/vroom.down"); err != nil {
+	if _, err := os.Stat(downFile); err != nil {
 		w.WriteHeader(http.StatusOK)
 	} else {
 		w.WriteHeader(http.StatusBadGateway)
