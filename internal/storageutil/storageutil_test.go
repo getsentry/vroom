@@ -19,6 +19,7 @@ import (
 	"gocloud.dev/blob"
 	_ "gocloud.dev/blob/fileblob"
 	_ "gocloud.dev/blob/gcsblob"
+	"gocloud.dev/gcerrors"
 
 	gojson "github.com/goccy/go-json"
 	jsoniter "github.com/json-iterator/go"
@@ -117,6 +118,14 @@ func TestUploadProfile(t *testing.T) {
 			err := CompressedWrite(ctx, test.blobBucket, objectName, originalData)
 			if err != nil {
 				t.Fatalf("we should be able to write: %s", err.Error())
+			}
+
+			err = CompressedWrite(ctx, test.blobBucket, objectName, Profile{
+				Samples: []int{5, 6},
+				Frames:  []int{7, 8},
+			})
+			if !errors.Is(err, gcerrors.ErrFailedPrecondition) {
+				t.Fatalf("duplicate writes should fail with ErrFailedPrecondition, got %v", err)
 			}
 
 			objectReader, err := test.blobBucket.NewReader(ctx, objectName, nil)
