@@ -156,11 +156,13 @@ func (env *environment) postProfileFromChunkIDs(w http.ResponseWriter, r *http.R
 	// We check the first chunk type, and use that to assert the
 	// type of all the elements in the slice and then call the
 	// appropriate utility.
-	switch chunks[0].Chunk().(type) {
-	case *chunk.SampleChunk:
+	_, isSample := chunks[0].Sample()
+	_, isAndroid := chunks[0].Android()
+	switch {
+	case isSample:
 		sampleChunks := make([]chunk.SampleChunk, 0, len(chunks))
 		for _, c := range chunks {
-			sc, ok := c.Chunk().(*chunk.SampleChunk)
+			sc, ok := c.Sample()
 			if !ok {
 				w.WriteHeader(http.StatusBadRequest)
 				fmt.Fprint(w, "error: mix of sampled and android chunks")
@@ -188,10 +190,10 @@ func (env *environment) postProfileFromChunkIDs(w http.ResponseWriter, r *http.R
 			return
 		}
 
-	case *chunk.AndroidChunk:
+	case isAndroid:
 		androidChunks := make([]chunk.AndroidChunk, 0, len(chunks))
 		for _, c := range chunks {
-			ac, ok := c.Chunk().(*chunk.AndroidChunk)
+			ac, ok := c.Android()
 			if !ok {
 				w.WriteHeader(http.StatusBadRequest)
 				fmt.Fprint(w, "error: mix of android and sample chunks")

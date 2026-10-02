@@ -86,6 +86,35 @@ func TestUnmarshalJSON(t *testing.T) {
 	}
 }
 
+func TestTypedAccessors(t *testing.T) {
+	sample := &SampleChunk{ID: "sample"}
+	android := &AndroidChunk{ID: "android"}
+
+	tests := []struct {
+		name        string
+		chunk       Chunk
+		wantSample  *SampleChunk
+		wantAndroid *AndroidChunk
+	}{
+		{name: "sample", chunk: New(sample), wantSample: sample},
+		{name: "android", chunk: New(android), wantAndroid: android},
+		{name: "empty"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotSample, isSample := tt.chunk.Sample()
+			if gotSample != tt.wantSample || isSample != (tt.wantSample != nil) {
+				t.Errorf("Sample() = (%p, %t), want (%p, %t)", gotSample, isSample, tt.wantSample, tt.wantSample != nil)
+			}
+			gotAndroid, isAndroid := tt.chunk.Android()
+			if gotAndroid != tt.wantAndroid || isAndroid != (tt.wantAndroid != nil) {
+				t.Errorf("Android() = (%p, %t), want (%p, %t)", gotAndroid, isAndroid, tt.wantAndroid, tt.wantAndroid != nil)
+			}
+		})
+	}
+}
+
 func TestUnmarshalJSONReturnsMalformedJSONError(t *testing.T) {
 	var c Chunk
 	if err := json.Unmarshal([]byte(`{"version":`), &c); err == nil {
