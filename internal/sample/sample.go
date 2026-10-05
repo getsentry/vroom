@@ -357,7 +357,7 @@ func (p *Profile) Speedscope() (speedscope.Output, error) {
 		speedscopeProfile.Samples = append(speedscopeProfile.Samples, samp)
 	} // end loop speedscope.SampledProfiles
 	var mainThreadProfileIndex int
-	allProfiles := make([]interface{}, 0)
+	allProfiles := make([]interface{}, 0, len(threadIDToProfile))
 	for _, prof := range threadIDToProfile {
 		if prof.IsMainThread {
 			mainThreadProfileIndex = len(allProfiles)
