@@ -15,5 +15,6 @@ dev = [
 environments = ["sys_platform == 'darwin' or sys_platform == 'linux'"]
 
 [[tool.uv.index]]
-url = "https://pypi.devinfra.sentry.io/simple"
+name = "sentry-sfw"
+url = "https://sfw.security.sentry.io/pypi/simple"
 default = true
