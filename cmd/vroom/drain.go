@@ -17,14 +17,14 @@ var downFile = "/tmp/vroom.down"
 // can be used as a shell-free Kubernetes preStop hook. It returns the process
 // exit code.
 func runDrain(args []string) int {
-	var wait time.Duration
-	if len(args) > 0 {
-		var err error
-		wait, err = time.ParseDuration(args[0])
-		if err != nil || wait < 0 {
-			fmt.Fprintf(os.Stderr, "invalid drain duration %q, expected e.g. 25s\n", args[0])
-			return 1
-		}
+	if len(args) != 1 {
+		fmt.Fprintln(os.Stderr, "usage: vroom drain <duration>, e.g. vroom drain 25s")
+		return 1
+	}
+	wait, err := time.ParseDuration(args[0])
+	if err != nil || wait < 0 {
+		fmt.Fprintf(os.Stderr, "invalid drain duration %q, expected e.g. 25s\n", args[0])
+		return 1
 	}
 	f, err := os.OpenFile(downFile, os.O_CREATE|os.O_WRONLY, 0o644)
 	if err != nil {

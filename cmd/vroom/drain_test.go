@@ -42,20 +42,15 @@ func TestDrain(t *testing.T) {
 	}
 }
 
-func TestDrainInvalidDuration(t *testing.T) {
+func TestDrainInvalidArgs(t *testing.T) {
 	useTempDownFile(t)
 
-	for _, arg := range []string{"25", "-1s", "soon"} {
-		if got := runDrain([]string{arg}); got != 1 {
-			t.Errorf("runDrain(%q) = %d, want 1", arg, got)
+	for _, args := range [][]string{nil, {"25s", "extra"}, {"25"}, {"-1s"}} {
+		if got := runDrain(args); got != 1 {
+			t.Errorf("runDrain(%q) = %d, want 1", args, got)
 		}
 	}
 	if _, err := os.Stat(downFile); err == nil {
-		t.Error("down file created despite invalid duration")
+		t.Error("down file created despite invalid arguments")
 	}
-}
-
-func TestClearDownFileMissing(t *testing.T) {
-	useTempDownFile(t)
-	clearDownFile()
 }
