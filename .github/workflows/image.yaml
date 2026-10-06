@@ -134,7 +134,7 @@ jobs:
 
     steps:
       - name: Run Sentry self-hosted e2e CI
-        uses: getsentry/self-hosted@bcc168f5555f2a99dfc3f4b598887d24f67b7f3b # master
+        uses: getsentry/self-hosted@137d3d1bbfc657335dc142907faa61152dc4a4a7 # master
         with:
           project_name: vroom
           image_url: ghcr.io/getsentry/vroom:${{ github.sha }}
