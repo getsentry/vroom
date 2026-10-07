@@ -11,6 +11,7 @@
 
 **Internal**:
 
+- Use `debian:trixie-slim` as the runtime base image. ([#714](https://github.com/getsentry/vroom/pull/714))
 - Fix flamegraph endpoint span nesting. ([#677](https://github.com/getsentry/vroom/pull/677))
 - More robust concurrency structure for flamegraph generation. ([#678](https://github.com/getsentry/vroom/pull/678))
 - Prevent script injection in release workflow. ([#669](https://github.com/getsentry/vroom/pull/669))
