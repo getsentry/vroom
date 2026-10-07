@@ -11,13 +11,21 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        platform: [amd64, arm64]
+        variant: [default, distroless]
         include:
-          - os: ubuntu-24.04
-            platform: amd64
-          - os: ubuntu-24.04-arm
-            platform: arm64
+          - platform: amd64
+            os: ubuntu-24.04
+          - platform: arm64
+            os: ubuntu-24.04-arm
+          - variant: default
+            target: application
+            suffix: ''
+          - variant: distroless
+            target: application-distroless
+            suffix: '-distroless'
     if: github.repository_owner == 'getsentry'
-    name: build-${{ matrix.platform }}
+    name: build-${{ matrix.platform }}${{ matrix.suffix }}
     steps:
       - uses: actions/checkout@ff7abcd0c3c05ccf6adc123a8cd1fd4fb30fb493 # v5.0.0
 
@@ -28,11 +36,12 @@ jobs:
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           context: .
-          cache-from: ghcr.io/getsentry/vroom:nightly
+          target: ${{ matrix.target }}
+          cache-from: ghcr.io/getsentry/vroom:nightly${{ matrix.suffix }}
           cache-to: type=inline
           platforms: linux/${{ matrix.platform }}
-          tags: vroom:${{ matrix.platform }}
-          outputs: type=docker,dest=/tmp/vroom-${{ matrix.platform }}.tar
+          tags: vroom:${{ matrix.platform }}${{ matrix.suffix }}
+          outputs: type=docker,dest=/tmp/vroom-${{ matrix.platform }}${{ matrix.suffix }}.tar
           push: false
 
       # NOTE(aldy505): Rather than pushing the individual architecture-specific image to GHCR,
@@ -45,14 +54,18 @@ jobs:
       - name: Upload Image
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: vroom-${{ matrix.platform }}
-          path: /tmp/vroom-${{ matrix.platform }}.tar
+          name: vroom-${{ matrix.platform }}${{ matrix.suffix }}
+          path: /tmp/vroom-${{ matrix.platform }}${{ matrix.suffix }}.tar
 
   assemble-image:
     runs-on: ubuntu-latest
     needs:
       - build-image
     if: ${{ github.event_name != 'pull_request' }}
+    strategy:
+      matrix:
+        suffix: ['', '-distroless']
+    name: assemble-image${{ matrix.suffix }}
     steps:
       - uses: actions/checkout@ff7abcd0c3c05ccf6adc123a8cd1fd4fb30fb493 # v5.0.0
       - run: docker login --username '${{ github.actor }}' --password-stdin ghcr.io <<< "$GHCR_TOKEN"
@@ -65,40 +78,42 @@ jobs:
       - name: Download amd64 Image
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v4.3.2
         with:
-          name: vroom-amd64
+          name: vroom-amd64${{ matrix.suffix }}
           path: /tmp
 
       - name: Load amd64 Image
-        run: docker load --input /tmp/vroom-amd64.tar
+        run: docker load --input /tmp/vroom-amd64${{ matrix.suffix }}.tar
 
       - name: Download arm64 Image
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v4.3.2
         with:
-          name: vroom-arm64
+          name: vroom-arm64${{ matrix.suffix }}
           path: /tmp
 
       - name: Load arm64 Image
-        run: docker load --input /tmp/vroom-arm64.tar
+        run: docker load --input /tmp/vroom-arm64${{ matrix.suffix }}.tar
 
       - name: Push to GitHub Container Registry
+        env:
+          SUFFIX: ${{ matrix.suffix }}
         run: |
-          docker tag vroom:amd64 ghcr.io/getsentry/vroom:${{ github.sha }}-amd64
-          docker push ghcr.io/getsentry/vroom:${{ github.sha }}-amd64
-          docker tag vroom:arm64 ghcr.io/getsentry/vroom:${{ github.sha }}-arm64
-          docker push ghcr.io/getsentry/vroom:${{ github.sha }}-arm64
+          docker tag vroom:amd64${SUFFIX} ghcr.io/getsentry/vroom:${{ github.sha }}${SUFFIX}-amd64
+          docker push ghcr.io/getsentry/vroom:${{ github.sha }}${SUFFIX}-amd64
+          docker tag vroom:arm64${SUFFIX} ghcr.io/getsentry/vroom:${{ github.sha }}${SUFFIX}-arm64
+          docker push ghcr.io/getsentry/vroom:${{ github.sha }}${SUFFIX}-arm64
 
           docker manifest create \
-            ghcr.io/getsentry/vroom:${{ github.sha }} \
-            --amend ghcr.io/getsentry/vroom:${{ github.sha }}-amd64 \
-            --amend ghcr.io/getsentry/vroom:${{ github.sha }}-arm64
+            ghcr.io/getsentry/vroom:${{ github.sha }}${SUFFIX} \
+            --amend ghcr.io/getsentry/vroom:${{ github.sha }}${SUFFIX}-amd64 \
+            --amend ghcr.io/getsentry/vroom:${{ github.sha }}${SUFFIX}-arm64
 
           docker manifest create \
-            ghcr.io/getsentry/vroom:nightly \
-            --amend ghcr.io/getsentry/vroom:${{ github.sha }}-amd64 \
-            --amend ghcr.io/getsentry/vroom:${{ github.sha }}-arm64
+            ghcr.io/getsentry/vroom:nightly${SUFFIX} \
+            --amend ghcr.io/getsentry/vroom:${{ github.sha }}${SUFFIX}-amd64 \
+            --amend ghcr.io/getsentry/vroom:${{ github.sha }}${SUFFIX}-arm64
 
-          docker manifest push ghcr.io/getsentry/vroom:${{ github.sha }}
-          docker manifest push ghcr.io/getsentry/vroom:nightly
+          docker manifest push ghcr.io/getsentry/vroom:${{ github.sha }}${SUFFIX}
+          docker manifest push ghcr.io/getsentry/vroom:nightly${SUFFIX}
 
   publish-to-dockerhub:
     name: Publish Vroom to DockerHub
@@ -175,6 +190,38 @@ jobs:
           google_ar: true
           tag_nightly: false
           tag_latest: true
+          google_ar_image_name: us-docker.pkg.dev/sentryio/vroom-mr/vroom
+          google_workload_identity_provider: projects/868781662168/locations/global/workloadIdentityPools/prod-github/providers/github-oidc-pool
+          google_service_account: gha-vroom-push@sac-prod-sa.iam.gserviceaccount.com
+
+      - name: Build and push distroless image to single-region registry
+        uses: getsentry/action-build-and-push-images@dd9b907092cdd2dbc6c1a409f7290df1b391f6ee
+        with:
+          image_name: 'vroom'
+          platforms: linux/amd64
+          dockerfile_path: './Dockerfile'
+          build_target: 'application-distroless'
+          tag_suffix: -distroless
+          ghcr: false
+          google_ar: true
+          tag_nightly: false
+          tag_latest: false
+          google_ar_image_name: us-central1-docker.pkg.dev/sentryio/vroom/vroom
+          google_workload_identity_provider: projects/868781662168/locations/global/workloadIdentityPools/prod-github/providers/github-oidc-pool
+          google_service_account: gha-vroom-push@sac-prod-sa.iam.gserviceaccount.com
+
+      - name: Build and push distroless image to multi-region registry
+        uses: getsentry/action-build-and-push-images@dd9b907092cdd2dbc6c1a409f7290df1b391f6ee
+        with:
+          image_name: 'vroom'
+          platforms: linux/amd64
+          dockerfile_path: './Dockerfile'
+          build_target: 'application-distroless'
+          tag_suffix: -distroless
+          ghcr: false
+          google_ar: true
+          tag_nightly: false
+          tag_latest: false
           google_ar_image_name: us-docker.pkg.dev/sentryio/vroom-mr/vroom
           google_workload_identity_provider: projects/868781662168/locations/global/workloadIdentityPools/prod-github/providers/github-oidc-pool
           google_service_account: gha-vroom-push@sac-prod-sa.iam.gserviceaccount.com
