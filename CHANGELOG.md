@@ -11,6 +11,7 @@
 
 **Internal**:
 
+- Build and publish a distroless image variant (`-distroless` tags). ([#715](https://github.com/getsentry/vroom/pull/715))
 - Use `debian:trixie-slim` as the runtime base image. ([#714](https://github.com/getsentry/vroom/pull/714))
 - Fix flamegraph endpoint span nesting. ([#677](https://github.com/getsentry/vroom/pull/677))
 - More robust concurrency structure for flamegraph generation. ([#678](https://github.com/getsentry/vroom/pull/678))
