@@ -68,16 +68,15 @@ func newEnvironment(ctx context.Context) (*environment, error) {
 }
 
 func (e *environment) shutdown(ctx context.Context) {
-	hub := sentry.GetHubFromContext(ctx)
 	err := e.storage.Close()
 	if err != nil {
-		hub.CaptureException(err)
+		sentry.CaptureException(ctx, err)
 	}
 	err = e.occurrencesWriter.Close()
 	if err != nil {
-		hub.CaptureException(err)
+		sentry.CaptureException(ctx, err)
 	}
-	hub.Flush(5 * time.Second)
+	sentry.Flush(5 * time.Second)
 }
 
 func (e *environment) newRouter() (*httprouter.Router, error) {
@@ -177,15 +176,9 @@ func main() {
 		log.Fatal("can't initialize sentry", err)
 	}
 
-	// This should be the only place we use the SDK's global Hub.
-	// Every goroutine should get its own clone instead.
-	// See: https://docs.sentry.io/platforms/go/usage/concurrency/
-	rootHub := sentry.CurrentHub() //nolint:forbidigo
-	rootCtx := sentry.SetHubOnContext(context.Background(), rootHub.Clone())
-
 	router, err := env.newRouter()
 	if err != nil {
-		rootHub.CaptureException(err)
+		sentry.CaptureException(context.Background(), err)
 		log.Fatal("error setting up the router", err)
 	}
 
@@ -196,7 +189,7 @@ func main() {
 	}
 
 	waitForShutdown := make(chan os.Signal)
-	go func(hub *sentry.Hub) {
+	go func() {
 		c := make(chan os.Signal, 1)
 		signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 		<-c
@@ -205,12 +198,12 @@ func main() {
 		defer cancel()
 
 		if err := server.Shutdown(cctx); err != nil {
-			hub.CaptureException(err)
+			sentry.CaptureException(context.Background(), err)
 			slog.Error("error shutting down server", "err", err)
 		}
 
 		close(waitForShutdown)
-	}(rootHub.Clone())
+	}()
 
 	slog.Info("vroom started")
 
@@ -221,7 +214,7 @@ func main() {
 
 	err = server.ListenAndServe()
 	if err != nil && err != http.ErrServerClosed {
-		rootHub.CaptureException(err)
+		sentry.CaptureException(context.Background(), err)
 		slog.Error("server failed", "err", err)
 	}
 
@@ -229,7 +222,7 @@ func main() {
 
 	// Shutdown the rest of the environment after the HTTP connections are closed
 	close(readJobs)
-	env.shutdown(rootCtx)
+	env.shutdown(context.Background())
 	slog.Info("vroom graceful shutdown")
 }
 

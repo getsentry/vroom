@@ -7,7 +7,7 @@ require (
 	github.com/CAFxX/httpcompression v0.0.8
 	github.com/andybalholm/brotli v1.1.0
 	github.com/fsouza/fake-gcs-server v1.44.0
-	github.com/getsentry/sentry-go v0.49.0
+	github.com/getsentry/sentry-go v1.0.0-alpha.1
 	github.com/goccy/go-json v0.10.0
 	github.com/google/go-cmp v0.7.0
 	github.com/google/uuid v1.6.0
@@ -102,9 +102,9 @@ require (
 	golang.org/x/crypto v0.55.0 // indirect
 	golang.org/x/net v0.58.0 // indirect
 	golang.org/x/oauth2 v0.36.0 // indirect
-	golang.org/x/sync v0.22.0 // indirect
-	golang.org/x/sys v0.47.0 // indirect
-	golang.org/x/text v0.41.0 // indirect
+	golang.org/x/sync v0.23.0 // indirect
+	golang.org/x/sys v0.48.0 // indirect
+	golang.org/x/text v0.42.0 // indirect
 	golang.org/x/time v0.15.0 // indirect
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da // indirect
 	google.golang.org/genproto v0.0.0-20260316180232-0b37fe3546d5 // indirect
