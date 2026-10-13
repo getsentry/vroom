@@ -24,22 +24,20 @@ type (
 )
 
 func (env *environment) postFlamegraph(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
+	ctx, scope := sentry.WithScope(r.Context())
 	downloadContext, cancel := context.WithTimeout(ctx, time.Second*10)
 	defer cancel()
-	hub := sentry.GetHubFromContext(ctx)
+
 	ps := httprouter.ParamsFromContext(ctx)
 	rawOrganizationID := ps.ByName("organization_id")
 	organizationID, err := strconv.ParseUint(rawOrganizationID, 10, 64)
 	if err != nil {
-		if hub != nil {
-			hub.CaptureException(err)
-		}
+		sentry.CaptureException(ctx, err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	hub.Scope().SetTag("organization_id", rawOrganizationID)
+	scope.SetTag("organization_id", rawOrganizationID)
 
 	var body postFlamegraphBody
 	s := sentry.StartSpan(ctx, "processing")
@@ -47,9 +45,7 @@ func (env *environment) postFlamegraph(w http.ResponseWriter, r *http.Request) {
 	err = json.NewDecoder(r.Body).Decode(&body)
 	s.Finish()
 	if err != nil {
-		if hub != nil {
-			hub.CaptureException(err)
-		}
+		sentry.CaptureException(ctx, err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -71,9 +67,7 @@ func (env *environment) postFlamegraph(w http.ResponseWriter, r *http.Request) {
 	)
 	s.Finish()
 	if err != nil {
-		if hub != nil {
-			hub.CaptureException(err)
-		}
+		sentry.CaptureException(ctx, err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -82,9 +76,7 @@ func (env *environment) postFlamegraph(w http.ResponseWriter, r *http.Request) {
 	defer s.Finish()
 	b, err := json.Marshal(speedscope)
 	if err != nil {
-		if hub != nil {
-			hub.CaptureException(err)
-		}
+		sentry.CaptureException(ctx, err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}

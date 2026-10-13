@@ -21,38 +21,38 @@ const (
 )
 
 func (env *environment) getRawProfile(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	hub := sentry.GetHubFromContext(ctx)
+	ctx, scope := sentry.WithScope(r.Context())
+
 	ps := httprouter.ParamsFromContext(ctx)
 	rawOrganizationID := ps.ByName("organization_id")
 	organizationID, err := strconv.ParseUint(rawOrganizationID, 10, 64)
 	if err != nil {
-		hub.CaptureException(err)
+		sentry.CaptureException(ctx, err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	hub.Scope().SetTag("organization_id", rawOrganizationID)
+	scope.SetTag("organization_id", rawOrganizationID)
 
 	rawProjectID := ps.ByName("project_id")
 	projectID, err := strconv.ParseUint(rawProjectID, 10, 64)
 	if err != nil {
-		hub.CaptureException(err)
+		sentry.CaptureException(ctx, err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	hub.Scope().SetTag("project_id", rawProjectID)
+	scope.SetTag("project_id", rawProjectID)
 
 	profileID := ps.ByName("profile_id")
 	_, err = uuid.Parse(profileID)
 	if err != nil {
-		hub.CaptureException(err)
+		sentry.CaptureException(ctx, err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	hub.Scope().SetTag("profile_id", profileID)
+	scope.SetTag("profile_id", profileID)
 	s := sentry.StartSpan(ctx, "profile.read")
 	s.Description = "Read profile from GCS"
 
@@ -71,14 +71,14 @@ func (env *environment) getRawProfile(w http.ResponseWriter, r *http.Request) {
 		}
 		var e *googleapi.Error
 		if ok := errors.As(err, &e); ok {
-			hub.Scope().SetContext("Google Cloud Storage Error", map[string]interface{}{
+			scope.SetContext("Google Cloud Storage Error", map[string]interface{}{
 				"body":    e.Body,
 				"code":    e.Code,
 				"details": e.Details,
 				"message": e.Message,
 			})
 		}
-		hub.CaptureException(err)
+		sentry.CaptureException(ctx, err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -87,7 +87,7 @@ func (env *environment) getRawProfile(w http.ResponseWriter, r *http.Request) {
 	defer s.Finish()
 	b, err := json.Marshal(p)
 	if err != nil {
-		hub.CaptureException(err)
+		sentry.CaptureException(ctx, err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -99,39 +99,39 @@ func (env *environment) getRawProfile(w http.ResponseWriter, r *http.Request) {
 }
 
 func (env *environment) getProfile(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
+	ctx, scope := sentry.WithScope(r.Context())
+
 	qs := r.URL.Query()
-	hub := sentry.GetHubFromContext(ctx)
 	ps := httprouter.ParamsFromContext(ctx)
 	rawOrganizationID := ps.ByName("organization_id")
 	organizationID, err := strconv.ParseUint(rawOrganizationID, 10, 64)
 	if err != nil {
-		hub.CaptureException(err)
+		sentry.CaptureException(ctx, err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	hub.Scope().SetTag("organization_id", rawOrganizationID)
+	scope.SetTag("organization_id", rawOrganizationID)
 
 	rawProjectID := ps.ByName("project_id")
 	projectID, err := strconv.ParseUint(rawProjectID, 10, 64)
 	if err != nil {
-		hub.CaptureException(err)
+		sentry.CaptureException(ctx, err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	hub.Scope().SetTag("project_id", rawProjectID)
+	scope.SetTag("project_id", rawProjectID)
 
 	profileID := ps.ByName("profile_id")
 	_, err = uuid.Parse(profileID)
 	if err != nil {
-		hub.CaptureException(err)
+		sentry.CaptureException(ctx, err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	hub.Scope().SetTag("profile_id", profileID)
+	scope.SetTag("profile_id", profileID)
 	s := sentry.StartSpan(ctx, "profile.read")
 	s.Description = "Read profile from GCS"
 
@@ -150,19 +150,19 @@ func (env *environment) getProfile(w http.ResponseWriter, r *http.Request) {
 		}
 		var e *googleapi.Error
 		if ok := errors.As(err, &e); ok {
-			hub.Scope().SetContext("Google Cloud Storage Error", map[string]interface{}{
+			scope.SetContext("Google Cloud Storage Error", map[string]interface{}{
 				"body":    e.Body,
 				"code":    e.Code,
 				"details": e.Details,
 				"message": e.Message,
 			})
 		}
-		hub.CaptureException(err)
+		sentry.CaptureException(ctx, err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	hub.Scope().SetTag("platform", string(p.Platform()))
+	scope.SetTag("platform", string(p.Platform()))
 
 	s = sentry.StartSpan(ctx, "json.marshal")
 	defer s.Finish()
@@ -170,13 +170,13 @@ func (env *environment) getProfile(w http.ResponseWriter, r *http.Request) {
 	var i interface{}
 
 	if format := qs.Get("format"); format == "sample" && p.IsSampleFormat() {
-		hub.Scope().SetTag("format", "sample")
+		scope.SetTag("format", "sample")
 		i = p
 	} else {
-		hub.Scope().SetTag("format", "speedscope")
+		scope.SetTag("format", "speedscope")
 		o, err := p.Speedscope()
 		if err != nil {
-			hub.CaptureException(err)
+			sentry.CaptureException(ctx, err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -185,7 +185,7 @@ func (env *environment) getProfile(w http.ResponseWriter, r *http.Request) {
 
 	b, err := json.Marshal(i)
 	if err != nil {
-		hub.CaptureException(err)
+		sentry.CaptureException(ctx, err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
