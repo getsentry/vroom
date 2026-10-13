@@ -42,14 +42,13 @@ var (
 	readJobs chan storageutil.ReadJob
 )
 
-func newEnvironment() (*environment, error) {
+func newEnvironment(ctx context.Context) (*environment, error) {
 	var e environment
 	err := cleanenv.ReadEnv(&e.config)
 	if err != nil {
 		return nil, err
 	}
 
-	ctx := context.Background()
 	e.storage, err = blob.OpenBucket(ctx, e.config.BucketURL)
 	if err != nil {
 		return nil, err
@@ -68,16 +67,17 @@ func newEnvironment() (*environment, error) {
 	return &e, nil
 }
 
-func (e *environment) shutdown() {
+func (e *environment) shutdown(ctx context.Context) {
+	hub := sentry.GetHubFromContext(ctx)
 	err := e.storage.Close()
 	if err != nil {
-		sentry.CaptureException(err)
+		hub.CaptureException(err)
 	}
 	err = e.occurrencesWriter.Close()
 	if err != nil {
-		sentry.CaptureException(err)
+		hub.CaptureException(err)
 	}
-	sentry.Flush(5 * time.Second)
+	hub.Flush(5 * time.Second)
 }
 
 func (e *environment) newRouter() (*httprouter.Router, error) {
@@ -146,7 +146,7 @@ func main() {
 	logutil.ConfigureLogger()
 	clearDownFile()
 
-	env, err := newEnvironment()
+	env, err := newEnvironment(context.Background())
 	if err != nil {
 		log.Fatal("error setting up environment", err)
 	}
@@ -177,9 +177,15 @@ func main() {
 		log.Fatal("can't initialize sentry", err)
 	}
 
+	// This should be the only place we use the SDK's global Hub.
+	// Every goroutine should get its own clone instead.
+	// See: https://docs.sentry.io/platforms/go/usage/concurrency/
+	rootHub := sentry.CurrentHub() //nolint:forbidigo
+	rootCtx := sentry.SetHubOnContext(context.Background(), rootHub.Clone())
+
 	router, err := env.newRouter()
 	if err != nil {
-		sentry.CaptureException(err)
+		rootHub.CaptureException(err)
 		log.Fatal("error setting up the router", err)
 	}
 
@@ -190,7 +196,7 @@ func main() {
 	}
 
 	waitForShutdown := make(chan os.Signal)
-	go func() {
+	go func(hub *sentry.Hub) {
 		c := make(chan os.Signal, 1)
 		signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 		<-c
@@ -199,12 +205,12 @@ func main() {
 		defer cancel()
 
 		if err := server.Shutdown(cctx); err != nil {
-			sentry.CaptureException(err)
+			hub.CaptureException(err)
 			slog.Error("error shutting down server", "err", err)
 		}
 
 		close(waitForShutdown)
-	}()
+	}(rootHub.Clone())
 
 	slog.Info("vroom started")
 
@@ -215,7 +221,7 @@ func main() {
 
 	err = server.ListenAndServe()
 	if err != nil && err != http.ErrServerClosed {
-		sentry.CaptureException(err)
+		rootHub.CaptureException(err)
 		slog.Error("server failed", "err", err)
 	}
 
@@ -223,7 +229,7 @@ func main() {
 
 	// Shutdown the rest of the environment after the HTTP connections are closed
 	close(readJobs)
-	env.shutdown()
+	env.shutdown(rootCtx)
 	slog.Info("vroom graceful shutdown")
 }
 
