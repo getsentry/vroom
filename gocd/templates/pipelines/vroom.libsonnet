@@ -1,7 +1,7 @@
 local gocdtasks = import 'github.com/getsentry/gocd-jsonnet/libs/gocd-tasks.libsonnet';
 
 local deploy_canary_stage(region) =
-  if region == 'us' then
+  if region == 'us' || region == 'de' then
     [
       {
         'deploy-canary': {
