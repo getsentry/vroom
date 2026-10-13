@@ -13,6 +13,7 @@ import (
 	"google.golang.org/api/googleapi"
 
 	"github.com/getsentry/vroom/internal/chunk"
+	"github.com/getsentry/vroom/internal/sentryutil"
 	"github.com/getsentry/vroom/internal/storageutil"
 )
 
@@ -41,7 +42,7 @@ type postProfileFromChunkIDsResponse struct {
 // This is more of a GET method, but since we're receiving a list of chunk IDs as part of a
 // body request, we use a POST method instead (similarly to the flamegraph endpoint).
 func (env *environment) postProfileFromChunkIDs(w http.ResponseWriter, r *http.Request) {
-	ctx, scope := sentry.WithScope(r.Context())
+	ctx, scope := sentryutil.EnsureScope(r.Context())
 
 	ps := httprouter.ParamsFromContext(ctx)
 	rawOrganizationID := ps.ByName("organization_id")
@@ -231,7 +232,7 @@ func (env *environment) postProfileFromChunkIDs(w http.ResponseWriter, r *http.R
 }
 
 func (env *environment) getRawChunk(w http.ResponseWriter, r *http.Request) {
-	ctx, scope := sentry.WithScope(r.Context())
+	ctx, scope := sentryutil.EnsureScope(r.Context())
 
 	ps := httprouter.ParamsFromContext(ctx)
 	rawOrganizationID := ps.ByName("organization_id")

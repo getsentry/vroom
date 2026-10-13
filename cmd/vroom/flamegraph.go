@@ -13,6 +13,7 @@ import (
 	"github.com/getsentry/vroom/internal/examples"
 	"github.com/getsentry/vroom/internal/flamegraph"
 	"github.com/getsentry/vroom/internal/metrics"
+	"github.com/getsentry/vroom/internal/sentryutil"
 )
 
 type (
@@ -24,7 +25,7 @@ type (
 )
 
 func (env *environment) postFlamegraph(w http.ResponseWriter, r *http.Request) {
-	ctx, scope := sentry.WithScope(r.Context())
+	ctx, scope := sentryutil.EnsureScope(r.Context())
 	downloadContext, cancel := context.WithTimeout(ctx, time.Second*10)
 	defer cancel()
 

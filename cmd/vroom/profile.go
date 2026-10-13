@@ -12,6 +12,7 @@ import (
 	"google.golang.org/api/googleapi"
 
 	"github.com/getsentry/vroom/internal/profile"
+	"github.com/getsentry/vroom/internal/sentryutil"
 	"github.com/getsentry/vroom/internal/storageutil"
 )
 
@@ -21,7 +22,7 @@ const (
 )
 
 func (env *environment) getRawProfile(w http.ResponseWriter, r *http.Request) {
-	ctx, scope := sentry.WithScope(r.Context())
+	ctx, scope := sentryutil.EnsureScope(r.Context())
 
 	ps := httprouter.ParamsFromContext(ctx)
 	rawOrganizationID := ps.ByName("organization_id")
@@ -99,7 +100,7 @@ func (env *environment) getRawProfile(w http.ResponseWriter, r *http.Request) {
 }
 
 func (env *environment) getProfile(w http.ResponseWriter, r *http.Request) {
-	ctx, scope := sentry.WithScope(r.Context())
+	ctx, scope := sentryutil.EnsureScope(r.Context())
 
 	qs := r.URL.Query()
 	ps := httprouter.ParamsFromContext(ctx)
