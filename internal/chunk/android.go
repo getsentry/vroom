@@ -132,5 +132,9 @@ func (c AndroidChunk) GetFrameWithFingerprint(target uint32) (frame.Frame, error
 	return frame.Frame{}, frame.ErrFrameNotFound
 }
 
+func (c AndroidChunk) GetFrameForRegression(target uint32) (frame.Frame, error) {
+	return c.Profile.GetFrameForRegression(target)
+}
+
 func (c *AndroidChunk) Normalize() {
 }

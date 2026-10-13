@@ -669,6 +669,16 @@ func (p Android) ActiveThreadID() uint64 {
 	return 0
 }
 
+func (p Android) GetFrameForRegression(target uint32) (frame.Frame, error) {
+	for _, m := range p.Methods {
+		f := m.Frame()
+		if f.VroomrsFingerprint() == target {
+			return f, nil
+		}
+	}
+	return frame.Frame{}, frame.ErrFrameNotFound
+}
+
 func (p Android) GetFrameWithFingerprint(target uint32) (frame.Frame, error) {
 	for _, m := range p.Methods {
 		f := m.Frame()

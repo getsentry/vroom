@@ -253,6 +253,15 @@ func (c SampleChunk) GetOptions() options.Options {
 	return c.Options
 }
 
+func (c SampleChunk) GetFrameForRegression(target uint32) (frame.Frame, error) {
+	for _, f := range c.Profile.Frames {
+		if f.VroomrsFingerprint() == target {
+			return f, nil
+		}
+	}
+	return frame.Frame{}, frame.ErrFrameNotFound
+}
+
 func (c SampleChunk) GetFrameWithFingerprint(target uint32) (frame.Frame, error) {
 	for _, f := range c.Profile.Frames {
 		if f.Fingerprint() == target {

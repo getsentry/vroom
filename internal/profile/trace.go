@@ -12,5 +12,6 @@ type (
 		CallTrees() map[uint64][]*nodetree.Node
 		Speedscope() (speedscope.Output, error)
 		GetFrameWithFingerprint(uint32) (frame.Frame, error)
+		GetFrameForRegression(uint32) (frame.Frame, error)
 	}
 )

@@ -240,6 +240,18 @@ func (f Frame) Fingerprint() uint32 {
 	return uint32(h.Sum64())
 }
 
+// VroomrsFingerprint returns the frame fingerprint using the same FNV-1a
+// algorithm as the vroomrs library. See [Frame::fingerprint] in vroomrs.
+//
+// [Frame::fingerprint]: https://github.com/getsentry/vroomrs/blob/54065818376d83d40ce2d95be81086543f7e8319/src/frame/mod.rs#L413-L427
+func (f Frame) VroomrsFingerprint() uint32 {
+	h := fnv.New64a()
+	h.Write([]byte(f.ModuleOrPackage()))
+	h.Write([]byte{':'})
+	h.Write([]byte(f.Function))
+	return uint32(h.Sum64())
+}
+
 func defaultFormatter(f Frame) string {
 	return f.Function
 }

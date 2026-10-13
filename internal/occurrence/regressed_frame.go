@@ -98,13 +98,13 @@ func getPlatformAndFrame(
 
 	if result, ok := res.(profile.ReadJobResult); ok {
 		platform = result.Profile.Platform()
-		frame, err = result.Profile.GetFrameWithFingerprint(target)
+		frame, err = result.Profile.GetFrameForRegression(target)
 		if err != nil {
 			return platform, frame, err
 		}
 	} else if result, ok := res.(chunk.ReadJobResult); ok {
 		platform = result.Chunk.GetPlatform()
-		frame, err = result.Chunk.GetFrameWithFingerprint(target)
+		frame, err = result.Chunk.GetFrameForRegression(target)
 		if err != nil {
 			return platform, frame, err
 		}

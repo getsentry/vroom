@@ -367,6 +367,10 @@ func (p LegacyProfile) GetFrameWithFingerprint(target uint32) (frame.Frame, erro
 	return p.Trace.GetFrameWithFingerprint(target)
 }
 
+func (p LegacyProfile) GetFrameForRegression(target uint32) (frame.Frame, error) {
+	return p.Trace.GetFrameForRegression(target)
+}
+
 // This is to be used for ReactNative JS profile only since it works based on the
 // assumption that we'll only have 1 thread in the JS profile, as is the case
 // for ReactNative.

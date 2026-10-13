@@ -44,6 +44,7 @@ type (
 		SetProfileID(ID string)
 		GetOptions() options.Options
 		GetFrameWithFingerprint(uint32) (frame.Frame, error)
+		GetFrameForRegression(uint32) (frame.Frame, error)
 	}
 
 	Profile struct {
@@ -192,4 +193,8 @@ func (p *Profile) GetOptions() options.Options {
 
 func (p *Profile) GetFrameWithFingerprint(target uint32) (frame.Frame, error) {
 	return p.profile.GetFrameWithFingerprint(target)
+}
+
+func (p *Profile) GetFrameForRegression(target uint32) (frame.Frame, error) {
+	return p.profile.GetFrameForRegression(target)
 }
