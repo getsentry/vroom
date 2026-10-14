@@ -37,7 +37,7 @@ func (env *environment) getRawProfile(w http.ResponseWriter, r *http.Request) {
 	rawProjectID := ps.ByName("project_id")
 	projectID, err := strconv.ParseUint(rawProjectID, 10, 64)
 	if err != nil {
-		sentry.CaptureException(err)
+		hub.CaptureException(err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -116,7 +116,7 @@ func (env *environment) getProfile(w http.ResponseWriter, r *http.Request) {
 	rawProjectID := ps.ByName("project_id")
 	projectID, err := strconv.ParseUint(rawProjectID, 10, 64)
 	if err != nil {
-		sentry.CaptureException(err)
+		hub.CaptureException(err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}

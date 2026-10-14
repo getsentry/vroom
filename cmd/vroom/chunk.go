@@ -57,7 +57,7 @@ func (env *environment) postProfileFromChunkIDs(w http.ResponseWriter, r *http.R
 	rawProjectID := ps.ByName("project_id")
 	projectID, err := strconv.ParseUint(rawProjectID, 10, 64)
 	if err != nil {
-		sentry.CaptureException(err)
+		hub.CaptureException(err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -248,7 +248,7 @@ func (env *environment) getRawChunk(w http.ResponseWriter, r *http.Request) {
 	rawProjectID := ps.ByName("project_id")
 	projectID, err := strconv.ParseUint(rawProjectID, 10, 64)
 	if err != nil {
-		sentry.CaptureException(err)
+		hub.CaptureException(err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}

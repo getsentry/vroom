@@ -23,6 +23,7 @@ type (
 		GetRetentionDays() int
 		GetOptions() options.Options
 		GetFrameWithFingerprint(uint32) (frame.Frame, error)
+		GetFrameForRegression(uint32) (frame.Frame, error)
 		CallTrees(activeThreadID *string) (map[string][]*nodetree.Node, error)
 
 		DurationMS() uint64
@@ -135,6 +136,10 @@ func (c Chunk) GetOptions() options.Options {
 
 func (c Chunk) GetFrameWithFingerprint(f uint32) (frame.Frame, error) {
 	return c.chunk.GetFrameWithFingerprint(f)
+}
+
+func (c Chunk) GetFrameForRegression(target uint32) (frame.Frame, error) {
+	return c.chunk.GetFrameForRegression(target)
 }
 
 func (c Chunk) CallTrees(activeThreadID *string) (map[string][]*nodetree.Node, error) {
