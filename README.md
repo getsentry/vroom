@@ -23,7 +23,7 @@ The name was inspired by this [video](https://www.youtube.com/watch?v=t_rzYnXEQl
 ## Development
 
 In order to develop for `vroom`, you will need:
-- `golang` >= 1.18
+- the [latest stable release of Go](https://go.dev/doc/devel/release)
 - `make`
 
 All other development dependencies are installed with [devenv](https://github.com/getsentry/devenv/?tab=readme-ov-file#install):
