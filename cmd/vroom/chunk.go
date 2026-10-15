@@ -13,6 +13,7 @@ import (
 	"google.golang.org/api/googleapi"
 
 	"github.com/getsentry/vroom/internal/chunk"
+	"github.com/getsentry/vroom/internal/sentryutil"
 	"github.com/getsentry/vroom/internal/storageutil"
 )
 
@@ -41,27 +42,26 @@ type postProfileFromChunkIDsResponse struct {
 // This is more of a GET method, but since we're receiving a list of chunk IDs as part of a
 // body request, we use a POST method instead (similarly to the flamegraph endpoint).
 func (env *environment) postProfileFromChunkIDs(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	hub := sentry.GetHubFromContext(ctx)
+	ctx, scope := sentryutil.EnsureScope(r.Context())
+
 	ps := httprouter.ParamsFromContext(ctx)
 	rawOrganizationID := ps.ByName("organization_id")
 	organizationID, err := strconv.ParseUint(rawOrganizationID, 10, 64)
 	if err != nil {
-		hub.CaptureException(err)
+		sentry.CaptureException(ctx, err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-
-	hub.Scope().SetTag("organization_id", rawOrganizationID)
+	scope.SetTag("organization_id", rawOrganizationID)
 
 	rawProjectID := ps.ByName("project_id")
 	projectID, err := strconv.ParseUint(rawProjectID, 10, 64)
 	if err != nil {
-		hub.CaptureException(err)
+		sentry.CaptureException(ctx, err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	hub.Scope().SetTag("project_id", rawProjectID)
+	scope.SetTag("project_id", rawProjectID)
 
 	var requestBody postProfileFromChunkIDsRequest
 	s := sentry.StartSpan(ctx, "processing")
@@ -69,13 +69,13 @@ func (env *environment) postProfileFromChunkIDs(w http.ResponseWriter, r *http.R
 	err = json.NewDecoder(r.Body).Decode(&requestBody)
 	s.Finish()
 	if err != nil {
-		hub.CaptureException(err)
+		sentry.CaptureException(ctx, err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 	r.Body.Close()
 
-	hub.Scope().SetTag("num_chunks", fmt.Sprintf("%d", len(requestBody.ChunkIDs)))
+	scope.SetTag("num_chunks", fmt.Sprintf("%d", len(requestBody.ChunkIDs)))
 	s = sentry.StartSpan(ctx, "chunks.read")
 	s.Description = "Read profile chunks from GCS"
 
@@ -128,14 +128,14 @@ func (env *environment) postProfileFromChunkIDs(w http.ResponseWriter, r *http.R
 		}
 		var e *googleapi.Error
 		if ok := errors.As(err, &e); ok {
-			hub.Scope().SetContext("Google Cloud Storage Error", map[string]interface{}{
+			scope.SetContext("Google Cloud Storage Error", map[string]interface{}{
 				"body":    e.Body,
 				"code":    e.Code,
 				"details": e.Details,
 				"message": e.Message,
 			})
 		}
-		hub.CaptureException(err)
+		sentry.CaptureException(ctx, err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -174,7 +174,7 @@ func (env *environment) postProfileFromChunkIDs(w http.ResponseWriter, r *http.R
 		mergedChunk, err := chunk.MergeSampleChunks(sampleChunks, requestBody.Start, requestBody.End)
 		s.Finish()
 		if err != nil {
-			hub.CaptureException(err)
+			sentry.CaptureException(ctx, err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -185,7 +185,7 @@ func (env *environment) postProfileFromChunkIDs(w http.ResponseWriter, r *http.R
 		})
 		s.Finish()
 		if err != nil {
-			hub.CaptureException(err)
+			sentry.CaptureException(ctx, err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -205,7 +205,7 @@ func (env *environment) postProfileFromChunkIDs(w http.ResponseWriter, r *http.R
 		sp, err := chunk.SpeedscopeFromAndroidChunks(androidChunks, requestBody.Start, requestBody.End)
 		s.Finish()
 		if err != nil {
-			hub.CaptureException(err)
+			sentry.CaptureException(ctx, err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -216,7 +216,7 @@ func (env *environment) postProfileFromChunkIDs(w http.ResponseWriter, r *http.R
 		})
 		s.Finish()
 		if err != nil {
-			hub.CaptureException(err)
+			sentry.CaptureException(ctx, err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -232,50 +232,48 @@ func (env *environment) postProfileFromChunkIDs(w http.ResponseWriter, r *http.R
 }
 
 func (env *environment) getRawChunk(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	hub := sentry.GetHubFromContext(ctx)
+	ctx, scope := sentryutil.EnsureScope(r.Context())
+
 	ps := httprouter.ParamsFromContext(ctx)
 	rawOrganizationID := ps.ByName("organization_id")
 	organizationID, err := strconv.ParseUint(rawOrganizationID, 10, 64)
 	if err != nil {
-		hub.CaptureException(err)
+		sentry.CaptureException(ctx, err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	hub.Scope().SetTag("organization_id", rawOrganizationID)
+	scope.SetTag("organization_id", rawOrganizationID)
 
 	rawProjectID := ps.ByName("project_id")
 	projectID, err := strconv.ParseUint(rawProjectID, 10, 64)
 	if err != nil {
-		hub.CaptureException(err)
+		sentry.CaptureException(ctx, err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	hub.Scope().SetTag("project_id", rawProjectID)
+	scope.SetTag("project_id", rawProjectID)
 
 	profilerID := ps.ByName("profiler_id")
 	_, err = uuid.Parse(profilerID)
 	if err != nil {
-		hub.CaptureException(err)
+		sentry.CaptureException(ctx, err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	hub.Scope().SetTag("profiler_id", profilerID)
-
-	hub.Scope().SetTag("project_id", rawProjectID)
+	scope.SetTag("profiler_id", profilerID)
 
 	chunkID := ps.ByName("chunk_id")
 	_, err = uuid.Parse(chunkID)
 	if err != nil {
-		hub.CaptureException(err)
+		sentry.CaptureException(ctx, err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	hub.Scope().SetTag("chunk_id", chunkID)
+	scope.SetTag("chunk_id", chunkID)
 
 	s := sentry.StartSpan(ctx, "chunk.read")
 	s.Description = "Read chunk from GCS"
@@ -295,14 +293,14 @@ func (env *environment) getRawChunk(w http.ResponseWriter, r *http.Request) {
 		}
 		var e *googleapi.Error
 		if ok := errors.As(err, &e); ok {
-			hub.Scope().SetContext("Google Cloud Storage Error", map[string]interface{}{
+			scope.SetContext("Google Cloud Storage Error", map[string]interface{}{
 				"body":    e.Body,
 				"code":    e.Code,
 				"details": e.Details,
 				"message": e.Message,
 			})
 		}
-		hub.CaptureException(err)
+		sentry.CaptureException(ctx, err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -311,7 +309,7 @@ func (env *environment) getRawChunk(w http.ResponseWriter, r *http.Request) {
 	defer s.Finish()
 	b, err := json.Marshal(c)
 	if err != nil {
-		hub.CaptureException(err)
+		sentry.CaptureException(ctx, err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}

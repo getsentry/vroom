@@ -11,11 +11,10 @@ import (
 
 func (env *environment) postRegressed(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	hub := sentry.GetHubFromContext(ctx)
 
 	regressedFunctions, err := decodeRegressedFunctionPayload(ctx, r)
 	if err != nil {
-		hub.CaptureException(err)
+		sentry.CaptureException(ctx, err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -28,7 +27,7 @@ func (env *environment) postRegressed(w http.ResponseWriter, r *http.Request) {
 		occurrence, err := occurrence.ProcessRegressedFunction(ctx, env.storage, regressedFunction, readJobs)
 		s.Finish()
 		if err != nil {
-			hub.CaptureException(err)
+			sentry.CaptureException(ctx, err)
 			continue
 		} else if occurrence == nil {
 			continue
@@ -45,14 +44,14 @@ func (env *environment) postRegressed(w http.ResponseWriter, r *http.Request) {
 	b, err := json.Marshal(data)
 	s.Finish()
 	if err != nil {
-		hub.CaptureException(err)
+		sentry.CaptureException(ctx, err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	occurrenceMessages, err := occurrence.GenerateKafkaMessageBatch(occurrences)
 	if err != nil {
-		hub.CaptureException(err)
+		sentry.CaptureException(ctx, err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -62,7 +61,7 @@ func (env *environment) postRegressed(w http.ResponseWriter, r *http.Request) {
 	err = env.occurrencesWriter.WriteMessages(ctx, occurrenceMessages...)
 	s.Finish()
 	if err != nil {
-		hub.CaptureException(err)
+		sentry.CaptureException(ctx, err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
