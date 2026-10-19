@@ -89,9 +89,7 @@ jobs:
           docker tag vroom:arm64 ghcr.io/getsentry/vroom:${{ github.sha }}-arm64
           docker push ghcr.io/getsentry/vroom:${{ github.sha }}-arm64
 
-          # The image is distroless. The "-distroless" tags are kept until
-          # everything that pulls them (deploys, devservices) moves to the plain tags.
-          for tag in ${{ github.sha }} ${{ github.sha }}-distroless nightly nightly-distroless; do
+          for tag in ${{ github.sha }} nightly; do
             docker manifest create \
               ghcr.io/getsentry/vroom:${tag} \
               --amend ghcr.io/getsentry/vroom:${{ github.sha }}-amd64 \
@@ -162,7 +160,6 @@ jobs:
           tag_nightly: false
           tag_latest: true
           google_ar_image_name: us-central1-docker.pkg.dev/sentryio/vroom/vroom
-          tags: us-central1-docker.pkg.dev/sentryio/vroom/vroom:${{ github.sha }}-distroless
           google_workload_identity_provider: projects/868781662168/locations/global/workloadIdentityPools/prod-github/providers/github-oidc-pool
           google_service_account: gha-vroom-push@sac-prod-sa.iam.gserviceaccount.com
           # The builder stage starts with `COPY . .`, so nothing from a previous
@@ -182,7 +179,6 @@ jobs:
           tag_nightly: false
           tag_latest: true
           google_ar_image_name: us-docker.pkg.dev/sentryio/vroom-mr/vroom
-          tags: us-docker.pkg.dev/sentryio/vroom-mr/vroom:${{ github.sha }}-distroless
           google_workload_identity_provider: projects/868781662168/locations/global/workloadIdentityPools/prod-github/providers/github-oidc-pool
           google_service_account: gha-vroom-push@sac-prod-sa.iam.gserviceaccount.com
           cache_from: type=local,src=${{ runner.temp }}/vroom-buildcache
