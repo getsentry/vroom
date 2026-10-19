@@ -38,13 +38,6 @@ linters:
       - third_party$
       - builtin$
       - examples$
-  settings:
-    forbidigo:
-      analyze-types: true
-      forbid:
-        - pkg: github.com/getsentry/sentry-go
-          pattern: '^sentry\.(AddBreadcrumb|CaptureCheckIn|CaptureEvent|CaptureException|CaptureMessage|ConfigureScope|CurrentHub|Flush|FlushWithContext|LastEventID|PopScope|PushScope|Recover|RecoverWithContext|WithMonitor|WithScope)$'
-          msg: "Do not use the global Hub. Always use the local Hub from context."
 formatters:
   enable:
     - gofmt

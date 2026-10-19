@@ -368,8 +368,6 @@ func GetFlamegraphFromCandidates(
 	jobs chan storageutil.ReadJob,
 	ma *metrics.Aggregator,
 ) (speedscope.Output, error) {
-	hub := sentry.GetHubFromContext(ctx)
-
 	results := make(chan storageutil.ReadJobResult)
 	dispatchDone := make(chan struct{})
 
@@ -438,9 +436,7 @@ func GetFlamegraphFromCandidates(
 				// and return it.
 				continue
 			}
-			if hub != nil {
-				hub.CaptureException(err)
-			}
+			sentry.CaptureException(ctx, err)
 			continue
 		}
 
