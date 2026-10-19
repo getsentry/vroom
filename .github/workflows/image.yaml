@@ -44,7 +44,7 @@ jobs:
       # For posterity: If at any chance you need the individual architecture-specific images,
       # you can set `push: true` and `tags: ghcr.io/getsentry/vroom:${{ github.sha }}-${{ matrix.platform }}` in the above step.
       - name: Upload Image
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: vroom-${{ matrix.platform }}
           path: /tmp/vroom-${{ matrix.platform }}.tar
@@ -65,7 +65,7 @@ jobs:
         uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
 
       - name: Download amd64 Image
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v4.3.2
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: vroom-amd64
           path: /tmp
@@ -74,7 +74,7 @@ jobs:
         run: docker load --input /tmp/vroom-amd64.tar
 
       - name: Download arm64 Image
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v4.3.2
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: vroom-arm64
           path: /tmp
@@ -152,7 +152,7 @@ jobs:
       - uses: actions/checkout@ff7abcd0c3c05ccf6adc123a8cd1fd4fb30fb493 # v4.2.2
 
       - name: Build and push image to single-region registry
-        uses: getsentry/action-build-and-push-images@dd9b907092cdd2dbc6c1a409f7290df1b391f6ee
+        uses: getsentry/action-build-and-push-images@3714f354c0bc912a95221f193c9643cdba966e34
         with:
           image_name: 'vroom'
           platforms: linux/amd64
@@ -165,9 +165,14 @@ jobs:
           tags: us-central1-docker.pkg.dev/sentryio/vroom/vroom:${{ github.sha }}-distroless
           google_workload_identity_provider: projects/868781662168/locations/global/workloadIdentityPools/prod-github/providers/github-oidc-pool
           google_service_account: gha-vroom-push@sac-prod-sa.iam.gserviceaccount.com
+          # The builder stage starts with `COPY . .`, so nothing from a previous
+          # commit's cache is reusable. Skip the GitHub Actions cache and hand
+          # this build's cache to the next build on the runner's disk.
+          cache_from: ''
+          cache_to: type=local,dest=${{ runner.temp }}/vroom-buildcache,mode=max
 
       - name: Build and push image to multi-region registry
-        uses: getsentry/action-build-and-push-images@dd9b907092cdd2dbc6c1a409f7290df1b391f6ee
+        uses: getsentry/action-build-and-push-images@3714f354c0bc912a95221f193c9643cdba966e34
         with:
           image_name: 'vroom'
           platforms: linux/amd64
@@ -180,3 +185,5 @@ jobs:
           tags: us-docker.pkg.dev/sentryio/vroom-mr/vroom:${{ github.sha }}-distroless
           google_workload_identity_provider: projects/868781662168/locations/global/workloadIdentityPools/prod-github/providers/github-oidc-pool
           google_service_account: gha-vroom-push@sac-prod-sa.iam.gserviceaccount.com
+          cache_from: type=local,src=${{ runner.temp }}/vroom-buildcache
+          cache_to: ''
