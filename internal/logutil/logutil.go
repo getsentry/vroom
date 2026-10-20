@@ -23,7 +23,9 @@ func ConfigureLogger() {
 		},
 	})
 	// `context.Background()` here will use the global Sentry client.
-	sentryHandler := sentryslog.Option{}.NewSentryHandler(context.Background())
+	sentryHandler := sentryslog.Option{
+		LogLevel: []slog.Level{slog.LevelInfo, slog.LevelWarn, slog.LevelError, sentryslog.LevelFatal},
+	}.NewSentryHandler(context.Background())
 	h := teeHandler{handlers: []slog.Handler{jsonHandler, sentryHandler}}
 	slog.SetDefault(slog.New(h))
 	slog.SetLogLoggerLevel(slog.LevelInfo)
