@@ -8,6 +8,7 @@ require (
 	github.com/andybalholm/brotli v1.1.0
 	github.com/fsouza/fake-gcs-server v1.44.0
 	github.com/getsentry/sentry-go v1.0.0-alpha.1
+	github.com/getsentry/sentry-go/slog v1.0.0-alpha.1
 	github.com/goccy/go-json v0.10.0
 	github.com/google/go-cmp v0.7.0
 	github.com/google/uuid v1.6.0
