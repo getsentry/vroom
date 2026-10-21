@@ -11,6 +11,7 @@ import (
 
 func (env *environment) postRegressed(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+	produceToKafka := r.URL.Query().Get("produce") != "false"
 
 	regressedFunctions, err := decodeRegressedFunctionPayload(ctx, r)
 	if err != nil {
@@ -38,9 +39,13 @@ func (env *environment) postRegressed(w http.ResponseWriter, r *http.Request) {
 
 	s := sentry.StartSpan(ctx, "json.marshal")
 	data := struct {
-		Occurrences int                            `json:"occurrences"`
-		Emitted     []occurrence.RegressedFunction `json:"emitted"`
+		Occurrences        int                            `json:"occurrences"`
+		Emitted            []occurrence.RegressedFunction `json:"emitted"`
+		OccurrencePayloads *[]*occurrence.Occurrence      `json:"occurrence_payloads,omitempty"`
 	}{Occurrences: len(occurrences), Emitted: emitted}
+	if !produceToKafka {
+		data.OccurrencePayloads = &occurrences
+	}
 	b, err := json.Marshal(data)
 	s.Finish()
 	if err != nil {
@@ -49,21 +54,23 @@ func (env *environment) postRegressed(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	occurrenceMessages, err := occurrence.GenerateKafkaMessageBatch(occurrences)
-	if err != nil {
-		sentry.CaptureException(ctx, err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
+	if produceToKafka {
+		occurrenceMessages, err := occurrence.GenerateKafkaMessageBatch(occurrences)
+		if err != nil {
+			sentry.CaptureException(ctx, err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 
-	s = sentry.StartSpan(ctx, "processing")
-	s.Description = "Send occurrences to Kafka"
-	err = env.occurrencesWriter.WriteMessages(ctx, occurrenceMessages...)
-	s.Finish()
-	if err != nil {
-		sentry.CaptureException(ctx, err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
+		s = sentry.StartSpan(ctx, "processing")
+		s.Description = "Send occurrences to Kafka"
+		err = env.occurrencesWriter.WriteMessages(ctx, occurrenceMessages...)
+		s.Finish()
+		if err != nil {
+			sentry.CaptureException(ctx, err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 	}
 
 	w.Header().Set("Content-Type", "application/json")
