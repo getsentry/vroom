@@ -6,8 +6,6 @@ import (
 	"os"
 	"testing"
 
-	"github.com/segmentio/kafka-go"
-
 	"gocloud.dev/blob"
 	_ "gocloud.dev/blob/fileblob"
 )
@@ -37,14 +35,4 @@ func TestMain(m *testing.M) {
 	}
 
 	os.Exit(code)
-}
-
-type KafkaWriterMock struct{}
-
-func (k KafkaWriterMock) WriteMessages(_ context.Context, _ ...kafka.Message) error {
-	return nil
-}
-
-func (k KafkaWriterMock) Close() error {
-	return nil
 }

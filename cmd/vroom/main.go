@@ -16,7 +16,6 @@ import (
 	sentryhttp "github.com/getsentry/sentry-go/http"
 	"github.com/ilyakaznacheev/cleanenv"
 	"github.com/julienschmidt/httprouter"
-	"github.com/segmentio/kafka-go"
 	"gocloud.dev/blob"
 	_ "gocloud.dev/blob/azureblob"
 	_ "gocloud.dev/blob/fileblob"
@@ -31,8 +30,6 @@ import (
 
 type environment struct {
 	config ServiceConfig
-
-	occurrencesWriter KafkaWriter
 
 	storage *blob.Bucket
 }
@@ -54,25 +51,11 @@ func newEnvironment(ctx context.Context) (*environment, error) {
 		return nil, err
 	}
 
-	e.occurrencesWriter = &kafka.Writer{
-		Addr:         kafka.TCP(e.config.OccurrencesKafkaBrokers...),
-		Async:        true,
-		Balancer:     kafka.CRC32Balancer{},
-		BatchSize:    100,
-		ReadTimeout:  3 * time.Second,
-		Topic:        e.config.OccurrencesKafkaTopic,
-		WriteTimeout: 3 * time.Second,
-		Transport:    createKafkaRoundTripper(e.config),
-	}
 	return &e, nil
 }
 
 func (e *environment) shutdown(ctx context.Context) {
 	err := e.storage.Close()
-	if err != nil {
-		sentry.CaptureException(ctx, err)
-	}
-	err = e.occurrencesWriter.Close()
 	if err != nil {
 		sentry.CaptureException(ctx, err)
 	}
