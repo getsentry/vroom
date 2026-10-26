@@ -5,7 +5,7 @@ go 1.27.0
 require (
 	cloud.google.com/go/storage v1.61.3
 	github.com/CAFxX/httpcompression v0.0.8
-	github.com/andybalholm/brotli v1.1.0
+	github.com/andybalholm/brotli v1.2.7
 	github.com/fsouza/fake-gcs-server v1.44.0
 	github.com/getsentry/sentry-go v1.0.0-alpha.1
 	github.com/getsentry/sentry-go/slog v1.0.0-alpha.1
