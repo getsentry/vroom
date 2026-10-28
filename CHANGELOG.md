@@ -1,5 +1,44 @@
 # Changelog
 
+## 26.10.1
+
+### New Features ✨
+
+- (regressed) Add produce=false mode by @mjq in [#745](https://github.com/getsentry/vroom/pull/745)
+
+### Internal Changes 🔧
+
+#### Deps
+
+- Bump andybalholm/brotli to 1.2.7 by @sentry-junior in [#756](https://github.com/getsentry/vroom/pull/756)
+- Bump getsentry/craft from 2.35.1 to 3.0.0 by @dependabot in [#757](https://github.com/getsentry/vroom/pull/757)
+- Bump getsentry/craft/.github/workflows/changelog-preview.yml from 2 to 3 by @dependabot in [#755](https://github.com/getsentry/vroom/pull/755)
+- Bump filelock from 3.32.7 to 4.2.1 by @dependabot in [#753](https://github.com/getsentry/vroom/pull/753)
+- Bump virtualenv from 21.7.13 to 21.14.13 by @dependabot in [#750](https://github.com/getsentry/vroom/pull/750)
+- Bump uv to 0.13.5 by @sentry-junior in [#752](https://github.com/getsentry/vroom/pull/752)
+- Bump getsentry/craft from 2.35.0 to 2.35.1 by @dependabot in [#751](https://github.com/getsentry/vroom/pull/751)
+- Bump getsentry/self-hosted from 0829063fe3477b0b245bab3709ad1a3ded0ce7cb to c49fff6ba47b97b95e11db2fb1f34a9b1e6d71da by @dependabot in [#748](https://github.com/getsentry/vroom/pull/748)
+- Bump uv to 0.13.4 by @sentry-junior in [#746](https://github.com/getsentry/vroom/pull/746)
+- Bump certifi from 2025.7.14 to 2026.10.19 by @dependabot in [#744](https://github.com/getsentry/vroom/pull/744)
+- Bump github.com/klauspost/compress from 1.17.7 to 1.18.7 by @dependabot in [#743](https://github.com/getsentry/vroom/pull/743)
+- Bump getsentry/self-hosted from 31bd196061b2c97160a8876cec06c807581ca949 to 0829063fe3477b0b245bab3709ad1a3ded0ce7cb by @dependabot in [#741](https://github.com/getsentry/vroom/pull/741)
+- Bump getsentry/craft from 2.34.1 to 2.35.0 by @dependabot in [#738](https://github.com/getsentry/vroom/pull/738)
+- Bump getsentry/self-hosted from e29cfe002b439d8d281d51a54d574e6a31831973 to 31bd196061b2c97160a8876cec06c807581ca949 by @dependabot in [#737](https://github.com/getsentry/vroom/pull/737)
+- Bump actions/create-github-app-token from 3.2.0 to 3.3.0 by @dependabot in [#735](https://github.com/getsentry/vroom/pull/735)
+
+#### Sentry
+
+- Send logs to Sentry by @mjq in [#742](https://github.com/getsentry/vroom/pull/742)
+- Update SDK to v1.0.0-alpha.1 by @mjq in [#729](https://github.com/getsentry/vroom/pull/729)
+
+#### Other
+
+- (ci) Always use `master` self-hosted action by @mjq in [#749](https://github.com/getsentry/vroom/pull/749)
+- (docker) Make the distroless image the only vroom image by @oioki in [#734](https://github.com/getsentry/vroom/pull/734)
+- (image) Use the plain vroom image tags and drop -distroless by @oioki in [#736](https://github.com/getsentry/vroom/pull/736)
+- (python) Update to 3.13.16 by @mjq in [#747](https://github.com/getsentry/vroom/pull/747)
+- (regressed) Remove Kafka occurrence production by @mjq in [#754](https://github.com/getsentry/vroom/pull/754)
+
 ## 26.10.0
 
 **Features**:
