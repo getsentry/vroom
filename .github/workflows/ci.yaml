@@ -56,7 +56,7 @@ jobs:
 
       - uses: astral-sh/setup-uv@fce2a640fd7624c55b695d893d63e75bc7741509 # v6
         with:
-          version: "0.13.5"
+          version: "0.13.7"
           # we just cache the venv-dir directly in action-setup-venv
           enable-cache: false
 
