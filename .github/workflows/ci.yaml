@@ -54,7 +54,7 @@ jobs:
           # running should be consolidated into pre-commit
           args: "--help"
 
-      - uses: astral-sh/setup-uv@0a73d6eb01c0201c8fc84847d0f4425b704ad66d # v6
+      - uses: astral-sh/setup-uv@5e83ccf689000bf635d77af2cdbad36ca1397375 # v6
         with:
           version: "0.13.7"
           # we just cache the venv-dir directly in action-setup-venv
