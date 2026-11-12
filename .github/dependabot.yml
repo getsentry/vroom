@@ -16,3 +16,8 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
+    groups:
+      # init, autobuild, and analyze must stay on the same version
+      codeql-action:
+        patterns:
+          - "github/codeql-action/*"
