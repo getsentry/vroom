@@ -1,5 +1,25 @@
 # Changelog
 
+## 26.11.0
+
+### Internal Changes 🔧
+
+#### Deps
+
+- Group codeql-action updates in dependabot by @mjq with @sentry-junior in [#777](https://github.com/getsentry/vroom/pull/777)
+- Bump github/codeql-action from 4.39.2 to 4.39.3 by @mjq with @sentry-junior in [#776](https://github.com/getsentry/vroom/pull/776)
+- Bump astral-sh/setup-uv to v10.3.3 by @mjq with @sentry-junior in [#775](https://github.com/getsentry/vroom/pull/775)
+- Bump getsentry/craft from 3.9.0 to 3.11.2 by @dependabot in [#771](https://github.com/getsentry/vroom/pull/771)
+- Bump astral-sh/setup-uv from fce2a640fd7624c55b695d893d63e75bc7741509 to 0a73d6eb01c0201c8fc84847d0f4425b704ad66d by @dependabot in [#768](https://github.com/getsentry/vroom/pull/768)
+- Pin github/codeql-action to v4.39.2 in lockstep by @mjq with @sentry-junior in [#765](https://github.com/getsentry/vroom/pull/765)
+- Bump astral-sh/setup-uv from 884ad927a57e558e7a70b92f2bccf9198a4be546 to fce2a640fd7624c55b695d893d63e75bc7741509 by @dependabot in [#762](https://github.com/getsentry/vroom/pull/762)
+- Bump github.com/go-jose/go-jose/v4 from 4.1.4 to 4.1.6 by @dependabot in [#759](https://github.com/getsentry/vroom/pull/759)
+
+#### Other
+
+- (python) Update to 3.13.18 by @oioki in [#769](https://github.com/getsentry/vroom/pull/769)
+- (release) Bump craft to 3.9.0 and update config by @BYK with @sentry-junior in [#766](https://github.com/getsentry/vroom/pull/766)
+
 ## 26.10.1
 
 ### New Features ✨
