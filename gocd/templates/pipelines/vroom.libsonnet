@@ -67,7 +67,10 @@ function(region) {
             elastic_profile_id: 'vroom',
             environment_variables: {
               LABEL_SELECTOR: 'service=vroom,environment=production',
-            },
+            } + (if region == 's4s2' then {
+                   ARGOCD_ONLY: 'true',
+                   ARGOCD_SERVICE: 'vroom',
+                 } else {}),
             tasks: [
               gocdtasks.script(importstr '../bash/deploy.sh'),
             ],
