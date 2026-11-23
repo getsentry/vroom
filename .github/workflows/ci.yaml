@@ -40,7 +40,7 @@ jobs:
         with:
           go-version: stable
 
-      # this is way too slow to add to pre-commit
+      # this is way too slow to add to prek
       - run: go mod tidy
 
       - run: go install golang.org/x/tools/cmd/goimports@v0.36.0
@@ -51,7 +51,7 @@ jobs:
           version: v2.14
           install-mode: binary
           # we're just using their official action to install;
-          # running should be consolidated into pre-commit
+          # running should be consolidated into prek
           args: "--help"
 
       - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
@@ -67,14 +67,14 @@ jobs:
 
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
-          path: ~/.cache/pre-commit
+          path: ~/.cache/prek
           key: cache-epoch-1|${{ env.pythonLocation }}|${{ hashFiles('.pre-commit-config.yaml', 'uv.lock') }}
 
-      - name: Install pre-commit
-        run: pre-commit install-hooks
+      - name: Install prek
+        run: .venv/bin/prek prepare-hooks
 
-      - name: Run pre-commit
-        run: pre-commit run --all-files
+      - name: Run prek
+        run: .venv/bin/prek run --all-files
 
   test-vroom:
     runs-on: ubuntu-latest
