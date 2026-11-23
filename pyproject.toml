@@ -7,7 +7,7 @@ version = "0.0.0"
 [dependency-groups]
 dev = [
     "devservices>=1.2.1",
-    "pre-commit>=4.2.0",
+    "prek>=0.5.10",
     "sentry-devenv>=1.22.2",
 ]
 

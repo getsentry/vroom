@@ -28,7 +28,7 @@ def main(context: dict[str, str]) -> int:
         (f"{reporoot}/.devenv/bin/uv", "sync", "--frozen", "--quiet", "--active"),
     )
 
-    print("installing pre-commit hooks ...")
-    proc.run((f"{reporoot}/.venv/bin/pre-commit", "install", "--install-hooks"))
+    print("installing prek hooks ...")
+    proc.run((f"{reporoot}/.venv/bin/prek", "install", "--prepare-hooks", "-f"))
 
     return 0

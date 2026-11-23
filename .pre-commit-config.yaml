@@ -14,8 +14,7 @@ repos:
         types: [go]
         pass_filenames: false
 
-  - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v5.0.0
+  - repo: builtin
     hooks:
       - id: check-case-conflict
       - id: check-executables-have-shebangs
